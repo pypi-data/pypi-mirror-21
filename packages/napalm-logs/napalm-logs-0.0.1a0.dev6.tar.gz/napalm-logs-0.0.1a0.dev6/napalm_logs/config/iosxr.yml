@@ -1,0 +1,23 @@
+# You should not use special characture in the value keys
+prefix:
+  values:
+    messageId: (\d+)
+    host: ([^ ]+)
+    date: (\w+ \d\d)
+    time: (\d\d:\d\d:\d\d\.\d\d\d \w\w\w)
+    processName: (\w+)
+    processId: (\d+)
+    error: ([\w-]+)
+  line: '{messageId}: {host}:{date} {time}: {processName}[{processId}]: %{error}'
+
+messages:
+  ROUTING-BGP-5-MAXPFX:
+    values:
+      peer: (\d+\.\d+\.\d+\.\d+)
+      current: (\d+)
+      limit: (\d+)
+    line: 'No. of IPv4 Unicast prefixes received from {peer} has reached {current}, max {limit}'
+    model: openconfig_bgp
+    mapping:
+      limit: bgp/neighbors/neighbor/{peer}/afi_safis/afi_safi/inet/ipv4_unicast/prefix_limit/state/max_prefixes
+      current: bgp/neighbors/neighbor/{peer}/afi_safis/afi_safi/inet/state/prefixes/received
