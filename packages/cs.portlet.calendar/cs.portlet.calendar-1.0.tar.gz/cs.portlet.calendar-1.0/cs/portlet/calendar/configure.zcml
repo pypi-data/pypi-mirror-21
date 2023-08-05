@@ -1,0 +1,43 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="cs.portlet.calendar">
+
+  <i18n:registerTranslations directory="locales" />
+
+  <browser:resourceDirectory
+    name="cs.portlet.calendar.resources"
+    directory="resources"
+    />
+
+  <genericsetup:registerProfile
+      name="default"
+      directory="profiles/default"
+      title="cs.portlet.calendar"
+      description="Calendar portlet using fullcalendar.io"
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <plone:portlet
+      name="cs.portlet.calendar"
+      interface=".portlet.ICalendarPortlet"
+      assignment=".portlet.Assignment"
+      renderer=".portlet.Renderer"
+      addview=".portlet.AddForm"
+      editview=".portlet.EditForm"
+      zcml:condition="have plone-5"
+      />
+
+  <browser:page
+      for="*"
+      name="cs.portlet.calendar.events.json"
+      class=".events.CSPortletCalendarEvents"
+      permission="zope2.View"
+      />
+
+
+</configure>

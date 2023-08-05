@@ -1,0 +1,59 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      i18n:domain="cs.portlet.calendar"
+      tal:omit-tag="">
+
+<section class="portletCSCalendar" role="section"
+    data-linkurl="${view/calendar_url}"
+    data-queryurl="${view/event_base_url}"
+    data-language="${view/language}">
+
+  <link
+      rel="stylesheet"
+      type="text/css"
+      href="${here/portal_url}/++resource++cs.portlet.calendar.resources/fullcalendar.min.css" />
+
+  <script type="text/javascript">
+
+    require.config({
+        "paths": {
+          "fullcalendar": PORTAL_URL + "/++resource++cs.portlet.calendar.resources/fullcalendar.min",
+        }
+    });
+    require(["jquery", "moment", "fullcalendar"], function($, moment, cal) {
+        $(document).ready(function(){
+            $('.portletCSCalendar .portletContents').fullCalendar({
+                events: $('section.portletCSCalendar').data('queryurl') + '/cs.portlet.calendar.events.json',
+                header: {
+                    left: 'prev',
+                    center: 'title',
+                    right: 'next'
+                },
+                timeFormat: 'H:mm',
+                locale: $('section.portletCSCalendar').data('language'),
+                fixedWeekCount: false,
+                aspectRatio: 0.5,
+                eventRender: function(event, element){
+                    $(element).attr('title', event.description);
+                },
+                dayClick: function(date, allDay, jsEvent, view) {
+                  var today = date.format();
+                  var tomorrow = moment(date).add(1, "days").format("YYYY-MM-DD");
+                  var url = $('section.portletCSCalendar').data('linkurl') + "?date=" + today;
+                  location.href = url;
+                }
+            });
+        });
+    });
+  </script>
+
+
+
+
+
+  <section class="portletContents">
+
+  </section>
+</section>
+</html>
