@@ -1,0 +1,128 @@
+cn:
+    description: "Firt Name and Display Name"
+    display_name: "Display Name"
+    type: string
+    search_displayed: True
+    weight: 30
+    autofill: 
+        function: cn
+        args:
+            - $first-name
+            - $name
+    backends:
+        ldap: cn
+        ad: cn
+
+first-name:
+    description: "First name of the user"
+    display_name: "First Name"
+    search_displayed: True
+    type: string
+    weight: 20
+    backends:
+        ldap: givenName
+        ad: givenName
+name:
+    description: "Family name of the user"
+    display_name: "Name"
+    search_displayed: True
+    weight: 10
+    type: string
+    backends:
+        ldap: sn
+        ad: sn
+email:
+    description: "Email of the user"
+    display_name: "Name"
+    type: email
+    weight: 40
+    autofill: 
+        function: email
+        args:
+            - $first-name
+            - $last-name
+            - '@example.com'
+    backends:
+        ldap: email
+        ad: EMAIL
+uid:
+    description: "UID of the user"
+    display_name: "UID"
+    search_displayed: True
+    key: True
+    type: string
+    weight: 50
+    autofill: 
+        function: uid
+        args:
+            - $first-name
+            - $last-name
+    backends:
+        ldap: uid
+        ad: UID
+uidNumber:
+    description: "User ID Number of the user"
+    display_name: "UID Number"
+    weight: 60
+    type: int
+    autofill: 
+        function: uidNumber
+        args:
+            - $first-name
+            - $last-name
+    backends:
+        ldap: uidNumber
+        ad: UIDNumber
+gidNumber:
+    description: "Group ID Number of the user"
+    display_name: "GID Number"
+    weight: 70
+    type: int
+    default: 10000
+    backends:
+        ldap: gidNumber
+        ad: gidNumber
+shell:
+    description: "Shell of the user"
+    display_name: "Shell"
+    weight: 80
+    self: True
+    type: stringlist
+    values:
+        - /bin/bash
+        - /bin/zsh
+        - /bin/sh
+    backends:
+        ldap: shell
+        ad: SHELL
+home:
+    description: "Home user path"
+    display_name: "Home"
+    weight: 90
+    type: string
+    autofill: 
+        function: home
+        args:
+            - $first-name
+            - $last-name
+            - /home/
+    backends:
+        ldap: home
+        ad: Home
+password:
+    description: "Password of the user"
+    display_name: "Password"
+    weight: 31
+    self: True
+    type: password
+    backends:
+        ldap: userPassword
+        ad: unicodePwd
+logscript:
+    description: "Windows login script"
+    display_name: "Login script"
+    weight: 100
+    type: fix
+    value: login1.bat
+    backends:
+        ad: logonScript
