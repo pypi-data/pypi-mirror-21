@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0">
+    <channel>
+        <title>{{ channel.title|e }}</title>
+        <link>{{ channel.link }}</link>
+        <language>{{ channel.language }}</language>
+        <copyright>{{ channel.copyright|e }}</copyright>
+        <itunes:subtitle>{{ channel.subtitle|e }}</itunes:subtitle>
+        <itunes:author>{{ channel.author|e }}</itunes:author>
+        <itunes:summary>
+            {{ channel.description|e }}
+        </itunes:summary>
+        <description>
+            {{ channel.description|e }}
+        </description>
+        <itunes:owner>
+            <itunes:name>{{ channel.owner.name|e }}</itunes:name>
+            <itunes:email>{{ channel.owner.email }}</itunes:email>
+        </itunes:owner>
+        <itunes:keywords>{{ channel.keywords|join(', ') }}</itunes:keywords>
+        {% if image -%}
+        <image>
+            <url>{{ channel.image }}</url>
+            <title>{{ channel.title }}</title>
+            <link>{{ channel.link }}</link>
+        </image>
+        {% endif -%}
+        <itunes:image href="{{ channel.image }}" />
+        {% for category in channel.categories -%}
+        {% if loop.length > 1 -%}
+        {% if loop.first -%}
+        <itunes:category text="{{ category|e }}">
+            {%- endif -%}
+            {%- if not loop.first %}
+            <itunes:category text="{{ category|e }}" />
+            {%- endif -%}
+            {%- if loop.last %}
+        </itunes:category>
+        {% endif -%}
+        {% else -%}
+        <itunes:category text="{{ category|e }}" />
+        {% endif -%}
+        {% endfor -%}
+        <itunes:explicit>{{ channel.explicit }}</itunes:explicit>
+        <generator>{{ generator }}</generator>
+        <lastBuildDate>{{ last_build_date }}</lastBuildDate>
+        {% for item in items -%}
+        <item>
+            <title>{{ item.album|e }} | {{ item.title|e }}</title>
+            <itunes:author>{{ item.artist|e }}</itunes:author>
+            <itunes:subtitle>{{ item.subtitle|e }}</itunes:subtitle>
+            {% if item.comment -%}
+            <itunes:summary>
+                {{ item.comment|e }}
+            </itunes:summary>
+            {% endif -%}
+            {% if item.comment -%}
+            <description>
+                {{ item.comment|e }}
+            </description>
+            {% endif -%}
+            <itunes:image href="{{ item.image_url }}" />
+            <enclosure url="{{ item.url }}" length="{{ item.length }}" type="audio/mpeg" />
+            <guid>{{ item.url }}</guid>
+            <pubDate>{{ item.pub_date }}</pubDate>
+            <itunes:duration>{{ item.duration }}</itunes:duration>
+        </item>
+        {% endfor -%}
+    </channel>
+</rss>
