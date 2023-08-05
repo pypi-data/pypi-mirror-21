@@ -1,0 +1,32 @@
+# Travis configuration file using the build matrix feature
+# Read more under http://docs.travis-ci.com/user/build-configuration/
+# THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
+
+sudo: false
+language: python
+virtualenv:
+  system_site_packages: true
+env:
+  matrix:
+    - DISTRIB="conda" PYTHON_VERSION="3.5" COVERAGE="true"
+install:
+  - source tests/travis_install.sh
+  - pip install git+https://github.com/behave/behave
+  - pip install -r test-requirements.txt
+before_script:
+  - git config --global user.email "william.usher@ouce.ox.ac.uk"
+  - git config --global user.name "Will Usher"
+script:
+  - python setup.py develop
+  - python setup.py test
+  - python setup.py behave_test
+after_success:
+  - if [[ "$COVERAGE" == "true" ]]; then coveralls || echo "failed"; fi
+cache:
+  - apt
+notifications:
+  email: false
+addons:
+  apt:
+    packages:
+      - glpk
