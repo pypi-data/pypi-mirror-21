@@ -1,0 +1,296 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    >
+    <!-- load permissions.zcml -->
+
+    <include package="Products.CMFCore" />
+    <include file="restapi.zcml" />
+
+    <browser:page
+        for="*"
+        name="lock"
+        class=".lock.Lock"
+        attribute="lock"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="*"
+        name="unlock"
+        class=".lock.Lock"
+        attribute="unlock"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="view"
+        class=".connector.Connector"
+        template="connector_view.pt"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="connector-folder-contents"
+        class=".connector.Connector"
+        attribute="folder_contents"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="connector-dispatch"
+        class=".connector.Dispatcher"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="view-editor-readonly"
+        class=".connector.AceEditorReadonly"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+    
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="raw"
+        class=".connector.Raw"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="view-editor"
+        class=".connector.AceEditor"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="*"
+        name="xmldirector-core-lockmanager"
+        class=".lockmanager.LockManager"
+        template="lockmanager.pt"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="upload-file"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".connector.Connector"
+        attribute="upload_file"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="connector-zip-import"
+        template="connector_zip_import.pt"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="connector-zip-upload"
+        class=".connector.Connector"
+        attribute="zip_import_ui"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        for="xmldirector.plonecore.connector.IConnector"
+        name="connector-reindex"
+        class=".connector.Connector"
+        attribute="reindex"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <!-- File manager -->
+
+    <browser:page
+        name="filemanager-rename"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".connector.Connector"
+        attribute="filemanager_rename"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="filemanager-delete"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".connector.Connector"
+        attribute="filemanager_delete"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="filemanager-download"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".connector.Connector"
+        attribute="filemanager_download"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="filemanager-zip-download"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".connector.Connector"
+        attribute="filemanager_zip_download"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="filemanager-create-collection"
+        for="xmldirector.plonecore.connector.IConnector"
+        class=".connector.Connector"
+        attribute="filemanager_create_collection"
+        permission="cmf.ModifyPortalContent"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="xmldirector-core-settings"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.DBSettingsControlPanel"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="xmldirector-settings-json"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.DBSettingsControlPanel"
+        attribute="settings_json"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="xmldirector-connection-test"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.DBSettingsControlPanel"
+        template="connection_test.pt"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="xmldirector-install-scripts"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.Installer"
+        attribute="install_scripts"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="xmldirector-core-introspection"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        template="introspection.pt"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="error"
+        for="xmldirector.plonecore.connector.IConnector"
+        template="error.pt"
+        permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <!-- Validator registry -->
+    <browser:page
+        name="validator-registry"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.ValidatorRegistry"
+        template="validator_registry.pt"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="validator-registry-view"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.ValidatorRegistry"
+        template="validator_registry_view.pt"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <!-- Validator registry -->
+    <browser:page
+        name="transformer-registry"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.TransformerRegistry"
+        template="transformer_registry.pt"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="transformer-registry-view"
+        for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+        class=".controlpanel.TransformerRegistry"
+        template="transformer_registry_view.pt"
+        permission="cmf.ManagePortal"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <!-- viewlet -->
+
+	<browser:viewlet
+	    name="xmldirector.plonecore.xml_debug"
+	    manager="plone.app.layout.viewlets.interfaces.IBelowContentBody"
+	    template="viewlet.pt"
+	    class=".viewlet.Debug"
+	    permission="zope2.View"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+	    />
+
+    <!-- Public XML-DB API --> 
+
+    <browser:page 
+        name="api-query"
+        for="xmldirector.plonecore.connector.IConnector"
+        permission="zope2.View"
+        class=".api.API"
+        attribute="generic_query"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:page
+        name="api-validate-xml"
+        for="*"
+        permission="zope2.View"
+        class=".api.Validation"
+        attribute="validate"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+    <browser:resourceDirectory
+        name="xmldirector.plonecore"
+        directory="resources"
+        layer="xmldirector.plonecore.interfaces.IBrowserLayer"
+    />
+
+</configure>
