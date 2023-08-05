@@ -1,0 +1,3 @@
+An utility for editing .mqd files produced by IBM SPSS Data Collection Base Professional
+
+
