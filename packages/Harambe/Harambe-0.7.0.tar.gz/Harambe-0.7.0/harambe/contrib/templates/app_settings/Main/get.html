@@ -1,0 +1,29 @@
+
+{% call widget.panel("") %}
+    {% call forms.post(action=url_for("AppDataAdmin:post")) %}
+        {{ forms.hidden("id", value=pref.id) }}
+        {{ forms.hidden("action", value="update") }}
+
+        <p>Key: <strong>{{ pref.key }}</strong></p>
+
+        {{ forms.input("description", label="Description", value=pref.description or "") }}
+        {% if pref.is_editable %}
+            {{ forms.input("value", label="Value", value=pref.data) }}
+        {% else %}
+            Data <small>uneditable</small>:
+            <div>
+               <pre id="jsondata"></pre>
+            </div>
+
+            <script>
+                $(function(){
+                    var str = JSON.stringify({{ pref.data | tojson }}, null, 2);
+                    $("#jsondata").html(str)
+                })
+            </script>
+
+        {% endif %}
+
+        <button type="submit" class="btn btn-info pull-left"><i class="fa fa-check"></i> Save Preference</button>
+    {% endcall %}
+{% endcall %}
