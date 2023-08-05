@@ -1,0 +1,767 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tt.tables.truth_table &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../author.html">Author</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tables.html"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tt.tables.truth_table</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Implementation of a truth table.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">string</span> <span class="k">import</span> <span class="n">ascii_uppercase</span> <span class="k">as</span> <span class="n">ALPHABET</span>
+
+<span class="kn">from</span> <span class="nn">..definitions</span> <span class="k">import</span> <span class="n">DONT_CARE_VALUE</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="p">(</span><span class="n">AlreadyFullTableError</span><span class="p">,</span> <span class="n">ConflictingArgumentsError</span><span class="p">,</span>
+                      <span class="n">ExtraSymbolError</span><span class="p">,</span> <span class="n">InvalidArgumentTypeError</span><span class="p">,</span>
+                      <span class="n">InvalidArgumentValueError</span><span class="p">,</span> <span class="n">InvalidBooleanValueError</span><span class="p">,</span>
+                      <span class="n">MissingSymbolError</span><span class="p">,</span> <span class="n">NoEvaluationVariationError</span><span class="p">,</span>
+                      <span class="n">RequiredArgumentError</span><span class="p">,</span> <span class="n">RequiresFullTableError</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..expressions</span> <span class="k">import</span> <span class="n">BooleanExpression</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="k">import</span> <span class="p">(</span><span class="n">assert_all_valid_keys</span><span class="p">,</span>
+                     <span class="n">assert_iterable_contains_all_expr_symbols</span><span class="p">)</span>
+
+
+<span class="n">_DEFAULT_CELL_PADDING</span> <span class="o">=</span> <span class="mi">1</span>
+
+
+<div class="viewcode-block" id="TruthTable"><a class="viewcode-back" href="../../../api/tables.html#tt.tables.truth_table.TruthTable">[docs]</a><span class="k">class</span> <span class="nc">TruthTable</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A class representing a truth table.</span>
+
+<span class="sd">    There are two ways to fill a table: either populated from an expression or</span>
+<span class="sd">    by specifying the values yourself.</span>
+
+<span class="sd">    An existing :class:`BooleanExpression &lt;tt.expressions.BooleanExpression&gt;`</span>
+<span class="sd">    expression can be used, or you can just pass in a string::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">        &gt;&gt;&gt; t = TruthTable(&#39;A xor B&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; print(t)</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | A | B |   |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 0 | 0 | 0 |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 0 | 1 | 1 |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 1 | 0 | 1 |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 1 | 1 | 0 |</span>
+<span class="sd">        +---+---+---+</span>
+
+<span class="sd">    When manually specifying the values tt can generate the symbols for you::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">        &gt;&gt;&gt; t = TruthTable(from_values=&#39;0110&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; print(t)</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | A | B |   |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 0 | 0 | 0 |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 0 | 1 | 1 |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 1 | 0 | 1 |</span>
+<span class="sd">        +---+---+---+</span>
+<span class="sd">        | 1 | 1 | 0 |</span>
+<span class="sd">        +---+---+---+</span>
+
+<span class="sd">    You can also specify the symbol names yourself, if you&#39;d like::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">        &gt;&gt;&gt; t = TruthTable(from_values=&#39;0110&#39;, ordering=[&#39;tt&#39;, &#39;rocks&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; print(t)</span>
+<span class="sd">        +----+-------+---+</span>
+<span class="sd">        | tt | rocks |   |</span>
+<span class="sd">        +----+-------+---+</span>
+<span class="sd">        | 0  |   0   | 0 |</span>
+<span class="sd">        +----+-------+---+</span>
+<span class="sd">        | 0  |   1   | 1 |</span>
+<span class="sd">        +----+-------+---+</span>
+<span class="sd">        | 1  |   0   | 1 |</span>
+<span class="sd">        +----+-------+---+</span>
+<span class="sd">        | 1  |   1   | 0 |</span>
+<span class="sd">        +----+-------+---+</span>
+
+<span class="sd">    :param expr: The expression with which to populate this truth table. If</span>
+<span class="sd">        this argument is omitted, then the ``from_values`` argument must be</span>
+<span class="sd">        properly set.</span>
+<span class="sd">    :type expr: :class:`str &lt;python:str&gt;` or :class:`BooleanExpression\</span>
+<span class="sd">        &lt;tt.expressions.bexpr.BooleanExpression&gt;`</span>
+
+<span class="sd">    :param from_values: A string of 1&#39;s, 0&#39;s, and x&#39;s representing the values</span>
+<span class="sd">        to be stored in the table; the length of this string must be a power</span>
+<span class="sd">        of 2 and is the complete set of values (in sequential order) to be</span>
+<span class="sd">        stored in table.</span>
+<span class="sd">    :type from_values: :class:`str &lt;python:str&gt;`</span>
+
+<span class="sd">    :param fill_all: A flag indicating whether the entirety of the table should</span>
+<span class="sd">        be filled on initialization; defaults to ``True``.</span>
+<span class="sd">    :type fill_all: :class:`bool &lt;python:bool&gt;`, optional</span>
+
+<span class="sd">    :param ordering: An input that maps to this class&#39;s :attr:`ordering`</span>
+<span class="sd">        property. If omitted, the ordering of symbols in the table will match</span>
+<span class="sd">        that of the symbols&#39; appearance in the original expression.</span>
+<span class="sd">    :type ordering: List[:class:`str &lt;python:str&gt;`], optional</span>
+
+<span class="sd">    :raises ConflictingArgumentsError: If both ``expr`` and ``from_values`` are</span>
+<span class="sd">        specified in the initalization; a table can only be instantiated from</span>
+<span class="sd">        one or the other.</span>
+<span class="sd">    :raises DuplicateSymbolError: If multiple symbols of the same name are</span>
+<span class="sd">        passed into the ``ordering`` list.</span>
+<span class="sd">    :raises ExtraSymbolError: If a symbol not present in the expression is</span>
+<span class="sd">        passed into the ``ordering`` list.</span>
+<span class="sd">    :raises MissingSymbolError: If a symbol present in the expression is</span>
+<span class="sd">        omitted from the ``ordering`` list.</span>
+<span class="sd">    :raises InvalidArgumentTypeError: If an unexpected parameter type is</span>
+<span class="sd">        encountered.</span>
+<span class="sd">    :raises InvalidArgumentValueError: If the number of values specified via</span>
+<span class="sd">        ``from_values`` is not a power of 2 or the ``ordering`` list (when</span>
+<span class="sd">        filling the table using ``from_values``) is empty.</span>
+<span class="sd">    :raises NoEvaluationVariationError: If an expression without any unqiue</span>
+<span class="sd">        symbols (i.e., one merely composed of constant operands) is specified.</span>
+<span class="sd">    :raises RequiredArgumentError: If neither the ``expr`` or ``from_values``</span>
+<span class="sd">        arguments are specified.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">from_values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">ordering</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">from_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConflictingArgumentsError</span><span class="p">(</span>
+                <span class="s1">&#39;`expr` and `from_values` are mutually exclusive arguments&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">expr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">from_values</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RequiredArgumentError</span><span class="p">(</span>
+                <span class="s1">&#39;Must specify either `expr` or `from_values`&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_filled_slots</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_init_from_expression</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fill_all</span><span class="p">,</span> <span class="n">ordering</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_init_from_values</span><span class="p">(</span><span class="n">from_values</span><span class="p">,</span> <span class="n">ordering</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init_from_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">fill_all</span><span class="p">,</span> <span class="n">ordering</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">BooleanExpression</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BooleanExpression</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="n">expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentTypeError</span><span class="p">(</span>
+                <span class="s1">&#39;Arg `expr` must be of type `str` or `BooleanExpression`&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ordering</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span><span class="o">.</span><span class="n">symbols</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">assert_iterable_contains_all_expr_symbols</span><span class="p">(</span>
+                <span class="n">ordering</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_expr</span><span class="o">.</span><span class="n">symbols</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span> <span class="o">=</span> <span class="n">ordering</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoEvaluationVariationError</span><span class="p">(</span>
+                <span class="s1">&#39;This expression is composed only of constant values&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">))]</span>
+        <span class="k">if</span> <span class="n">fill_all</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_init_from_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_values</span><span class="p">,</span> <span class="n">ordering</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_values</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="n">DONT_CARE_VALUE</span><span class="p">}</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">from_values</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidArgumentValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;Cannot specify an empty string&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">value</span> <span class="ow">in</span> <span class="n">valid</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">from_values</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">InvalidBooleanValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;Invalid Boolean/don</span><span class="se">\&#39;</span><span class="s1">t care value specified&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentTypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`from_values` must either be a string or list of strings&#39;</span><span class="p">)</span>
+
+        <span class="n">num_values</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">from_values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">num_values</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">num_values</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># assert that number of input values is a power of 2</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Must specify a number of input values that is a power of 2&#39;</span><span class="p">)</span>
+
+        <span class="n">user_gave_symbols</span> <span class="o">=</span> <span class="n">ordering</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user_gave_symbols</span><span class="p">:</span>
+            <span class="c1"># user left it up to us to generate symbols</span>
+            <span class="n">num_required_symbols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">num_values</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="o">.</span><span class="n">generate_symbols</span><span class="p">(</span><span class="n">num_required_symbols</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ordering</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentTypeError</span><span class="p">(</span><span class="s1">&#39;`ordering` must be a list&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">elt</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">ordering</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentTypeError</span><span class="p">(</span>
+                <span class="s1">&#39;`ordering` must only contain strings&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># validate user-provided ordering/symbols</span>
+            <span class="n">num_symbols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ordering</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">num_symbols</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">InvalidArgumentValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;If specifying `ordering`, it must be non-empty&#39;</span><span class="p">)</span>
+
+            <span class="n">num_expected_values</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">num_symbols</span>
+            <span class="k">if</span> <span class="n">num_values</span> <span class="o">&lt;</span> <span class="n">num_expected_values</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ExtraSymbolError</span><span class="p">(</span>
+                    <span class="s1">&#39;Too many symbols provided for the specified values&#39;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">num_values</span> <span class="o">&gt;</span> <span class="n">num_expected_values</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">MissingSymbolError</span><span class="p">(</span>
+                    <span class="s1">&#39;Too few symbols provided for the specified values&#39;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span> <span class="o">=</span> <span class="n">ordering</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">bool_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">DONT_CARE_VALUE</span><span class="p">:</span> <span class="n">DONT_CARE_VALUE</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">bool_dict</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">from_values</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_filled_slots</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The ``BooleanExpression`` object represented by this table.</span>
+
+<span class="sd">        This attribute will be ``None`` if this table was not derived from</span>
+<span class="sd">        an expression (i.e., the user provided the values).</span>
+
+<span class="sd">        :type: :class:`BooleanExpression\</span>
+<span class="sd">                       &lt;tt.expressions.bexpr.BooleanExpression&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ordering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The order in which the symbols should appear in the truth table.</span>
+
+<span class="sd">        :type: List[:class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">        Here&#39;s a short example of alternative orderings of a partially-filled,</span>
+<span class="sd">        three-symbol table::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t = TruthTable(&#39;(A or B) and C&#39;, fill_all=False)</span>
+<span class="sd">            &gt;&gt;&gt; t.fill(A=0, B=0)</span>
+<span class="sd">            &gt;&gt;&gt; print(t)</span>
+<span class="sd">            +---+---+---+---+</span>
+<span class="sd">            | A | B | C |   |</span>
+<span class="sd">            +---+---+---+---+</span>
+<span class="sd">            | 0 | 0 | 0 | 0 |</span>
+<span class="sd">            +---+---+---+---+</span>
+<span class="sd">            | 0 | 0 | 1 | 0 |</span>
+<span class="sd">            +---+---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; t = TruthTable(&#39;(A or B) and C&#39;,</span>
+<span class="sd">            ...                fill_all=False, ordering=[&#39;C&#39;, &#39;B&#39;, &#39;A&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; t.fill(A=0, B=0)</span>
+<span class="sd">            &gt;&gt;&gt; print(t)</span>
+<span class="sd">            +---+---+---+---+</span>
+<span class="sd">            | C | B | A |   |</span>
+<span class="sd">            +---+---+---+---+</span>
+<span class="sd">            | 0 | 0 | 0 | 0 |</span>
+<span class="sd">            +---+---+---+---+</span>
+<span class="sd">            | 1 | 0 | 0 | 0 |</span>
+<span class="sd">            +---+---+---+---+</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A Boolean flag indicating whether this table is full or not.</span>
+
+<span class="sd">        :type: :class:`bool &lt;python:bool&gt;`</span>
+
+<span class="sd">        Attempting to further fill an already-full table will raise an</span>
+<span class="sd">        :exc:`AlreadyFullTableError\</span>
+<span class="sd">        &lt;tt.errors.state.AlreadyFullTableError&gt;`::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t = TruthTable(&#39;A or B&#39;, fill_all=False)</span>
+<span class="sd">            &gt;&gt;&gt; t.is_full</span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; t.fill()</span>
+<span class="sd">            &gt;&gt;&gt; t.is_full</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; try:</span>
+<span class="sd">            ...     t.fill()</span>
+<span class="sd">            ... except Exception as e:</span>
+<span class="sd">            ...     print(type(e))</span>
+<span class="sd">            ...</span>
+<span class="sd">            &lt;class &#39;tt.errors.state.AlreadyFullTableError&#39;&gt;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_filled_slots</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A list containing the results of each possible set of inputs.</span>
+
+<span class="sd">        :type: List[:class:`bool &lt;python:bool&gt;`, :class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">        In the case that the table is not completely filled, spots in this list</span>
+<span class="sd">        that do not yet have a computed result will hold the ``None`` value.</span>
+
+<span class="sd">        Regardless of the filled status of this table, all</span>
+<span class="sd">        positions in the ``results`` list are allocated at initialization and</span>
+<span class="sd">        subsequently filled as computed. This is illustrated in the below</span>
+<span class="sd">        example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t = TruthTable(&#39;A or B&#39;, fill_all=False)</span>
+<span class="sd">            &gt;&gt;&gt; t.results</span>
+<span class="sd">            [None, None, None, None]</span>
+<span class="sd">            &gt;&gt;&gt; t.fill(A=0)</span>
+<span class="sd">            &gt;&gt;&gt; t.results</span>
+<span class="sd">            [False, True, None, None]</span>
+<span class="sd">            &gt;&gt;&gt; t.fill()</span>
+<span class="sd">            &gt;&gt;&gt; t.results</span>
+<span class="sd">            [False, True, True, True]</span>
+
+<span class="sd">        If the table is filled upon initialization via the ``from_values``</span>
+<span class="sd">        parameter, don&#39;t care strings could be present in the result list::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t = TruthTable(from_values=&#39;1xx0&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; t.results</span>
+<span class="sd">            [True, &#39;x&#39;, &#39;x&#39;, False]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">col_widths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_col_widths</span><span class="p">()</span>
+        <span class="n">row_sep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_row_sep</span><span class="p">(</span><span class="n">col_widths</span><span class="p">)</span>
+
+        <span class="n">filled_row_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_sep</span><span class="p">)</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_as_table_row</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39; &#39;</span><span class="p">],</span> <span class="n">col_widths</span><span class="p">))</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_sep</span><span class="p">)</span>
+
+        <span class="n">_input_combos</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="o">.</span><span class="n">input_combos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_input_combos</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="n">DONT_CARE_VALUE</span><span class="p">:</span>
+                <span class="n">result_str</span> <span class="o">=</span> <span class="n">result</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+
+            <span class="n">item_strs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">))</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">]</span>
+            <span class="n">item_strs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result_str</span><span class="p">)</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_as_table_row</span><span class="p">(</span><span class="n">item_strs</span><span class="p">,</span> <span class="n">col_widths</span><span class="p">))</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_sep</span><span class="p">)</span>
+            <span class="n">filled_row_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filled_row_count</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Empty!&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_input_combos</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="o">.</span><span class="n">input_combos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">combo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_input_combos</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">combo</span><span class="p">,</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<div class="viewcode-block" id="TruthTable.equivalent_to"><a class="viewcode-back" href="../../../api/tables.html#tt.tables.truth_table.TruthTable.equivalent_to">[docs]</a>    <span class="k">def</span> <span class="nf">equivalent_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return whether this table is equivalent to another source of truth.</span>
+
+<span class="sd">        :param other: The other source of truth with which to compare logical</span>
+<span class="sd">            equivalence.</span>
+<span class="sd">        :type other: :class:`TruthTable`, :class:`str &lt;python:str&gt;`, or</span>
+<span class="sd">            :class:`BooleanExpression &lt;tt.expressions.bexpr.BooleanExpression&gt;`</span>
+
+<span class="sd">        :returns: True if the other expression is logically equivalent to this</span>
+<span class="sd">            one, otherwise False.</span>
+<span class="sd">        :rtype: :class:`bool &lt;python:bool&gt;`</span>
+
+<span class="sd">        :raises InvalidArgumentTypeError: If the ``other`` argument is not one</span>
+<span class="sd">            of the acceptable types.</span>
+<span class="sd">        :raises RequiresFullTableError: If either the calling table or other</span>
+<span class="sd">            source of truth represents an unfilled table.</span>
+
+<span class="sd">        It is important to note that the concept of equivalence employed here</span>
+<span class="sd">        is only concerned with the corresponding outputs between this table</span>
+<span class="sd">        and the other provided source of truth. For example, the ordering of</span>
+<span class="sd">        symbols is not taken into consideration when computing equivalence::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t1 = TruthTable(&#39;op1 or op2&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; t2 = TruthTable(&#39;A or B&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; t1.equivalent_to(t2)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; t2.equivalent_to(t1)</span>
+<span class="sd">            True</span>
+
+<span class="sd">        Another area of possible ambiguity here is the role of the don&#39;t care</span>
+<span class="sd">        value in equivalence. When comparing tables, don&#39;t cares in the caller</span>
+<span class="sd">        will allow for any corresponding value in ``other``, but the reverse is</span>
+<span class="sd">        not true. For example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t1 = TruthTable(from_values=&#39;0x11&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; t2 = TruthTable(from_values=&#39;0011&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; t1.equivalent_to(t2)</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; t2.equivalent_to(t1)</span>
+<span class="sd">            False</span>
+
+<span class="sd">        Additionally, only full tables are valid for equivalence checks. The</span>
+<span class="sd">        appropriate error will be raised if you attempt to check the</span>
+<span class="sd">        equivalence of partially filled tables::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t = TruthTable(&#39;A or B&#39;, fill_all=False)</span>
+<span class="sd">            &gt;&gt;&gt; t.fill(A=0)</span>
+<span class="sd">            &gt;&gt;&gt; try:</span>
+<span class="sd">            ...     t.equivalent_to(&#39;A or B&#39;)</span>
+<span class="sd">            ... except Exception as e:</span>
+<span class="sd">            ...     print(type(e))</span>
+<span class="sd">            ...</span>
+<span class="sd">            &lt;class &#39;tt.errors.state.RequiresFullTableError&#39;&gt;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">TruthTable</span><span class="p">):</span>
+            <span class="n">other_table</span> <span class="o">=</span> <span class="n">other</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">BooleanExpression</span><span class="p">)):</span>
+            <span class="n">other_table</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidArgumentTypeError</span><span class="p">(</span>
+                <span class="s1">&#39;other must be a BooleanExpression, TruthTable, or str&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_full</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">other_table</span><span class="o">.</span><span class="n">is_full</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RequiresFullTableError</span><span class="p">(</span>
+                <span class="s1">&#39;Equivalence can only be checked on full truth tables&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">other_table</span><span class="o">.</span><span class="n">results</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="n">DONT_CARE_VALUE</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">other_table</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">result</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="TruthTable.fill"><a class="viewcode-back" href="../../../api/tables.html#tt.tables.truth_table.TruthTable.fill">[docs]</a>    <span class="k">def</span> <span class="nf">fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fill the table with results, based on values specified by kwargs.</span>
+
+<span class="sd">        :param kwargs: Filter which entries in the table are filled by</span>
+<span class="sd">            specifying symbol values through the keyword args.</span>
+
+<span class="sd">        :raises ExtraSymbolError: If a symbol not in the expression is passed</span>
+<span class="sd">            as a keyword arg.</span>
+<span class="sd">        :raises InvalidBooleanValueError: If a non-Boolean value is passed</span>
+<span class="sd">            as a value for one of the keyword args.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            See :func:`assert_all_valid_keys\</span>
+<span class="sd">            &lt;tt.utils.assertions.assert_all_valid_keys&gt;`</span>
+<span class="sd">            for more information about the exceptions raised by this method.</span>
+
+<span class="sd">        An example of iteratively filling a table::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; t = TruthTable(&#39;A or B&#39;, fill_all=False)</span>
+<span class="sd">            &gt;&gt;&gt; print(t)</span>
+<span class="sd">            Empty!</span>
+<span class="sd">            &gt;&gt;&gt; t.fill(A=0)</span>
+<span class="sd">            &gt;&gt;&gt; print(t)</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | A | B |   |</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | 0 | 0 | 0 |</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | 0 | 1 | 1 |</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            &gt;&gt;&gt; t.fill(A=1)</span>
+<span class="sd">            &gt;&gt;&gt; print(t)</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | A | B |   |</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | 0 | 0 | 0 |</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | 0 | 1 | 1 |</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | 1 | 0 | 1 |</span>
+<span class="sd">            +---+---+---+</span>
+<span class="sd">            | 1 | 1 | 1 |</span>
+<span class="sd">            +---+---+---+</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_full</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AlreadyFullTableError</span><span class="p">(</span><span class="s1">&#39;Cannot fill an already-full table&#39;</span><span class="p">)</span>
+
+        <span class="n">assert_all_valid_keys</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">))</span>
+
+        <span class="c1"># convert all kwarg values to bools</span>
+        <span class="n">restrictions</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="c1"># I think the restriction of inputs can be greatly optimized by</span>
+        <span class="c1"># pre-computing the ranges of indices for which the inputs will</span>
+        <span class="c1"># be valid</span>
+        <span class="n">_input_combos</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="o">.</span><span class="n">input_combos</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">input_combo</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_input_combos</span><span class="p">):</span>
+            <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">symbol</span><span class="p">:</span> <span class="n">input_combo</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">symbol</span> <span class="ow">in</span>
+                          <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">)}</span>
+
+            <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">restrictions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">input_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_results</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr</span><span class="o">.</span><span class="n">evaluate_unchecked</span><span class="p">(</span><span class="o">**</span><span class="n">input_dict</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_num_filled_slots</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="TruthTable.input_combos"><a class="viewcode-back" href="../../../api/tables.html#tt.tables.truth_table.TruthTable.input_combos">[docs]</a>    <span class="k">def</span> <span class="nf">input_combos</span><span class="p">(</span><span class="n">combo_len</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get an iterator of Boolean input combinations for this expression.</span>
+
+<span class="sd">        :param combo_len: The length of each combination in the returned</span>
+<span class="sd">            iterator.</span>
+<span class="sd">        :type combo_len: :class:`int &lt;python:int&gt;`, optional</span>
+
+<span class="sd">        :returns: An iterator of tuples containing permutations of Boolean</span>
+<span class="sd">            inputs.</span>
+<span class="sd">        :rtype: :func:`itertools.product &lt;python:itertools.product&gt;`</span>
+
+<span class="sd">        A simple example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; for tup in TruthTable.input_combos(2):</span>
+<span class="sd">            ...     print(tup)</span>
+<span class="sd">            ...</span>
+<span class="sd">            (False, False)</span>
+<span class="sd">            (False, True)</span>
+<span class="sd">            (True, False)</span>
+<span class="sd">            (True, True)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">((</span><span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="n">combo_len</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="TruthTable.generate_symbols"><a class="viewcode-back" href="../../../api/tables.html#tt.tables.truth_table.TruthTable.generate_symbols">[docs]</a>    <span class="k">def</span> <span class="nf">generate_symbols</span><span class="p">(</span><span class="n">num_symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a list of symbols for a specified number of symbols.</span>
+
+<span class="sd">        Generated symbol names are permutations of a properly-sized number</span>
+<span class="sd">        of uppercase alphabet letters.</span>
+
+<span class="sd">        :param num_symbols: The number of symbols to generate.</span>
+<span class="sd">        :type num_symbols: :class:`int &lt;python:int&gt;`</span>
+
+<span class="sd">        :returns: A list of strings of length ``num_symbols``, containing</span>
+<span class="sd">            auto-generated symbols.</span>
+<span class="sd">        :rtype: List[:class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">        A simple example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import TruthTable</span>
+<span class="sd">            &gt;&gt;&gt; TruthTable.generate_symbols(3)</span>
+<span class="sd">            [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; TruthTable.generate_symbols(7)</span>
+<span class="sd">            [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39;]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">num_repeats</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">while</span> <span class="n">num_symbols</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ALPHABET</span><span class="p">)</span><span class="o">**</span><span class="n">num_repeats</span><span class="p">:</span>
+            <span class="n">num_repeats</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># generate symbols for the user based on the uppercase alphabet</span>
+        <span class="n">symbol_product</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">ALPHABET</span><span class="p">,</span> <span class="n">repeat</span><span class="o">=</span><span class="n">num_repeats</span><span class="p">)</span>
+        <span class="n">symbol_pool</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elts</span><span class="p">)</span> <span class="k">for</span> <span class="n">elts</span> <span class="ow">in</span> <span class="n">symbol_product</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">islice</span><span class="p">(</span><span class="n">symbol_pool</span><span class="p">,</span> <span class="n">num_symbols</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_as_table_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">,</span> <span class="n">col_widths</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert an iterable to a row in the table ``__str__``.</span>
+
+<span class="sd">        :param items: The items to convert to a table row.</span>
+<span class="sd">        :type items: Iterable[:class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">        :param col_widths: A list of integers specifying the column widths for</span>
+<span class="sd">            each column of the table.</span>
+<span class="sd">        :type col_widths: List[:class:`int &lt;python:int&gt;`]</span>
+
+<span class="sd">        :returns: The string representation of the table row.</span>
+<span class="sd">        :rtype: :class:`str &lt;python:str&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span>
+        <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">col_width</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">col_widths</span><span class="p">):</span>
+            <span class="n">total_pad_len</span> <span class="o">=</span> <span class="n">col_width</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">left_pad_len</span> <span class="o">=</span> <span class="n">total_pad_len</span> <span class="o">//</span> <span class="mi">2</span>
+            <span class="n">right_pad_len</span> <span class="o">=</span> <span class="n">total_pad_len</span> <span class="o">-</span> <span class="n">left_pad_len</span>
+            <span class="n">row</span> <span class="o">+=</span> <span class="p">(</span><span class="n">left_pad_len</span> <span class="o">*</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span>
+                    <span class="n">item</span> <span class="o">+</span>
+                    <span class="n">right_pad_len</span> <span class="o">*</span> <span class="s1">&#39; &#39;</span>
+                    <span class="o">+</span> <span class="s1">&#39;|&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">row</span>
+
+    <span class="k">def</span> <span class="nf">_get_col_widths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">_DEFAULT_CELL_PADDING</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get a list of integers, representing the column widths of the table.</span>
+
+<span class="sd">        :param padding: The additional padding to add to both the left and</span>
+<span class="sd">            right of the contents of each cell.</span>
+<span class="sd">        :type padding: :class:`int &lt;python:int&gt;`</span>
+
+<span class="sd">        :returns: A list of ints representing the width of each column of the</span>
+<span class="sd">            table.</span>
+<span class="sd">        :rtype: List[:class:`int &lt;python:int&gt;`]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tot_padding</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">padding</span>
+        <span class="n">symbol_widths</span> <span class="o">=</span> <span class="p">[</span><span class="n">tot_padding</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span>
+                         <span class="n">symbol</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ordering</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">symbol_widths</span> <span class="o">+</span> <span class="p">[</span><span class="n">tot_padding</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_get_row_sep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col_widths</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the string separator for truth table rows.</span>
+
+<span class="sd">        :param col_widths: A list of integers representing the width of each</span>
+<span class="sd">            column in the table.</span>
+<span class="sd">        :type col_widths: List[:class:`int &lt;python:int&gt;`]</span>
+
+<span class="sd">        :returns: The row separator, of the style ``+---+---+---+``.</span>
+<span class="sd">        :rtype: :class:`str &lt;python:str&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;-&#39;</span> <span class="o">*</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">col_widths</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tables &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="trees" href="trees.html" />
+    <link rel="prev" title="expressions" href="expressions.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../author.html">Author</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="expressions.html" title="previous chapter"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+      <li>Next: <a href="trees.html" title="next chapter"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-tt.tables">
+<span id="tables"></span><h1><code class="docutils literal"><span class="pre">tables</span></code><a class="headerlink" href="#module-tt.tables" title="Permalink to this headline">¶</a></h1>
+<p>Tools for working with truth tables.</p>
+<div class="section" id="module-tt.tables.truth_table">
+<span id="tables-truth-table-module"></span><h2><code class="docutils literal"><span class="pre">tables.truth_table</span></code> module<a class="headerlink" href="#module-tt.tables.truth_table" title="Permalink to this headline">¶</a></h2>
+<p>Implementation of a truth table.</p>
+<dl class="class">
+<dt id="tt.tables.truth_table.TruthTable">
+<em class="property">class </em><code class="descclassname">tt.tables.truth_table.</code><code class="descname">TruthTable</code><span class="sig-paren">(</span><em>expr=None</em>, <em>from_values=None</em>, <em>fill_all=True</em>, <em>ordering=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tt/tables/truth_table.html#TruthTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tt.tables.truth_table.TruthTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>A class representing a truth table.</p>
+<p>There are two ways to fill a table: either populated from an expression or
+by specifying the values yourself.</p>
+<p>An existing <code class="xref py py-class docutils literal"><span class="pre">BooleanExpression</span></code>
+expression can be used, or you can just pass in a string:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A xor B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 0 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+</pre></div>
+</div>
+<p>When manually specifying the values tt can generate the symbols for you:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;0110&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 0 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+</pre></div>
+</div>
+<p>You can also specify the symbol names yourself, if you&#8217;d like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;0110&#39;</span><span class="p">,</span> <span class="n">ordering</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;tt&#39;</span><span class="p">,</span> <span class="s1">&#39;rocks&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+----+-------+---+</span>
+<span class="go">| tt | rocks |   |</span>
+<span class="go">+----+-------+---+</span>
+<span class="go">| 0  |   0   | 0 |</span>
+<span class="go">+----+-------+---+</span>
+<span class="go">| 0  |   1   | 1 |</span>
+<span class="go">+----+-------+---+</span>
+<span class="go">| 1  |   0   | 1 |</span>
+<span class="go">+----+-------+---+</span>
+<span class="go">| 1  |   1   | 0 |</span>
+<span class="go">+----+-------+---+</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>expr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a> or <a class="reference internal" href="expressions.html#tt.expressions.bexpr.BooleanExpression" title="tt.expressions.bexpr.BooleanExpression"><code class="xref py py-class docutils literal"><span class="pre">BooleanExpression</span></code></a>) &#8211; The expression with which to populate this truth table. If
+this argument is omitted, then the <code class="docutils literal"><span class="pre">from_values</span></code> argument must be
+properly set.</li>
+<li><strong>from_values</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>) &#8211; A string of 1&#8217;s, 0&#8217;s, and x&#8217;s representing the values
+to be stored in the table; the length of this string must be a power
+of 2 and is the complete set of values (in sequential order) to be
+stored in table.</li>
+<li><strong>fill_all</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></a>, optional) &#8211; A flag indicating whether the entirety of the table should
+be filled on initialization; defaults to <code class="docutils literal"><span class="pre">True</span></code>.</li>
+<li><strong>ordering</strong> (List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>], optional) &#8211; An input that maps to this class&#8217;s <a class="reference internal" href="#tt.tables.truth_table.TruthTable.ordering" title="tt.tables.truth_table.TruthTable.ordering"><code class="xref py py-attr docutils literal"><span class="pre">ordering</span></code></a>
+property. If omitted, the ordering of symbols in the table will match
+that of the symbols&#8217; appearance in the original expression.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="errors.html#tt.errors.arguments.ConflictingArgumentsError" title="tt.errors.arguments.ConflictingArgumentsError"><strong>ConflictingArgumentsError</strong></a> &#8211; If both <code class="docutils literal"><span class="pre">expr</span></code> and <code class="docutils literal"><span class="pre">from_values</span></code> are
+specified in the initalization; a table can only be instantiated from
+one or the other.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.symbols.DuplicateSymbolError" title="tt.errors.symbols.DuplicateSymbolError"><strong>DuplicateSymbolError</strong></a> &#8211; If multiple symbols of the same name are
+passed into the <code class="docutils literal"><span class="pre">ordering</span></code> list.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.symbols.ExtraSymbolError" title="tt.errors.symbols.ExtraSymbolError"><strong>ExtraSymbolError</strong></a> &#8211; If a symbol not present in the expression is
+passed into the <code class="docutils literal"><span class="pre">ordering</span></code> list.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.symbols.MissingSymbolError" title="tt.errors.symbols.MissingSymbolError"><strong>MissingSymbolError</strong></a> &#8211; If a symbol present in the expression is
+omitted from the <code class="docutils literal"><span class="pre">ordering</span></code> list.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.arguments.InvalidArgumentTypeError" title="tt.errors.arguments.InvalidArgumentTypeError"><strong>InvalidArgumentTypeError</strong></a> &#8211; If an unexpected parameter type is
+encountered.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.arguments.InvalidArgumentValueError" title="tt.errors.arguments.InvalidArgumentValueError"><strong>InvalidArgumentValueError</strong></a> &#8211; If the number of values specified via
+<code class="docutils literal"><span class="pre">from_values</span></code> is not a power of 2 or the <code class="docutils literal"><span class="pre">ordering</span></code> list (when
+filling the table using <code class="docutils literal"><span class="pre">from_values</span></code>) is empty.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.evaluation.NoEvaluationVariationError" title="tt.errors.evaluation.NoEvaluationVariationError"><strong>NoEvaluationVariationError</strong></a> &#8211; If an expression without any unqiue
+symbols (i.e., one merely composed of constant operands) is specified.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.arguments.RequiredArgumentError" title="tt.errors.arguments.RequiredArgumentError"><strong>RequiredArgumentError</strong></a> &#8211; If neither the <code class="docutils literal"><span class="pre">expr</span></code> or <code class="docutils literal"><span class="pre">from_values</span></code>
+arguments are specified.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tt.tables.truth_table.TruthTable.equivalent_to">
+<code class="descname">equivalent_to</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tt/tables/truth_table.html#TruthTable.equivalent_to"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tt.tables.truth_table.TruthTable.equivalent_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return whether this table is equivalent to another source of truth.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>other</strong> (<a class="reference internal" href="#tt.tables.truth_table.TruthTable" title="tt.tables.truth_table.TruthTable"><code class="xref py py-class docutils literal"><span class="pre">TruthTable</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>, or
+<a class="reference internal" href="expressions.html#tt.expressions.bexpr.BooleanExpression" title="tt.expressions.bexpr.BooleanExpression"><code class="xref py py-class docutils literal"><span class="pre">BooleanExpression</span></code></a>) &#8211; The other source of truth with which to compare logical
+equivalence.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if the other expression is logically equivalent to this
+one, otherwise False.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></a></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="errors.html#tt.errors.arguments.InvalidArgumentTypeError" title="tt.errors.arguments.InvalidArgumentTypeError"><strong>InvalidArgumentTypeError</strong></a> &#8211; If the <code class="docutils literal"><span class="pre">other</span></code> argument is not one
+of the acceptable types.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.state.RequiresFullTableError" title="tt.errors.state.RequiresFullTableError"><strong>RequiresFullTableError</strong></a> &#8211; If either the calling table or other
+source of truth represents an unfilled table.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>It is important to note that the concept of equivalence employed here
+is only concerned with the corresponding outputs between this table
+and the other provided source of truth. For example, the ordering of
+symbols is not taken into consideration when computing equivalence:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;op1 or op2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A or B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="n">t2</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Another area of possible ambiguity here is the role of the don&#8217;t care
+value in equivalence. When comparing tables, don&#8217;t cares in the caller
+will allow for any corresponding value in <code class="docutils literal"><span class="pre">other</span></code>, but the reverse is
+not true. For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;0x11&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;0011&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="n">t2</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Additionally, only full tables are valid for equivalence checks. The
+appropriate error will be raised if you attempt to check the
+equivalence of partially filled tables:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A or B&#39;</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="s1">&#39;A or B&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">&lt;class &#39;tt.errors.state.RequiresFullTableError&#39;&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tt.tables.truth_table.TruthTable.expr">
+<code class="descname">expr</code><a class="headerlink" href="#tt.tables.truth_table.TruthTable.expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="docutils literal"><span class="pre">BooleanExpression</span></code> object represented by this table.</p>
+<p>This attribute will be <code class="docutils literal"><span class="pre">None</span></code> if this table was not derived from
+an expression (i.e., the user provided the values).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="expressions.html#tt.expressions.bexpr.BooleanExpression" title="tt.expressions.bexpr.BooleanExpression"><code class="xref py py-class docutils literal"><span class="pre">BooleanExpression</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tt.tables.truth_table.TruthTable.fill">
+<code class="descname">fill</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tt/tables/truth_table.html#TruthTable.fill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tt.tables.truth_table.TruthTable.fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill the table with results, based on values specified by kwargs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>kwargs</strong> &#8211; Filter which entries in the table are filled by
+specifying symbol values through the keyword args.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="errors.html#tt.errors.symbols.ExtraSymbolError" title="tt.errors.symbols.ExtraSymbolError"><strong>ExtraSymbolError</strong></a> &#8211; If a symbol not in the expression is passed
+as a keyword arg.</li>
+<li><a class="reference internal" href="errors.html#tt.errors.evaluation.InvalidBooleanValueError" title="tt.errors.evaluation.InvalidBooleanValueError"><strong>InvalidBooleanValueError</strong></a> &#8211; If a non-Boolean value is passed
+as a value for one of the keyword args.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See <a class="reference internal" href="utils.html#tt.utils.assertions.assert_all_valid_keys" title="tt.utils.assertions.assert_all_valid_keys"><code class="xref py py-func docutils literal"><span class="pre">assert_all_valid_keys</span></code></a>
+for more information about the exceptions raised by this method.</p>
+</div>
+<p>An example of iteratively filling a table:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A or B&#39;</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">Empty!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 0 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="tt.tables.truth_table.TruthTable.generate_symbols">
+<em class="property">static </em><code class="descname">generate_symbols</code><span class="sig-paren">(</span><em>num_symbols</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tt/tables/truth_table.html#TruthTable.generate_symbols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tt.tables.truth_table.TruthTable.generate_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a list of symbols for a specified number of symbols.</p>
+<p>Generated symbol names are permutations of a properly-sized number
+of uppercase alphabet letters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_symbols</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">int</span></code></a>) &#8211; The number of symbols to generate.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of strings of length <code class="docutils literal"><span class="pre">num_symbols</span></code>, containing
+auto-generated symbols.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+<p>A simple example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TruthTable</span><span class="o">.</span><span class="n">generate_symbols</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TruthTable</span><span class="o">.</span><span class="n">generate_symbols</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span>
+<span class="go">[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="tt.tables.truth_table.TruthTable.input_combos">
+<em class="property">static </em><code class="descname">input_combos</code><span class="sig-paren">(</span><em>combo_len</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tt/tables/truth_table.html#TruthTable.input_combos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tt.tables.truth_table.TruthTable.input_combos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get an iterator of Boolean input combinations for this expression.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>combo_len</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">int</span></code></a>, optional) &#8211; The length of each combination in the returned
+iterator.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">An iterator of tuples containing permutations of Boolean
+inputs.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/itertools.html#itertools.product" title="(in Python v3.6)"><code class="xref py py-func docutils literal"><span class="pre">itertools.product</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<p>A simple example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">TruthTable</span><span class="o">.</span><span class="n">input_combos</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">tup</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">(False, False)</span>
+<span class="go">(False, True)</span>
+<span class="go">(True, False)</span>
+<span class="go">(True, True)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tt.tables.truth_table.TruthTable.is_full">
+<code class="descname">is_full</code><a class="headerlink" href="#tt.tables.truth_table.TruthTable.is_full" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Boolean flag indicating whether this table is full or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<p>Attempting to further fill an already-full table will raise an
+<a class="reference internal" href="errors.html#tt.errors.state.AlreadyFullTableError" title="tt.errors.state.AlreadyFullTableError"><code class="xref py py-exc docutils literal"><span class="pre">AlreadyFullTableError</span></code></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A or B&#39;</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">is_full</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">is_full</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">&lt;class &#39;tt.errors.state.AlreadyFullTableError&#39;&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tt.tables.truth_table.TruthTable.ordering">
+<code class="descname">ordering</code><a class="headerlink" href="#tt.tables.truth_table.TruthTable.ordering" title="Permalink to this definition">¶</a></dt>
+<dd><p>The order in which the symbols should appear in the truth table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+<p>Here&#8217;s a short example of alternative orderings of a partially-filled,
+three-symbol table:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;(A or B) and C&#39;</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+---+</span>
+<span class="go">| A | B | C |   |</span>
+<span class="go">+---+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+---+</span>
+<span class="go">| 0 | 0 | 1 | 0 |</span>
+<span class="go">+---+---+---+---+</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;(A or B) and C&#39;</span><span class="p">,</span>
+<span class="gp">... </span>               <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ordering</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+---+</span>
+<span class="go">| C | B | A |   |</span>
+<span class="go">+---+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+---+</span>
+<span class="go">| 1 | 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+---+</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="tt.tables.truth_table.TruthTable.results">
+<code class="descname">results</code><a class="headerlink" href="#tt.tables.truth_table.TruthTable.results" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list containing the results of each possible set of inputs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+<p>In the case that the table is not completely filled, spots in this list
+that do not yet have a computed result will hold the <code class="docutils literal"><span class="pre">None</span></code> value.</p>
+<p>Regardless of the filled status of this table, all
+positions in the <code class="docutils literal"><span class="pre">results</span></code> list are allocated at initialization and
+subsequently filled as computed. This is illustrated in the below
+example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A or B&#39;</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">results</span>
+<span class="go">[None, None, None, None]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">results</span>
+<span class="go">[False, True, None, None]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">results</span>
+<span class="go">[False, True, True, True]</span>
+</pre></div>
+</div>
+<p>If the table is filled upon initialization via the <code class="docutils literal"><span class="pre">from_values</span></code>
+parameter, don&#8217;t care strings could be present in the result list:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;1xx0&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">results</span>
+<span class="go">[True, &#39;x&#39;, &#39;x&#39;, False]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/api/tables.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

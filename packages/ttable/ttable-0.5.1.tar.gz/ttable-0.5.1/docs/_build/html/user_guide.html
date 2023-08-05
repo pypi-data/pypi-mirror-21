@@ -1,0 +1,389 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>User Guide &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Development" href="development.html" />
+    <link rel="prev" title="tt - the Boolean expression toolbox" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#expression-basics">Expression basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#table-basics">Table basics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="author.html">Author</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/tables.html"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">tt - the Boolean expression toolbox</a></li>
+      <li>Next: <a href="development.html" title="next chapter">Development</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="user-guide">
+<h1>User Guide<a class="headerlink" href="#user-guide" title="Permalink to this headline">¶</a></h1>
+<p>The below code samples should give you an idea of how to use the tools provided in this library. If anything remains unclear, please feel free to open an <a class="reference external" href="https://github.com/welchbj/tt/issues/new">issue on GitHub</a> or reach out to <a class="reference internal" href="author.html"><span class="doc">the author</span></a>.</p>
+<div class="section" id="expression-basics">
+<h2>Expression basics<a class="headerlink" href="#expression-basics" title="Permalink to this headline">¶</a></h2>
+<p>The top-level class for interacting with boolean expressions in tt is, fittingly named, <a class="reference internal" href="api/expressions.html#tt.expressions.bexpr.BooleanExpression" title="tt.expressions.bexpr.BooleanExpression"><code class="xref py py-class docutils literal"><span class="pre">BooleanExpression</span></code></a>. Let&#8217;s start by importing it:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">BooleanExpression</span>
+</pre></div>
+</div>
+<p>This class accepts boolean expressions as strings and provides the interface for parsing and tokenizing string expressions into a sequence of tokens and symbols, as we see here:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">BooleanExpression</span><span class="p">(</span><span class="s1">&#39;(A nand B) or (C and D)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">tokens</span>
+<span class="go">[&#39;(&#39;, &#39;A&#39;, &#39;nand&#39;, &#39;B&#39;, &#39;)&#39;, &#39;or&#39;, &#39;(&#39;, &#39;C&#39;, &#39;and&#39;, &#39;D&#39;, &#39;)&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">symbols</span>
+<span class="go">[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;]</span>
+</pre></div>
+</div>
+<p>During initialization, the <a class="reference internal" href="api/expressions.html#tt.expressions.bexpr.BooleanExpression" title="tt.expressions.bexpr.BooleanExpression"><code class="xref py py-class docutils literal"><span class="pre">BooleanExpression</span></code></a> also does some work behind the scenes to build a basic understanding of the expression&#8217;s structure. It re-orders the tokens into postfix order, and uses this representation to build a <a class="reference internal" href="api/trees.html#tt.trees.expr_tree.BooleanExpressionTree" title="tt.trees.expr_tree.BooleanExpressionTree"><code class="xref py py-class docutils literal"><span class="pre">BooleanExpressionTree</span></code></a>. We can see this with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">postfix_tokens</span>
+<span class="go">[&#39;A&#39;, &#39;B&#39;, &#39;nand&#39;, &#39;C&#39;, &#39;D&#39;, &#39;and&#39;, &#39;or&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">tree</span><span class="p">)</span>
+<span class="go">or</span>
+<span class="go">`----nand</span>
+<span class="go">|    `----A</span>
+<span class="go">|    `----B</span>
+<span class="go">`----and</span>
+<span class="go">     `----C</span>
+<span class="go">     `----D</span>
+</pre></div>
+</div>
+<p>Under the hood, this expression tree is used for evaluation of the expression. The expression object provides an interface to this evaluation functionality; use it like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Notice that we can use <code class="docutils literal"><span class="pre">0</span></code> or <code class="docutils literal"><span class="pre">False</span></code> to represent low values and <code class="docutils literal"><span class="pre">1</span></code> or <code class="docutils literal"><span class="pre">True</span></code> to represent high values. tt makes sure that only valid Boolean-esque values are accepted for evaluation. For example, if we tried something like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="s1">&#39;not a Boolean value&#39;</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">D</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">tt.errors.evaluation.InvalidBooleanValueError</span>: <span class="n">&quot;not a Boolean value&quot; passed as value for &quot;B&quot; is not a valid Boolean value</span>
+</pre></div>
+</div>
+<p>or if we didn&#8217;t include a value for each of the symbols:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">C</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">tt.errors.symbols.MissingSymbolError</span>: <span class="n">Did not receive value for the following symbols: &quot;D&quot;</span>
+</pre></div>
+</div>
+<p>we see that we get an exception. This brings up one of the key design philosophies of tt: exceptions are specific and abundant. This library does its best to make sure you use its top-level interfaces as designed, and will raise exceptions if something isn&#8217;t right.</p>
+<p>Exceptions in tt are organized in a hierarchy, with each category of exceptions grouped under a base exception type. For example, a common group of exceptions you&#8217;ll deal with if you might handle malformed expressions is  <a class="reference internal" href="api/errors.html#tt.errors.grammar.GrammarError" title="tt.errors.grammar.GrammarError"><code class="xref py py-exc docutils literal"><span class="pre">GrammarError</span></code></a>. <a class="reference internal" href="api/errors.html#tt.errors.grammar.GrammarError" title="tt.errors.grammar.GrammarError"><code class="xref py py-exc docutils literal"><span class="pre">GrammarError</span></code></a> is a unique type of exception in tt, as it provides attributes for accessing the specific position in the expression string that caused an error. This is best illustrated with an example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">GrammarError</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">b</span> <span class="o">=</span> <span class="n">BooleanExpression</span><span class="p">(</span><span class="s1">&#39;A or or B&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">except</span> <span class="n">GrammarError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Here&#39;s what happened:&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Here&#39;s where it happened:&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">expr_str</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">error_pos</span> <span class="o">+</span> <span class="s1">&#39;^&#39;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">Here&#39;s what happened:</span>
+<span class="go">Unexpected binary operator &quot;or&quot;</span>
+<span class="go">Here&#39;s where it happened:</span>
+<span class="go">A or or B</span>
+<span class="go">     ^</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="table-basics">
+<h2>Table basics<a class="headerlink" href="#table-basics" title="Permalink to this headline">¶</a></h2>
+<p>Now that we&#8217;ve gotten the basic idea of how expressions work, we can use them to fill some truth tables. Surprisingly, the top-level class for dealing with truth tables in tt is called <a class="reference internal" href="api/tables.html#tt.tables.truth_table.TruthTable" title="tt.tables.truth_table.TruthTable"><code class="xref py py-class docutils literal"><span class="pre">TruthTable</span></code></a>. Let&#8217;s begin by importing it:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tt</span> <span class="k">import</span> <span class="n">TruthTable</span>
+</pre></div>
+</div>
+<p>There are a few ways we can fill up a truth table in tt. One of them is to pass in an expression, either as an already-created <a class="reference internal" href="api/expressions.html#tt.expressions.bexpr.BooleanExpression" title="tt.expressions.bexpr.BooleanExpression"><code class="xref py py-class docutils literal"><span class="pre">BooleanExpression</span></code></a> object or a string:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A xor B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 0 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+</pre></div>
+</div>
+<p>As we saw in the above example, printing tables produces a nicely-formatted text table. While we have stuck to simple variable names (<code class="docutils literal"><span class="pre">A</span></code>, <code class="docutils literal"><span class="pre">B</span></code>, <code class="docutils literal"><span class="pre">C</span></code>, etc.) so far, these tables will scale to fit the size of the symbol names:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;operand_1 and operand_2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+-----------+-----------+---+</span>
+<span class="go">| operand_1 | operand_2 |   |</span>
+<span class="go">+-----------+-----------+---+</span>
+<span class="go">|     0     |     0     | 0 |</span>
+<span class="go">+-----------+-----------+---+</span>
+<span class="go">|     0     |     1     | 0 |</span>
+<span class="go">+-----------+-----------+---+</span>
+<span class="go">|     1     |     0     | 0 |</span>
+<span class="go">+-----------+-----------+---+</span>
+<span class="go">|     1     |     1     | 1 |</span>
+<span class="go">+-----------+-----------+---+</span>
+</pre></div>
+</div>
+<p>By default, tt will order the symbols in the top row of of the table to match the order of their appearance in the original expression; however, you can impose your own order, too:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A xor B&#39;</span><span class="p">,</span> <span class="n">ordering</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| B | A |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 0 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+</pre></div>
+</div>
+<p>These tables are populated by evaluating the expression for each combination of input values. Let&#8217;s say that you already have the values you want in your truth table and would rather skip over re-evaluating ; you&#8217;d populate your table like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;00x1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 0 | x |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 1 | 1 |</span>
+<span class="go">+---+---+---+</span>
+</pre></div>
+</div>
+<p>Notice that populating tables like this allows for <em>don&#8217;t cares</em> (indicating by <code class="docutils literal"><span class="pre">x</span></code>) to be present in your table. Additionally, we can see that symbol names were automatically generated for us. That&#8217;s nice sometimes, but what if we want to specify them ourselves? We return to the <code class="docutils literal"><span class="pre">ordering</span></code> keyword argument:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;1x01&#39;</span><span class="p">,</span> <span class="n">ordering</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;op1&#39;</span><span class="p">,</span> <span class="s1">&#39;op2&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+-----+-----+---+</span>
+<span class="go">| op1 | op2 |   |</span>
+<span class="go">+-----+-----+---+</span>
+<span class="go">|  0  |  0  | 1 |</span>
+<span class="go">+-----+-----+---+</span>
+<span class="go">|  0  |  1  | x |</span>
+<span class="go">+-----+-----+---+</span>
+<span class="go">|  1  |  0  | 0 |</span>
+<span class="go">+-----+-----+---+</span>
+<span class="go">|  1  |  1  | 1 |</span>
+<span class="go">+-----+-----+---+</span>
+</pre></div>
+</div>
+<p>So far, we&#8217;ve only been able to examine the results stored in our tables by printing them. This is nice for looking at an end result, but we need programmatic methods of accessing the values in our tables, like these:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;!A &amp;&amp; B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">results</span>
+<span class="go">[False, True, False, False]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">inputs</span><span class="p">,</span> <span class="n">result</span>
+<span class="gp">...</span>
+<span class="go">((False, False), False)</span>
+<span class="go">((False, True), True)</span>
+<span class="go">((True, False), False)</span>
+<span class="go">((True, True), False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">(False, True, False, False)</span>
+</pre></div>
+</div>
+<p>Accessing results by index is also an intuitive time to use binary literal values:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">[</span><span class="mb">0b00</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mb">0b01</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mb">0b10</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mb">0b11</span><span class="p">]</span>
+<span class="go">(False, True, False, False)</span>
+</pre></div>
+</div>
+<p>Up to this point, we&#8217;ve only taken a look at tables with all their results filled in, but we don&#8217;t have to completely fill up our tables to start working with them. Here&#8217;s an example of iteratively filling a table:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A nor B&#39;</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">is_full</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">Empty!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">is_full</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">is_full</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| A | B |   |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 0 | 1 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 0 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 0 | 0 |</span>
+<span class="go">+---+---+---+</span>
+<span class="go">| 1 | 1 | 0 |</span>
+<span class="go">+---+---+---+</span>
+</pre></div>
+</div>
+<p>Empty slots in the table will be represented with a corresponding <code class="docutils literal"><span class="pre">None</span></code> entry for their result:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A or B&#39;</span><span class="p">,</span> <span class="n">fill_all</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">results</span>
+<span class="go">[None, None, None, None]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">B</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">results</span>
+<span class="go">[False, None, True, None]</span>
+</pre></div>
+</div>
+<p>Make sure not to try to keep filling an already-full table, though:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;0110&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">is_full</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">fill</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">tt.errors.state.AlreadyFullTableError</span>: <span class="n">Cannot fill an already-full table</span>
+</pre></div>
+</div>
+<p>Another neat feature provided by tt&#8217;s tables is the checking of logical equivalence:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;A xor B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;0110&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="n">t2</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="s1">&#39;C xor D&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Note that this equivalence comparison looks only at the result values of the tables and doesn&#8217;t look at the symbols of either table.</p>
+<p>Next, let&#8217;s examine how <em>don&#8217;t cares</em> function within tt&#8217;s concept of logical equivalence. <em>Don&#8217;t cares</em> in the calling table will be considered to equal to any value in the comparison table, but any explicity value in the calling table must be matched in the comparison table to be considered equal.</p>
+<p>In this sense, a fully-specified table (i.e., one without any <em>don&#8217;t cares</em>) will never be logically equivalent to one which contains <em>don&#8217;t cares</em>, but the converse may be true. Let&#8217;s see an example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="s1">&#39;C nand D&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">from_values</span><span class="o">=</span><span class="s1">&#39;xx10&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t1</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="n">t2</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span><span class="o">.</span><span class="n">equivalent_to</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/user_guide.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tt.trees.expr_tree &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../author.html">Author</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tables.html"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tt.trees.expr_tree</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;An expression tree implementation for Boolean expressions.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">..definitions</span> <span class="k">import</span> <span class="n">OPERATOR_MAPPING</span><span class="p">,</span> <span class="n">TT_NOT_OP</span>
+<span class="kn">from</span> <span class="nn">.tree_node</span> <span class="k">import</span> <span class="p">(</span><span class="n">BinaryOperatorExpressionTreeNode</span><span class="p">,</span>
+                        <span class="n">OperandExpressionTreeNode</span><span class="p">,</span>
+                        <span class="n">UnaryOperatorExpressionTreeNode</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BooleanExpressionTree"><a class="viewcode-back" href="../../../api/trees.html#tt.trees.expr_tree.BooleanExpressionTree">[docs]</a><span class="k">class</span> <span class="nc">BooleanExpressionTree</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;An expression tree for Boolean expressions.</span>
+
+<span class="sd">    This class expects any input it receives to be well-formed; any tokenized</span>
+<span class="sd">    lists you pass it directly (instead of from the attribute of the</span>
+<span class="sd">    :class:`BooleanExpression &lt;tt.expressions.bexpr.BooleanExpression&gt;` class)</span>
+<span class="sd">    will not be checked.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">postfix_tokens</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_postfix_tokens</span> <span class="o">=</span> <span class="n">postfix_tokens</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_tree</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">postfix_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The tokens, in postfix order, from which this tree was built.</span>
+
+<span class="sd">        :type: List[:class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_postfix_tokens</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The root of the tree; this is ``None`` for an empty tree.</span>
+
+<span class="sd">        :type: :class:`ExpressionTreeNode\</span>
+<span class="sd">                       &lt;tt.trees.tree_node.ExpressionTreeNode&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+
+<div class="viewcode-block" id="BooleanExpressionTree.evaluate"><a class="viewcode-back" href="../../../api/trees.html#tt.trees.expr_tree.BooleanExpressionTree.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the expression held in this tree for specified inputs.</span>
+
+<span class="sd">        :param input_dict: A dict mapping string variable names to the values</span>
+<span class="sd">            for which they should be evaluated.</span>
+<span class="sd">        :type input_dict: Dict{:class:`str &lt;python:str&gt;`: truthy}</span>
+
+<span class="sd">        :returns: The result of the expression tree evaluation.</span>
+<span class="sd">        :rtype: :class:`bool &lt;python:bool&gt;`</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            This function does not check to ensure the validity of the</span>
+<span class="sd">            ``input_dict`` argument in any way.</span>
+
+<span class="sd">        While you would normally evaluate expressions through the interface</span>
+<span class="sd">        provided by the :class:`BooleanExpression\</span>
+<span class="sd">        &lt;tt.expressions.bexpr.BooleanExpression&gt;` class, this interface is</span>
+<span class="sd">        still exposed for your use if you want to avoid any overhead introduced</span>
+<span class="sd">        by the extra layer of abstraction. For example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt import BooleanExpressionTree</span>
+<span class="sd">            &gt;&gt;&gt; bet = BooleanExpressionTree([&#39;A&#39;, &#39;B&#39;, &#39;xor&#39;])</span>
+<span class="sd">            &gt;&gt;&gt; bet.evaluate({&#39;A&#39;: 1, &#39;B&#39;: 0})</span>
+<span class="sd">            True</span>
+<span class="sd">            &gt;&gt;&gt; bet.evaluate({&#39;A&#39;: 1, &#39;B&#39;: 1})</span>
+<span class="sd">            False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_build_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterate over the ``postfix_tokens``, constructing the tree.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            This method will populate this class&#39;s ``root`` attribute.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">postfix_tokens</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span>
+
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">operators</span> <span class="o">=</span> <span class="n">OPERATOR_MAPPING</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">postfix_tokens</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">operators</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">OPERATOR_MAPPING</span><span class="p">[</span><span class="n">token</span><span class="p">]</span> <span class="o">==</span> <span class="n">TT_NOT_OP</span><span class="p">:</span>
+                    <span class="n">node</span> <span class="o">=</span> <span class="n">UnaryOperatorExpressionTreeNode</span><span class="p">(</span>
+                        <span class="n">token</span><span class="p">,</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">node</span> <span class="o">=</span> <span class="n">BinaryOperatorExpressionTreeNode</span><span class="p">(</span>
+                        <span class="n">token</span><span class="p">,</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">OperandExpressionTreeNode</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Empty!&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_root</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

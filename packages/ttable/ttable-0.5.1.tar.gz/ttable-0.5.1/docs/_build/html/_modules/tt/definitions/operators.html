@@ -1,0 +1,314 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tt.definitions.operators &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../author.html">Author</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tables.html"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tt.definitions.operators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Definitions for tt&#39;s built-in Boolean operators.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="BooleanOperator"><a class="viewcode-back" href="../../../api/definitions.html#tt.definitions.operators.BooleanOperator">[docs]</a><span class="k">class</span> <span class="nc">BooleanOperator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A wrapper around a Boolean operator.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precedence</span><span class="p">,</span> <span class="n">eval_func</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precedence</span> <span class="o">=</span> <span class="n">precedence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_eval_func</span> <span class="o">=</span> <span class="n">eval_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;BooleanOperator </span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">precedence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Precedence of this operator, relative to other operators.</span>
+
+<span class="sd">        :type: :class:`int &lt;python:int&gt;`</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt.definitions import TT_AND_OP, TT_OR_OP</span>
+<span class="sd">            &gt;&gt;&gt; TT_AND_OP.precedence &gt; TT_OR_OP.precedence</span>
+<span class="sd">            True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_precedence</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">eval_func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The evaluation function wrapped by this operator.</span>
+
+<span class="sd">        :type: :data:`Callable &lt;python:typing.Callable&gt;`</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt.definitions import TT_XOR_OP</span>
+<span class="sd">            &gt;&gt;&gt; TT_XOR_OP.eval_func(0, 0)</span>
+<span class="sd">            False</span>
+<span class="sd">            &gt;&gt;&gt; TT_XOR_OP.eval_func(True, False)</span>
+<span class="sd">            True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_func</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The human-readable name of this operator.</span>
+
+<span class="sd">        :type: :class:`str &lt;python:str&gt;`</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &gt;&gt;&gt; from tt.definitions import TT_NOT_OP, TT_XOR_OP</span>
+<span class="sd">            &gt;&gt;&gt; TT_NOT_OP.name</span>
+<span class="sd">            &#39;NOT&#39;</span>
+<span class="sd">            &gt;&gt;&gt; TT_XOR_OP.name</span>
+<span class="sd">            &#39;XOR&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span></div>
+
+
+<span class="n">_PRECEDENCE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;ZERO&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s1">&#39;LOW&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">&#39;MEDIUM&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s1">&#39;HIGH&#39;</span><span class="p">:</span> <span class="mi">3</span>
+<span class="p">}</span>
+
+
+<span class="n">TT_NOT_OP</span> <span class="o">=</span> <span class="n">BooleanOperator</span><span class="p">(</span><span class="n">_PRECEDENCE</span><span class="p">[</span><span class="s1">&#39;HIGH&#39;</span><span class="p">],</span>
+                            <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="ow">not</span> <span class="n">a</span><span class="p">,</span>
+                            <span class="s1">&#39;NOT&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;tt&#39;s operator implementation of a Boolean NOT.</span>
+
+<span class="sd">:type: :class:`BooleanOperator`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">TT_XOR_OP</span> <span class="o">=</span> <span class="n">BooleanOperator</span><span class="p">(</span><span class="n">_PRECEDENCE</span><span class="p">[</span><span class="s1">&#39;MEDIUM&#39;</span><span class="p">],</span>
+                            <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">!=</span> <span class="n">b</span><span class="p">,</span>
+                            <span class="s1">&#39;XOR&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;tt&#39;s operator implementation of a Boolean XOR.</span>
+
+<span class="sd">:type: :class:`BooleanOperator`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">TT_XNOR_OP</span> <span class="o">=</span> <span class="n">BooleanOperator</span><span class="p">(</span><span class="n">_PRECEDENCE</span><span class="p">[</span><span class="s1">&#39;MEDIUM&#39;</span><span class="p">],</span>
+                             <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">,</span>
+                             <span class="s1">&#39;XNOR&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;tt&#39;s operator implementation of a Boolean XNOR.</span>
+
+<span class="sd">:type: :class:`BooleanOperator`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">TT_AND_OP</span> <span class="o">=</span> <span class="n">BooleanOperator</span><span class="p">(</span><span class="n">_PRECEDENCE</span><span class="p">[</span><span class="s1">&#39;LOW&#39;</span><span class="p">],</span>
+                            <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="ow">and</span> <span class="n">b</span><span class="p">,</span>
+                            <span class="s1">&#39;AND&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;tt&#39;s operator implementation of a Boolean AND.</span>
+
+<span class="sd">:type: :class:`BooleanOperator`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">TT_NAND_OP</span> <span class="o">=</span> <span class="n">BooleanOperator</span><span class="p">(</span><span class="n">_PRECEDENCE</span><span class="p">[</span><span class="s1">&#39;LOW&#39;</span><span class="p">],</span>
+                             <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="ow">not</span><span class="p">(</span><span class="n">a</span> <span class="ow">and</span> <span class="n">b</span><span class="p">),</span>
+                             <span class="s1">&#39;NAND&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;tt&#39;s operator implementation of a Boolean NAND.</span>
+
+<span class="sd">:type: :class:`BooleanOperator`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">TT_OR_OP</span> <span class="o">=</span> <span class="n">BooleanOperator</span><span class="p">(</span><span class="n">_PRECEDENCE</span><span class="p">[</span><span class="s1">&#39;ZERO&#39;</span><span class="p">],</span>
+                           <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">a</span> <span class="ow">or</span> <span class="n">b</span><span class="p">,</span>
+                           <span class="s1">&#39;OR&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;tt&#39;s operator implementation of a Boolean OR.</span>
+
+<span class="sd">:type: :class:`BooleanOperator`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">TT_NOR_OP</span> <span class="o">=</span> <span class="n">BooleanOperator</span><span class="p">(</span><span class="n">_PRECEDENCE</span><span class="p">[</span><span class="s1">&#39;ZERO&#39;</span><span class="p">],</span>
+                            <span class="k">lambda</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="ow">not</span><span class="p">(</span><span class="n">a</span> <span class="ow">or</span> <span class="n">b</span><span class="p">),</span>
+                            <span class="s1">&#39;NOR&#39;</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;tt&#39;s operator implementation of a Boolean NOR.</span>
+
+<span class="sd">:type: :class:`BooleanOperator`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">OPERATOR_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;not&#39;</span><span class="p">:</span> <span class="n">TT_NOT_OP</span><span class="p">,</span>
+    <span class="s1">&#39;NOT&#39;</span><span class="p">:</span> <span class="n">TT_NOT_OP</span><span class="p">,</span>
+    <span class="s1">&#39;~&#39;</span><span class="p">:</span> <span class="n">TT_NOT_OP</span><span class="p">,</span>
+    <span class="s1">&#39;!&#39;</span><span class="p">:</span> <span class="n">TT_NOT_OP</span><span class="p">,</span>
+
+    <span class="s1">&#39;xor&#39;</span><span class="p">:</span> <span class="n">TT_XOR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;XOR&#39;</span><span class="p">:</span> <span class="n">TT_XOR_OP</span><span class="p">,</span>
+
+    <span class="s1">&#39;xnor&#39;</span><span class="p">:</span> <span class="n">TT_XNOR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;XNOR&#39;</span><span class="p">:</span> <span class="n">TT_XNOR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;nxor&#39;</span><span class="p">:</span> <span class="n">TT_XNOR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;NXOR&#39;</span><span class="p">:</span> <span class="n">TT_XNOR_OP</span><span class="p">,</span>
+
+    <span class="s1">&#39;and&#39;</span><span class="p">:</span> <span class="n">TT_AND_OP</span><span class="p">,</span>
+    <span class="s1">&#39;AND&#39;</span><span class="p">:</span> <span class="n">TT_AND_OP</span><span class="p">,</span>
+    <span class="s1">&#39;&amp;&amp;&#39;</span><span class="p">:</span> <span class="n">TT_AND_OP</span><span class="p">,</span>
+    <span class="s1">&#39;&amp;&#39;</span><span class="p">:</span> <span class="n">TT_AND_OP</span><span class="p">,</span>
+    <span class="s1">&#39;/</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">TT_AND_OP</span><span class="p">,</span>
+
+    <span class="s1">&#39;nand&#39;</span><span class="p">:</span> <span class="n">TT_NAND_OP</span><span class="p">,</span>
+    <span class="s1">&#39;NAND&#39;</span><span class="p">:</span> <span class="n">TT_NAND_OP</span><span class="p">,</span>
+
+    <span class="s1">&#39;or&#39;</span><span class="p">:</span> <span class="n">TT_OR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;OR&#39;</span><span class="p">:</span> <span class="n">TT_OR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;||&#39;</span><span class="p">:</span> <span class="n">TT_OR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;|&#39;</span><span class="p">:</span> <span class="n">TT_OR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">/&#39;</span><span class="p">:</span> <span class="n">TT_OR_OP</span><span class="p">,</span>
+
+    <span class="s1">&#39;nor&#39;</span><span class="p">:</span> <span class="n">TT_NOR_OP</span><span class="p">,</span>
+    <span class="s1">&#39;NOR&#39;</span><span class="p">:</span> <span class="n">TT_NOR_OP</span>
+<span class="p">}</span>
+<span class="sd">&quot;&quot;&quot;A mapping of Boolean operators.</span>
+
+<span class="sd">This mapping serves to define all valid operator strings and maps them to the</span>
+<span class="sd">appropriate :class:`BooleanOperator` object defining the operator behavior.</span>
+
+<span class="sd">:type: Dict{:class:`str &lt;python:str&gt;`: :class:`BooleanOperator`}</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">MAX_OPERATOR_STR_LEN</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">OPERATOR_MAPPING</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="sd">&quot;&quot;&quot;The length of the longest operator from :data:`OPERATOR_MAPPING`.</span>
+
+<span class="sd">:type: :class:`int &lt;python:int&gt;`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

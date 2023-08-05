@@ -1,0 +1,291 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tt.trees.tree_node &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../author.html">Author</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tables.html"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tt.trees.tree_node</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A node, and related classes, for use in expression trees.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">..definitions</span> <span class="k">import</span> <span class="n">MAX_OPERATOR_STR_LEN</span><span class="p">,</span> <span class="n">OPERATOR_MAPPING</span>
+
+
+<span class="n">_DEFAULT_INDENT_SIZE</span> <span class="o">=</span> <span class="n">MAX_OPERATOR_STR_LEN</span> <span class="o">+</span> <span class="mi">1</span>
+
+
+<div class="viewcode-block" id="ExpressionTreeNode"><a class="viewcode-back" href="../../../api/trees.html#tt.trees.tree_node.ExpressionTreeNode">[docs]</a><span class="k">class</span> <span class="nc">ExpressionTreeNode</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;A base class for expression tree nodes.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol_name</span><span class="p">,</span> <span class="n">l_child</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r_child</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_symbol_name</span> <span class="o">=</span> <span class="n">symbol_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_l_child</span> <span class="o">=</span> <span class="n">l_child</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_r_child</span> <span class="o">=</span> <span class="n">r_child</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbol_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The string operator/operand name wrapped in this node.</span>
+
+<span class="sd">        :type: :class:`str &lt;python:str&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbol_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">l_child</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; This node&#39;s left child; ``None`` indicates the absence of a child.</span>
+
+<span class="sd">        :type: :class:`ExpressionTreeNode`, optional</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_l_child</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">r_child</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; This node&#39;s left child; ``None`` indicates the absence of a child.</span>
+
+<span class="sd">        :type: :class:`ExpressionTreeNode`, optional</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r_child</span>
+
+<div class="viewcode-block" id="ExpressionTreeNode.evaluate"><a class="viewcode-back" href="../../../api/trees.html#tt.trees.tree_node.ExpressionTreeNode.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursively evaluate this node.</span>
+
+<span class="sd">        This is an interface that should be defined in sub-classes.</span>
+
+<span class="sd">        :param input_dict: A dictionary mapping expression symbols to the value</span>
+<span class="sd">            for which they should be subsituted in expression evaluation.</span>
+<span class="sd">        :type input_dict: Dict{:class:`str &lt;python:str&gt;`: truthy}</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            Node evaluation does no checking of the validity of inputs; they</span>
+<span class="sd">            should be check before being passed here.</span>
+
+<span class="sd">        :returns: The evaluation of the tree rooted at this node.</span>
+<span class="sd">        :rtype: :class:`bool &lt;python:bool&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s1">&#39;Expression tree nodes must implement `evaluate`.&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">indent_size</span><span class="o">=</span><span class="n">_DEFAULT_INDENT_SIZE</span><span class="p">,</span> <span class="n">stem_list</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">trunk</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="n">indent_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">trunk</span> <span class="o">=</span> <span class="n">trunk</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">stem_list</span><span class="p">)</span>
+            <span class="n">stem</span> <span class="o">=</span> <span class="s1">&#39;`&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="n">indent_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="s1">&#39;-&#39;</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="n">trunk</span> <span class="o">+</span> <span class="n">stem</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbol_name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_symbol_name</span>
+
+        <span class="n">ret</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r_child</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(</span>
+                <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">indent_size</span><span class="o">=</span><span class="n">indent_size</span><span class="p">,</span>
+                <span class="n">stem_list</span><span class="o">=</span><span class="n">stem_list</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;|&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_l_child</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_l_child</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(</span>
+                <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">indent_size</span><span class="o">=</span><span class="n">indent_size</span><span class="p">,</span>
+                <span class="n">stem_list</span><span class="o">=</span><span class="n">stem_list</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39; &#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="BinaryOperatorExpressionTreeNode"><a class="viewcode-back" href="../../../api/trees.html#tt.trees.tree_node.BinaryOperatorExpressionTreeNode">[docs]</a><span class="k">class</span> <span class="nc">BinaryOperatorExpressionTreeNode</span><span class="p">(</span><span class="n">ExpressionTreeNode</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;An expression tree node for binary operators.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator_str</span><span class="p">,</span> <span class="n">l_child</span><span class="p">,</span> <span class="n">r_child</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BinaryOperatorExpressionTreeNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">operator_str</span><span class="p">,</span> <span class="n">l_child</span><span class="p">,</span> <span class="n">r_child</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_operator</span> <span class="o">=</span> <span class="n">OPERATOR_MAPPING</span><span class="p">[</span><span class="n">operator_str</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The actual operator object wrapped in this node.</span>
+
+<span class="sd">        :type: :class:`BooleanOperator\</span>
+<span class="sd">                       &lt;tt.definitions.operators.BooleanOperator&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_operator</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">eval_func</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">l_child</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">input_dict</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r_child</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">input_dict</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="UnaryOperatorExpressionTreeNode"><a class="viewcode-back" href="../../../api/trees.html#tt.trees.tree_node.UnaryOperatorExpressionTreeNode">[docs]</a><span class="k">class</span> <span class="nc">UnaryOperatorExpressionTreeNode</span><span class="p">(</span><span class="n">ExpressionTreeNode</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;An expression tree node for unary operators.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator_str</span><span class="p">,</span> <span class="n">l_child</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">UnaryOperatorExpressionTreeNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">operator_str</span><span class="p">,</span> <span class="n">l_child</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_operator</span> <span class="o">=</span> <span class="n">OPERATOR_MAPPING</span><span class="p">[</span><span class="n">operator_str</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The actual operator object wrapped in this node.</span>
+
+<span class="sd">        :type: :class:`BooleanOperator\</span>
+<span class="sd">                       &lt;tt.definitions.operators.BooleanOperator&gt;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_operator</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">eval_func</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">l_child</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">input_dict</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="OperandExpressionTreeNode"><a class="viewcode-back" href="../../../api/trees.html#tt.trees.tree_node.OperandExpressionTreeNode">[docs]</a><span class="k">class</span> <span class="nc">OperandExpressionTreeNode</span><span class="p">(</span><span class="n">ExpressionTreeNode</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;An expression tree node for operands.</span>
+
+<span class="sd">    Nodes of this type will always be leaves in an expression tree.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operand_str</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">OperandExpressionTreeNode</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">operand_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_name</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol_name</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">input_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol_name</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

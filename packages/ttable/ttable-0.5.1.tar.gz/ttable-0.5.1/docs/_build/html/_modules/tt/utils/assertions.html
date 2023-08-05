@@ -1,0 +1,310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tt.utils.assertions &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../author.html">Author</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tables.html"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tt.utils.assertions</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Utilities for asserting inputs and states.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">..definitions</span> <span class="k">import</span> <span class="n">BOOLEAN_VALUES</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="p">(</span><span class="n">DuplicateSymbolError</span><span class="p">,</span> <span class="n">ExtraSymbolError</span><span class="p">,</span>
+                      <span class="n">InvalidBooleanValueError</span><span class="p">,</span> <span class="n">MissingSymbolError</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="assert_iterable_contains_all_expr_symbols"><a class="viewcode-back" href="../../../api/utils.html#tt.utils.assertions.assert_iterable_contains_all_expr_symbols">[docs]</a><span class="k">def</span> <span class="nf">assert_iterable_contains_all_expr_symbols</span><span class="p">(</span><span class="n">iter_of_strs</span><span class="p">,</span> <span class="n">reference_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assert a one-to-one presence of all symbols in the passed iterable.</span>
+
+<span class="sd">    :param iter_of_strs: An iterable of strings to assert.</span>
+<span class="sd">    :type iter_of_strs: Iterable[:class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">    :param reference_set: A set of strings, each of which will be asserted to</span>
+<span class="sd">        be present in the passed iterable.</span>
+<span class="sd">    :type reference_set: Set[:class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This function will consume ``iter_of_strs``.</span>
+
+<span class="sd">    :raises DuplicateSymbolError: If the passed iterable contains more than one</span>
+<span class="sd">        of a given symbol.</span>
+<span class="sd">    :raises ExtraSymbolError: If the passed iterable contains symbols not</span>
+<span class="sd">        present in the reference set.</span>
+<span class="sd">    :raises MissingSymbolError: If the passed iterable is missing symbols</span>
+<span class="sd">        present in the reference set.</span>
+
+<span class="sd">    This assertion is used for validation of user-specified sets of symbols.</span>
+<span class="sd">    Below are some example uses.</span>
+
+<span class="sd">    Valid input::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt.utils.assertions import (</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols)</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols(</span>
+<span class="sd">        ...             (&#39;A&#39;, &#39;B&#39;, &#39;C&#39;,),</span>
+<span class="sd">        ...             {&#39;A&#39;, &#39;B&#39;, &#39;C&#39;},</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ... except Exception as e:</span>
+<span class="sd">        ...     print(type(e))</span>
+<span class="sd">        ... else:</span>
+<span class="sd">        ...     print(&#39;All good!&#39;)</span>
+<span class="sd">        ...</span>
+<span class="sd">        All good!</span>
+
+<span class="sd">    Producing a :exc:`DuplicateSymbolError\</span>
+<span class="sd">    &lt;tt.errors.symbols.DuplicateSymbolError&gt;`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt.utils.assertions import (</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols)</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols(</span>
+<span class="sd">        ...             (&#39;A&#39;, &#39;A&#39;, &#39;B&#39;,),</span>
+<span class="sd">        ...             {&#39;A&#39;, &#39;B&#39;}</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ... except Exception as e:</span>
+<span class="sd">        ...     print(type(e))</span>
+<span class="sd">        ...</span>
+<span class="sd">        &lt;class &#39;tt.errors.symbols.DuplicateSymbolError&#39;&gt;</span>
+
+<span class="sd">    Producing an :exc:`ExtraSymbolError\</span>
+<span class="sd">    &lt;tt.errors.symbols.ExtraSymbolError&gt;`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt.utils.assertions import (</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols)</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols(</span>
+<span class="sd">        ...             (&#39;A&#39;, &#39;B&#39;, &#39;C&#39;,),</span>
+<span class="sd">        ...             {&#39;A&#39;, &#39;B&#39;}</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ... except Exception as e:</span>
+<span class="sd">        ...     print(type(e))</span>
+<span class="sd">        ...</span>
+<span class="sd">        &lt;class &#39;tt.errors.symbols.ExtraSymbolError&#39;&gt;</span>
+
+<span class="sd">    Producing a :exc:`MissingSymbolError\</span>
+<span class="sd">    &lt;tt.errors.symbols.MissingSymbolError&gt;`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt.utils.assertions import (</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols)</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     assert_iterable_contains_all_expr_symbols(</span>
+<span class="sd">        ...             (&#39;A&#39;, &#39;B&#39;,),</span>
+<span class="sd">        ...             {&#39;A&#39;, &#39;B&#39;, &#39;C&#39;}</span>
+<span class="sd">        ...     )</span>
+<span class="sd">        ... except Exception as e:</span>
+<span class="sd">        ...     print(type(e))</span>
+<span class="sd">        ...</span>
+<span class="sd">        &lt;class &#39;tt.errors.symbols.MissingSymbolError&#39;&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">passed_symbol_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">iter_of_strs</span><span class="p">)</span>
+    <span class="n">passed_symbol_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">passed_symbol_list</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">passed_symbol_list</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">passed_symbol_set</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">DuplicateSymbolError</span><span class="p">(</span><span class="s1">&#39;Received duplicate symbols&#39;</span><span class="p">)</span>
+
+    <span class="n">passed_excess_set</span> <span class="o">=</span> <span class="n">passed_symbol_set</span> <span class="o">-</span> <span class="n">reference_set</span>
+    <span class="n">reference_excess_set</span> <span class="o">=</span> <span class="n">reference_set</span> <span class="o">-</span> <span class="n">passed_symbol_set</span>
+
+    <span class="k">if</span> <span class="n">reference_excess_set</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Did not receive value for the following symbols: &#39;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span> <span class="k">for</span> <span class="n">sym</span> <span class="ow">in</span> <span class="n">reference_excess_set</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">MissingSymbolError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">passed_excess_set</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Received unexpected symbols: &#39;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sym</span><span class="p">)</span> <span class="k">for</span> <span class="n">sym</span> <span class="ow">in</span> <span class="n">passed_excess_set</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ExtraSymbolError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="assert_all_valid_keys"><a class="viewcode-back" href="../../../api/utils.html#tt.utils.assertions.assert_all_valid_keys">[docs]</a><span class="k">def</span> <span class="nf">assert_all_valid_keys</span><span class="p">(</span><span class="n">symbol_input_dict</span><span class="p">,</span> <span class="n">symbol_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Assert that all keys in the passed input dict are valid.</span>
+
+<span class="sd">    Valid keys are considered those that are present in the passed set of</span>
+<span class="sd">    symbols and that map to valid Boolean values. Dictionaries cannot have</span>
+<span class="sd">    duplicate keys, so no duplicate checking is necessary.</span>
+
+<span class="sd">    :param symbol_input_dict: A dict containing symbol names mapping to what</span>
+<span class="sd">        should be Boolean values.</span>
+<span class="sd">    :type symbol_input_dict: Dict{:class:`str &lt;python:str&gt;`: truthy}</span>
+
+<span class="sd">    :param symbol_set: A set of the symbol names expected to be present as keys</span>
+<span class="sd">        in ``symbol_input_dict``.</span>
+<span class="sd">    :type symbol_set: Set[:class:`str &lt;python:str&gt;`]</span>
+
+<span class="sd">    :raises  ExtraSymbolError: If any keys in the passed input dict are not</span>
+<span class="sd">        present in the passed set of symbols.</span>
+<span class="sd">    :raises InvalidBooleanValueError: If any values in the passed input dict</span>
+<span class="sd">        are not valid Boolean values (``1``, ``0``, ``True``, or ``False``).</span>
+
+<span class="sd">    This assert is used for validation of user-specified kwargs which map</span>
+<span class="sd">    symbols to expected values. Below are some example uses.</span>
+
+<span class="sd">    Valid input::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt.utils.assertions import assert_all_valid_keys</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     assert_all_valid_keys({&#39;A&#39;: True, &#39;B&#39;: False},</span>
+<span class="sd">        ...                           {&#39;A&#39;, &#39;B&#39;})</span>
+<span class="sd">        ... except Exception as e:</span>
+<span class="sd">        ...     print(type(e))</span>
+<span class="sd">        ... else:</span>
+<span class="sd">        ...     print(&#39;All good!&#39;)</span>
+<span class="sd">        ...</span>
+<span class="sd">        All good!</span>
+
+<span class="sd">    Producing an :exc:`ExtraSymbolError\</span>
+<span class="sd">    &lt;tt.errors.symbols.ExtraSymbolError&gt;`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt.utils.assertions import assert_all_valid_keys</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     assert_all_valid_keys({&#39;A&#39;: 1, &#39;B&#39;: 0}, {&#39;A&#39;})</span>
+<span class="sd">        ... except Exception as e:</span>
+<span class="sd">        ...     print(type(e))</span>
+<span class="sd">        ...</span>
+<span class="sd">        &lt;class &#39;tt.errors.symbols.ExtraSymbolError&#39;&gt;</span>
+
+<span class="sd">    Producing an :exc:`InvalidBooleanValueError\</span>
+<span class="sd">    &lt;tt.errors.evaluation.InvalidBooleanValueError&gt;`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from tt.utils.assertions import assert_all_valid_keys</span>
+<span class="sd">        &gt;&gt;&gt; try:</span>
+<span class="sd">        ...     assert_all_valid_keys({&#39;A&#39;: &#39;brian&#39;, &#39;B&#39;: True},</span>
+<span class="sd">        ...                           {&#39;A&#39;, &#39;B&#39;})</span>
+<span class="sd">        ... except Exception as e:</span>
+<span class="sd">        ...     print(type(e))</span>
+<span class="sd">        ...</span>
+<span class="sd">        &lt;class &#39;tt.errors.evaluation.InvalidBooleanValueError&#39;&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">symbol_input_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">symbol_set</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ExtraSymbolError</span><span class="p">(</span>
+                <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot; is not a symbol in this expression&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BOOLEAN_VALUES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidBooleanValueError</span><span class="p">(</span>
+                <span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot; passed as value for &quot;</span><span class="si">{}</span><span class="s1">&quot; is not a valid Boolean &#39;</span>
+                <span class="s1">&#39;value&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tt.cli.core &#8212; tt 0.5.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.5.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  <div class="document">
+    
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static/logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">the Boolean expression toolbox</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=welchbj&repo=tt&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../prior_art.html">Prior Art</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../special_thanks.html">Special Thanks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../author.html">Author</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/cli.html"><code class="docutils literal"><span class="pre">cli</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/definitions.html"><code class="docutils literal"><span class="pre">definitions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/errors.html"><code class="docutils literal"><span class="pre">errors</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/expressions.html"><code class="docutils literal"><span class="pre">expressions</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/tables.html"><code class="docutils literal"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/trees.html"><code class="docutils literal"><span class="pre">trees</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/utils.html"><code class="docutils literal"><span class="pre">utils</span></code></a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tt.cli.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Core command-line interface for tt.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="k">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawTextHelpFormatter</span>
+
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">EmptyExpressionError</span><span class="p">,</span> <span class="n">GrammarError</span>
+<span class="kn">from</span> <span class="nn">..expressions</span> <span class="k">import</span> <span class="n">BooleanExpression</span>
+<span class="kn">from</span> <span class="nn">..tables</span> <span class="k">import</span> <span class="n">TruthTable</span>
+<span class="kn">from</span> <span class="nn">..version</span> <span class="k">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">print_err</span><span class="p">,</span> <span class="n">print_info</span>
+
+
+<span class="k">def</span> <span class="nf">_add_expression_arg</span><span class="p">(</span><span class="n">parser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add the expression argument to a parser.&quot;&quot;&quot;</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;expression&#39;</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Boolean expression to process; surround it in quotes to</span><span class="se">\n</span><span class="s1">&#39;</span>
+             <span class="s1">&#39;avoid escaping control characters in your terminal&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_tokens</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run the ``tokens`` command.&quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">BooleanExpression</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+    <span class="n">print_info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">tokens</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_postfix_tokens</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run the ``postfix-tokens`` command.&quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">BooleanExpression</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+    <span class="n">print_info</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">postfix_tokens</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_tree</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run the ``tree`` command.&quot;&quot;&quot;</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">BooleanExpression</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+    <span class="n">print_info</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">tree</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_table</span><span class="p">(</span><span class="n">opts</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Run the ``table`` command.&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">TruthTable</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+    <span class="n">print_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_parsed_args"><a class="viewcode-back" href="../../../api/cli.html#tt.cli.core.get_parsed_args">[docs]</a><span class="k">def</span> <span class="nf">get_parsed_args</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the parsed command line arguments.</span>
+
+<span class="sd">    :param args: The command-line args to parse; if omitted,</span>
+<span class="sd">        :data:`sys.argv &lt;python:sys.argv&gt;` will be used.</span>
+<span class="sd">    :type args: List[str], optional</span>
+
+<span class="sd">    :return: The :class:`Namespace &lt;python:argparse.Namespace&gt;` object holding</span>
+<span class="sd">        the parsed args.</span>
+<span class="sd">    :rtype: :class:`argparse.Namespace &lt;python:argparse.Namespace&gt;`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">prog</span><span class="o">=</span><span class="s1">&#39;tt&#39;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s1">&#39;tt is a library and command-line utility written in Python for</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;interacting with Boolean Algebra expressions. tt is open source</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;software and released under the MIT License. Please use</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;`tt --help` for more information.&#39;</span><span class="p">),</span>
+        <span class="n">formatter_class</span><span class="o">=</span><span class="n">RawTextHelpFormatter</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;--version&#39;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="s1">&#39;v&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">__version__</span><span class="p">),</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;program version&#39;</span><span class="p">)</span>
+
+    <span class="n">sub_parsers</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_subparsers</span><span class="p">(</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;the tt command to run&#39;</span><span class="p">)</span>
+
+    <span class="c1"># tokens sub-parser</span>
+    <span class="n">parser_tokens</span> <span class="o">=</span> <span class="n">sub_parsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s1">&#39;tokens&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;print the expression</span><span class="se">\&#39;</span><span class="s1">s tokens in order of appearance&#39;</span><span class="p">)</span>
+    <span class="n">_add_expression_arg</span><span class="p">(</span><span class="n">parser_tokens</span><span class="p">)</span>
+    <span class="n">parser_tokens</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">_tokens</span><span class="p">)</span>
+
+    <span class="c1"># postfix-tokens sub-parser</span>
+    <span class="n">parser_postfix_tokens</span> <span class="o">=</span> <span class="n">sub_parsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s1">&#39;postfix-tokens&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;print the expression</span><span class="se">\&#39;</span><span class="s1">s tokens in postfix order&#39;</span><span class="p">)</span>
+    <span class="n">_add_expression_arg</span><span class="p">(</span><span class="n">parser_postfix_tokens</span><span class="p">)</span>
+    <span class="n">parser_postfix_tokens</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">_postfix_tokens</span><span class="p">)</span>
+
+    <span class="c1"># tree sub-parser</span>
+    <span class="n">parser_tree</span> <span class="o">=</span> <span class="n">sub_parsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s1">&#39;tree&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;print the expression</span><span class="se">\&#39;</span><span class="s1">s tree representation&#39;</span><span class="p">)</span>
+    <span class="n">_add_expression_arg</span><span class="p">(</span><span class="n">parser_tree</span><span class="p">)</span>
+    <span class="n">parser_tree</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">_tree</span><span class="p">)</span>
+
+    <span class="c1"># table sub-parser</span>
+    <span class="n">parser_table</span> <span class="o">=</span> <span class="n">sub_parsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span>
+        <span class="s1">&#39;table&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;print the expression</span><span class="se">\&#39;</span><span class="s1">s truth table&#39;</span><span class="p">)</span>
+    <span class="n">_add_expression_arg</span><span class="p">(</span><span class="n">parser_table</span><span class="p">)</span>
+    <span class="n">parser_table</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">_table</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../api/cli.html#tt.cli.core.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The main routine to run the tt command-line interface.</span>
+
+<span class="sd">    :param args: The command-line arguments.</span>
+<span class="sd">    :type args: List[str], optional</span>
+
+<span class="sd">    :return: The exit code of the program.</span>
+<span class="sd">    :rtype: int</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">opts</span> <span class="o">=</span> <span class="n">get_parsed_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">opts</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">print_err</span><span class="p">(</span><span class="s1">&#39;No command specified; use `tt --help` for options.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">2</span>
+
+        <span class="n">opts</span><span class="o">.</span><span class="n">expression</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">expression</span><span class="p">)</span>
+        <span class="n">func</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">except</span> <span class="n">EmptyExpressionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">print_err</span><span class="p">(</span><span class="s1">&#39;Empty expressions are invalid!&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">except</span> <span class="n">GrammarError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">print_err</span><span class="p">(</span><span class="s1">&#39;Error! &#39;</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">print_err</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">expr_str</span><span class="p">)</span>
+        <span class="n">print_err</span><span class="p">(</span><span class="s1">&#39; &#39;</span> <span class="o">*</span> <span class="n">e</span><span class="o">.</span><span class="n">error_pos</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">print_err</span><span class="p">(</span><span class="s1">&#39;Received unexpected error; re-raising it!&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">e</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+    <div class="clearer"></div>
+  </div>
+    <div class="footer">
+      &copy;2017, Brian Welch.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
