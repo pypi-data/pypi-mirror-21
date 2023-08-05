@@ -1,0 +1,54 @@
+Metadata-Version: 1.1
+Name: TiffCapture
+Version: 0.1.6
+Summary: Brings the power of OpenCV to TIFF videos; provides interface to multi-part TIFFs compatible with OpenCV's VideoCapture.
+Home-page: https://github.com/cdw/TiffCapture
+Author: Dave Williams
+Author-email: cdave@uw.edu
+License: LICENSE.txt
+Download-URL: https://github.com/cdw/TiffCapture/archive/0.1.6.tar.gz
+Description: ===========
+        tiffcapture
+        ===========
+        
+        Provides a PIL based capture interface to multi-part tiffs, allowing them to be used more easily with OpenCV. This allows you to use OpenCV's image and video processing capabilities with tiff stacks, a video form frequently encountered in scientific video as it is lossless and supports custom metadata. 
+        
+        Examples
+        ========
+        
+        A minimal example looks like this::
+        
+            import tiffcapture as tc
+            import matplotlib.pyplot as plt
+            tiff = tc.opentiff(filename)
+            plt.imshow(tiff.read()[1])
+            plt.show()
+            tiff.release()
+            
+        
+        More real world usage looks like this::
+        
+            import tiffcapture as tc
+            import cv2
+            tiff = tc.opentiff(filename) #open img
+            _, first_img = tiff.retrieve() 
+            cv2.namedWindow('video')
+            for img in tiff:
+                tempimg = cv2.absdiff(first_img, img) # bkgnd sub
+                _, tempimg = cv2.threshold(tempimg, 5, 255, 
+                    cv2.THRESH_BINARY) # convert to binary
+                cv2.imshow('video', tempimg)
+                cv2.waitKey(80)
+            cv2.destroyWindow('video')
+            
+        
+        
+Keywords: tiff,PIL,OpenCV
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Intended Audience :: Science/Research
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Multimedia :: Graphics
+Classifier: Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator
