@@ -1,0 +1,17 @@
+{% extends 'dragonpay_soapxml/base.xml' %}
+
+{% block body %}
+<tns:RequestPayoutEx xmlns="http://api.dragonpay.ph/">
+   <tns:apiKey>{{ dp_merchant_apikey }}</tns:apiKey>
+   <tns:merchantTxnId>{{ txn_id }}</tns:merchantTxnId>
+   <tns:userName>{{ user_name }}</tns:userName>
+   <tns:amount>{{ amount }}</tns:amount>
+   <tns:currency>{{ currency|default:"PHP" }}</tns:currency>
+   <tns:description>{{ description }}</tns:description>
+   <tns:procId>{{ processor_id }}</tns:procId>
+   <tns:procDetail>{{ processor_detail }}</tns:procDetail>
+   <tns:runDate>{{ timestamp|date:"c" }}</tns:runDate>
+   <tns:email>{{ email }}</tns:email>
+   <tns:mobileNo>{{ mobile }}</tns:mobileNo>
+ </tns:RequestPayoutEx>
+{% endblock %}
