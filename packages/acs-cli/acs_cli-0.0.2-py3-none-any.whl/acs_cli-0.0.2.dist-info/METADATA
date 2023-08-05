@@ -1,0 +1,154 @@
+Metadata-Version: 2.0
+Name: acs-cli
+Version: 0.0.2
+Summary: A command line interface to the Alfresco Content Services REST API
+Home-page: https://git.alfresco.com/mward/acs-cli
+Author: Matt Ward
+Author-email: matt.ward@alfresco.com
+License: UNKNOWN
+Keywords: alfresco acs rest cli
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Utilities
+Classifier: Programming Language :: Python :: 3
+Requires-Dist: jmespath
+Requires-Dist: requests
+Provides-Extra: dev
+Requires-Dist: check-manifest; extra == 'dev'
+Provides-Extra: test
+Requires-Dist: coverage; extra == 'test'
+
+# ACS-CLI
+
+## What is it?
+
+A command line tool for accessing Alfresco Content Services repository servers through the public REST APIs.
+
+The motivation for building this tool is two-fold: firstly as an interesting way for me to learn python; and
+secondly it's the tool I always wish existed. The code probably isn't very _pythonic_ or well organised, but
+hopefully this will get better :-)
+
+
+## Example usage
+
+Without any arguments, you may log in to http://localhost:8080/alfresco using the username 'admin' and will be prompted for a password.
+
+```
+mward@holly:acs-cli$ ./acs login
+Logging in admin to http://localhost:8080/alfresco
+Password:
+mward@holly:acs-cli$
+```
+
+Use the `--username` or `--password` options to log in with different credentials:
+
+```
+mward@holly:acs-cli$ ./acs login --username=asmith --password=ban4n4@!
+```
+
+Once logged in, APIs may be exercised by using the general format:
+
+```
+acs <api or command> <subcommand> [options...] <arguments...>
+```
+
+or by invoking python explicitly:
+
+```
+python3 acs.py <api or command> <subcommand> [options...] <arguments...>
+```
+
+Here we see the people API being used to create a person entity:
+
+```
+mward@holly:acs-cli$ ./acs people create-person asmith ban4n4@! asmith@example.com Alison
+{
+    "entry": {
+        "firstName": "Alison",
+        "id": "asmith",
+        "emailNotificationsEnabled": true,
+        "email": "asmith@example.com",
+        "enabled": true,
+        "company": {}
+    }
+}
+```
+
+All API operations accept the `--query` option to specify a JMESPath expression.
+Here for example, we choose to only display the `id` and `email` fields of the returned `entry` object:
+
+```
+mward@holly:acs-cli$ ./acs people get-person jbloggs --query 'entry.[id,email]'
+[
+    "jbloggs",
+    "jbloggs@example.com"
+]
+```
+
+And here, we use the `--query` option to view `id`, `firstName` and `email` of _each_ entry
+in the list of people:
+
+```
+mward@holly:acs-cli$ ./acs people list-people --query='list.entries[].entry.[id,firstName,email]'
+[
+    [
+        "admin",
+        "Administrator",
+        "admin@alfresco.com"
+    ],
+    [
+        "guest",
+        "Guest",
+        null
+    ],
+    [
+        "jbloggs",
+        "Joe",
+        "jbloggs@example.com"
+    ]
+]
+```
+
+Any _list_ operation that may be paged can be used with the `--max-items` and `--skip-count` options,
+used here to show two results after skipping the first 4. This may be thought of as showing the _third_ page of results.
+```
+mward@holly:acs-cli$ ./acs people list-people --query='list.entries[].entry.[firstName]' --max-items=2 --skip-count=4
+[
+    [
+        "Joe10"
+    ],
+    [
+        "Joe11"
+    ]
+]
+```
+
+The _sites_ API may be used to list "sites" as used extensively in the Share application. This
+is a paged API and here we use it without the `--max-items` and `--skip-count` options which
+default to 10 and 0 respectively:
+
+```
+mward@holly:acs-cli$ ./acs sites list-sites --query='list.entries[].entry'
+[
+    {
+        "title": "accounts",
+        "role": "SiteManager",
+        "guid": "80dbd63c-3dbf-4005-bd16-e324fa8b4517",
+        "id": "accounts",
+        "visibility": "PUBLIC",
+        "preset": "site-dashboard"
+    },
+    {
+        "title": "Sample: Web Site Design Project",
+        "guid": "b4cff62a-664d-4d45-9302-98723eac1319",
+        "id": "swsdp",
+        "visibility": "PUBLIC",
+        "description": "This is a Sample Alfresco Team site.",
+        "preset": "site-dashboard"
+    }
+]
+```
+
+
+
