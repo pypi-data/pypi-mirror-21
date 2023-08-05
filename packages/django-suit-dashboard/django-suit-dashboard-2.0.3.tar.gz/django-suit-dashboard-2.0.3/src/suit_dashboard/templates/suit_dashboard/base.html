@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% if not is_popup %}
+  {% block breadcrumbs %}
+    {% if crumbs %}
+      {% if suit %}
+        <ul class="breadcrumb">
+          {% for crumb in crumbs %}
+            {% if forloop.last %}
+              <li class="active">{{ crumb.name }}</li>
+            {% else %}
+              <li>
+                <a {% if crumb.url %}href="{% url crumb.url %}"{% endif %}>{{ crumb.name }}</a>
+                <span class="divider">&raquo;</span>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="breadcrumbs">
+          {% for crumb in crumbs %}
+            {% if forloop.last %}
+              {{ crumb.name }}
+            {% else %}
+              <a href="{% url crumb.url %}">{{ crumb.name }}</a> &rsaquo;
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endif %}
+  {% endblock %}
+{% endif %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link href="{% static 'suit_dashboard/base.css' %}" rel="stylesheet">
+  {% block dashboard_css %}{% endblock %}
+{% endblock %}
+
+{% block extrajs %}
+  {{ block.super }}
+  {% block dashboard_js %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+  {% for row in dashboard_grid.rows %}
+    {% include "suit_dashboard/row.html" %}
+  {% endfor %}
+{% endblock %}
