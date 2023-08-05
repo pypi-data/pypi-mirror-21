@@ -1,0 +1,96 @@
+###############################################################################
+#                                   Propel
+#
+# A deploy config file to deploy Harambe apps
+#
+# Go to `https://github.com/mardix/propel` for more info and config options
+#
+# How to run?
+#
+# After `pip install propel` on the production applicationr, you can run the following
+# commands:
+#
+#   'propel -w' on the hosting applicationr to launch a web application
+#   'propel -k $worker-name' on the hosting applicationr to launch a worker application by name
+#   'propel -s $script-name' on the hosting applicationr to execute a script by name
+#
+###############################################################################
+
+
+# Virtualenv
+#
+virtualenv:
+
+  # *Required - The name of the virtual environment
+  name: ""
+
+
+# WEB:
+# list of dict of web sites/application to deploy
+web:
+  -
+    # Required - The site name
+    name: ""
+
+    # The application entry point
+    application: "harambepy:app"
+
+    # The environment to use. ie: app="main:prod"
+    environment: app="main:prod"
+
+    # Nginx related config
+    nginx:
+      aliases:
+        "/static": "app/static"
+        "/uploads": "app/var/uploads"
+
+    # List of host to deploy it
+    hosts:
+      - web
+
+
+# SCRIPTS:
+# A dict of all scripts to execute
+scripts:
+
+  # Scripts to before anything else
+  before_all:
+    -
+      command: "harambe setup"
+      environment: app="main:prod"
+
+
+  # Scripts to run when undeploying
+  undeploy:
+    - command: ""
+
+
+# WORKERS:
+# Run custom script or app in the background using supervisor
+workers:
+
+  # Tasks:
+  tasks:
+    -
+      name: "worker-task-1"
+      command: "" # harambe cmd
+      environment: app="main:prod"
+
+
+### END OF PROPEL
+
+
+################################################################################
+# Harambe specific config
+# ------------------------------------------------------------------------------
+# From command line
+# - harambe deploy
+#
+# contain a k/v store of remote/hosts to push application to
+# Require local git and remote git for push to work
+deploy-remotes:
+  # remote name containing list of git hosts
+  # > harambe deploy web
+  web:
+    - ssh://user@host[20-24]:/path.git
+
