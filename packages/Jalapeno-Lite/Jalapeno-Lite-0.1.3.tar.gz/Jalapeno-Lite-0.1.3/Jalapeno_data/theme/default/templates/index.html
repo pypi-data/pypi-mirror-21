@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block css %}
+
+	
+
+<link rel='stylesheet' media="screen and (min-width:1024px)"  href='{{asset.css.posts}}'>
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='{{asset.icss.iposts}}'>
+{% endblock %}
+
+{% block title %}
+Posts
+{% endblock %}
+
+
+{% block content %}
+
+<ul class="post_list">
+    {% for page in pagination.items %}
+		<li class="post_preview">
+			<div class="post_header">
+				<div class="post_title">{{ page.meta.title }}</div>
+				<div class="post_info">{{ page.meta.date }} | 分类于:  <a class = 'tag' href="{{ url_for('tags.posts', tag=page.meta.tag) }}">{{page.meta.tag}}</a></div>
+			</div>
+			<div class="post_body">{{page.html| excerpt}}...</div>
+			<div class="more link_tag"><a href="{{ url_for('article.page', path=page.path) }}">More -></a></div>
+		</li>
+	{% endfor %}
+	{% import "pagination.html" as Pag %}
+	{{Pag.pager(pagination)}}
+</ul>
+{% endblock %}
+
+{% block js %}
+        
+
+{% endblock %}
+
+

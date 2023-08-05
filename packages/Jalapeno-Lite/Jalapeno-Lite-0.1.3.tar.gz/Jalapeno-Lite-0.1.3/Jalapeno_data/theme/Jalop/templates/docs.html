@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block css %}
+<link rel='stylesheet' href='{{asset.css.docs}}'>
+{% endblock %}
+
+{% block content %} 
+ 			<div class="container">
+
+				
+
+				<div class="content">
+					<article>
+						<h2>{{page.meta.title}}</h2>
+						{{page.body | excerpt}}
+						{{page.body | content}}
+				</article>
+				</div>
+			
+			
+			
+			</div>
+						
+			
+		
+
+{% endblock %}
+
+{% block sidebar %}
+
+<ul class="nav nav-tabs" role="tablist">
+	
+	<li class = "active"><a href = #catalog role ="tab" data-toggle="tab">Catalog</a></li>
+	<li><a href = #content role ="tab" data-toggle="tab">Content</a></li>
+</ul>
+
+<div class ="tab-content">
+	<div class ="tab-pane active" id ="catalog">
+		<ul>
+			<li class="li-title">Content</li>
+				{% for tle in doctag %}
+			<li><a href="{{ url_for('docs.page', path=tle[1]) }}">{{tle[0]}}</a></li>
+				{% endfor %}		
+		</ul>
+	</div>
+	<div class ="tab-pane" id ="content">
+		{{page.body| sidebar}}
+	</div>
+</div>
+
+
+
+{% endblock %}

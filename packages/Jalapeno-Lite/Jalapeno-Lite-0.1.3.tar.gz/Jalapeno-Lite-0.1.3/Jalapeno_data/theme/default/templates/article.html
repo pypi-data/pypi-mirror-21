@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block css %}
+
+<link rel='stylesheet' media="screen and (min-width:1025px)"  href='{{asset.css.article}}'>
+
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='{{asset.icss.iarticle}}'>
+
+{% endblock %}
+
+{% block title %}
+{{ page.meta.title}}
+{% endblock %}
+
+
+{% block content %}
+    <div class="article_header">
+        <h1 class="article_title"><a>{{ page.meta.title}}</a></h1>                   
+		<div class="article_info">{{ page.meta.date }} | 分类于:  <a class = 'tag' href="{{ url_for('tags.posts', tag=page.meta.tag) }}">{{page.meta.tag}}</a></div>
+	</div>
+	<article>
+        
+        {{page.html|content}}
+		
+	</article>
+	<div id="copyright"><a href="{{url_for('page.copyright')}}">&copy;著作权归作者所有</a></div>
+	<hr>
+    <div id="vc-main" data-access-token="11c8370248773a268137e6fb158a3884"></div>
+    
+    <div id="vc-feelback-main" data-access-token="bd6f14702ab835406654dbd001f2c721" data-display-type="4" ></div> 
+{% endblock %}
+
+{% block sidebar_menu %}
+<li id="catalog" class="item">
+    <span class="glyphicon glyphicon-list-alt"></span>
+
+</li>
+
+{% endblock %}
+
+{% block sidebarcontent %}
+
+<div class="nav-content" id="catalog-content">
+    <div class="nav-con-close">
+        <span class='glyphicon glyphicon-chevron-right'></span>
+    </div>
+    <div class="nav-con-title">目录</div>
+    <div class="inner-content">
+        {{page.html | sidebar}}
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+        
+
+<!--         
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+        <script>
+        (function() {
+        var v = document.createElement('script'); v.async = true;
+        v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+        })();
+        </script>  -->
+
+{% endblock %}

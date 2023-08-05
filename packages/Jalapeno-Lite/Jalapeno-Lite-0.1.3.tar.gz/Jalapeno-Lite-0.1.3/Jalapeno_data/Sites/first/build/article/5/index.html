@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>
+python3使用相对路径import
+|| 老钱</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel='stylesheet' href='/static/css/normalize.css'>
+		<link rel='stylesheet' href="/static/css/mono.css">
+		<link rel='stylesheet' href='/static/css/bootstrap.css'>
+		<link rel='stylesheet' media="screen and (min-width:1023px)"  href='/static/css/homepage.css'>
+		<link rel='stylesheet' media="screen and (max-width:1023px)"  href='/static/icss/ihomepage.css'>
+        
+
+<link rel='stylesheet' media="screen and (min-width:1025px)"  href='/static/css/article.css'>
+
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='/static/icss/iarticle.css'>
+
+
+        
+        <script src="https://carnivalapp.io/sites/559/init.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", Carnival.init);
+</script>
+        
+                 <script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-83291137-1', 'auto');
+              ga('send', 'pageview');
+
+        </script> 
+        
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+<script>
+(function() {
+var v = document.createElement('script'); v.async = true;
+v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+})();
+</script> 
+        
+
+    
+    
+    </head>
+    
+    <body>
+        <div id="wrapper">
+        <div id='main-page'>
+           <div class="mask"></div>
+            <header>
+                <nav>
+                    <div class="logo"><a href="/">老钱</a></div>
+                    <button class="menu_trigger">☰</button>
+                    <ul class="menu">
+                        
+                           
+                        <li><a href='/'>文章</a></li> 
+<!--
+                        <li><a href='#'>归档</a></li> 
+                        <li><a href='#'>关于</a></li>     
+-->
+                    </ul>
+                    
+                </nav>
+                <div class="hr"></div>
+            </header>
+            <div class='content'>
+                <div class="content_wrapper">
+                    
+    <div class="article_header">
+        <h1 class="article_title"><a>python3使用相对路径import</a></h1>                   
+		<div class="article_info">2016-08-29 | 分类于:  <a class = 'tag' href="/tag/Python/">Python</a></div>
+	</div>
+	<article>
+        
+        
+
+<p>python3在导入不同目录的模块时是怎么做的</p>
+<p>先来看一下我们的Project目录</p>
+<div class="codehilite"><pre><span></span>    |---myproject
+    ├── __init__.py
+    ├── settings.py
+    ├── folderA
+    │   └── testA.py
+    ├── folderB
+    │   ├── __init__.py
+    │   ├── testB.py
+    ├── test.py
+</pre></div>
+
+
+<h2 id="_1">在相同目录下</h2>
+<p>我们现在在myproject/目录下</p>
+<p>在同一目录下，我们可以使用'.'来表示当前目录：</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">test</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+
+
+<!--More-->
+
+<p>或者直接import </p>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">test.py</span>
+</pre></div>
+
+
+<p>如果你想使用同目录下某一文件的内容，假设我们test.py内有一对象名为app</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">.test</span> <span class="kn">import</span> <span class="n">app</span>
+</pre></div>
+
+
+<h2 id="_2">在上级目录中</h2>
+<p>我们现在在folderA下</p>
+<p>对于调用上级目录的内容，我们可以使用'..'来表示返回上一级目录，假设我们现在要调用上一层的test. py</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">test</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+
+
+<p>如果你想使用上级目录下某一文件的内容，假设我们test.py内有一对象名为app</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">..test</span> <span class="kn">import</span> <span class="n">app</span>
+</pre></div>
+
+
+<h2 id="_3">在兄弟目录中</h2>
+<p>现在我们仍然在folderA下</p>
+<p>我们可以看到，folderB是和folderA一样在myproject下面的目录，我们该怎么办呢？先返回上级目录调用，调用方法类似于上级目录下的某一文件.我们现在要调用folderB下的testB.py</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">..folderB</span> <span class="kn">import</span> <span class="n">testB</span>
+</pre></div>
+
+
+<h2 id="__init__py"><strong>__init__.py</strong>是什么</h2>
+<p>当一个目录下有<strong>__init__.py</strong>时，python将该目录认定为package。我们可以看到myproject/下面有一个<strong>init</strong>.py，这个时候myproject可以被当做package.</p>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">myproject</span>
+</pre></div>
+
+
+<p>而如果没有<strong>init</strong>.py的话，myproject只是文件夹，不可以被调用。<strong>init</strong>.py通常为空，但是也可以放从其他文件import 一些参数，假设我们的<strong>init</strong>.py引入了test.py的app</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">.test</span> <span class="kn">import</span> <span class="n">app</span>
+</pre></div>
+
+
+<p>之后我们就可以直接通过包名来调用它</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">myproject</span> <span class="kn">import</span> <span class="n">app</span>
+</pre></div>
+
+
+<h2 id="_4">从顶层调用及子目录调用</h2>
+<p>我们可以使用'.'或者'..'来调用同一级或上一级的模块和对象，但是如果你想跨过多层调用（上上级目录)，你需要从顶层调用,我们当前的根目录是myproject/，对于子目录的调用方法我们通常使用'.'来链接 -&gt; root.level1.level2</p>
+<p>我们现在的位置是folderA,假设我们需要调用folderB的testB.py,我们可以使用</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">myproject.folderB</span> <span class="kn">import</span> <span class="n">testB</span>
+</pre></div>
+
+
+<p>那我们是不是也可以这样呢</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">myproject.folderA</span> <span class="kn">import</span> <span class="n">testA</span>
+</pre></div>
+
+
+<p>很遗憾，是<strong>不能</strong>的。为什么会这样呢？因为仔细观察两个目录你可以发现folderA下并没有<strong>init</strong>.py，这样这个目录就只是文件夹而不是package，这意味着不能被import.</p>
+		
+	</article>
+	<div id="copyright"><a href="/copyright">&copy;著作权归作者所有</a></div>
+	<hr>
+    <div id="vc-main" data-access-token="11c8370248773a268137e6fb158a3884"></div>
+    
+    <div id="vc-feelback-main" data-access-token="bd6f14702ab835406654dbd001f2c721" data-display-type="4" ></div> 
+
+                </div>
+    
+            </div>
+            
+            <footer>
+                <ul class="share-group">
+                    <li><a href="#">Jalapeno急速运转中</a></li>
+                    <!--<li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>--> 
+                </ul>   
+                <div class="copyright">
+                    &copy ChenghaoQ;
+                </div>
+
+            </footer>
+            
+            
+            <div class="back-to-top">
+            	<span class="glyphicon glyphicon-chevron-up"></span>
+            </div>
+            <div id="closeBar">
+                <span class="glyphicon glyphicon-remove"></span>
+            </div>
+        
+        </div>
+          
+            
+        
+        
+        
+        
+        
+        
+        <div id="sidebar">
+            <div id="sidebar-menu">
+
+               	<div id="home"><a href="/"><span class="glyphicon glyphicon-home"></span></a></div>
+               	<ul>
+               	    
+<li id="catalog" class="item">
+    <span class="glyphicon glyphicon-list-alt"></span>
+
+</li>
+
+
+               	    <li id="site-view" class="item">
+                        <span class="glyphicon glyphicon-align-center"></span>
+                    
+                    </li>
+               	 </ul>
+                
+            </div>
+            <div id="sidebar-content" >
+                
+
+<div class="nav-content" id="catalog-content">
+    <div class="nav-con-close">
+        <span class='glyphicon glyphicon-chevron-right'></span>
+    </div>
+    <div class="nav-con-title">目录</div>
+    <div class="inner-content">
+        <div class="toc">
+<ul>
+<li><a href="#_1">在相同目录下</a></li>
+<li><a href="#_2">在上级目录中</a></li>
+<li><a href="#_3">在兄弟目录中</a></li>
+<li><a href="#__init__py">__init__.py是什么</a></li>
+<li><a href="#_4">从顶层调用及子目录调用</a></li>
+</ul>
+</div>
+
+    </div>
+</div>
+
+                    <div class="nav-content" id="site-view-content">
+                    <div class="nav-con-close">
+                        <span class='glyphicon glyphicon-chevron-right'></span>
+                    </div>
+                
+                    <div class="inner-content">
+                        <div class="selfie"><img src='/image/theme/Selfie.JPG'</div>
+                        <div class="site-view-info">
+                         
+                            <p class="motto">你总有一个坚持下去的理由</p>
+                
+                            <h3 class="myself">老钱</h3>
+                            
+                            <ul class="posts-info">
+                            </ul>
+                            <div class="extern-links">
+                               <ul>
+                                   <li><a href="https://github.com/ChenghaoQ">Github</a></li>
+                               <li><a>Wechat</a></li>            
+                               </ul>
+     
+                            </div>
+                
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+            
+        </div>
+		<script src="/static/js/jquery.js"></script>
+        <!--<script src="/static/js/home.js"></script>
+        <script src="/static/ijs/ihome.js"></script>-->
+        <script type = "text/javascript">
+        $(document).ready(function(){
+            if($(window).width()>1024){
+                temp = 'desktop';
+                $.getScript( "/static/js/home.js" )
+            }
+            else
+            {
+                temp = 'mobile';
+                $.getScript( "/static/ijs/ihome.js" )
+            }
+            console.log('reload');
+            function refresher(){
+                if($(window).width()>1024)
+                    var status = 'desktop';
+                else
+                    var status = 'mobile';
+                if (status!= temp)
+                {
+                    location=location;//refresh page
+                    
+                    temp = status;
+                    
+                }
+                console.log(temp)
+            };
+
+            $(window).resize(refresher);
+        });
+        </script>
+
+        
+        
+
+<!--         
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+        <script>
+        (function() {
+        var v = document.createElement('script'); v.async = true;
+        v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+        })();
+        </script>  -->
+
+
+        <!-- Carnival comments -->
+        <!-- <script src="https://carnivalapp.io/sites/559/init.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", Carnival.init);
+        </script> -->
+
+
+
+    </body>
+
+
+
+
+
+</html>

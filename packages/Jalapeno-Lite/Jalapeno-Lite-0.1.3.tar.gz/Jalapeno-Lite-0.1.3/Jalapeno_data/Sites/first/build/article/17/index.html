@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>
+使用Python实现关键字搜索文件
+|| 老钱</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel='stylesheet' href='/static/css/normalize.css'>
+		<link rel='stylesheet' href="/static/css/mono.css">
+		<link rel='stylesheet' href='/static/css/bootstrap.css'>
+		<link rel='stylesheet' media="screen and (min-width:1023px)"  href='/static/css/homepage.css'>
+		<link rel='stylesheet' media="screen and (max-width:1023px)"  href='/static/icss/ihomepage.css'>
+        
+
+<link rel='stylesheet' media="screen and (min-width:1025px)"  href='/static/css/article.css'>
+
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='/static/icss/iarticle.css'>
+
+
+        
+        <script src="https://carnivalapp.io/sites/559/init.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", Carnival.init);
+</script>
+        
+                 <script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-83291137-1', 'auto');
+              ga('send', 'pageview');
+
+        </script> 
+        
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+<script>
+(function() {
+var v = document.createElement('script'); v.async = true;
+v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+})();
+</script> 
+        
+
+    
+    
+    </head>
+    
+    <body>
+        <div id="wrapper">
+        <div id='main-page'>
+           <div class="mask"></div>
+            <header>
+                <nav>
+                    <div class="logo"><a href="/">老钱</a></div>
+                    <button class="menu_trigger">☰</button>
+                    <ul class="menu">
+                        
+                           
+                        <li><a href='/'>文章</a></li> 
+<!--
+                        <li><a href='#'>归档</a></li> 
+                        <li><a href='#'>关于</a></li>     
+-->
+                    </ul>
+                    
+                </nav>
+                <div class="hr"></div>
+            </header>
+            <div class='content'>
+                <div class="content_wrapper">
+                    
+    <div class="article_header">
+        <h1 class="article_title"><a>使用Python实现关键字搜索文件</a></h1>                   
+		<div class="article_info">2016-12-10 | 分类于:  <a class = 'tag' href="/tag/Python/">Python</a></div>
+	</div>
+	<article>
+        
+        
+
+<p>让我们通过20行python代码实现一个简单的关键字搜索工具</p>
+<h2 id="_1">目录遍历</h2>
+<p>首先我们来看如何实现目录遍历</p>
+<p>目录遍历的过程很简单:</p>
+<ol>
+<li>将目标路径作为当前目录</li>
+<li>罗列出当前目录下的所有内容</li>
+<li>判断每一个目标是否是文件夹。</li>
+<li>如果是，进入该文件夹搜索（将文件夹路径改为当前路径，多级目录在此处会循环)</li>
+</ol>
+<!--More-->
+
+<p>为什么我们要使用递归，与for对已知大小的列表的遍历相比，递归更适合与那些确定开始结束条件而过程不确定的情况。我们将初始路径设为起点，将目录下没有其他目录可以进入的情况设为终点</p>
+<p>让我们来看如何通过递归的方式来遍历某个路径下的所有内容</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+        <span class="n">each_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">each</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">each_path</span><span class="p">):</span>
+            <span class="n">search</span><span class="p">(</span><span class="n">each_path</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">each_path</span><span class="p">)</span><span class="c1">#测试输出</span>
+</pre></div>
+</td></tr></table>
+
+<ul>
+<li>第1行：首先我们先定义一个search函数，参数path是接收的路径</li>
+<li>第2行：os.listdir(path) 将path路径下的所有(文件/文件夹)作为一个列表返回 </li>
+<li>第3行：使用for循环遍历当前目录</li>
+<li>第4行：构建当前目录下文件的完整目录（当前目录/文件名称），os.sep为当前操作系统的分隔符</li>
+<li>第5行：判断这个目标是否是文件夹</li>
+<li>第6行：如果是，把这个文件夹作为新的路径像刚才那样再来一遍</li>
+<li>第7行：最后在循环的后面我们加一个print来看看输出了什么</li>
+</ul>
+<p>来看我们的测试目录test的结构</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="nb">test</span>
+├── a
+│   ├── a
+│   ├── b
+│   └── c
+│       └── file.md
+├── b
+│   ├── a
+│   └── b
+│       └── target.py
+├── c
+│   └── a
+└── d
+</pre></div>
+</td></tr></table>
+
+<p>测试，进入test目录并使用os.getcwd()返回当前路径：</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">search</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+</pre></div>
+</td></tr></table>
+
+<p>输出结果</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>/home/Jkob/Github/test/b/b/target.py
+/home/Jkob/Github/test/b/b
+/home/Jkob/Github/test/b/a
+/home/Jkob/Github/test/b
+/home/Jkob/Github/test/a/b
+/home/Jkob/Github/test/a/a
+/home/Jkob/Github/test/a/c/file.md
+/home/Jkob/Github/test/a/c
+/home/Jkob/Github/test/a
+/home/Jkob/Github/test/d
+/home/Jkob/Github/test/c/a
+/home/Jkob/Github/test/c
+</pre></div>
+</td></tr></table>
+
+<p>目录的遍历有什么用呢，我们可以添加条件来（搜索/操作）目录下所有符合条件的文件</p>
+<h2 id="_2">文件名搜索</h2>
+<p>我们来对刚刚的函数进行简单的修改</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">keyword</span><span class="p">):</span>
+    <span class="n">content</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+        <span class="n">each_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">each</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">each</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">each_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">each_path</span><span class="p">):</span>
+            <span class="n">search</span><span class="p">(</span><span class="n">each_path</span><span class="p">,</span><span class="n">keyword</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<p>与刚刚不同的只有简单几行</p>
+<ul>
+<li>第1行：函数参数增加了要搜索的文件名</li>
+<li>第5,6行：增加了判断，我们这里使用‘in’ 而不是‘==’ 的目的是为了使用模糊匹配，只要包含搜索的关键字就符合条件
+-第8行：由于我们整个函数没有修改filename,所以我们可以将搜索条件传递下去</li>
+</ul>
+<p>我们这次再来测试，寻找藏起来的target.py</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">search</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="s1">&#39;target&#39;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<p>结果</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>/home/Jkob/Github/test/b/b/target.py
+</pre></div>
+</td></tr></table>
+
+<p>再试一次</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">search</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="s1">&#39;tar&#39;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<p>结果</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>/home/Jkob/Github/test/b/b/target.py
+</pre></div>
+</td></tr></table>
+
+<h2 id="_3">文件内容搜索</h2>
+<p>然而只有文件名字符合并不能满足我们的需求，我们有时也需要查找文件里面的内容是否符合关键字需求</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">content_search</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span><span class="n">keyword</span><span class="p">):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</pre></div>
+</td></tr></table>
+
+<p>在这里我们定义了一个函数content_search(),搜索文件内容并默认返回False，如果符合关键字条件即返回True并终端该项搜索</p>
+<p>别忘记关闭文件哦</p>
+<p>接下来我们将这个函数整合到我们刚刚的文件搜索函数中</p>
+<h2 id="_4">关键字搜索整合</h2>
+<p>我们来把刚才的内容搜索函数添加到我们刚才的搜索函数中</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">keyword</span><span class="p">):</span>
+    <span class="n">content</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+        <span class="n">each_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">each</span>
+        <span class="k">if</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="n">each</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">each_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">each_path</span><span class="p">):</span>
+            <span class="n">search</span><span class="p">(</span><span class="n">each_path</span><span class="p">,</span><span class="n">keyword</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">content_search</span><span class="p">(</span><span class="n">each_path</span><span class="p">,</span><span class="n">keyword</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">each_path</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<p>我们只添加了最后两行，即当该文件包含关键字时，我们显示该文件路径。但是为什么我们不能把这个和刚才文件名判定条件放在一起呢？<strong>因为有的文件名指代的是文件夹</strong>,我们需要将其放在文件夹判断之后</p>
+<p>我们来测试一下,其实目录下的file.md文件是编辑过的，内容为'target':</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">search</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="s1">&#39;tar&#39;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<p>返回
+    #!shell
+    /home/Jkob/Github/test/b/b/target.py
+    /home/Jkob/Github/test/a/c/file.md</p>
+<p>如果我们将整个文件作为工具的话，我们可以最后一行添加</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">search</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Your Keyword:&#39;</span><span class="p">))</span>
+</pre></div>
+</td></tr></table>
+
+<h2 id="_5">完整代码</h2>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="n">keyword</span><span class="p">):</span>
+    <span class="n">content</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+        <span class="n">each_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="n">each</span>
+        <span class="k">if</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="n">each</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">each_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">each_path</span><span class="p">):</span>
+            <span class="n">search</span><span class="p">(</span><span class="n">each_path</span><span class="p">,</span><span class="n">keyword</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">content_search</span><span class="p">(</span><span class="n">each_path</span><span class="p">,</span><span class="n">keyword</span><span class="p">):</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">each_path</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">content_search</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span><span class="n">keyword</span><span class="p">):</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">keyword</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">False</span>
+<span class="n">search</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span><span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Your Keyword:&#39;</span><span class="p">))</span>
+</pre></div>
+</td></tr></table>
+
+<p>示例:</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">[</span>Jkob@localhost test<span class="o">]</span> $ python3 test.py 
+Your Keyword:tar
+/home/Jkob/Github/test/b/b/target.py
+/home/Jkob/Github/test/a/c/file.md
+</pre></div>
+</td></tr></table>
+		
+	</article>
+	<div id="copyright"><a href="/copyright">&copy;著作权归作者所有</a></div>
+	<hr>
+    <div id="vc-main" data-access-token="11c8370248773a268137e6fb158a3884"></div>
+    
+    <div id="vc-feelback-main" data-access-token="bd6f14702ab835406654dbd001f2c721" data-display-type="4" ></div> 
+
+                </div>
+    
+            </div>
+            
+            <footer>
+                <ul class="share-group">
+                    <li><a href="#">Jalapeno急速运转中</a></li>
+                    <!--<li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>--> 
+                </ul>   
+                <div class="copyright">
+                    &copy ChenghaoQ;
+                </div>
+
+            </footer>
+            
+            
+            <div class="back-to-top">
+            	<span class="glyphicon glyphicon-chevron-up"></span>
+            </div>
+            <div id="closeBar">
+                <span class="glyphicon glyphicon-remove"></span>
+            </div>
+        
+        </div>
+          
+            
+        
+        
+        
+        
+        
+        
+        <div id="sidebar">
+            <div id="sidebar-menu">
+
+               	<div id="home"><a href="/"><span class="glyphicon glyphicon-home"></span></a></div>
+               	<ul>
+               	    
+<li id="catalog" class="item">
+    <span class="glyphicon glyphicon-list-alt"></span>
+
+</li>
+
+
+               	    <li id="site-view" class="item">
+                        <span class="glyphicon glyphicon-align-center"></span>
+                    
+                    </li>
+               	 </ul>
+                
+            </div>
+            <div id="sidebar-content" >
+                
+
+<div class="nav-content" id="catalog-content">
+    <div class="nav-con-close">
+        <span class='glyphicon glyphicon-chevron-right'></span>
+    </div>
+    <div class="nav-con-title">目录</div>
+    <div class="inner-content">
+        <div class="toc">
+<ul>
+<li><a href="#_1">目录遍历</a></li>
+<li><a href="#_2">文件名搜索</a></li>
+<li><a href="#_3">文件内容搜索</a></li>
+<li><a href="#_4">关键字搜索整合</a></li>
+<li><a href="#_5">完整代码</a></li>
+</ul>
+</div>
+
+    </div>
+</div>
+
+                    <div class="nav-content" id="site-view-content">
+                    <div class="nav-con-close">
+                        <span class='glyphicon glyphicon-chevron-right'></span>
+                    </div>
+                
+                    <div class="inner-content">
+                        <div class="selfie"><img src='/image/theme/Selfie.JPG'</div>
+                        <div class="site-view-info">
+                         
+                            <p class="motto">你总有一个坚持下去的理由</p>
+                
+                            <h3 class="myself">老钱</h3>
+                            
+                            <ul class="posts-info">
+                            </ul>
+                            <div class="extern-links">
+                               <ul>
+                                   <li><a href="https://github.com/ChenghaoQ">Github</a></li>
+                               <li><a>Wechat</a></li>            
+                               </ul>
+     
+                            </div>
+                
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+            
+        </div>
+		<script src="/static/js/jquery.js"></script>
+        <!--<script src="/static/js/home.js"></script>
+        <script src="/static/ijs/ihome.js"></script>-->
+        <script type = "text/javascript">
+        $(document).ready(function(){
+            if($(window).width()>1024){
+                temp = 'desktop';
+                $.getScript( "/static/js/home.js" )
+            }
+            else
+            {
+                temp = 'mobile';
+                $.getScript( "/static/ijs/ihome.js" )
+            }
+            console.log('reload');
+            function refresher(){
+                if($(window).width()>1024)
+                    var status = 'desktop';
+                else
+                    var status = 'mobile';
+                if (status!= temp)
+                {
+                    location=location;//refresh page
+                    
+                    temp = status;
+                    
+                }
+                console.log(temp)
+            };
+
+            $(window).resize(refresher);
+        });
+        </script>
+
+        
+        
+
+<!--         
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+        <script>
+        (function() {
+        var v = document.createElement('script'); v.async = true;
+        v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+        })();
+        </script>  -->
+
+
+        <!-- Carnival comments -->
+        <!-- <script src="https://carnivalapp.io/sites/559/init.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", Carnival.init);
+        </script> -->
+
+
+
+    </body>
+
+
+
+
+
+</html>

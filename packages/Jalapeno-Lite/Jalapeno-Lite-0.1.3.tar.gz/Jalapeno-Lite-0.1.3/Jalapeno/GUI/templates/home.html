@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <meta charset="UTF-8">
+    <title>Jalapeno</title>
+	<link rel='stylesheet' href='{{gui.css.bootstrap}}'>
+	<link rel='stylesheet' href='{{gui.css.home}}'>
+	<script src="{{gui.js.jquery}}"></script>
+	<script src="{{gui.js.bootstrap}}"></script>
+	<script src="{{gui.js.home}}"></script>
+	<script>   
+	  var new_width=1256; //你要固定的浏览器宽度
+	  var new_height=768; //你要固定的浏览器高度
+	  function resizewindow()
+	  {
+	      window.resizeTo(new_width,new_height);
+	  }
+	  resizewindow();
+	</script>
+	</head>
+	
+	
+	<body>
+		
+		<div id="main-page">
+			
+			<div id = "display">
+
+			</div>
+
+		</div>
+		<button id="sidebar-trigger">➤</button>
+		<div id="sidebar">
+			<h1><a id = 'home'>Jalapeno</a></h1>
+			<ul class="cardgroup container-fluid">
+				<li id='Touch'><a href="#">Touch</a></li>
+				<li id='Run'><a href="#">Run</a></li>
+				<li id='Preview'><a href="#">Preview</a></li>
+				<li id='Stop'><a href="#">Stop</a></li>
+				<li id='Freeze'><a href="#">Freeze</a></li>
+				<li id='Site'><a href="#">Sites</a></li>
+				<li id='card'><a href="#">Shortcuts</a></li>
+				<li id='Exit'><a href="#">Exit</a></li>
+			</ul>
+			<button id="sidebar-trigger">➤</button>
+		</div>
+		
+
+		<script type="text/javascript">
+			$("#display").fadeIn(500).load("/welcome");
+			$("#Touch").click(function(){
+				$("#display").hide()
+				  $("#display").fadeIn(500).load("/touch");
+					 /*display id oonflict here*/
+				});
+			$("#home").click(function(){
+				$("#display").hide()
+				  $("#display").fadeIn(500).load("/welcome");
+					 $(this).trigger("pagecreate");
+				});
+			
+			$("#Freeze").click(function(){
+				$("#display").hide()
+				  $("#display").fadeIn(500).load("/welcome");
+					 $.post("/freeze");
+				});
+			$("#Site").click(function(){
+				$("#display").hide()
+				  $("#display").fadeIn(500).load("/sites");
+					 $(this).trigger("pagecreate");
+				});
+			$("#Run").click(function(){
+				  $.post("/run");
+				  $("#Run").slideUp(300);
+				  $("#Preview").slideDown(300);
+				  $("#Stop").slideDown(300);
+				  // $("#display").hide()
+				});
+			$("#Preview").click(function(){
+				
+				setTimeout(function(){$("#display").load("/run/preview");},500);
+				});
+			$("#Stop").click(function(){
+				  $.post("/run/stop");
+				  $("#Preview").slideUp(300);
+				  $("#Stop").slideUp(300);
+				  $("#Run").slideDown(300);
+				  // $("#display").hide()
+				});
+			$("#Exit").click(function(){
+
+				$("#display").hide()
+					$("#display").fadeIn(800).load("/bye");
+					$.post("/exit");
+					setTimeout(function(){close();},1500);
+					// close();
+				});
+
+		</script>
+		<script>
+			window.onbeforeunload = function (e) {
+			    e = e || window.event;
+
+			    // For IE and Firefox prior to version 4
+			    if (e) {
+			        e.returnValue = 'Sure?';
+			    }
+
+			    // For Safari
+			    return 'Sure?';
+			};
+		</script>
+	</body>
+	
+	
+	
+</html>
