@@ -1,0 +1,506 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Settings &#8212; Pootle 2.6.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.6.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimization" href="optimization.html" />
+    <link rel="prev" title="Database Migration" href="database_migration.html" /> 
+  </head>
+  <body role="document">
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <a class="brand" href="../index.html">Pootle</a>
+        <span class="navbar-text pull-left"><b>2.6.1</b></span>
+          <ul class="nav">
+            <li class="divider-vertical"></li>
+            
+              <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../users/index.html">User&#8217;s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features/index.html">Features</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administering a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">Pootle API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../releases/index.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_docs.html">External documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+</ul>
+</li>
+              
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"><ul>
+<li><a class="reference internal" href="#">Settings</a><ul>
+<li><a class="reference internal" href="#customizing-settings">Customizing Settings</a></li>
+<li><a class="reference internal" href="#available-settings">Available Settings</a><ul>
+<li><a class="reference internal" href="#base-conf">10-base.conf</a></li>
+<li><a class="reference internal" href="#backends-conf">20-backends.conf</a></li>
+<li><a class="reference internal" href="#site-conf">30-site.conf</a></li>
+<li><a class="reference internal" href="#apps-conf">40-apps.conf</a></li>
+<li><a class="reference internal" href="#ldap-conf">51-ldap.conf</a></li>
+<li><a class="reference internal" href="#translation-conf">60-translation.conf</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#deprecated-settings">Deprecated Settings</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+            
+            
+              
+  <li><a href="database_migration.html"
+         title="previous chapter">&laquo; Database Migration</a></li>
+  <li><a href="optimization.html"
+         title="next chapter">Optimization &raquo;</a></li>
+            
+          </ul>
+          <ul class="nav pull-right">
+            
+              
+            
+          
+            
+<form class="navbar-search pull-right" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container content">
+   
+  <div class="section" id="settings">
+<span id="id1"></span><h1>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h1>
+<p>You will find all the Pootle-specific settings in this document.</p>
+<p>If you have upgraded, you might want to compare your previous copy to the one
+distributed with the Pootle version for any new settings you might be interested
+in.</p>
+<div class="section" id="customizing-settings">
+<span id="settings-customizing"></span><h2>Customizing Settings<a class="headerlink" href="#customizing-settings" title="Permalink to this headline">¶</a></h2>
+<p>When starting Pootle with the <code class="docutils literal"><span class="pre">pootle</span></code> runner script, by default it will try
+to load custom settings from the <em>~/.pootle/pootle.conf</em> file. These settings
+will override the defaults set by Pootle.</p>
+<p>An alternative location for the settings file can be specified by setting the
+<code class="docutils literal"><span class="pre">-c</span> <span class="pre">&lt;/path/to/settings.conf/&gt;</span></code> flag when executing the runner. You can also
+set the <code class="docutils literal"><span class="pre">POOTLE_SETTINGS</span></code> environment variable to specify the path to the
+custom configuration file. The environment variable will take precedence over
+the command-line flag.</p>
+<p>If instead of an installation you deployed Pootle straight from the git
+repository, you can either set the <code class="docutils literal"><span class="pre">POOTLE_SETTINGS</span></code> environment variable or
+put a file under the <em>pootle/settings/</em> directory. Note that the files in this
+directory are read in alphabetical order, and  <strong>creating a 90-local.conf file
+is recommended</strong> (files ending in <em>-local.conf</em> will be ignored by git).</p>
+</div>
+<div class="section" id="available-settings">
+<span id="settings-available"></span><h2>Available Settings<a class="headerlink" href="#available-settings" title="Permalink to this headline">¶</a></h2>
+<p>This is a list of Pootle-specific settings grouped by the file they&#8217;re
+contained and ordered alphabetically.</p>
+<div class="section" id="base-conf">
+<h3>10-base.conf<a class="headerlink" href="#base-conf" title="Permalink to this headline">¶</a></h3>
+<p>This file contains base configuration settings.</p>
+<dl class="docutils" id="std:setting-DESCRIPTION">
+<dt><code class="docutils literal"><span class="pre">DESCRIPTION</span></code></dt>
+<dd>Description of the Pootle server.</dd>
+</dl>
+<dl class="docutils" id="std:setting-TITLE">
+<dt><code class="docutils literal"><span class="pre">TITLE</span></code></dt>
+<dd>The name of the Pootle server.</dd>
+</dl>
+</div>
+<div class="section" id="backends-conf">
+<h3>20-backends.conf<a class="headerlink" href="#backends-conf" title="Permalink to this headline">¶</a></h3>
+<p>Backend and caching settings.</p>
+<dl class="docutils" id="std:setting-OBJECT_CACHE_TIMEOUT">
+<dt><code class="docutils literal"><span class="pre">OBJECT_CACHE_TIMEOUT</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">2500000</span></code></p>
+<p class="last">Time in seconds the Pootle&#8217;s statistics cache will last.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-POOTLE_TOP_STATS_CACHE_TIMEOUT">
+<dt><code class="docutils literal"><span class="pre">POOTLE_TOP_STATS_CACHE_TIMEOUT</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">86400</span></code></p>
+<p class="last">Time in seconds the Pootle&#8217;s top statistics cache will last.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-POOTLE_LOG_DIRECTORY">
+<dt><code class="docutils literal"><span class="pre">POOTLE_LOG_DIRECTORY</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">/var/log/pootle/</span></code></p>
+<p class="last">The directory where Pootle writes event logs to. These are high-level
+logs of events on store/unit changes and manage.py commands executed</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="site-conf">
+<h3>30-site.conf<a class="headerlink" href="#site-conf" title="Permalink to this headline">¶</a></h3>
+<p>Site-specific settings.</p>
+<dl class="docutils" id="std:setting-CAN_CONTACT">
+<dt><code class="docutils literal"><span class="pre">CAN_CONTACT</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">True</span></code></p>
+<p class="last">Controls whether users will be able to use the contact form. The address to
+receive messages is controlled by <a class="reference internal" href="#std:setting-CONTACT_EMAIL"><code class="xref std std-setting docutils literal"><span class="pre">CONTACT_EMAIL</span></code></a>.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-CAN_REGISTER">
+<dt><code class="docutils literal"><span class="pre">CAN_REGISTER</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">True</span></code></p>
+<p class="last">Controls whether user registrations are allowed or not. If set to <code class="docutils literal"><span class="pre">False</span></code>,
+administrators will still be able to create new user accounts.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-CONTACT_EMAIL">
+<dt><code class="docutils literal"><span class="pre">CONTACT_EMAIL</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">info&#64;YOUR_DOMAIN.com</span></code></p>
+<p class="last">Address to receive messages sent through the contact form. This will only
+have effect if <a class="reference internal" href="#std:setting-CAN_CONTACT"><code class="xref std std-setting docutils literal"><span class="pre">CAN_CONTACT</span></code></a> is set to <code class="docutils literal"><span class="pre">True</span></code>.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-POOTLE_REPORT_STRING_ERRORS_EMAIL">
+<dt><code class="docutils literal"><span class="pre">POOTLE_REPORT_STRING_ERRORS_EMAIL</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">string_errors_manager&#64;YOUR_DOMAIN.com</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.6.</span></p>
+</div>
+<p class="last">Email address to report errors on strings.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="apps-conf">
+<h3>40-apps.conf<a class="headerlink" href="#apps-conf" title="Permalink to this headline">¶</a></h3>
+<p>Configuration settings for applications used by Pootle.</p>
+<dl class="docutils" id="std:setting-API_LIMIT_PER_PAGE">
+<dt><code class="docutils literal"><span class="pre">API_LIMIT_PER_PAGE</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">0</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.1.</span></p>
+</div>
+<p class="last">Number of records Pootle API will show in a list view. <code class="docutils literal"><span class="pre">0</span></code> means no limit.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-CUSTOM_TEMPLATE_CONTEXT">
+<dt><code class="docutils literal"><span class="pre">CUSTOM_TEMPLATE_CONTEXT</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">{}</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.</span></p>
+</div>
+<p class="last">Custom template context dictionary. The values will be available in the
+templates as <code class="docutils literal"><span class="pre">{{</span> <span class="pre">custom.&lt;key&gt;</span> <span class="pre">}}</span></code>.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-FUZZY_MATCH_MAX_LENGTH">
+<dt><code class="docutils literal"><span class="pre">FUZZY_MATCH_MAX_LENGTH</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">70</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.</span></p>
+</div>
+<p class="last">Maximum character length to consider when doing fuzzy matching. The default
+might not be enough for long texts. Please note this affects all fuzzy
+matching operations, so bear in mind this might affect performance.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-FUZZY_MATCH_MIN_SIMILARITY">
+<dt><code class="docutils literal"><span class="pre">FUZZY_MATCH_MIN_SIMILARITY</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">75</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.</span></p>
+</div>
+<p class="last">Minimum similarity to consider when doing fuzzy matching. Please note this
+affects all fuzzy matching operations, so bear in mind this might affect
+performance.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-LEGALPAGE_NOCHECK_PREFIXES">
+<dt><code class="docutils literal"><span class="pre">LEGALPAGE_NOCHECK_PREFIXES</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">('/accounts',</span> <span class="pre">'/admin',</span> <span class="pre">'/api',</span> <span class="pre">'/contact',</span> <span class="pre">'/django_admin',</span>
+<span class="pre">'/jsi18n',</span> <span class="pre">'/pages',</span> <span class="pre">)</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.1.</span></p>
+</div>
+<p class="last">List of path prefixes where the <code class="docutils literal"><span class="pre">LegalAgreementMiddleware</span></code> will check
+if the current logged-in user has agreed all the legal documents defined
+for the Pootle instance. Don&#8217;t change this unless you know what you&#8217;re
+doing.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-MIN_AUTOTERMS">
+<dt><code class="docutils literal"><span class="pre">MIN_AUTOTERMS</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">60</span></code></p>
+<p class="last">When building the terminology, the minimum number of terms that will be
+automatically extracted.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-MARKUP_FILTER">
+<dt><code class="docutils literal"><span class="pre">MARKUP_FILTER</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">(None,</span> <span class="pre">{})</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.</span></p>
+</div>
+<p>Two-tuple defining the markup filter to apply in certain textareas.</p>
+<ul class="simple">
+<li>Accepted values for the first element are <code class="docutils literal"><span class="pre">textile</span></code>, <code class="docutils literal"><span class="pre">markdown</span></code>,
+<code class="docutils literal"><span class="pre">restructuredtext</span></code> and None</li>
+<li>The second element should be a dictionary of keyword arguments that
+will be passed to the markup function</li>
+</ul>
+<p>Examples:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">MARKUP_FILTER</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">{})</span>
+
+<span class="n">MARKUP_FILTER</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;markdown&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;safe_mode&#39;</span><span class="p">:</span> <span class="s1">&#39;escape&#39;</span><span class="p">})</span>
+
+<span class="n">MARKUP_FILTER</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;restructuredtext&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;settings_overrides&#39;</span><span class="p">:</span> <span class="p">{</span>
+                                         <span class="s1">&#39;report_level&#39;</span><span class="p">:</span> <span class="s1">&#39;quiet&#39;</span><span class="p">,</span>
+                                         <span class="p">}</span>
+                                     <span class="p">})</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-MAX_AUTOTERMS">
+<dt><code class="docutils literal"><span class="pre">MAX_AUTOTERMS</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">600</span></code></p>
+<p class="last">When building the terminology, the maximum number of terms that will be
+automatically extracted.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-POOTLE_ENABLE_API">
+<dt><code class="docutils literal"><span class="pre">POOTLE_ENABLE_API</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">False</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.1.</span></p>
+</div>
+<p class="last">Enable Pootle API.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-TASTYPIE_DEFAULT_FORMATS">
+<dt><code class="docutils literal"><span class="pre">TASTYPIE_DEFAULT_FORMATS</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">['json']</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.1.</span></p>
+</div>
+<p class="last">List defining the allowed serialization formats for Pootle API. Check
+<a class="reference external" href="https://django-tastypie.readthedocs.io/en/latest/settings.html#settings-tastypie-default-formats" title="(in Tastypie v0.13)"><span class="xref std std-ref">Tastypie docs</span></a> for all the
+available formats and <a class="reference external" href="https://django-tastypie.readthedocs.io/en/latest/tutorial.html#ref-tutorial" title="(in Tastypie v0.13)"><span class="xref std std-ref">its dependencies</span></a> (see in
+Installation section).</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-TOPSTAT_SIZE">
+<dt><code class="docutils literal"><span class="pre">TOPSTAT_SIZE</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">5</span></code></p>
+<p class="last">The number of rows displayed in the top contributors table.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-USE_CAPTCHA">
+<dt><code class="docutils literal"><span class="pre">USE_CAPTCHA</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">True</span></code></p>
+<p class="last">Enable spam prevention through a captcha.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="ldap-conf">
+<span id="settings-ldap"></span><h3>51-ldap.conf<a class="headerlink" href="#ldap-conf" title="Permalink to this headline">¶</a></h3>
+<p>Optional LDAP configuration settings. To enable the LDAP authentication
+backend, you&#8217;ll need to append <code class="docutils literal"><span class="pre">'pootle.core.auth.ldap_backend.LdapBackend'</span></code>
+to the list of <code class="docutils literal"><span class="pre">AUTHENTICATION_BACKENDS</span></code>.</p>
+<dl class="docutils" id="std:setting-AUTH_LDAP_ANON_DN">
+<dt><code class="docutils literal"><span class="pre">AUTH_LDAP_ANON_DN</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">''</span></code></p>
+<p class="last">Anonymous credentials: Distinguished Name.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-AUTH_LDAP_ANON_PASS">
+<dt><code class="docutils literal"><span class="pre">AUTH_LDAP_ANON_PASS</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">''</span></code></p>
+<p class="last">Anonymous credentials: password.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-AUTH_LDAP_BASE_DN">
+<dt><code class="docutils literal"><span class="pre">AUTH_LDAP_BASE_DN</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">''</span></code></p>
+<p class="last">Base DN to search</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-AUTH_LDAP_FIELDS">
+<dt><code class="docutils literal"><span class="pre">AUTH_LDAP_FIELDS</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">{'dn':</span> <span class="pre">'dn'}</span></code></p>
+<p class="last">A mapping of Pootle field names to LDAP fields.  The key is Pootle&#8217;s name,
+the value should be your LDAP field name.  If you don&#8217;t use the field or
+don&#8217;t want to automatically retrieve these fields from LDAP comment them out.
+The only required field is <code class="docutils literal"><span class="pre">dn</span></code>.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-AUTH_LDAP_FILTER">
+<dt><code class="docutils literal"><span class="pre">AUTH_LDAP_FILTER</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">''</span></code></p>
+<p class="last">What are we filtering on? %s will be the username, for example <code class="docutils literal"><span class="pre">'sn=%s'</span></code>,
+or <code class="docutils literal"><span class="pre">'uid=%s'</span></code>.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-AUTH_LDAP_SERVER">
+<dt><code class="docutils literal"><span class="pre">AUTH_LDAP_SERVER</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">''</span></code></p>
+<p class="last">The LDAP server. Format: <code class="docutils literal"><span class="pre">protocol://hostname:port</span></code></p>
+</dd>
+</dl>
+</div>
+<div class="section" id="translation-conf">
+<h3>60-translation.conf<a class="headerlink" href="#translation-conf" title="Permalink to this headline">¶</a></h3>
+<p>Translation environment configuration settings.</p>
+<dl class="docutils" id="std:setting-AMAGAMA_URL">
+<dt><code class="docutils literal"><span class="pre">AMAGAMA_URL</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">https://amagama-live.translatehouse.org/api/v1/</span></code></p>
+<p>URL to an amaGama Translation Memory server. The default service should work
+fine, but if you have a custom server set it here.</p>
+<p>This URL must point to the public API URL which returns JSON. Don&#8217;t forget
+the trailing slash.</p>
+<p class="last">Setting it to blank string disables retrieving translation memory results.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-EXPORTED_DIRECTORY_MODE">
+<dt><code class="docutils literal"><span class="pre">EXPORTED_DIRECTORY_MODE</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">0755</span></code></p>
+<p class="last">On POSIX systems, exported directories will be assigned this permission. Use
+<code class="docutils literal"><span class="pre">0755</span></code> for publically-readable directories or <code class="docutils literal"><span class="pre">0700</span></code> if you want only the
+Pootle user to be able to read them.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-EXPORTED_FILE_MODE">
+<dt><code class="docutils literal"><span class="pre">EXPORTED_FILE_MODE</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">0644</span></code></p>
+<p class="last">On POSIX systems, exported files will be assigned this permission. Use
+<code class="docutils literal"><span class="pre">0644</span></code> for publically-readable files or <code class="docutils literal"><span class="pre">0600</span></code> if you want only the
+Pootle user to be able to read them.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-LOOKUP_BACKENDS">
+<dt><code class="docutils literal"><span class="pre">LOOKUP_BACKENDS</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">['wikipedia']</span></code> (Wikipedia enabled)</p>
+<p>Enables backends for web-based lookups.</p>
+<p class="last">Available options: <code class="docutils literal"><span class="pre">wikipedia</span></code>.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-MT_BACKENDS">
+<dt><code class="docutils literal"><span class="pre">MT_BACKENDS</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">[]</span></code> (empty list)</p>
+<p>This setting enables translation suggestions through several online services.</p>
+<p>The elements for the list are two-element tuples containing the name of the
+service and an optional API key.</p>
+<p>Available options are:</p>
+<dl class="last docutils">
+<dt><code class="docutils literal"><span class="pre">APERTIUM</span></code>: Apertium service.</dt>
+<dd>For this service you need to set the API key. Get your key at
+<a class="reference external" href="http://api.apertium.org/register.jsp">http://api.apertium.org/register.jsp</a></dd>
+<dt><code class="docutils literal"><span class="pre">GOOGLE_TRANSLATE</span></code>: Google Translate service.</dt>
+<dd>For this service you need to set the API key. Note that Google Translate
+API is a paid service. See more at
+<a class="reference external" href="https://developers.google.com/translate/v2/pricing">https://developers.google.com/translate/v2/pricing</a></dd>
+</dl>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-PARSE_POOL_CULL_FREQUENCY">
+<dt><code class="docutils literal"><span class="pre">PARSE_POOL_CULL_FREQUENCY</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">4</span></code></p>
+<p class="last">When the pool fills up, 1/PARSE_POOL_CULL_FREQUENCY number of files will be
+removed from the pool.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-PARSE_POOL_SIZE">
+<dt><code class="docutils literal"><span class="pre">PARSE_POOL_SIZE</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">40</span></code></p>
+<p>To avoid rereading and reparsing translation files from disk on
+every request, Pootle keeps a pool of already parsed files in memory.</p>
+<p class="last">Larger pools will offer better performance, but higher memory usage
+(per server process).</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-PODIRECTORY">
+<dt><code class="docutils literal"><span class="pre">PODIRECTORY</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">working_path('po')</span></code></p>
+<p class="last">The directory where the translation files are kept.</p>
+</dd>
+</dl>
+<dl class="docutils" id="std:setting-VCS_DIRECTORY">
+<dt><code class="docutils literal"><span class="pre">VCS_DIRECTORY</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">working_path('repos')</span></code></p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 2.5.</span></p>
+</div>
+<p class="last">The directory where version control clones/checkouts are kept.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="deprecated-settings">
+<span id="settings-deprecated"></span><h2>Deprecated Settings<a class="headerlink" href="#deprecated-settings" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils" id="std:setting-ENABLE_ALT_SRC">
+<dt><code class="docutils literal"><span class="pre">ENABLE_ALT_SRC</span></code></dt>
+<dd><p class="first">Default: <code class="docutils literal"><span class="pre">True</span></code></p>
+<div class="deprecated">
+<p><span class="versionmodified">Deprecated since version 2.5: </span>Alternate source languages are now on by default. This ensures
+that translators have access to as much useful information as possible
+when translating.</p>
+</div>
+<p class="last">Display alternate source languages in the translation interface.</p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+</div>
+<hr>
+
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right"><a href="#">Back to top ↑</a></p>
+    <ul class="unstyled muted">
+      <li><small>
+        &copy; 2004-2015, Translate.<br/>
+      </small></li>
+      <li><small>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.5.3.
+      </small></li>
+    </ul>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Initial data and upgrade &#8212; Pootle 2.6.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.6.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Release Process" href="release.html" />
+    <link rel="prev" title="Testing" href="testing.html" /> 
+  </head>
+  <body role="document">
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <a class="brand" href="../index.html">Pootle</a>
+        <span class="navbar-text pull-left"><b>2.6.1</b></span>
+          <ul class="nav">
+            <li class="divider-vertical"></li>
+            
+              <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../users/index.html">User&#8217;s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features/index.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../server/index.html">Administering a server</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">Pootle API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../releases/index.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_docs.html">External documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+</ul>
+</li>
+              
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"><ul>
+<li><a class="reference internal" href="#">Initial data and upgrade</a></li>
+</ul>
+</ul>
+</li>
+            
+            
+              
+  <li><a href="testing.html"
+         title="previous chapter">&laquo; Testing</a></li>
+  <li><a href="release.html"
+         title="next chapter">Release Process &raquo;</a></li>
+            
+          </ul>
+          <ul class="nav pull-right">
+            
+              
+            
+          
+            
+<form class="navbar-search pull-right" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container content">
+   
+  <div class="section" id="initial-data-and-upgrade">
+<span id="id1"></span><h1>Initial data and upgrade<a class="headerlink" href="#initial-data-and-upgrade" title="Permalink to this headline">¶</a></h1>
+<p>When developing is not uncommon to have to alter the database schema (adding,
+changing or removing fields to models), provide new initial data on fresh
+installations or alter the data on the database when upgrading.</p>
+<p>The following guidelines are meant to make clear where to put the code:</p>
+<ul>
+<li><p class="first">When altering the database schema, add a migration.</p>
+</li>
+<li><p class="first">When adding new initial data, add the code to <code class="docutils literal"><span class="pre">pootle.core.initdb</span></code>.</p>
+</li>
+<li><p class="first">When altering the data on the database on upgrading, add the code to
+<code class="docutils literal"><span class="pre">pootle.apps.pootle_misc.upgrade.pootle</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If this upgrade code is going to be used for providing initial data
+as well, then it must be placed instead on <code class="docutils literal"><span class="pre">pootle.core.initdb</span></code> and
+referenced from <code class="docutils literal"><span class="pre">pootle.apps.pootle_misc.upgrade.pootle</span></code>.</p>
+</div>
+</li>
+</ul>
+</div>
+
+
+</div>
+<hr>
+
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right"><a href="#">Back to top ↑</a></p>
+    <ul class="unstyled muted">
+      <li><small>
+        &copy; 2004-2015, Translate.<br/>
+      </small></li>
+      <li><small>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.5.3.
+      </small></li>
+    </ul>
+  </div>
+</footer>
+  </body>
+</html>

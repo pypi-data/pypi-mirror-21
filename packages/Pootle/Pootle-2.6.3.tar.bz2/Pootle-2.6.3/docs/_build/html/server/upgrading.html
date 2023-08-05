@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Upgrading &#8212; Pootle 2.6.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.6.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Database Migration" href="database_migration.html" />
+    <link rel="prev" title="Running under a Web Server" href="web.html" /> 
+  </head>
+  <body role="document">
+  <div id="navbar" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <a class="brand" href="../index.html">Pootle</a>
+        <span class="navbar-text pull-left"><b>2.6.1</b></span>
+          <ul class="nav">
+            <li class="divider-vertical"></li>
+            
+              <li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../users/index.html">User&#8217;s guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../features/index.html">Features</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Administering a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developers/index.html">Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/index.html">Pootle API</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../releases/index.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../external_docs.html">External documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+</ul>
+</li>
+              
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"><ul>
+<li><a class="reference internal" href="#">Upgrading</a><ul>
+<li><a class="reference internal" href="#previous-tasks">Previous tasks</a></li>
+<li><a class="reference internal" href="#upgrading-upgrading">Upgrading</a></li>
+<li><a class="reference internal" href="#continue-the-upgrade-to-a-newer-version">Continue the upgrade to a newer version</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+            
+            
+              
+  <li><a href="web.html"
+         title="previous chapter">&laquo; Running under a Web Server</a></li>
+  <li><a href="database_migration.html"
+         title="next chapter">Database Migration &raquo;</a></li>
+            
+          </ul>
+          <ul class="nav pull-right">
+            
+              
+            
+          
+            
+<form class="navbar-search pull-right" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<div class="container content">
+   
+  <div class="section" id="upgrading">
+<span id="id1"></span><h1>Upgrading<a class="headerlink" href="#upgrading" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p><strong>Pootle 2.6.1 is just an intermediate upgrade step towards newer releases.</strong></p>
+<p class="last">Pootle 2.6.1 is meant to be only used as an intermediate step for upgrading
+older Pootle deployments to the newer Pootle releases.</p>
+</div>
+<p>Here are some points to take into account while performing Pootle
+upgrades.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Upgrading Pootle to a newer version can be a dangerous endeavour, so please:</p>
+<ul class="last simple">
+<li><strong>Carefully read this entire page</strong> before proceeding with any further
+steps</li>
+<li>Do all the recommended <strong>backups</strong></li>
+<li>Try to <strong>follow these instructions</strong> as must as possible</li>
+</ul>
+</div>
+<p>This page is divided in three sections. The first one lists some previous tasks
+that should be performed before upgrading. The second section includes a
+detailed list of steps to actually perform the upgrade. The third one tells you
+how to continue with the upgrade to the next version, since Pootle 2.6.1 is
+only an intermediate upgrade step.</p>
+<div class="section" id="previous-tasks">
+<span id="upgrading-previous-tasks"></span><h2>Previous tasks<a class="headerlink" href="#previous-tasks" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If you perform all the steps in this section you will:</p>
+<ul class="last simple">
+<li>Avoid losing any data or Pootle customizations,</li>
+<li>Ensure a thorough and successful upgrade,</li>
+<li>Prevent headaches for you and the support team.</li>
+</ul>
+</div>
+<p>Before upgrading Pootle to a newer version, make sure to go through this
+checklist.</p>
+<ul class="simple">
+<li>Familiarize yourself with <a class="reference internal" href="../releases/index.html"><span class="doc">important changes</span></a> in
+Pootle over the versions.</li>
+<li>If you want to change the database backend then have a look at the
+<a class="reference internal" href="database_migration.html"><span class="doc">database migration</span></a> page first. We discourage
+using SQLite, so if you are using it please migrate to a real database
+server.</li>
+<li>Ensure that you meet all the <a class="reference internal" href="installation.html#installation-hardware-requirements"><span class="std std-ref">hardware requirements</span></a> for the newer version.</li>
+<li>Always make backups of all your translation files (your whole
+<a class="reference internal" href="settings.html#std:setting-PODIRECTORY"><code class="xref std std-setting docutils literal"><span class="pre">PODIRECTORY</span></code></a>). Use the <a class="reference internal" href="commands.html#commands-sync-stores"><span class="std std-ref">sync_stores</span></a>
+command to synchronize to disk all your translation files before making any
+backup.</li>
+<li>Also backup your settings, to avoid losing any settings customization.</li>
+<li>Make a backup of your complete database using the appropriate <em>dump</em>
+command for your database system. For example <strong class="command">mysqldump</strong> for MySQL,
+or <strong class="command">pg_dump</strong> for PostgreSQL.</li>
+<li>And don&#8217;t forget to backup any code, templates or styling customization that
+you have done to your Pootle.</li>
+<li>You might want to look for any new <a class="reference internal" href="settings.html#settings-available"><span class="std std-ref">available settings</span></a> in the new version that you might want to configure.</li>
+</ul>
+</div>
+<div class="section" id="upgrading-upgrading">
+<span id="id2"></span><h2>Upgrading<a class="headerlink" href="#upgrading-upgrading" title="Permalink to this headline">¶</a></h2>
+<p>Here is the list of steps to upgrade a Pootle install using the <strong class="command">pip</strong>
+tool.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Since these instructions don&#8217;t take into account other possible installation
+methods, like using a checkout from git, you will have to do the appropriate
+adjustments in this list if you didn&#8217;t install Pootle using <strong class="command">pip</strong>.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Always backup the following before upgrading:</p>
+<ul class="last simple">
+<li>the entire <strong>database</strong></li>
+<li>all the <strong>settings</strong></li>
+<li>all your <strong>translation files</strong></li>
+<li>any <strong>code customizations</strong></li>
+<li>any <strong>templates customizations</strong></li>
+<li>any <strong>styling customizations</strong></li>
+</ul>
+</div>
+<p>To perform the upgrade follow the next steps:</p>
+<ul>
+<li><p class="first">If you want to perform a <a class="reference internal" href="database_migration.html"><span class="doc">database migration</span></a> then
+do it right now.</p>
+</li>
+<li><p class="first">It is highly recommended to use a virtualenv, so if you don&#8217;t use it please
+<a class="reference internal" href="installation.html#installation-setup-environment"><span class="std std-ref">set up a virtualenv</span></a>.</p>
+</li>
+<li><p class="first">Upgrade the Pootle package:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="o">(</span>env<span class="o">)</span>$ pip install --upgrade <span class="nv">Pootle</span><span class="o">==</span><span class="m">2</span>.6.1
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If you weren&#8217;t using a virtualenv before upgrading, instead of upgrading
+you will be just doing a fresh install of Pootle in a blank virtualenv:</p>
+<div class="last highlight-bash"><div class="highlight"><pre><span></span><span class="o">(</span>env<span class="o">)</span>$ pip install <span class="nv">Pootle</span><span class="o">==</span><span class="m">2</span>.6.1
+</pre></div>
+</div>
+</div>
+</li>
+<li><p class="first">Update Pootle settings to include new useful settings and updating existing
+ones, while keeping the necessary data from the old install. Deleting now
+unused settings is also advisable. Check the <a class="reference internal" href="settings.html#settings-available"><span class="std std-ref">available settings</span></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you are upgrading from a version of Pootle that uses
+<code class="file docutils literal"><span class="pre">localsettings.py</span></code> then you must <a class="reference internal" href="settings.html#settings-customizing"><span class="std std-ref">move your custom settings</span></a> to a new location in order to ensure that Pootle
+uses them.</p>
+</div>
+</li>
+<li><p class="first">Perform the database schema and data upgrade by running:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="o">(</span>env<span class="o">)</span>$ pootle setup
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="continue-the-upgrade-to-a-newer-version">
+<span id="upgrading-continue-the-upgrade"></span><h2>Continue the upgrade to a newer version<a class="headerlink" href="#continue-the-upgrade-to-a-newer-version" title="Permalink to this headline">¶</a></h2>
+<p>Since Pootle 2.6.1 is intended to be an intermediate upgrade step towards newer
+Pootle releases you will have to upgrade again to the desired version. In order
+to do that just follow the upgrade instructions for that version.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Please note that if you have some custom changes to Pootle code, templates or
+styling you will have to reapply those <strong>after</strong> finishing the upgrade to the
+desired Pootle version. Instructions on how to do that are available on the
+upgrade instructions.</p>
+</div>
+</div>
+</div>
+
+
+</div>
+<hr>
+
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right"><a href="#">Back to top ↑</a></p>
+    <ul class="unstyled muted">
+      <li><small>
+        &copy; 2004-2015, Translate.<br/>
+      </small></li>
+      <li><small>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.5.3.
+      </small></li>
+    </ul>
+  </div>
+</footer>
+  </body>
+</html>
