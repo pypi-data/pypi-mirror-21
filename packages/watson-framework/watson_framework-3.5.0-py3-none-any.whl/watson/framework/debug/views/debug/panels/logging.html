@@ -1,0 +1,45 @@
+<style>
+.watson-debug-toolbar__panel__log table tr td:nth-of-type(1n) {
+    width: 10%;
+}
+.watson-debug-toolbar__panel__log table tr td:nth-of-type(3n) {
+    width: 2%;
+}
+.watson-debug-toolbar__panel__log table tr td:nth-of-type(4n) {
+    width: 80%;
+}
+.watson-debug-toolbar__panel__log table tr td:nth-of-type(5n) {
+    width: 1%;
+}
+</style>
+<div class="watson-debug-toolbar__panel__log">
+<table>
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Name</th>
+            <th>Level</th>
+            <th>Message</th>
+            <th>Line</th>
+            <th>File</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.time|date(format='%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ log.name }}</td>
+            <td>{{ log.levelname|title }}</td>
+            <td>{{ log.getMessage() }}</td>
+            <td>{{ log.lineno }}</td>
+            <td>{{ log.pathname }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6">Nothing logged.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</dd>
+</div>
