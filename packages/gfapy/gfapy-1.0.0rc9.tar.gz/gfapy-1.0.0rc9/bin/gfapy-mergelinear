@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+"""
+Merge linear paths in a GFA graph
+"""
+
+import sys
+import os
+import gfapy
+import argparse
+
+op = argparse.ArgumentParser(description=__doc__)
+op.add_argument("filename")
+op.add_argument("--redundant", help="create redundant paths, "+
+    "similar to the contigs constructed by Readjoiner",
+    default=False, action="store_true", dest='redundant')
+op.add_argument('--version', action='version', version='%(prog)s 1.0')
+opts = op.parse_args()
+
+gfa = gfapy.Gfa()
+gfa.enable_progress_logging(part=0.01)
+gfa.vlevel = 0
+gfa.read_file(opts.filename)
+if opts.redundant:
+  # remove isolated segments, as this mode is for comparison
+  # with readjoiner contigs, and isolated vertices are not output by readjoiner
+  for cc in gfa.connected_components():
+    if len(cc) == 1:
+      gfa.segment(cc[0]).disconnect()
+gfa.merge_linear_paths(redundant_junctions=opts.redundant,
+                       enable_tracking=False,
+                       merged_name="short")
+print(gfa)
+
