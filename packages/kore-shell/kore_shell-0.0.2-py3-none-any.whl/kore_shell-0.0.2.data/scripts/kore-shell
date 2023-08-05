@@ -1,0 +1,36 @@
+#!python
+
+import os
+import sys
+
+from argparse import ArgumentParser
+
+from kore import config_factory, container_factory
+from kore.configs.exceptions import ConfigPluginNotFoundError
+
+from kore_shell.lib.dict import merge_dict
+from kore_shell.lib.parsers import KVParser
+from kore_shell.shells import KoreInteractiveShellEmbed
+
+name = os.path.basename(sys.argv[0])
+
+parser = ArgumentParser(name)
+
+parser.add_argument('--config-type', default='dict')
+parser.add_argument('--config-opt', type=KVParser().parse,
+                    action='append', default=[])
+
+arguments = parser.parse_args()
+
+config_type = arguments.config_type
+config_opt = merge_dict(*arguments.config_opt)
+
+try:
+    config = config_factory.create(config_type, **config_opt)
+except ConfigPluginNotFoundError as e:
+    exit(e)
+
+container = container_factory.create(config=config)
+
+shell = KoreInteractiveShellEmbed()
+shell(config, config_factory, container, container_factory)
