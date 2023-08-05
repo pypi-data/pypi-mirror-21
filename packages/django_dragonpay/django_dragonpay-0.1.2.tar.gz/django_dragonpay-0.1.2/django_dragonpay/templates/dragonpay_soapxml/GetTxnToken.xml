@@ -1,0 +1,15 @@
+{% extends 'dragonpay_soapxml/base.xml' %}
+
+{% block body %}
+<tns:GetTxnToken xmlns="http://api.dragonpay.ph/">
+    <tns:merchantId>{{ dp_merchant_id }}</tns:merchantId>
+    <tns:password>{{ dp_merchant_secret }}</tns:password>
+    <tns:merchantTxnId>{{ txn_id }}</tns:merchantTxnId>
+    <tns:amount>{{ amount }}</tns:amount>
+    <tns:ccy>{{ ccy|default:"PHP" }}</tns:ccy>
+    <tns:description>{{ description }}</tns:description>
+    <tns:email>{{ email }}</tns:email>
+    {% if param1 %}<tns:param1>{{ param1 }}</tns:param1>{% endif %}
+    {% if param2 %}<tns:param2>{{ param2 }}</tns:param2>{% endif %}
+</tns:GetTxnToken>
+{% endblock%}
