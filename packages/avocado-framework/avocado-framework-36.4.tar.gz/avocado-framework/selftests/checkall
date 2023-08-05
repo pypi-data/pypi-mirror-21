@@ -1,0 +1,24 @@
+#!/bin/bash
+GR=0
+run_rc() {
+    echo "Running '$1'"
+    eval $1
+    if [ $? != 0 ]; then
+        GR=1
+    fi
+}
+run_rc 'inspekt --exclude=.git lint'
+echo ""
+run_rc 'inspekt --exclude=.git indent'
+echo ""
+run_rc 'inspekt --exclude=.git style'
+echo ""
+run_rc 'selftests/modules_boundaries'
+echo ""
+if [ -z "$AVOCADO_SELF_CHECK" ]; then
+    run_rc selftests/run
+else
+    run_rc 'python setup.py develop --user'
+    run_rc 'scripts/avocado run `./contrib/scripts/avocado-find-unittests selftests/{unit,functional,doc}/*.py | xargs` --external-runner="/usr/bin/python -m unittest"'
+fi
+exit ${GR}
