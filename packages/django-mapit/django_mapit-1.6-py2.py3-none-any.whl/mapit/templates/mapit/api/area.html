@@ -1,0 +1,76 @@
+{% load i18n %}
+        <section id="api-by_area_id">
+            <h3>{% blocktrans trimmed %}
+        <em>lookup by</em> area
+        {% endblocktrans %}</h3>
+            <dl>
+                <dt>{% trans "URL" %}:</dt>
+                <dd><ul>
+                    {% if country == 'GB' %}
+                    <li>/area/<i>[{% trans "area ID or ONS code" %}]</i>
+                    {% else %}
+                    <li>/area/<i>[{% trans "area ID" %}]</i>
+                    {% endif %}
+                    {% if country == 'Global' %}
+                    <li>/code/osm_rel/<i>[{% trans "OSM relation ID" %}]</i>
+                    <li>/code/osm_way/<i>[{% trans "OSM way ID" %}]</i>
+                    {% elif postcodes_available %}
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/example_postcode
+                    {% endif %}
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/geometry
+                    <li>/area/<i>[{% trans "area ID" %}]</i>.<i>[{% trans "kml or geojson or wkt" %}]</i>
+                    <li>/area/<i>[{% trans "SRID" %}]</i>/<i>[{% trans "area ID" %}]</i>.<i>[{% trans "kml or json or wkt" %}]</i>
+                </ul></dd>
+                <dt>{% trans "Optional query parameters" %}:</dt>
+                <dd><i>simplify_tolerance</i>, {% trans "a floating point parameter to simplify the polygons returned" %}.</dd>
+                <dt>{% trans "Returns" %}:</dt>
+                <dd>
+                    {% blocktrans trimmed %}
+                Information on a particular area, including name, type, parent, and any associated codes
+                (see <a href="#general">below for details</a>). The code lookups redirect to the area URI.
+                {% endblocktrans %}
+                {% if postcodes_available %}
+                {% trans "example_postcode returns a random postcode within the area specified." %}
+                {% endif %}
+                {% blocktrans trimmed %}
+                geometry returns centroid, extent and area of the area.
+                {% endblocktrans %}
+                </dd>
+                {% include "mapit/api/area-example.html" %}
+            </dl>
+
+        </section>
+        <section id="api-related_areas">
+
+            <h3>{% blocktrans trimmed %}<em>lookup</em> related areas {% endblocktrans %}</h3>
+            <dl>
+                <dt>URL:</dt>
+                <dd><ul>
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/children
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/touches
+{% if country != 'NO' %}
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/overlaps
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/covers
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/covered
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/coverlaps
+                    <li>/area/<i>[{% trans "area ID" %}]</i>/intersects
+{% endif %}
+                </ul></dd>
+                <dt>{% trans "Optional query parameters" %}:</dt>
+                <dd><ul>
+                    {% blocktrans trimmed %}
+                        <li><i>type</i>, to restrict results to a particular type or types.</li>
+                    {% endblocktrans %}
+                    {% blocktrans trimmed %}
+                        <li><i>generation</i>, to return results from a previous generation (children only).</li>
+                    {% endblocktrans %}
+                    {% blocktrans trimmed %}
+                        <li><i>min_generation</i>, to return areas since that generation (children only).</li>
+                    {% endblocktrans %}
+                </ul></dd>
+                <dt>{% trans "Returns" %}:</dt>
+                <dd>{% trans "A hash of areas that match the requested lookup." %}
+                {% include "mapit/api/area-example-related.html" %}
+            </dl>
+        </section>
+

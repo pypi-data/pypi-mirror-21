@@ -1,0 +1,39 @@
+{% load i18n %}
+    <section id="api-multiple_areas">
+        <h3>{% blocktrans trimmed %}
+            <em>lookup</em> multiple areas
+        {% endblocktrans %}</h3>
+        <dl>
+            <dt>URL:</dt>
+            <dd><ul>
+                <li>/areas/<i>[{% trans "area IDs" %}]</i>
+                <li>/areas/<i>[{% trans "area IDs" %}]</i>/geometry
+                <li>/areas/<i>[{% trans "type(s)" %}]</i>
+                <li>/areas/<i>[{% trans "name prefix" %}]</i>
+            </ul></dd>
+            <dt>{% trans "Parameters" %}:</dt>
+            <dd>{% blocktrans trimmed %}
+            Separate multiple parameters with commas.
+            Name prefix means it will return any area that starts with the string given.
+            {% endblocktrans %}
+            {% include "mapit/api/areas-types.html" %}
+            </dd>
+            <dt>{% trans "Optional query parameters" %}:</dt>
+            <dd><ul>
+                <li><i>generation</i>, {% trans "to return areas in that generation (type and name lookups only)" %}.</li>
+                <li><i>min_generation</i>, {% trans "to return areas since that generation (type and name lookups only)" %}.</li>
+                <li><i>type</i>, {% trans "to restrict results to a type or types (multiple separated by commas; name lookup only)" %}.</li>
+            </ul></dd>
+
+            <dt>{% trans "Returns" %}:</dt>
+            <dd>
+            <p>
+                {% blocktrans trimmed %}
+                    Information on multiple areas that match the parameters provided, as a dictionary indexed by area ID.
+                    The geometry argument lets you fetch multiple single area geometry results at once.
+                {% endblocktrans %}
+            </p>
+            </dd>
+            {% include "mapit/api/areas-examples.html" %}
+        </dl>
+    </section>
