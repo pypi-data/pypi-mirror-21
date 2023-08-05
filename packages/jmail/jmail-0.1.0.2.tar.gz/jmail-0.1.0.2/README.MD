@@ -1,0 +1,11 @@
+@click.option('-t', '--title', prompt=True, default="Mail from Jmail", help='Email title')
+@click.option('-s', '--server', prompt=True, help='Email server')
+@click.option('-p', '--passwd', prompt=True, help='Email password')
+@click.option('--sender', prompt=True, help="Sender's email address")
+@click.option('--to', default=["jiajie999@gmail.com", ], help="Receiver's email address")
+@click.option('--content', default="<b>Some <i>HTML</i> test text</b> and an image.<br>", help="Email's content")
+@click.option('--attachs', help="Receiver's email address")
+@click.option('--content_type', type=click.Choice(["html", "plan"]), default="html", help="Only support html and plain，default is html")
+@click.option('--pics',
+                      help="""Pictures in content, dict ：{"path","tag eg:<imgage1>I am a image<img src='cid:imgage1' >"} """)
+@click.option('--attachs', help="The list of attachment, use comma to separate")
