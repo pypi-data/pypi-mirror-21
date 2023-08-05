@@ -1,0 +1,30 @@
+
+{% extends "base.html" %}
+{% block body %}
+
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% else %}
+    {% if status %}
+    <p>{{ name }} is in the <b>{{ status }}</b> status.</p>
+    {% endif %}
+
+    {% if not status %}
+        <p>The service {{ name }} had no status.</p>
+        <p class="pure-form-message">This might mean that the service is not enabled or installed on your system.</p>
+    {% endif %}
+
+
+    <ul class="journal-content">
+        {% for line in journal %}
+            <li class="log-line">
+            <span class="timestamp">{{line.timestamp_realtime}}</span>
+            <span class="message">{{line.message}}</span>
+            </li>
+        {% else %}
+            <li>Nothing has been logged yet…</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% endblock %}
