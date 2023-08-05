@@ -1,0 +1,17 @@
+import cPickle as pickle
+import sys
+import os
+
+sys.path.append(os.getcwd())
+original_filename = "$FILE_NAME"
+my_file_to_be_caculated =  open(original_filename + ".pkl", 'r')
+my_object_to_be_caculated =  pickle.load(my_file_to_be_caculated)
+print my_object_to_be_caculated
+calculated_object = my_object_to_be_caculated.$FUNCTION_NAME()
+
+if $NORMAL_SAVE:
+   calculated_object_file = open(original_filename + "_CALCULATED.pkl", 'w')
+else:
+   calculated_object_file = open($SPECIAL_SAVE_LOCATION, 'w')
+pickle.dump(calculated_object, calculated_object_file)
+calculated_object_file.close()
