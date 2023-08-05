@@ -1,0 +1,16 @@
+mqtt:
+  host: localhost
+  port: 1883
+  auth:
+    username: mqtt
+    password: ttqm
+watchers:
+  - unit: unit.service
+    comm: process_name
+    topic: my_cool_topic
+    events:
+      - name: pattern1
+        pattern: "${MESSAGE}"
+        where:
+          MESSAGE: _ALPHANUMERIC_
+        publish: '{"time": "_EPOCH_", "message": "${MESSAGE}"}' 
