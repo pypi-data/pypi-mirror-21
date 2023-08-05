@@ -1,0 +1,152 @@
+#!/usr/bin/python
+#
+# Copyright (C) 2016 Aimelia
+#
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+import logging
+import os
+import sys
+import urllib
+import urllib2
+import sys
+try:
+    import ssl
+except ImportError:
+    print("You need python2.6 or higher.")
+    sys.exit(1)
+try:
+    import simplejson as json
+except ImportError:
+    import json
+import ConfigParser
+
+
+    
+class CLI:
+
+    cli_version = '15'
+    api_version = '1'
+    config = ConfigParser.ConfigParser()
+    config_filename = os.path.expanduser('~/.aimelia')
+
+    def restcall(self, data, postfix):
+        urlpostfix = 'api-v' + self.api_version + '-' + postfix
+        url = 'https://aimelia.com/' + urlpostfix
+        data2 = urllib.urlencode(data)
+        req = urllib2.Request(url, data2)
+        response = urllib2.urlopen(req)
+        ret = response.read()
+        return ret
+
+    def apicall(self, data, postfix):
+        response = self.restcall(data, postfix)
+        ret = json.loads(response)
+        if ret['ret_text']:
+            print ret['ret_text']
+        else:
+            print ret
+
+    def cmd_init(self, args, data):
+        if len(args) <= 2:
+            print "You need to pass the API key as the only parameter."
+        else:
+            apikey = args[2]
+            self.config = ConfigParser.RawConfigParser()
+
+            cfgfile = open(self.config_filename, 'w')
+            self.config.add_section('config')
+            self.config.set('config', 'apikey', apikey)
+            self.config.write(cfgfile)
+            cfgfile.close()
+
+    def cmd_add(self, args, data):
+        if len(args) <= 2:
+            print "You need to type something in."
+        else:
+            body = ""
+            words = 0
+            counter = 2
+            while counter < len(args):
+                if words > 0:
+                    body = body + " "
+                line = args[counter]                
+                body = body + line
+                words = words + 1
+                counter = counter + 1
+            data['body'] = body
+            self.apicall(data, 'todo-add')
+
+    def cmd_done(self, args, data):
+        if len(args) <= 2:
+            print "You need to type the todo id in."
+        else:
+            data['id'] = args[2]
+            self.apicall(data, 'todo-done')
+
+    def cmd_list(self, args, data):
+        data['param'] = args[2]
+        self.apicall(data, 'todo-list')
+
+    def cmd_ai(self, args, data):
+        if len(args) <= 2:
+            print "You need to enter some text."
+        else:
+            data['body'] = args[2]
+            self.apicall(data, 'ai')
+
+    def run(self, args):
+        
+        if len(args) <= 1:
+            print "Aimelia version " + self.cli_version + " API v" + self.api_version
+            print "Usage: " + args[0] + " <command> [options]"
+            print "Commands:"
+            print "  aim init         initialize aim to use your API key"
+            print "  aim add          add a todo"
+            print "  aim done (rm)    cross-off a todo"
+            print "  aim list (ls)    list open todos"
+            print "  aim ai           run AI on text for honesty, clarity, and thoughtfulness"
+        else:
+            self.config.read( [ self.config_filename ])
+            data = dict()
+            data['cmd'] = args[1]
+            try:
+                data['apikey'] = self.config.get('config', 'apikey')
+            except Exception as e:
+                print str(e) + " -- please run: aim init"
+            if args[1] == "init":
+                self.cmd_init(args, data)
+            elif args[1] == "add" or args[1] == "a":
+                self.cmd_add(args, data)
+            elif args[1] == "done" or args[1] == "rm" or args[1] == "d":
+                self.cmd_done(args, data)
+            elif args[1] == "list" or args[1] == "ls" or args[1] == "l":
+                self.cmd_list(args, data)
+            elif args[1] == "ai":
+                self.cmd_ai(args, data)
+            else:
+                # Type 'aim anything ...' on the shell and add it as a todo
+                args.insert(1, "add")
+                self.cmd_add(args, data)
+
+
+cli = CLI()
+cli.run(sys.argv)
+
