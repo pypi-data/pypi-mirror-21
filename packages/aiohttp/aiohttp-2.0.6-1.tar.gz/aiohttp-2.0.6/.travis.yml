@@ -1,0 +1,67 @@
+sudo: required
+services:
+  - docker
+
+language: python
+
+python:
+  # python3.4.2 has bug in http.cookies module, aiohttp provides fix
+  - 3.4.2
+  - 3.4.3
+  - 3.5.2
+  # - 3.5.3
+  - 3.5
+  - 3.6
+  # - 'nightly'
+
+os:
+  - linux
+#   - osx   # doesn't work on MacOSX -- the system has no Python installed
+
+matrix:
+  allow_failures:
+    - python: '3.6-dev'
+    - python: 'nightly'
+    - os: osx
+
+cache:
+  directories:
+  - $HOME/.cache/pip
+
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
+
+install:
+  - sudo apt-get install enchant
+  - pip install --upgrade pip wheel
+  - pip install --upgrade setuptools
+  - pip install -r requirements-ci.txt
+  - pip install aiodns
+  - pip install codecov
+  - if python -c "import sys; sys.exit(sys.version_info < (3,5))"; then
+        pip install uvloop;
+    fi
+  - pip install sphinxcontrib-spelling
+
+script:
+  - make cov-dev-full
+
+  - if python -c "import sys; sys.exit(sys.version_info < (3,5))"; then
+        make doc;
+        make doc-spelling;
+    fi
+
+after_success:
+  - codecov
+  - ./run_docker.sh
+
+deploy:
+  provider: pypi
+  user: andrew.svetlov
+  password:
+    secure: ZQKbdPT9BlNqP5CTbWRQyeyig7Bpf7wsnYVQIQPOZc9Ec74A+dsbagstR1sPkAO+d+5PN0pZMovvmU7OQhSVPAnJ74nsN90/fL4ux3kqYecMbevv0rJg20hMXSSkwMEIpjUsMdMjJvZAcaKytGWmKL0qAlOJHhixd1pBbWyuIUE=
+  distributions: "sdist"
+  on:
+    tags: true
+    all_branches: true
+    python: 3.5
