@@ -1,0 +1,29 @@
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "pypy"
+
+before_install:
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.4 ]]; then ci/deploy_sjs.sh ; fi
+
+install:
+  - pip install tox-travis
+  - pip install coveralls
+script:
+  - tox
+  - tox -e cover
+  - tox -e pep8
+  - tox -e docs
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.4 ]]; then ci/run_ft_in_docker.sh ; fi
+after_success:
+  coveralls
