@@ -1,0 +1,16 @@
+[Unit]
+Description=uWSGI application server
+After=syslog.target
+
+[Service]
+Environment="HOME={{ tm_home }}"
+ExecStart=/home/{{ tm_user }}/.tmaps/uwsgi.sh
+RuntimeDirectory=uwsgi
+Restart=always
+KillSignal=SIGTERM + "die-on-term" UWSGI
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
