@@ -1,0 +1,45 @@
+# Config file for automatic testing at travis-ci.org
+
+language: python
+python:
+    - 3.5
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.pip-accel
+    - $HOME/.cache/pip
+
+env:
+  matrix:
+    - TOXENV=py27-django18-dmp
+    - TOXENV=py27-django18
+    - TOXENV=py27-django19-dmp
+    - TOXENV=py27-django19
+    - TOXENV=py27-django110-dmp
+    - TOXENV=py27-django110
+    - TOXENV=py34-django18-dmp
+    - TOXENV=py34-django18
+    - TOXENV=py34-django19-dmp
+    - TOXENV=py34-django19
+    - TOXENV=py34-django110-dmp
+    - TOXENV=py34-django110
+    - TOXENV=py35-django18-dmp
+    - TOXENV=py35-django18
+    - TOXENV=py35-django19-dmp
+    - TOXENV=py35-django19
+    - TOXENV=py35-django110-dmp
+    - TOXENV=py35-django110
+
+matrix:
+  fast_finish: true
+
+install:
+    - pip install --upgrade pip
+    - travis_retry pip install 'tox>=2.3.1' coveralls
+
+script:
+  - travis_retry tox
+
+notifications:
+    irc: "irc.freenode.org#pylucid"
