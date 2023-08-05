@@ -1,0 +1,181 @@
+Metadata-Version: 1.1
+Name: slacklog
+Version: 0.0.9
+Summary: Convert Slackware ChangeLog to various formats
+Home-page: http://pypi.python.org/pypi/slacklog/
+Author: Mikko Värri
+Author-email: vmj@linuxbox.fi
+License: GNU GPLv3
+Description: slacklog -- Convert Slackware Changelog to various formats
+        **********************************************************
+        
+        slacklog provides a program and a library to convert a Slackware
+        ChangeLog into other formats.  Currently, RSS, Atom, and PyBlosxom
+        formats are supported.
+        
+        | Download: http://pypi.python.org/pypi/slacklog
+        | Source code: http://github.com/vmj/slacklog
+        | Builds status: https://travis-ci.org/vmj/slacklog
+        | Docs: http://slacklog.readthedocs.org
+        
+        .. contents::
+        
+        
+        Basic usage
+        ===========
+        
+        Typical usage of the program looks like this::
+        
+            $ slacklog2rss --changelog slackware-current/ChangeLog.txt \
+                           --encoding iso8859-1 \
+                           --out ~/public_html/slackware-current.rss \
+                           --slackware "Slackware current" \
+                           --rssLink "http://linuxbox.fi/~vmj/slackware-current.rss" \
+                           --description "Slackware current activity" \
+                           --managingEditor "vmj@linuxbox.fi (Mikko Värri)" \
+                           --webMaster "vmj@linuxbox.fi (Mikko Värri)"
+        
+        The included Python library provides the ability to make custom
+        formats easily::
+        
+            #!/usr/bin/env python
+            from __future__ import print_function
+            import codecs
+            import locale
+            from slacklog import parsers
+        
+            def read(file):
+                '''Return file contents as Unicode.'''
+                return codecs.open(file, 'r', 'iso8859-1').read()
+        
+            def write(str):
+                '''Print out in preferred encoding.'''
+                print(str.encode(locale.getpreferredencoding()))
+        
+            # Parse the ChangeLog
+            log = parsers.SlackLogParser.parse(read('ChangeLog.txt'))
+        
+            # Print a custom format
+            for entry in log.entries:
+                write(u'[%s] %s\n' % (entry.timestamp.isoformat(), entry.description))
+                for pkg in entry.pkgs:
+                    write(u'%s:%s' % (pkg.pkg, pkg.description))
+        
+        Note that slacklog package deals solely in Unicode; parser expect to
+        be given Unicode input and formatters generate Unicode data.
+        
+        
+        Requirements
+        ============
+        
+        In addition to Python, `python-dateutil
+        <http://pypi.python.org/pypi/python-dateutil>`_ is required.
+        
+        Python versions 2.7 and 3.3 - 3.6 are tested, together with python-dateutil versions 2.1 - 2.6.
+        
+        
+        Installation
+        ============
+        
+        Use either ``pip install slacklog`` or download the source archive and
+        use ``python setup.py install``.
+        
+        The source code is available at `Python Package Index (PyPI)
+        <http://pypi.python.org/pypi/slacklog>`_ or, if you want the
+        unreleased version, from `Github <https://github.com/vmj/slacklog>`_
+        git repository.
+        
+        
+        Authors
+        =======
+        
+        Original author and current maintainer is Mikko Värri
+        (vmj@linuxbox.fi).
+        
+        
+        License
+        =======
+        
+        slacklog is Free Software, licensed under GNU General Public License
+        (GPL), version 3 or later.  See LICENSE.txt file for details.
+        
+        
+        Release history
+        ===============
+        
+        
+        Version 0.0.9 (2017-04-04)
+        --------------------------
+        
+        This release does not add any new functionality.
+        
+        The dependencies were updated: Python 2.7, 3.3 - 3.6, and python-dateutil 2.1 - 2.6.
+        Support for Python 2.6 was dropped, not because it doesn't work but because Python core team doesn't support it.
+        
+        The code was formatted according to PEP-8, and the example script was updated to include Slackware versions 14.0 and
+        14.2.
+        
+        
+        Version 0.0.8 (2014-09-28)
+        --------------------------
+        
+        This release does not add any new functionality, but includes support
+        for Python 3.
+        
+        In addition, Slackware{,64} 14.1 was added to the example script, and
+        Travis CI and ReadTheDocs were integrated (see the links at the top of
+        the README).
+        
+        Version 0.0.7 (2011-06-16)
+        --------------------------
+        
+        This release adds Atom feed formatter, and fixes compatibility issue
+        with recent ChangeLog.txt format change which caused empty entries to
+        be generated.  Also, Slackware{,64} 13.37 was added to the example
+        script.
+        
+        
+        Version 0.0.6 (2011-03-18)
+        --------------------------
+        
+        This release adds documentation.
+        
+        
+        Version 0.0.5 (2011-03-17)
+        --------------------------
+        
+        This release adds the example script in source distribution, too.
+        
+        
+        Version 0.0.4 (2011-03-17)
+        --------------------------
+        
+        This release contains better error handling, better compatibility with
+        more feed readers, better support for timezones other that UTC, and an
+        example script suitable for a cron job to update RSS feeds.
+        
+        
+        Version 0.0.3 (2011-02-21)
+        --------------------------
+        
+        Added PyBlosxom formatter and fixed a couple of issues.
+        
+        
+        Version 0.0.2 (2011-01-29)
+        --------------------------
+        
+        Packaging cleanups.
+        
+        
+        Version 0.0.1 (2011-01-28)
+        --------------------------
+        
+        Initial release.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: GNU Affero General Public License v3
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Utilities
