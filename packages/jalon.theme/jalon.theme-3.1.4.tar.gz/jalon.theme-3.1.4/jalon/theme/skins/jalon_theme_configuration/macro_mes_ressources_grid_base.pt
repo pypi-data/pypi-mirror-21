@@ -1,0 +1,15 @@
+<tal:define define="infos_mes_ressources context/getMonEspace;
+                    maintenance infos_mes_ressources/maintenance;
+                    messages infos_mes_ressources/messages">
+
+    <tal:comment replace="nothing">!-- Grille d'accès à Mes ressources --</tal:comment>
+    <nav class="small-12 columns">
+        <tal:repeat repeat="block infos_mes_ressources/grid">
+        <a tal:condition="block/activated"
+           tal:attributes="class string:button res-${block/css};
+                           href string:${container/absolute_url}/${block/link}">
+            <i tal:attributes="class block/icon"></i><tal:replace replace="block/title"/>
+        </a>
+        </tal:repeat>
+    </nav>
+</tal:define>

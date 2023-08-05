@@ -1,0 +1,175 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="jalon.content">
+
+<body>
+
+<metal:main fill-slot="content"
+            tal:define="errors options/state/getErrors | nothing;">
+
+<!--
+        Modification des informations d'une activité Wims
+-->
+
+<tal:define define="tab request/tab | nothing;
+                    mode_etudiant request/mode_etudiant | nothing;
+                    isExamen python:context.getTypeWims()=='Examen'">
+    <h2 tal:condition="is_ajax">
+        <i tal:attributes="class context/getIconClass"></i>
+        <tal:block tal:condition="not:isExamen"
+                   i18n:translate="">Modifier les informations de «<tal:replace replace="here/Title" />»
+        </tal:block>
+        <tal:block tal:condition="isExamen"
+                   i18n:translate="">Modifier les informations de l'examen
+        </tal:block>
+        <a class="close-reveal-modal"></a>
+    </h2>
+
+    <tal:define define="breadcrumbs python:context.getCrumbs('edit')"  tal:condition="not:is_ajax | nothing">
+        <metal:macro use-macro="context/breadcrumbs_macro/macros/breadcrumbs">
+            Page d'affichage du fil d'ariane
+        </metal:macro>
+        <metal:macro use-macro="here/global_statusmessage_macro/macros/portal_message">Message de session</metal:macro>
+    </tal:define>
+
+    <form tal:attributes="action string:${context/absolute_url}/${template/id}"
+          id="js-editActivity"
+          method="post"
+          class="row">
+
+        <h1 tal:condition="not:is_ajax">
+            <i class="fa fa-edit no-pad"></i>
+            <span i18n:translate="">Propriétés de l'activité</span> «<tal:replace replace="here/Title" />»
+        </h1>
+
+        <div id="archetypes-fieldname-title"
+                tal:define="error errors/title | nothing;
+                            arch_class string:field;
+                            widget python:context.schema['title'].widget"
+                tal:attributes="class python:context.test(error, 'error %s' % arch_class, arch_class)">
+            <label for="title" tal:content="structure python:widget.Label(here)"/>
+            <span class="formHelp"
+                  tal:content="structure python:widget.Description(here)"/>
+            <div class="fieldErrorBox"
+                   tal:condition="error"
+                   tal:content="error" />
+            <input type="text" id="title" name="title" required="required" placeholder="Saisie obligatoire" maxlength="255" size="30"
+                   tal:attributes="value request/title | context/Title"
+                   i18n:attributes="placeholder" />
+        </div>
+
+        <div id="archetypes-fieldname-description"
+                tal:define="error errors/description | nothing;
+                            arch_class string:field;
+                            widget python:context.schema['description'].widget"
+                tal:attributes="class python:context.test(error, 'error %s' % arch_class, arch_class)">
+            <label for="description" tal:content="structure python:widget.Label(here)"/>
+            <span class="formHelp"
+                  tal:content="structure python:widget.Description(here)"/>
+            <div class="fieldErrorBox"
+                   tal:condition="error"
+                   tal:content="error" />
+            <textarea id="description" name="description" rows="5"><tal:replace replace="request/description | context/Description"/></textarea>
+        </div>
+
+        <div id="archetypes-fieldname-note_max"
+                tal:define="error errors/note_max | nothing;
+                            arch_class string:field;
+                            widget python:context.schema['note_max'].widget"
+                tal:attributes="class python:context.test(error, 'error %s' % arch_class, arch_class)">
+            <label for="note_max" tal:content="structure python:widget.Label(here)"/>
+            <span class="formHelp"
+                  tal:content="structure python:widget.Description(here)"/>
+            <div class="fieldErrorBox"
+                   tal:condition="error"
+                   tal:content="error" />
+            <input type="text" id="note_max" name="note_max" maxlength="255" size="30"
+                   required="required" placeholder="Saisie obligatoire"
+                   tal:attributes="value request/note_max | context/getNoteMax"
+                   i18n:attributes="placeholder" />
+        </div>
+
+        <div id="archetypes-fieldname-duree"
+             tal:condition="isExamen"
+             tal:define="error errors/duree | nothing;
+                         arch_class string:field;
+                         widget python:context.schema['duree'].widget"
+             tal:attributes="class python:context.test(error, 'error %s' % arch_class, arch_class)">
+            <label for="duree" tal:content="structure python:widget.Label(here)"/>
+            <span class="formHelp"
+                  tal:content="structure python:widget.Description(here)"/>
+            <div class="fieldErrorBox"
+                   tal:condition="error"
+                   tal:content="error" />
+            <input type="text" id="duree" name="duree" required="required"
+                   placeholder="Saisie obligatoire" maxlength="50"
+                   tal:attributes="value request/duree | context/getDuree"
+                   i18n:attributes="placeholder" />
+        </div>
+
+        <div id="archetypes-fieldname-attempts"
+             tal:condition="isExamen"
+             tal:define="error errors/attempts | nothing;
+                         arch_class string:field;
+                         widget python:context.schema['attempts'].widget"
+             tal:attributes="class python:context.test(error, 'error %s' % arch_class, arch_class)">
+
+            <label for="attempts" tal:content="structure python:widget.Label(here)"/>
+            <span class="formHelp"
+                  tal:content="structure python:widget.Description(here)"/>
+            <div class="fieldErrorBox"
+                   tal:condition="error"
+                   tal:content="error" />
+            <input type="number" max="5" min="1" size="30"
+                   id="attempts" name="attempts"
+                   required="required"
+                   placeholder="Saisie obligatoire" i18n:attributes="placeholder"
+                   tal:attributes="value request/attempts | context/getAttempts" />
+        </div>
+
+        <div tal:condition="isExamen"
+             tal:define="fieldName string:verrou;
+                         widget python:context.schema[fieldName].widget"
+             tal:attributes="id string:archetypes-fieldname-${fieldName}"
+             class="field">
+            <label tal:attributes="for fieldName" tal:content="structure python:widget.Label(here)"/>
+            <span class="formHelp"
+                  tal:content="structure python:widget.Description(here)"/>
+            <input type="text" maxlength="255" size="30"
+                   id="verrou" name="verrou"
+                   tal:attributes="value request/verrou | context/verrou" />
+        </div>
+
+        <metal:field use-macro="python:here.widget('wims_lang', mode='edit')">
+            wims_lang
+        </metal:field>
+
+        <input type="hidden" name="tab" tal:attributes="value tab"/>
+        <!--input type="hidden" name="validate_key" value="edit_wims_activity"/-->
+        <input type="hidden" name="mode_etudiant" tal:attributes="value mode_etudiant" tal:condition="mode_etudiant"/>
+        <input type="hidden" name="form.submitted" value="1" />
+        <input type="hidden" value="macro_form" name="macro" />
+        <!--input type="hidden" value="modifier-activite" name="formulaire" /-->
+
+        <div class="formControls">
+            <button type="submit" class="button small radius"
+                    name="form.button.save">
+                <i class="fa fa-check-circle"></i>
+                <tal:block i18n:translate="">Enregistrer</tal:block>
+            </button>
+        </div>
+
+    </form>
+</tal:define>
+
+<script charset="UTF-8"
+            tal:content="structure string:setRevealFormNewPage('js-editActivity')"></script>
+
+</metal:main>
+
+</body>
+
+</html>

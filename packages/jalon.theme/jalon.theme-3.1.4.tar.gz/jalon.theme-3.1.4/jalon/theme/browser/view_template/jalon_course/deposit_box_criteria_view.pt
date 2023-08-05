@@ -1,0 +1,197 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="jalon.content">
+
+<body>
+
+<metal:main fill-slot="content"
+            tal:define="criteria_id request/criteria_id | string:0;
+                        mode_etudiant request/mode_etudiant | nothing;
+                        my_view python:view.getCriteriaView(user, mode_etudiant);
+                        mode_etudiant my_view/mode_etudiant">
+
+    <tal:define define="breadcrumbs view/getBreadcrumbs">
+    <metal:macro use-macro="context/breadcrumbs_macro/macros/breadcrumbs">
+        Page d'affichage du fil d'ariane
+    </metal:macro>
+    </tal:define>
+
+    <div id="reveal-main" class="reveal-modal medium"
+         data-reveal="data-reveal" data-options="close_on_background_click: true;"></div>
+    <div id="reveal-main_second" class="reveal-modal medium"
+         data-reveal="data-reveal" data-options="close_on_background_click: true;"></div>
+    <div id="reveal-main-large" class="reveal-modal large"
+         data-reveal="data-reveal" data-options="close_on_background_click: true;"></div>
+
+    <main class="row" role="main" aria-labelledby="page_title">
+        <section>
+        <h1>
+            <i class="fa fa-th falfw"></i>Grille d'évaluation
+        </h1>
+
+        <div class="panel warning radius">
+            <strong>Attention :</strong> Cette fonction est actuellement en phase de test merci de remonter vos difficultés d'utilisation.
+        </div>
+
+        <tal:condition condition="my_view/is_personnel">
+
+        <nav tal:condition="my_view/is_depot_actif">
+            <a class="button expand create" data-reveal-id="reveal-main" data-reveal-ajax="true"
+               tal:attributes="href string:${context/absolute_url}/add_deposit_box_criteria_form">
+               <i class="fa fa-plus-circle"></i>
+               <tal:block i18n:translate="">Ajouter un critère d'évaluation</tal:block>
+            </a>
+        </nav>
+        <div class="panel radius warning"
+             tal:condition="not:my_view/is_authorized_deposit">
+            <strong>Attention :</strong> dans le profil évaluation par les pairs les "dates limite de dépôts et d'évaluation" sont obligatoires.
+        </div>
+
+        <tal:condition condition="my_view/is_authorized_deposit">
+
+        <div class="panel radius warning"
+             tal:condition="not:my_view/is_depot_actif">
+            <strong>Attention :</strong> la date limite de dépôt est dépassée vous ne pouvez plus modifier la grille d'évaluation.
+        </div>
+        <div class="panel radius warning"
+             tal:condition="not:my_view/is_correction_actif">
+            <strong>Attention :</strong> la date limite d'évaluation est dépassée, vous pouvez annuler un critère d'évaluation.
+        </div>
+
+        </tal:condition>
+        </tal:condition>
+
+        <div class="panel radius warning"
+             tal:condition="not:my_view/is_grid_access">
+            <strong>Attention :</strong> vous n'avez pas le droit de visualiser la grille d'évaluation avant de commencer les évaluations !
+        </div>
+
+        <tal:condition condition="my_view/is_grid_access">
+        <div class="panel callout radius"
+             tal:condition="not:my_view/criteria_order">
+            La grille d'évaluation ne contient aucun critère d'évaluation
+        </div>
+
+        <ul class="tabs" data-tab role="tablist">
+            <tal:repeat repeat="index my_view/criteria_order">
+            <li role="presentation"
+                tal:attributes="class python:context.test(index == criteria_id, 'tab-title active', 'tab-title')">
+                <a role="tab" tabindex="0" aria-selected="true"
+                   tal:attributes="id string:tab${repeat/index/number};
+                                   href string:#criteria${repeat/index/number};
+                                   aria-controls string:#criteria${repeat/index/number}"
+                   tal:content="string:Critère ${repeat/index/number}"/>
+            </li>
+            </tal:repeat>
+        </ul>
+
+        <div class="tabs-content peer_evaluate"
+             tal:condition="my_view/criteria_order">
+            <section role="tabpanel" aria-hidden="true"
+                     tal:attributes="class python:context.test(criteria_id == '0', 'content active', 'content')">
+                <div class="panel callout radius">Sélectionnez un onglet</div>
+            </section>
+
+            <tal:repeat repeat="index my_view/criteria_order">
+            <section role="tabpanel" aria-hidden="true"
+                     tal:define="criteria python:my_view['criteria_dict'][index];
+                                 criteria_css_id string:criteria${repeat/index/number};"
+                     tal:attributes="id criteria_css_id;
+                                     class python:context.test(index == criteria_id, 'content active', 'content')">
+                <h2>
+                    <tal:condition condition="my_view/is_personnel">
+                    <tal:condition condition="my_view/is_depot_actif">
+                    <a class="right" data-reveal-id="reveal-main" data-reveal-ajax="true"
+                       tal:attributes="href string:${my_view/deposit_box_link}/delete_deposit_box_criteria_form?criteria_id=${index}">
+                        <i class="fa fa-trash-o alert"></i>
+                    </a>
+                    <a class="right" data-reveal-id="reveal-main" data-reveal-ajax="true"
+                       tal:attributes="href string:${my_view/deposit_box_link}/edit_deposit_box_criteria_form?criteria_id=${index}">
+                        <i class="fa fa-pencil"></i>
+                    </a>
+                    </tal:condition>
+                    <tal:condition condition="not:my_view/is_correction_actif">
+                    <a class="right" data-reveal-id="reveal-main" data-reveal-ajax="true"
+                       tal:attributes="href string:${my_view/deposit_box_link}/undo_deposit_box_criteria_form?criteria_id=${index}">
+                        <i class="fa fa-undo warning"></i>
+                    </a>
+                    <a class="right" data-reveal-id="reveal-main" data-reveal-ajax="true"
+                       tal:attributes="href string:${my_view/deposit_box_link}/redo_deposit_box_criteria_form?criteria_id=${index}">
+                        <i class="fa fa-pencil"></i>
+                    </a>
+                    </tal:condition>
+                    </tal:condition>
+                    <tal:replace replace="criteria/title"/>
+                </h2>
+
+                <div class="row">
+                    <div class="small-12 columns">
+                        <h3>Description :</h3>
+                    </div>
+                    <div class="small-12 medium-7 columns">
+                        <div class="panel callout radius"
+                             tal:content="structure python:criteria['description'].replace('\n', '<br/>')"/>
+                    </div>
+                    <div class="small-12 medium-5 columns">
+                        <dl class="deflist">
+                            <dt>Noter sur</dt>
+                            <dd tal:content="criteria/notation" />
+                            <dt>Coefficient</dt>
+                            <dd tal:content="criteria/coefficient" />
+                            <dt>Marge</dt>
+                            <dd tal:content="criteria/gap" />
+                            <dt>Commentaire étudiant</dt>
+                            <dd>
+                                <tal:replace replace="python:my_view['comment_dict'][criteria['comment']]"/>,
+                            </dd>
+                            <dd>
+                                entre <tal:replace replace="criteria/comment_min"/> et <tal:replace replace="criteria/comment_max"/> caractères.
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!--div class="formControls"-->
+                <div class="text-center"
+                     tal:define="crit_number repeat/index/number;
+                                 crit_prev python:'%s' % (int(crit_number) - 1);
+                                 crit_next python:'%s' % (int(crit_number) + 1)">
+                    <a class="button small"
+                       tal:attributes="onclick string:document.getElementById('tab${crit_prev}').click();
+                                       aria-controls string:#criteria${crit_prev}"
+                       tal:condition="not: repeat/index/start">
+                        <i class="fa fa-arrow-left"></i>
+                        Précédent
+                    </a>
+                    <a class="button small"
+                       tal:attributes="onclick string:document.getElementById('tab${crit_next}').click();
+                                       aria-controls string:#criteria${crit_next}"
+                       tal:condition="not: repeat/index/end">
+                        <i class="fa fa-arrow-right"></i>
+                        Suivant
+                    </a>
+                    <!--
+                    <button type="submit" class="button small"
+                            name="form.button.save"
+                            tal:condition="repeat/index/end">
+                        <i class="fa fa-pencil"></i>
+                        <tal:block i18n:translate="">Enregistrer</tal:block>
+                    </button>
+                    -->
+                </div>
+
+            </section>
+            </tal:repeat>
+        </div>
+        </tal:condition>
+        </section>
+    </main>
+</metal:main>
+
+</body>
+
+</html>

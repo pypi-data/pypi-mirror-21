@@ -1,0 +1,64 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="jalon.content">
+
+<body>
+
+<metal:main fill-slot="content"
+            tal:define="is_not_standard context/isNotStandard">
+    <h2>
+        <tal:block i18n:translate="">Modifier l'état du fichier déposé</tal:block>
+        <a class="close-reveal-modal"></a>
+    </h2>
+
+    <div class="panel warning radius"
+         tal:condition="is_not_standard"
+         i18n:translate="">
+        <strong>Attention :</strong> dans le profil "<tal:replace replace="context/getDisplayProfile"/>" vous ne pouvez valider ou invalider un dépôt. Ajouter un nouveau dépôt invalidera automatiquement le précédent.
+    </div>
+
+    <form method="post"
+          tal:attributes="action string:${context/absolute_url}/edit_validate_deposit_script"
+          tal:condition="not:is_not_standard">
+
+        <fieldset class="panel bkgrnd radius"
+                  tal:define="actif context/getActif">
+            <legend>État du fichier déposé</legend>
+
+            <p i18n:translate="">
+                Sélectionner « Invalide » pour indiquer à votre enseignant que ce fichier n'est pas à évaluer.
+            </p>
+
+            <div class="formControls">
+                <input type="radio" name="actif"
+                       value="actif" id="actif_activer"
+                       tal:attributes="checked python:context.test(actif == 'actif', 'checked', '')"/>
+                <label for="actif_activer"
+                       class="success"
+                       i18n:translate="">Valide</label>
+                <input type="radio" name="actif"
+                       value="" id="actif_desactiver"
+                       tal:attributes="checked python:context.test(actif != 'actif', 'checked', '')"/>
+                <label for="actif_desactiver"
+                       class="warning"
+                       i18n:translate="">Invalide</label>
+            </div>
+        </fieldset>
+
+        <div class="formControls">
+            <button type="submit" class="button small"
+                    name="Save">
+                <i class="fa fa-pencil"></i>
+                <tal:block i18n:translate="">Modifier</tal:block>
+            </button>
+        </div>
+    </form>
+
+</metal:main>
+
+</body>
+
+</html>
