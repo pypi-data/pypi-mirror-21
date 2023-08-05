@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+"""An executable that samples data from the sensor and gives the values to the
+dao to persist.
+
+"""
+from __future__ import print_function
+
+import sys
+
+from friskby import FriskbySampler, FriskbyDao
+from friskby import SDS011
+from rpiparticle import fby_settings
+
+if __name__ == '__main__':
+
+    settings = fby_settings.get_settings()
+    sample_time = settings['rpi_sample_time']
+    rpi_db = settings['rpi_db']
+
+    if len(sys.argv) > 1:
+        rpi_db = sys.argv[1]
+
+    DAO = FriskbyDao(rpi_db)
+    SAM = FriskbySampler(SDS011(True), DAO, sample_time)
+    SAM.collect()
