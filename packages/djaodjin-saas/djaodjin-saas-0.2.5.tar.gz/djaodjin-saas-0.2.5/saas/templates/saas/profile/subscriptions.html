@@ -1,0 +1,62 @@
+{% extends "saas/base_dashboard.html" %}
+
+{% block saas_content %}
+<section id="subscriptions" ng-app="saasApp" ng-cloak>
+  <div ng-controller="subscriptionListCtrl">
+    <table>
+      <thead>
+        <tr>
+          <th>Subscribed to</th>
+          <th>Until</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-hide="subscribed.$resolved">
+          <td colspan="4">
+            <h4>Loading ...</h4>
+          </td>
+        </tr>
+        <tr ng-show="subscribed.$resolved && subscribed.count == 0">
+          <td colspan="4">
+            <h4>No subcriptions<span ng-show="filterExpr"> [[filterExpr]]</span></h4>
+          </td>
+        </tr>
+      </tbody>
+      <tbody ng-repeat="entry in subscribed.results" ng-cloak ng-show="subscribed.$resolved && subscribed.results.length > 0">
+        <tr ng-class="endsSoon(entry)">
+          <td>
+            <a href="[[entry.plan.app_url]]/[[entry.organization.slug]]/">[[entry.plan.title]]</a>
+          </td>
+          <td>
+            [[entry.ends_at|date: mediumDate]]
+          </td>
+          <td>
+            [[relativeDate(entry.ends_at)]]
+          </td>
+          <td>
+            <button ng-click="unsubscribe(entry.organization.slug, entry.plan.slug)"
+                    ng-show="entry.auto_renew">
+              Unsubscribe Now
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div>
+      <uib-pagination ng-model="currentPage"
+                  total-items="subscribed.count"
+                  items-per-page="itemsPerPage"
+                  boundary-links="true"
+                  max-size="maxSize"
+                  previous-text="&lsaquo;"
+                  next-text="&rsaquo;"
+                  first-text="&laquo;"
+                  last-text="&raquo;"
+                  ng-change="pageChanged(subscribed)"
+                  ng-show="subscribed.$resolved && subscribed.results.length > 0"></uib-pagination>
+    </div>
+  </div>
+</section>
+{% endblock %}

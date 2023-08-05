@@ -1,0 +1,24 @@
+{% extends "saas/base_dashboard.html" %}
+
+{% block saas_content %}
+<div>
+    {% if form.instance %}
+    <div data-plan="{{form.instance.slug}}">
+        <button id="activate-plan" class="activate {% if form.instance.is_active %}activated{% endif %}">{% if form.instance.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+    </div>
+    {% endif %}
+    {% if show_delete %}
+    <div>
+        <button id="delete-plan">Delete</button>
+    </div>
+    {% endif %}
+</div>
+<form method="post" action=".">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{csrf_token}}">
+    {{ form }}
+    <input type="submit" name="submit" value="Submit">
+</form>
+<div id="confirm-delete" data-plan="{{form.instance.slug}}">
+<button id="delete-action-btn" class="delete">Confirmed Delete</button>
+</div>
+{% endblock %}
