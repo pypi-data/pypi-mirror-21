@@ -1,0 +1,84 @@
+{% load wagtailcore_tags compress static wagtailuserbar core_tags i18n persona_tags %}
+{% load wagtailsettings_tags wagtailimages_tags %}
+{% get_settings %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>{% block title %}{% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %}{% endblock %}{% block title_suffix %}{% endblock %}</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <meta name="twitter:card" content="summary"/>
+        <meta name="twitter:title" content="{% if self.social_media_title %}{{ self.social_media_title }}{% elif self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %}"/>
+        <meta name="twitter:description" content="{% if self.social_media_description %}{{ self.social_media_description }}{% else %}{{ self.subtitle }}{% endif %}"/>
+        {% image self.social_media_image width-300 as tmp_photo %}
+        <meta name="twitter:image" content="{% if self.social_media_image %}{{request.site.root_url}}{{ tmp_photo.url }}{% endif %}"/>
+        <meta property="og:title" content= "{% if self.social_media_title %}{{ self.social_media_title }}{% elif self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %}" />
+        <meta property="og:description" content="{% if self.social_media_description %}{{ self.social_media_description }}{% else %}{{ self.subtitle }}{% endif %}"/>
+        {% image self.social_media_image width-300 as tmp_photo %}
+        <meta property="og:image" content="{% if self.social_media_image %}{{request.site.root_url}}{{ tmp_photo.url }}{% endif %}"/>
+        <meta property="og:image:url" content="{% if self.social_media_image %}{{request.site.root_url}}{{ tmp_photo.url }}{% endif %}"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        {% compress css %}
+        <link rel="stylesheet" type="text/x-scss" href="{% static 'css/style.scss' %}">
+        {% endcompress %}
+        {% block extra_css %}{% endblock %}
+    </head>
+
+    <body class="{% block body_class %}{% endblock %}">
+
+      {% if settings.core.SiteSettings.ga_tag_manager %}
+      <!-- Google Tag Manager -->
+      {% persona_selected as persona_selected_value %}
+      <noscript><iframe src="//www.googletagmanager.com/ns.html?id={{settings.core.SiteSettings.ga_tag_manager}}{% if persona_selected_value%}&persona={{ persona_selected_value }}&event=persona{% endif %}"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+      <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','{{settings.core.SiteSettings.ga_tag_manager}}');</script>
+      <!-- End Google Tag Manager -->
+
+      {% if persona_selected_value %}
+        <script type="text/javascript">
+          dataLayer.push({'persona': '{{ persona_selected_value }}', 'event': 'persona'});
+        </script>
+      {% endif %}
+      {% endif %}
+
+      {% if languages %}
+      <div class="languages l-indent">
+        {% for language in languages %}
+          <a href="{% url 'locale_set' language.locale %}?next={{request.path}}">{{language}}</a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <a href="/" class="logo l-indent">
+        {% block logo %}
+        <img src="{% static 'logo_1line.png' %}" alt="The Internet of Good Things" />
+        {% endblock %}
+      </a>
+
+      {% block content %}{% endblock %}
+
+      {% section_listing_homepage %}
+
+      {% block search %}
+        {% if languages %}
+          {% include "search/search_block.html" %}
+        {% endif %}
+      {% endblock %}
+
+      {% block footer %}
+      <div class="footer l-indent">
+        <div>&copy; The Internet of Good Things</div>
+          {% footer_page %}
+      </div>
+
+      {% endblock %}
+      {% block extra_js %}{% endblock %}
+    </body>
+</html>
