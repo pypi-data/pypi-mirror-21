@@ -1,0 +1,33 @@
+@require(page, source_file, symbols_details, extra_html, extra_footer_html)
+@extends('base_page.html')
+
+@def content():
+
+<div id="page-description" data-hotdoc-source="@source_file">
+@if page.formatted_contents:
+@page.formatted_contents
+@end
+@for extra in extra_html:
+@extra
+@end
+</div>
+
+@for symbols_detail in symbols_details:
+@if symbols_detail.name:
+@(html_id = '_'.join(symbols_detail.name.split()))
+<h2 class="symbol_section" id="@html_id">@symbols_detail.name</h2>
+@end
+\
+@for i, description in enumerate(symbols_detail.descriptions):
+@description
+@end
+@end
+@end
+\
+@def footer():
+\
+@for extra in extra_footer_html:
+@extra
+@end
+\
+@end
