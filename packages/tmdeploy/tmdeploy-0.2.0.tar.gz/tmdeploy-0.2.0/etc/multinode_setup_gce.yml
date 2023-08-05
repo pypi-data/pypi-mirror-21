@@ -1,0 +1,104 @@
+# Template for setting up TissueMAPS on multiple nodes on Google Compute Engine.
+#
+# This setup depends on groups defined via Elasticluster.
+---
+cloud:
+  provider: gce
+  region: us-west1-b
+architecture:
+  name: tissuemaps
+  clusters:
+    - name: postgresql
+      node_types:
+        - name: master
+          count: 1
+          groups:
+            - name: tissuemaps_db_master
+              vars:
+                pg_max_worker_processes: 16
+                pg_shared_buffer: 20GB
+                pg_effective_cache_size: 40GB
+            - name: ganglia_client
+          instance:
+            volume_size: 7000
+            disk_size: 30
+            image: ubuntu-1404-trusty-v20161020
+            flavor: n1-highcpu-16
+            tags:
+              - storage
+        - name: worker
+          count: 5
+          groups:
+            - name: tissuemaps_db_worker
+              vars:
+                pg_max_worker_processes: 4
+                pg_shared_buffer: 5GB
+                pg_effective_cache_size: 10GB
+            - name: ganglia_client
+          instance:
+            volume_size: 7000
+            disk_size: 30
+            image: ubuntu-1404-trusty-v20161020
+            flavor: n1-highcpu-4
+            tags:
+              - storage
+    - name: glusterfs
+      node_types:
+        - name: server
+          count: 5
+          groups:
+            - name: glusterfs_server
+            - name: ganglia_client
+          instance:
+            volume_size: 7000
+            disk_size: 30
+            image: ubuntu-1404-trusty-v20161020
+            flavor: n1-standard-2
+            tags:
+              - storage
+    - name: slurm
+      node_types:
+        - name: master
+          count: 1
+          groups:
+            - name: tissuemaps_server
+              vars:
+                tm_data_directory: /glusterfs/data
+                tm_log_directory: /glusterfs/log
+            - name: slurm_master
+            - name: glusterfs_client
+            - name: ganglia_client
+          instance:
+            disk_size: 100
+            image: ubuntu-1404-trusty-v20161020
+            flavor: n1-standard-8
+            tags:
+              - web
+              - compute
+        - name: worker
+          count: 10
+          groups:
+            - name: tissuemaps_compute
+              vars:
+                tm_data_directory: /glusterfs/data
+            - name: slurm_workers
+            - name: glusterfs_client
+            - name: ganglia_client
+          instance:
+            disk_size: 100
+            image: ubuntu-1404-trusty-v20161020
+            flavor: n1-highmem-4
+            tags:
+              - compute
+    - name: ganglia
+      node_teyps:
+        - name: server
+          count: 1
+          groups:
+            - name: ganglia_client
+          instance:
+            disk_size: 30
+            image: ubuntu-1404-trusty-v20161020
+            flavor: n1-standard-1
+            tags:
+              - web

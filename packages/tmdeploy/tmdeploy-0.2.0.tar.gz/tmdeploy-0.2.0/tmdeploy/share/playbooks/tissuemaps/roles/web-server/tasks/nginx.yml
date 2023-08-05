@@ -1,0 +1,189 @@
+# TmDeploy - Automated setup and deployment of TissueMAPS in the cloud.
+# Copyright (C) 2016  Markus D. Herrmann, University of Zurich
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+---
+- name: Install nginx
+  apt:
+    name: nginx
+    state: installed
+  tags:
+    - web-server
+    - nginx
+
+- name: Create nginx site
+  template:
+    src: nginx_site.j2
+    dest: /etc/nginx/sites-available/tissuemaps
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+    mode: 0700
+  tags:
+    - web-server
+    - nginx
+
+- name: Place site specific nginx conf.d
+  template:
+    src: nginx_conf.j2
+    dest: /etc/nginx/conf.d/tissuemaps.conf
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+    mode: 0700
+  tags:
+    - web-server
+    - nginx
+
+- name: Create log directory
+  file:
+    path: "{{ tm_log_directory }}"
+    state: directory
+    recurse: yes
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+    mode: 0700
+  tags:
+    - web-server
+    - nginx
+
+- name: Create nginx log files with correct permissions
+  file:
+    path: "{{ tm_log_directory }}/{{ item }}"
+    state: touch
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+    mode: 0700
+  with_items:
+    - nginx-access.log
+    - nginx-error.log
+  tags:
+    - web-server
+    - nginx
+
+- name: Set path to nginx pid file
+  set_fact:
+    nginx_pid_file: /var/run/nginx/nginx.pid
+  when: ansible_env.ANSIBLE_CONTAINER is defined
+  tags:
+    - web-server
+    - nginx
+
+- name: Set path to nginx pid file
+  set_fact:
+    nginx_pid_file: /var/run/nginx.pid
+  when: ansible_env.ANSIBLE_CONTAINER is undefined
+  tags:
+    - web-server
+    - nginx
+
+- name: Place nginx init config file for update-rc.d
+  template:
+    src: nginx.conf.j2
+    dest: /etc/init/nxing.conf
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+    mode: 0700
+  when: ansible_env.ANSIBLE_CONTAINER is undefined and (ansible_distribution_version|int) < 16
+  tags:
+    - web-server
+    - nginx
+
+- name: Create directory for nginx pid file
+  file:
+    path: "{{ nginx_pid_file | dirname }}"
+    state: directory
+    recurse: yes
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+    mode: 0700
+  when: ansible_env.ANSIBLE_CONTAINER is defined
+  tags:
+    - web-server
+    - nginx
+
+- name: Change nginx pid in config
+  lineinfile:
+    dest: /etc/nginx/nginx.conf
+    state: present
+    regexp: 'pid\s+.*;'
+    line: 'pid {{ nginx_pid_file }};'
+  tags:
+    - web-server
+    - nginx
+
+- name: Change nginx pid for serviced
+  template:
+    src: nginx.service.j2
+    dest: /lib/systemd/system/nginx.service
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+  when: (ansible_env.ANSIBLE_CONTAINER is undefined) and (ansible_distribution_version|int > 16)
+  tags:
+    - web-server
+    - nginx
+
+- name: Reload systemctl for serviced
+  command: systemctl daemon-reload
+  when: (ansible_env.ANSIBLE_CONTAINER is undefined) and (ansible_distribution_version|int >= 16)
+  tags:
+    - web-server
+    - nginx
+
+- name: Change nginx user for worker processes
+  lineinfile:
+    dest: /etc/nginx/nginx.conf
+    state: present
+    regexp: 'user\s+.*;'
+    line: 'user {{ tm_user }};'
+  tags:
+    - web-server
+    - nginx
+
+- name: Change nginx keep alive timeout
+  lineinfile:
+    dest: /etc/nginx/nginx.conf
+    state: present
+    regexp: 'keepalive_timeout\s+.*;'
+    line: 'keepalive_timeout 300s;'
+  tags:
+    - web-server
+    - nginx
+
+# We may want to run nginx as a non-root user, e.g. within a container.
+- name: Give user permission to nginx directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    owner: "{{ tm_user }}"
+    group: "{{ tm_user }}"
+  with_items:
+    - /var/lib/nginx
+    - /var/log/nginx
+    - /usr/share/nginx
+    - /etc/nginx
+  tags:
+    - web-server
+    - nginx
+
+- name: Enable nginx site
+  shell: |
+    if [ ! -s /etc/nginx/sites-enabled/tissuemaps ]; then
+      ln -s /etc/nginx/sites-available/tissuemaps /etc/nginx/sites-enabled/tissuemaps
+    fi
+    if [ -s /etc/nginx/sites-enabled/default ]; then
+      rm /etc/nginx/sites-enabled/default
+    fi
+  tags:
+    - web-server
+    - nginx
