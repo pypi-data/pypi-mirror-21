@@ -1,0 +1,22 @@
+[Unit]
+Description=Kubernetes Proxy
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config/config
+EnvironmentFile=-/etc/kubernetes/config/kube-proxy
+ExecStart=/usr/bin/kube-proxy \
+    $CLUSTER_CIDR \
+    --masquerade-all=true \
+    $MODE \
+	$KUBECONFIG \
+	$KUBE_LOGTOSTDERR \
+	$KUBE_LOG_LEVEL \
+	$ARGS
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
