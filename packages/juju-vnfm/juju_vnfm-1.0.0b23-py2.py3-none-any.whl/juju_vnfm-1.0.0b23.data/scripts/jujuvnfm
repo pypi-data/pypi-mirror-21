@@ -1,0 +1,87 @@
+#!python
+from __future__ import print_function
+
+import configparser
+import logging
+import sys
+from optparse import OptionParser
+
+import os.path
+
+import jujuvnfm.juju_vnfm as vnfm
+from utils.utils import get_version
+
+version = get_version()
+log = logging.getLogger('org.openbaton.python.vnfm.jujuvnfm.%s' % __name__)
+conf_path = '/etc/openbaton/juju/'
+conf_ini = '%sconf.ini' % conf_path
+
+if sys.version_info < (3, 5, 2):
+    print('jujuvnfm: error: please use Python version 3.5.2 or higher', file=sys.stderr)
+    sys.exit(1)
+
+
+def config_file_exists():
+    return os.path.isfile(conf_ini)
+
+
+def touch(path):
+    with open(path, 'a'):
+        os.utime(path, None)
+
+
+def create_config_file():
+    if not os.path.exists(conf_path):
+        os.mkdir(conf_path)
+    config = configparser.ConfigParser()
+    config['vnfm'] = {
+        'log_path': os.getenv('JUJU_VNFM_LOG_PATH', '/var/log/openbaton/'),
+        'broker_ip': os.getenv('JUJU_VNFM_BROKER_IP', 'localhost'),
+        'username': os.getenv('JUJU_VNFM_RABBIT_USERNAME', 'admin'),
+        'password': os.getenv('JUJU_VNFM_RABBIT_PASSWORD', 'openbaton'),
+        'heartbeat': os.getenv('JUJU_VNFM_RABBIT_HARTBEAT', '60'),
+        'exchange': os.getenv('JUJU_VNFM_RABBIT_EXCHANGE', 'openbaton-exchange'),
+        'endpoint_type': 'RABBIT',
+        'charm-status-timeout': os.getenv('JUJU_VNFM_CHARM_STATUS_TIMEOUT', '600'),
+        'allocate': os.getenv('JUJU_VNFM_NFVO_ALLOCATE', 'true'),
+        'exchange-durable': os.getenv('JUJU_VNFM_RABBIT_EXCHANGE_DURABLE', 'true'),
+    }
+    with open(conf_ini, 'w+') as configfile:
+        config.write(configfile)
+
+
+if __name__ == "__main__":
+    parser = OptionParser(usage='%prog [-d] [-t THREADS] [start|configure]', version='%prog {}'.format(version))
+    parser.add_option('-t', '--threads', dest='threads', type='int', help='number of threads started for the Juju-VNFM')
+    parser.add_option('-d', '--debug', action='store_true', dest='debug', default=False, help='enable debug mode')
+
+    if not os.path.isfile(conf_ini):
+        create_config_file()
+
+    (options, args) = parser.parse_args()
+
+    if len(args) > 1:
+        parser.error('pass either start or configure as arguments')
+    elif len(args) < 1:
+        parser.error('start or configure argument required')
+
+    if 'start' in args:
+        if not config_file_exists():
+            log.error(
+                'jujuvnfm: error: No configuration file found. Please create the file /etc/openbaton/juju/conf.ini and run jujuvnfm configure before starting.',
+                file=sys.stderr)
+            sys.exit(1)
+        number_of_threads = 5
+        debug_mode = False
+        if options.threads:
+            number_of_threads = options.threads
+        if options.debug:
+            debug_mode = options.debug
+        vnfm.start(debug_mode=debug_mode, number_of_threads=number_of_threads)
+    elif 'configure' in args:
+        if options.threads or options.debug:
+            parser.error('jujuvnfm configure takes no options')
+        create_config_file()
+    else:
+        parser.error('{} is not a valid argument: start or configure argument required'.format(args[0]))
+        sys.exit(1)
