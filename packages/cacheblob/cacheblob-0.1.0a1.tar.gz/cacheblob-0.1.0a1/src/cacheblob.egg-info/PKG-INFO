@@ -1,0 +1,95 @@
+Metadata-Version: 1.1
+Name: cacheblob
+Version: 0.1.0a1
+Summary: cacheblob is a key-value interface for expiring items.
+Home-page: https://github.com/oddacious/python-cacheblob
+Author: rdj
+Author-email: fumble.to.victory@gmail.com
+License: Apache Software License
+Description: python-cacheblob
+        ================
+        
+        cacheblob is a key-value interface for expiring items.
+        
+        Installation
+        ------------
+        
+        pip install python-cacheblob
+        
+        Usage
+        -----
+        
+        .. code-block:: python
+        
+            import datetime
+            from cacheblob import Cacheblob
+        
+            cache = Cacheblob.cache(handler='mongo')
+            cache.store(index='index2', value='value2', duration=datetime.timedelta(days=1))
+            for item in cache.fetch_all():
+                print item
+        
+        Use Case
+        --------
+        
+        cacheblob was designed for data sources that should age and expire. Using it should be as
+        simple as setting an expiry time (or duration) on your data. 
+        
+        As such, cacheblob avoids imposing too many design decisions upon the user beyond those
+        necessary for its expiry functionality. It decouples the interface and the storage
+        mechanism by allowing arbitrary underlying storage systems, called *handlers* in
+        cacheblob.
+        
+        Cacheblob has an *item* concept, which is a key-value pair with an expiry time. Most
+        handlers except strings for values or will work with any values that can be converted to
+        strings. Not all handlers are necessarily subject to this limitation.
+        
+        Cacheblob was designed to be lightweight by default, and to be flexible, by allowing the
+        user to choose their underlying storage model. Worried about concurrency? Use a handler
+        that allows concurrent access. You want your items as files on disk for easy access by
+        programs that expect them as such? Use a file-backed handler. Choose your own
+        consistency-availability-tolerance trade-off.
+        
+        The current implemented handlers are:
+        
+        - handler: A lightweight wrapper that uses Python's in-memory storage
+        - mongo: Store items in a Mongo database
+        - sqlite: Store items in a SQLite database
+        - plaintext: Store items as files in a folder on disk
+        - gzip: Store items as gzip files in a folder on disk
+        
+        Authors
+        -------
+        
+        rdj - https://oddacious.github.io
+        
+        
+        Changelog
+        =========
+        
+        0.1.0 (2016-11-01)
+        -----------------------------------------
+        
+        * First PyPi release
+        
+        0.1.0a1 (2016-09-10)
+        -----------------------------------------
+        
+        * Prerelease
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: Unix
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Utilities

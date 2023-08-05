@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cacheblob.db_wrapper &mdash; cacheblob  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="cacheblob  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cacheblob.db_wrapper</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module allows us to manage a series of tables in a SQLite database.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">six</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">db_wrapper_table</span>
+
+<div class="viewcode-block" id="DBWrapper"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper">[docs]</a><span class="k">class</span> <span class="nc">DBWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;DBWrapper manages a series of DBWrapperTable objects.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;results.db&quot;</span><span class="p">,</span> <span class="n">pytypes</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">db_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">con</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pytypes</span> <span class="o">=</span> <span class="n">pytypes</span>
+
+<div class="viewcode-block" id="DBWrapper.get_con"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.get_con">[docs]</a>    <span class="k">def</span> <span class="nf">get_con</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access or initiate the sqlite3 connection.</span>
+
+<span class="sd">        :returns: The sqlite3 connection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">con</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pytypes</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">,</span> <span class="n">detect_types</span><span class="o">=</span><span class="n">sqlite3</span><span class="o">.</span><span class="n">PARSE_DECLTYPES</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">db_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">con</span><span class="o">.</span><span class="n">text_factory</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">con</span></div>
+
+<div class="viewcode-block" id="DBWrapper.get_cursor"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.get_cursor">[docs]</a>    <span class="k">def</span> <span class="nf">get_cursor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access or initiate the sqlite3 cursor.</span>
+
+<span class="sd">        :returns: The sqlite3 cursor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_con</span><span class="p">()</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cursor</span></div>
+
+<div class="viewcode-block" id="DBWrapper.add_table"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.add_table">[docs]</a>    <span class="k">def</span> <span class="nf">add_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a table to the collection.</span>
+
+<span class="sd">        :param table_name: The name you will refer to the table by.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">db_wrapper_table</span><span class="o">.</span><span class="n">DBWrapperTable</span><span class="p">(</span><span class="n">con</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_con</span><span class="p">(),</span>
+                                                                      <span class="n">table_name</span><span class="o">=</span><span class="n">table_name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DBWrapper.empty_all_dbs"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.empty_all_dbs">[docs]</a>    <span class="k">def</span> <span class="nf">empty_all_dbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Empty all of the tables.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">:</span>
+            <span class="n">table</span><span class="o">.</span><span class="n">empty_db</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DBWrapper.close_db"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.close_db">[docs]</a>    <span class="k">def</span> <span class="nf">close_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Commit results to database and close the database.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_con</span><span class="p">()</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_con</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+    <span class="c1"># The following methods are wrappers around the table-specific methods</span>
+
+<div class="viewcode-block" id="DBWrapper.init_table"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.init_table">[docs]</a>    <span class="k">def</span> <span class="nf">init_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">create_sql</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a table.</span>
+
+<span class="sd">        :param table_name: The name you will refer to the table by.</span>
+<span class="sd">        :param create_sql: The SQL used to initialize the database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">init_db</span><span class="p">(</span><span class="n">create_sql</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DBWrapper.empty_db"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.empty_db">[docs]</a>    <span class="k">def</span> <span class="nf">empty_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Empty a given table.</span>
+
+<span class="sd">        :param table_name: The name of the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">empty_db</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DBWrapper.set_update_sql"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.set_update_sql">[docs]</a>    <span class="k">def</span> <span class="nf">set_update_sql</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">update_sql</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the update SQL to be used for update_db for a given table. Be careful, no</span>
+<span class="sd">        security checks in place here.</span>
+
+<span class="sd">        :param table_name: The name of the table.</span>
+<span class="sd">        :param update_sql: The SQL to be used for an update.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">set_update_sql</span><span class="p">(</span><span class="n">update_sql</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DBWrapper.update_db"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.update_db">[docs]</a>    <span class="k">def</span> <span class="nf">update_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the database with the template provided earlier in set_update_sql().</span>
+
+<span class="sd">        :param table_name: The name of the table.</span>
+<span class="sd">        :param params: The list of SQL parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">update_db</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DBWrapper.num_rows"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.num_rows">[docs]</a>    <span class="k">def</span> <span class="nf">num_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Count the number of rows in the table.</span>
+
+<span class="sd">        :param table_name: The name of the table.</span>
+<span class="sd">        :returns: Number of rows in the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">num_rows</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DBWrapper.print_db"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.db_wrapper.DBWrapper.print_db">[docs]</a>    <span class="k">def</span> <span class="nf">print_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print the contents of a table.</span>
+
+<span class="sd">        :param table_name: The name of the table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">table_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_list</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span><span class="o">.</span><span class="n">print_db</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RDJ.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

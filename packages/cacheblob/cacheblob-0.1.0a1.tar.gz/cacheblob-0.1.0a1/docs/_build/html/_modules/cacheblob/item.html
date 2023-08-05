@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cacheblob.item &mdash; cacheblob  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="cacheblob  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cacheblob.item</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module defines the CacheItem class, which represents key-value pairs that have an</span>
+<span class="sd">associated time of expiry.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">pytz</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">C</span>
+
+<div class="viewcode-block" id="CacheItem"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.item.CacheItem">[docs]</a><span class="k">class</span> <span class="nc">CacheItem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class represents items, which are key-value pairs that have an associated</span>
+<span class="sd">    time of expiry.</span>
+
+<span class="sd">    :class:`cacheblob.CacheItem`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">expiry</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_created</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expiry</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updated</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">expiry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot simultaneously specify both duration and expiry&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">created</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">created</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">expiry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expiry</span> <span class="o">=</span> <span class="n">expiry</span>
+        <span class="k">elif</span> <span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expiry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># This can safely be an else case because of the error thrown earlier</span>
+            <span class="c1"># Note that if the user wants an item with no expiry, cannot do that here</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">DEFAULT_DURATION</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expiry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;{0}:{1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;&lt;{0} {1}&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                                  <span class="nb">str</span><span class="p">({</span><span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">,</span>
+                                       <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">,</span>
+                                       <span class="s1">&#39;length&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="p">,</span>
+                                       <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+                                       <span class="s1">&#39;duration&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span>
+                                       <span class="s1">&#39;expiry&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">expiry</span><span class="p">,</span>
+                                       <span class="s1">&#39;updated&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="p">}))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the index, or key, of a key-value pair.</span>
+
+<span class="sd">        :returns: The index, or key, of the key-value pair.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span>
+
+    <span class="nd">@index.setter</span>
+    <span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the index, or key, of a key-value pair.</span>
+
+<span class="sd">        :param value: The value to set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the value of a key-value pair.</span>
+
+<span class="sd">        :returns: The value of the key-value pair.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span>
+
+    <span class="nd">@value.setter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the value of a key-value pair. This will set the updated field to the</span>
+<span class="sd">        current time, in UTC.</span>
+
+<span class="sd">        :param value: The value to set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updated</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the duration of the key-value pair. This is the length of time that the</span>
+<span class="sd">        pair was intended to live for.</span>
+
+<span class="sd">        :returns: The duration of the key-value pair.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span>
+
+    <span class="nd">@duration.setter</span>
+    <span class="k">def</span> <span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the duration of a key-value pair. If the value is none, then the pair is</span>
+<span class="sd">        designed to never expire. The duration must be positive.</span>
+
+<span class="sd">        :param value: The value to set. Must be a datetime.timedelta value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expiry</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;duration must be None or a datetime.timedelta value.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Duration must be None or positive&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expiry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">+</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">created</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the creation time of the key-value pair, which is stored in UTC.</span>
+
+<span class="sd">        :returns: The creation time of the key-value pair.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_created</span>
+
+    <span class="nd">@created.setter</span>
+    <span class="k">def</span> <span class="nf">created</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the creation time of a key-value pair. The time is stored in UTC but does</span>
+<span class="sd">        not need to be provided as a UTC-localized value.</span>
+
+<span class="sd">        :param value: The value to set. Must be a datetime.datetime value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;created must be a datetime.datetime value.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">tzinfo</span><span class="o">.</span><span class="n">utcoffset</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">value_utc</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value_utc</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_created</span> <span class="o">=</span> <span class="n">value_utc</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">expiry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the expiry time of the key-value pair, which is stored in UTC.</span>
+
+<span class="sd">        :returns: The expiry time of the key-value pair.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expiry</span>
+
+    <span class="nd">@expiry.setter</span>
+    <span class="k">def</span> <span class="nf">expiry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the expiry time of a key-value pair. If the value is none, then the pair</span>
+<span class="sd">        is designed to never expire. The expiry must not be earlier than the creation</span>
+<span class="sd">        time. The time is stored in UTC but does not need to be provided as a</span>
+<span class="sd">        UTC-localized value.</span>
+
+<span class="sd">        :param value: The value to set. Must be a datetime.datetime value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expiry</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;expiry must be a datetime.datetime value.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">tzinfo</span><span class="o">.</span><span class="n">utcoffset</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">value_utc</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value_utc</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">value_utc</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expiry must be None or in the future&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_duration</span> <span class="o">=</span> <span class="n">value_utc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_expiry</span> <span class="o">=</span> <span class="n">value_utc</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_expired</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determine whether or not the item is expired.</span>
+
+<span class="sd">        :returns: Whether the item is currently expired or not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expiry</span> <span class="o">&lt;</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">updated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the last update time of the item.</span>
+
+<span class="sd">        :returns: When the item was updated, in UTC.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_updated</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Access the length of the item&#39;s value. If the item was a string type then this</span>
+<span class="sd">        will be the length of the string. Otherwise this will be None, which does not</span>
+<span class="sd">        indicate that the item has no value.</span>
+
+<span class="sd">        :returns: The length of the item&#39;s value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_length</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RDJ.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

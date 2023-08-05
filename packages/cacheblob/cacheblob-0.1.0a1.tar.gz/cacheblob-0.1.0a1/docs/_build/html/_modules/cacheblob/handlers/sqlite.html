@@ -1,0 +1,429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cacheblob.handlers.sqlite &mdash; cacheblob  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="cacheblob  documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cacheblob.handlers.sqlite</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module implements a SQLite handler. It stores items in a SQLite database.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pytz</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">db_wrapper</span>
+<span class="kn">from</span> <span class="nn">..item</span> <span class="kn">import</span> <span class="n">CacheItem</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">.handler</span> <span class="kn">import</span> <span class="n">Handler</span>
+
+<div class="viewcode-block" id="SQLite"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite">[docs]</a><span class="k">class</span> <span class="nc">SQLite</span><span class="p">(</span><span class="n">Handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class implements a SQLite handler which stores items in a SQLite database,</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SQLite</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_directory</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_file</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">DEFAULT_DB_FILE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_absolute</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_database</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_index_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;CREATE TABLE IF NOT EXISTS {} (</span>
+<span class="s2">            id INTEGER PRIMARY KEY,</span>
+<span class="s2">            lookup_index TEXT,</span>
+<span class="s2">            value BLOB,</span>
+<span class="s2">            created TIMESTAMP,</span>
+<span class="s2">            expiry TIMESTAMP,</span>
+<span class="s2">            length INTEGER)&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;directory&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;directory&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;index_file&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">index_file</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;index_file&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">C</span><span class="o">.</span><span class="n">DEFAULT_DIRECTORY</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_database</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SQLite.open_database"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.open_database">[docs]</a>    <span class="k">def</span> <span class="nf">open_database</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open the SQLite database that will be used to store the metadata.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="o">=</span> <span class="n">db_wrapper</span><span class="o">.</span><span class="n">DBWrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_absolute</span><span class="p">,</span> <span class="n">pytypes</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">init_table</span><span class="p">(</span><span class="s1">&#39;lookup&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_index_table</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">set_update_sql</span><span class="p">(</span><span class="s1">&#39;lookup&#39;</span><span class="p">,</span>
+                                     <span class="s1">&#39;INSERT OR REPLACE INTO {} VALUES(NULL, ?, ?, ?, ?, ?)&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">database</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the database in use. This is an internal utility that is not designed to</span>
+<span class="sd">        be called by users.</span>
+
+<span class="sd">        :returns: The database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_database</span>
+
+    <span class="nd">@database.setter</span>
+    <span class="k">def</span> <span class="nf">database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">database</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the database in use. This is an internal utility that is not designed to</span>
+<span class="sd">        be called by users.</span>
+
+<span class="sd">        :param database: The database object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_database</span> <span class="o">=</span> <span class="n">database</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">directory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the directory in which the SQLite database is stored.</span>
+
+<span class="sd">        :returns: The directory used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directory</span>
+
+    <span class="nd">@directory.setter</span>
+    <span class="k">def</span> <span class="nf">directory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the directory to be used for the SQLite database.</span>
+
+<span class="sd">        :param directory: The directory to be used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_directory</span> <span class="o">=</span> <span class="n">directory</span>
+
+        <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">W_OK</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">define_index</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_file</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the filename of the SQLite database for storing items.</span>
+
+<span class="sd">        :returns: The name of the index file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_file</span>
+
+    <span class="nd">@index_file.setter</span>
+    <span class="k">def</span> <span class="nf">index_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the filename of the SQLite database for storing items.</span>
+
+<span class="sd">        :param filename: The filename to assign, relative to self.directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_file</span> <span class="o">=</span> <span class="n">filename</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">define_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SQLite.define_index"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.define_index">[docs]</a>    <span class="k">def</span> <span class="nf">define_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">index_file</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Define the full index file path, based on the directory and index_file. The</span>
+<span class="sd">        directory and index_file need not be provided here, if previously defined.</span>
+
+<span class="sd">        :param directory: The directory to use.</span>
+<span class="sd">        :param index_file: The SQLite file to use for items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">directory</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">directory</span> <span class="o">=</span> <span class="n">directory</span>
+        <span class="k">if</span> <span class="n">index_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">index_file</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">index_file</span> <span class="o">=</span> <span class="n">index_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_absolute</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">directory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SQLite.get_indexes"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.get_indexes">[docs]</a>    <span class="k">def</span> <span class="nf">get_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all of the indexes stored in the handler.</span>
+
+<span class="sd">        :returns: The list of indexes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT lookup_index FROM lookup&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()]</span>
+
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+    <span class="k">def</span> <span class="nf">_row_to_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;For a given row from the database, create an return an appropriate item.</span>
+<span class="sd">        This is an internal utility that is not designed to be called by users.</span>
+
+<span class="sd">        :param row: The database row.</span>
+<span class="sd">        :returns: An item if it could create one, otherwise None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must provide a list/tuple of length 6 to _row_to_item, or None&quot;</span><span class="p">)</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">created</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="n">expiry</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">CacheItem</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                         <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+                         <span class="n">created</span><span class="o">=</span><span class="n">created</span><span class="p">,</span>
+                         <span class="n">expiry</span><span class="o">=</span><span class="n">expiry</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_store_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store an item in the handler.</span>
+
+<span class="sd">        :param item: The item to be stored.</span>
+<span class="sd">        :returns: True if the item was successfully stored, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT id FROM lookup WHERE lookup_index=? LIMIT 1&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">,</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">did_write</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="c1"># This is one place where we can have concurrency problems</span>
+        <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">overwrite</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+            <span class="n">index_id</span> <span class="o">=</span> <span class="n">existing</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">update_sql</span> <span class="o">=</span> <span class="s2">&quot;UPDATE lookup SET value=?, created=?, expiry=?, length=? WHERE id=?&quot;</span>
+            <span class="n">update_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">expiry</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">length</span><span class="p">,</span> <span class="n">index_id</span><span class="p">]</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">update_sql</span><span class="p">,</span> <span class="n">update_list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_con</span><span class="p">()</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="c1"># If somehow we did not alter the row that we found (row was purged in between?)</span>
+            <span class="c1"># then create new row</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">rowcount</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">update_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">expiry</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">length</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">update_db</span><span class="p">(</span><span class="s1">&#39;lookup&#39;</span><span class="p">,</span> <span class="n">update_list</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">rowcount</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">did_write</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">did_write</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Generate a new arbitrary filename to be used for the value storage.</span>
+            <span class="n">update_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">expiry</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">length</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">update_db</span><span class="p">(</span><span class="s1">&#39;lookup&#39;</span><span class="p">,</span> <span class="n">update_list</span><span class="p">)</span>
+
+            <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT id FROM lookup WHERE lookup_index=? LIMIT 1&quot;</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">,</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">did_write</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_if_applicable</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">did_write</span>
+
+<div class="viewcode-block" id="SQLite.fetch"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.fetch">[docs]</a>    <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch an item from the handler.</span>
+
+<span class="sd">        :param index: Index of the item to fetch. Indexes are expected to be unique at</span>
+<span class="sd">            any given time.</span>
+<span class="sd">        :returns: The item, or None if no unexpired items are found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">item</span>
+
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lookup WHERE lookup_index=? LIMIT 1&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">,</span> <span class="p">[</span><span class="n">index</span><span class="p">])</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">item</span>
+
+        <span class="k">return</span> <span class="bp">None</span></div>
+
+<div class="viewcode-block" id="SQLite.fetch_with_status"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.fetch_with_status">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_with_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch an item from the handler. This differs from fetch() because it will also</span>
+<span class="sd">        return whether or not an item was found, which differs in the case of expired</span>
+<span class="sd">        items.</span>
+
+<span class="sd">        :param index: Index of the item to fetch. Indexes are expected to be unique at</span>
+<span class="sd">            any given time.</span>
+<span class="sd">        :returns: The item, or None if no unexpired items are found, and whether an item</span>
+<span class="sd">            was found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lookup WHERE lookup_index=? LIMIT 1&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">,</span> <span class="p">[</span><span class="n">index</span><span class="p">])</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">item</span><span class="p">,</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="SQLite.fetch_all"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.fetch_all">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch all of the items and return an iterator. Note that this function does</span>
+<span class="sd">        not guarantee that the items will not be modified between this function returning</span>
+<span class="sd">        and the user accessing the values.</span>
+
+<span class="sd">        :returns: An iterator that yields items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lookup&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">raw_data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">raw_data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="SQLite.fetch_all_with_status"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.fetch_all_with_status">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_all_with_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch all of the items and return an iterator. Note that this function does</span>
+<span class="sd">        not guarantee that the items will not be modified between this function returning</span>
+<span class="sd">        and the user accessing the values. This differs from fetch_all() because it will</span>
+<span class="sd">        also return whether or not an item was found, which differs in the case of</span>
+<span class="sd">        expired items.</span>
+
+<span class="sd">        :returns: An iterator that yields pairs of items and their status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT * FROM lookup&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">raw_data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">False</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">item</span><span class="p">,</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="SQLite.purge"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.purge">[docs]</a>    <span class="k">def</span> <span class="nf">purge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Purge an item from the handler. The persistent value will be removed.</span>
+
+<span class="sd">        :param index: The index of the item to be purged.</span>
+<span class="sd">        :returns: Whether or not an item was removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delete_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">select_sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT id FROM lookup WHERE lookup_index=? LIMIT 1&quot;</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select_sql</span><span class="p">,</span> <span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+        <span class="c1"># If we&#39;re in a state where the entry only exists in the memoized cache,</span>
+        <span class="c1"># return status of removing that</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">status</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_cursor</span><span class="p">()</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;DELETE FROM lookup WHERE lookup_index=?&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">get_con</span><span class="p">()</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="SQLite.close"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.sqlite.SQLite.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close the database.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">close_db</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="o">=</span> <span class="bp">None</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RDJ.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

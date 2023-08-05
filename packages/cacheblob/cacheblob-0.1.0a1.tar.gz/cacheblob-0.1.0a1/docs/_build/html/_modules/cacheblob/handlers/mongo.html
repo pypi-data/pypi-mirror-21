@@ -1,0 +1,435 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cacheblob.handlers.mongo &mdash; cacheblob  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="cacheblob  documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cacheblob.handlers.mongo</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module implements a MongoDB handler. It stores the items in a MongoDB database.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">import</span> <span class="nn">six</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>
+
+<span class="kn">from</span> <span class="nn">..item</span> <span class="kn">import</span> <span class="n">CacheItem</span>
+<span class="kn">from</span> <span class="nn">.handler</span> <span class="kn">import</span> <span class="n">Handler</span>
+
+<div class="viewcode-block" id="Mongo"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo">[docs]</a><span class="k">class</span> <span class="nc">Mongo</span><span class="p">(</span><span class="n">Handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class implements a MongoDB handler. It stores the items in a MongoDB</span>
+<span class="sd">    database.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Mongo</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">opts</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_database_name</span> <span class="o">=</span> <span class="s1">&#39;cacheblob&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_table_name</span> <span class="o">=</span> <span class="s1">&#39;cache&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_database</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_table</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c1"># This may fail, since Mongo isn&#39;t required to install the broader library.</span>
+        <span class="c1"># I don&#39;t want to do anything special with the exception.</span>
+        <span class="k">global</span> <span class="n">pymongo</span>
+        <span class="kn">import</span> <span class="nn">pymongo</span>
+
+        <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;mongo_init&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">MongoClient</span><span class="p">(</span><span class="o">*</span><span class="n">opts</span><span class="p">[</span><span class="s1">&#39;mongo_init&#39;</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="s1">&#39;database_name&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;database_name&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s1">&#39;table_name&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;table_name&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">MongoClient</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">open_database</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Mongo.open_database"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.open_database">[docs]</a>    <span class="k">def</span> <span class="nf">open_database</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open the mongo database and collection that will contain our items.</span>
+
+<span class="sd">        :returns: True if the client could create the database and collection, otherwise</span>
+<span class="sd">            None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">database</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">database_name</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">database</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">table_name</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the MongoDB client in use.</span>
+
+<span class="sd">        :returns: The MongoDB client.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span>
+
+    <span class="nd">@client.setter</span>
+    <span class="k">def</span> <span class="nf">client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the client in use.</span>
+
+<span class="sd">        :param client: The client object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">mongo_client</span><span class="o">.</span><span class="n">MongoClient</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must provide a pymongo.mongo_client.MongoClient as the client&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">client</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">database_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the database name in use.</span>
+
+<span class="sd">        :returns: The database name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_database_name</span>
+
+    <span class="nd">@database_name.setter</span>
+    <span class="k">def</span> <span class="nf">database_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the database name.</span>
+
+<span class="sd">        :param name: The name to use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must provide a string name for the database&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_database_name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">table_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the table name in use.</span>
+
+<span class="sd">        :returns: The table name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table_name</span>
+
+    <span class="nd">@table_name.setter</span>
+    <span class="k">def</span> <span class="nf">table_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the table name.</span>
+
+<span class="sd">        :param name: The name to use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">text_type</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must provide a string name for the database&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_table_name</span> <span class="o">=</span> <span class="n">name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">database</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the database in use. This is an internal utility that is not designed to</span>
+<span class="sd">        be called by users.</span>
+
+<span class="sd">        :returns: The database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_database</span>
+
+    <span class="nd">@database.setter</span>
+    <span class="k">def</span> <span class="nf">database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">database</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the database in use. This is an internal utility that is not designed to</span>
+<span class="sd">        be called by users.</span>
+
+<span class="sd">        :param database: The database object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">database</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">Database</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must provide a pymongo.database.Database for the database&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_database</span> <span class="o">=</span> <span class="n">database</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the MongoDB table in use.</span>
+
+<span class="sd">        :returns: The table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table</span>
+
+    <span class="nd">@table.setter</span>
+    <span class="k">def</span> <span class="nf">table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the table. This is an internal utility that is not designed to be called</span>
+<span class="sd">        by users.</span>
+
+<span class="sd">        :param table: The table.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">Collection</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must provide a pymongo.collection.Collection for the table&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_table</span> <span class="o">=</span> <span class="n">table</span>
+
+<div class="viewcode-block" id="Mongo.get_indexes"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.get_indexes">[docs]</a>    <span class="k">def</span> <span class="nf">get_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all of the indexes stored in the handler.</span>
+
+<span class="sd">        :returns: The list of indexes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">existing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">:</span>
+            <span class="n">indexes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;lookup_index&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">indexes</span></div>
+
+    <span class="k">def</span> <span class="nf">_row_to_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;For a given row from the database, create an return an appropriate item. This</span>
+<span class="sd">        is an internal utility that is not designed to be called by users.</span>
+
+<span class="sd">        :param row: The database row.</span>
+<span class="sd">        :returns: An item if it could create one, otherwise None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must provide a list of length 6 to _row_to_iteme, or None&quot;</span><span class="p">)</span>
+
+        <span class="n">value</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+        <span class="n">created</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">])</span>
+        <span class="n">expiry</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">utc</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;expiry&#39;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">CacheItem</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;lookup_index&#39;</span><span class="p">],</span>
+                         <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+                         <span class="n">created</span><span class="o">=</span><span class="n">created</span><span class="p">,</span>
+                         <span class="n">expiry</span><span class="o">=</span><span class="n">expiry</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_store_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store an item in the handler. The value is stored in files, but the other item</span>
+<span class="sd">        data is stored in the metadata database.</span>
+
+<span class="sd">        :param item: The item to be stored.</span>
+<span class="sd">        :returns: True if the item was successfully stored, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">&quot;lookup_index&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">})</span>
+
+        <span class="n">did_write</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="n">item_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;lookup_index&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                     <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                     <span class="s2">&quot;created&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+                     <span class="s2">&quot;expiry&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">expiry</span><span class="p">,</span>
+                     <span class="s2">&quot;length&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">length</span><span class="p">}</span>
+
+        <span class="c1"># This is one place where we can have concurrency problems</span>
+        <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">overwrite</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">update_one</span><span class="p">({</span><span class="s2">&quot;lookup_index&quot;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">},</span>
+                                           <span class="p">{</span><span class="s1">&#39;$set&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+                                                     <span class="s1">&#39;expiry&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">expiry</span><span class="p">,</span>
+                                                     <span class="s1">&#39;length&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">length</span><span class="p">,</span>
+                                                     <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">value</span><span class="p">}},</span>
+                                           <span class="bp">True</span><span class="p">)</span>
+
+            <span class="c1"># If somehow we did not alter the row that we found (row was purged in between?)</span>
+            <span class="c1"># then create new row</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">modified_count</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">item_dict</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">modified_count</span><span class="p">:</span>
+                    <span class="n">did_write</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">item_dict</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">acknowledged</span><span class="p">:</span>
+                <span class="n">did_write</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_if_applicable</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">did_write</span>
+
+<div class="viewcode-block" id="Mongo.fetch"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.fetch">[docs]</a>    <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch an item from the handler.</span>
+
+<span class="sd">        :param index: Index of the item to fetch. Indexes are expected to be unique at</span>
+<span class="sd">            any given time.</span>
+<span class="sd">        :returns: The item, or None if no unexpired items are found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="n">existing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">&quot;lookup_index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">existing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">return</span> <span class="bp">None</span></div>
+
+<div class="viewcode-block" id="Mongo.fetch_with_status"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.fetch_with_status">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_with_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch an item from the handler. This differs from fetch() because it will also</span>
+<span class="sd">        return whether or not an item was found, which differs in the case of expired</span>
+<span class="sd">        items.</span>
+
+<span class="sd">        :param index: Index of the item to fetch. Indexes are expected to be unique at</span>
+<span class="sd">            any given time.</span>
+<span class="sd">        :returns: The item, or None if no unexpired items are found, and whether an item</span>
+<span class="sd">            was found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span>
+
+        <span class="n">existing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">&quot;lookup_index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">existing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">False</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">,</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="Mongo.fetch_all"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.fetch_all">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch all of the items and return an iterator. Note that this function does</span>
+<span class="sd">        not guarantee that the items will not be modified between this function returning</span>
+<span class="sd">        and the user accessing the values.</span>
+
+<span class="sd">        :returns: An iterator that yields items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Mongo.fetch_all_with_status"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.fetch_all_with_status">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_all_with_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch all of the items and return an iterator. Note that this function does</span>
+<span class="sd">        not guarantee that the items will not be modified between this function returning</span>
+<span class="sd">        and the user accessing the values. This differs from fetch_all() because it will</span>
+<span class="sd">        also return whether or not an item was found, which differs in the case of</span>
+<span class="sd">        expired items.</span>
+
+<span class="sd">        :returns: An iterator that yields pairs of items and their status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">find</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_row_to_item</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">False</span>
+                <span class="k">break</span>
+            <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">item</span><span class="p">,</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="Mongo.purge"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.purge">[docs]</a>    <span class="k">def</span> <span class="nf">purge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Purge an item from the handler. The persistent value will be removed.</span>
+
+<span class="sd">        :param index: The index of the item to be purged.</span>
+<span class="sd">        :returns: Whether or not an item was removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delete_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">existing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s2">&quot;lookup_index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span>
+
+        <span class="c1"># If we&#39;re in a state where the entry only exists in the memoized cache,</span>
+        <span class="c1"># return status of removing that</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">existing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">status</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">delete_one</span><span class="p">({</span><span class="s2">&quot;lookup_index&quot;</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">deleted_count</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="Mongo.close"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.mongo.Mongo.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close the database.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RDJ.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

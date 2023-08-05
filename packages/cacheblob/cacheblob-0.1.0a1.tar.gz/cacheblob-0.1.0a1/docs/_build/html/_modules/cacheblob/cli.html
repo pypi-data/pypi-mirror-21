@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cacheblob.cli &mdash; cacheblob  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="cacheblob  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cacheblob.cli</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">CacheBlob CLI interface. Fetch or purge items.</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">    cli.py (fetch|purge|purge_any_expired) [INDEX ...]</span>
+<span class="sd">    cli.py --handler=sqlite (fetch|purge|purge_any_expired) [INDEX ...]</span>
+<span class="sd">    cli.py --handler=gzip --index_file=index.db (fetch|purge|purge_any_expired) [INDEX ...]</span>
+<span class="sd">    cli.py --handler=plaintext --directory=data (fetch|purge|purge_any_expired) [INDEX ...]</span>
+
+<span class="sd">Options:</span>
+<span class="sd">    -h --help               Show this screen.</span>
+<span class="sd">    --version               Show version.</span>
+<span class="sd">    --handler=&lt;sqlite&gt;      Handler type [default: sqlite]</span>
+<span class="sd">    --directory=&lt;data&gt;      Directory if applicable [default: data]</span>
+<span class="sd">    --index_file=&lt;index.db&gt; Index file if applicable [default: index.db]</span>
+
+<span class="sd">If no arguments are specified to fetch, all INDEX are fetched. Purge, however,</span>
+<span class="sd">will not let you purge everything that easily.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">docopt</span>
+
+<span class="n">CURRENT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CURRENT_DIR</span><span class="p">,</span> <span class="s2">&quot;..&quot;</span><span class="p">)))</span>
+
+<span class="kn">from</span> <span class="nn">cacheblob</span> <span class="kn">import</span> <span class="n">Cacheblob</span>
+<span class="kn">from</span> <span class="nn">cacheblob</span> <span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="kn">import</span> <span class="nn">cacheblob.constants</span> <span class="kn">as</span> <span class="nn">C</span>
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../cacheblob.html#cacheblob.cli.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Main CLI handler.</span>
+
+<span class="sd">    :returns: 0 on success, exits with message otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">docopt</span><span class="o">.</span><span class="n">docopt</span><span class="p">(</span><span class="n">__doc__</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--handler&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">C</span><span class="o">.</span><span class="n">IMPLEMENTED_HANDLERS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Handler </span><span class="se">\&quot;</span><span class="s2">{}</span><span class="se">\&quot;</span><span class="s2"> is not defined&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--handler&#39;</span><span class="p">]))</span>
+
+    <span class="n">cache</span> <span class="o">=</span> <span class="n">Cacheblob</span><span class="o">.</span><span class="n">cache</span><span class="p">(</span><span class="n">handler</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;--handler&#39;</span><span class="p">])</span>
+    <span class="c1">#print(&quot;cache is a {}&quot;.format(cache))</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--directory&#39;</span><span class="p">]:</span>
+        <span class="n">cache</span><span class="o">.</span><span class="n">directory</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;--directory&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;fetch&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;INDEX&#39;</span><span class="p">]):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">cache</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">():</span>
+                <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;INDEX&#39;</span><span class="p">]:</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Item with index </span><span class="se">\&quot;</span><span class="s2">{}</span><span class="se">\&quot;</span><span class="s2"> not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">__dict__</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;purge&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;INDEX&#39;</span><span class="p">]):</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Purged items must be specified individually&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;INDEX&#39;</span><span class="p">]:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">purge</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Purged item with index </span><span class="se">\&quot;</span><span class="s2">{}</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Could not purge item with index </span><span class="se">\&quot;</span><span class="s2">{}</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;purge_any_expired&#39;</span><span class="p">]:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">purge_any_expired</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Purged 1 item&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Purged {} items&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="mi">0</span></div>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RDJ.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

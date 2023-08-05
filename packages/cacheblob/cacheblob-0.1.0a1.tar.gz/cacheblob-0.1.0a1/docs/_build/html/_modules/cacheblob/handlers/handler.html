@@ -1,0 +1,419 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cacheblob.handlers.handler &mdash; cacheblob  documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="cacheblob  documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for cacheblob.handlers.handler</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides base handler functions, and basic functionality. Will</span>
+<span class="sd">successfully operate as a handler, but if used as one will only store data in-memory.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">cacheblob</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">..item</span> <span class="kn">import</span> <span class="n">CacheItem</span>
+
+<div class="viewcode-block" id="is_number"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.is_number">[docs]</a><span class="k">def</span> <span class="nf">is_number</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return if value is numeric, based on attempting to coerce to float.</span>
+
+<span class="sd">    :param value: The value in question.</span>
+<span class="sd">    :returns: True if the float(value) does not throw an exception, otherwise False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="Handler"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler">[docs]</a><span class="k">class</span> <span class="nc">Handler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This module represents a handler for `cacheblob.item` objects. Handlers offer</span>
+<span class="sd">    simple fetch() and store() capabilities, and other utilities. Items included are</span>
+<span class="sd">    expected to be unique by index.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_overwrite</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memoize</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_max_length</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">MEMOIZE_MAX_LENGTH</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_max_entries</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">MEMOIZE_MAX_ENTRIES</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_may_purge_if_expired</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">if</span> <span class="n">opts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;overwrite&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">overwrite</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;overwrite&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s1">&#39;memoize&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">memoize</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;memoize&#39;</span><span class="p">]</span>
+
+            <span class="c1"># This is the maximum value length that can be held in a memoized item.</span>
+            <span class="k">if</span> <span class="s1">&#39;memoize_max_length&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">memoize</span> <span class="ow">or</span> <span class="p">(</span><span class="s1">&#39;memoize&#39;</span> <span class="ow">in</span> <span class="n">opts</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;memoize&#39;</span><span class="p">]):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;memoize_max_length ony applicable if memoize is true&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">memoize_max_length</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;memoize_max_length&#39;</span><span class="p">]</span>
+
+            <span class="c1"># This is the maximum number of items that will be memoized.</span>
+            <span class="k">if</span> <span class="s1">&#39;memoize_max_entries&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">memoize</span> <span class="ow">or</span> <span class="p">(</span><span class="s1">&#39;memoize&#39;</span> <span class="ow">in</span> <span class="n">opts</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;memoize&#39;</span><span class="p">]):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;memoize_max_entries ony applicable if memoize is true&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">memoize_max_entries</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;memoize_max_entries&#39;</span><span class="p">]</span>
+
+            <span class="c1"># This is whether or not the handler can purge expired items from the</span>
+            <span class="c1"># underlying storage. This is not a promise that it necessarily will.</span>
+            <span class="k">if</span> <span class="s1">&#39;may_purge_if_expired&#39;</span> <span class="ow">in</span> <span class="n">opts</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">may_purge_if_expired</span> <span class="o">=</span> <span class="n">opts</span><span class="p">[</span><span class="s1">&#39;may_purge_if_expired&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fetch_all</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">index</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the overwrite status.</span>
+
+<span class="sd">        :returns: Whether or not the object will overwrite entries with the same index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_overwrite</span>
+
+    <span class="nd">@overwrite.setter</span>
+    <span class="k">def</span> <span class="nf">overwrite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable_overwrite</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Define the overwrite status. This is whether or not an existing item will be</span>
+<span class="sd">        overwriting if a second item with the same index is stored afterwards.</span>
+
+<span class="sd">        :param enable_overwrite: Whether or not items should be overwritten by newer ones.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_overwrite</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">enable_overwrite</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">memoize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the memoization status.</span>
+
+<span class="sd">        :returns: Whether or not in-memory memoization is enabled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memoize</span>
+
+    <span class="nd">@memoize.setter</span>
+    <span class="k">def</span> <span class="nf">memoize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable_memoize</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enable or disable in-memory memoization. This is designed to make accessing</span>
+<span class="sd">        quicker.</span>
+
+<span class="sd">        :param enable_memoize: Whether or not items should be memoized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memoize</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">enable_memoize</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">may_purge_if_expired</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether or not expired items may be purged from the underlying</span>
+<span class="sd">        persistent data store. Note that this does not guarantee that they will be</span>
+<span class="sd">        purged, but instead allows them to be purged.</span>
+
+<span class="sd">        :returns: Whether items may be purged if they are expired.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_may_purge_if_expired</span>
+
+    <span class="nd">@may_purge_if_expired.setter</span>
+    <span class="k">def</span> <span class="nf">may_purge_if_expired</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_purge</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enable or disable purging of the underlying data storage upon item expiry.</span>
+<span class="sd">        This is not a promise that it necessarily will, be if enabled will allow the</span>
+<span class="sd">        handler to clean purged data as it pleases. Accessing an expired item should not</span>
+<span class="sd">        be affected by whether this is set or not.</span>
+
+<span class="sd">        :param allow_purge: Whether or not purging of expired items is allowed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_may_purge_if_expired</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">allow_purge</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">memoize_max_length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the max value length allowed for memoized items.</span>
+
+<span class="sd">        :returns: The maximum value length allowed for items memoized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_max_length</span>
+
+    <span class="nd">@memoize_max_length.setter</span>
+    <span class="k">def</span> <span class="nf">memoize_max_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_length</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the maximum value length of items that can be memoized. Note that this is</span>
+<span class="sd">        not the maximum number of items that can be memoized, but instead the max size of</span>
+<span class="sd">        them individually.</span>
+
+<span class="sd">        :param max_length: The maximum value length allowed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">is_number</span><span class="p">(</span><span class="n">max_length</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_max_length</span> <span class="o">=</span> <span class="n">max_length</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;memoize_max_length must be numeric&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">memoize_max_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the max number of memoized items at a given time.</span>
+
+<span class="sd">        :returns: The maximum number of items that will be memoized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_max_entries</span>
+
+    <span class="nd">@memoize_max_entries.setter</span>
+    <span class="k">def</span> <span class="nf">memoize_max_entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_entries</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the maximum number of of items that can be memoized.</span>
+
+<span class="sd">        :param max_entries: The maximum number of items that can be memoized.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">is_number</span><span class="p">(</span><span class="n">max_entries</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_max_entries</span> <span class="o">=</span> <span class="n">max_entries</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;memoize_max_entries must be numeric&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_memoized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the value of a memoized item. This is an internal utility that is not</span>
+<span class="sd">        designed to be called by users.</span>
+
+<span class="sd">        :param index: The index of the item to be retrieved.</span>
+<span class="sd">        :returns: The item, and whether an item was found or not. If the item is expired</span>
+<span class="sd">            then it will not be returned, but the second value will be True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">memoize</span> <span class="ow">and</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="c1"># Memoized items are easy to purge, so we do so if applicable.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">may_purge_if_expired</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">purge</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="n">item</span><span class="p">,</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">_memoize_if_applicable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Memoize an item, if enabled. This is an internal utility that is not designed</span>
+<span class="sd">        to be called by users.</span>
+
+<span class="sd">        :param item: The item to be stored.</span>
+<span class="sd">        :returns: True if an item was stored, otherwise False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">memoize</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">item</span><span class="o">.</span><span class="n">length</span> <span class="ow">or</span> <span class="n">item</span><span class="o">.</span><span class="n">length</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">memoize_max_length</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">overwrite</span><span class="p">:</span>
+
+                <span class="c1"># Remove an arbitrary existing item.</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memoize_max_entries</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">memoize_max_entries</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">item</span>
+                <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">_delete_memoized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete a memoized item. This is an internal utility that is not designed to be</span>
+<span class="sd">        called by users. Note that this does not remove an item from the persistent</span>
+<span class="sd">        storage mechanism.</span>
+
+<span class="sd">        :param index: The index of the item to be deleted.</span>
+<span class="sd">        :returns: True if an item was removed, otherwise False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">_store_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store an item in the handler.</span>
+
+<span class="sd">        :param item: The item to be stored.</span>
+<span class="sd">        :returns: True if the item was successfully stored, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memoize_if_applicable</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Handler.get_indexes"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.get_indexes">[docs]</a>    <span class="k">def</span> <span class="nf">get_indexes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all of the indexes stored in the handler.</span>
+
+<span class="sd">        :returns: The list of indexes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Handler.purge"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.purge">[docs]</a>    <span class="k">def</span> <span class="nf">purge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Purge an item from the handler. The persistent value will be removed.</span>
+
+<span class="sd">        :param index: The index of the item to be purged.</span>
+<span class="sd">        :returns: Whether or not an item was removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delete_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Handler.purge_if_expired"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.purge_if_expired">[docs]</a>    <span class="k">def</span> <span class="nf">purge_if_expired</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;If an item is expired, purge it.</span>
+
+<span class="sd">        :param index: The index of the item to be purged.</span>
+<span class="sd">        :returns: Whether or not an item was removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">found</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fetch_with_status</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">item</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">is_expired</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">found</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">item</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">purge</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="Handler.purge_any_expired"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.purge_any_expired">[docs]</a>    <span class="k">def</span> <span class="nf">purge_any_expired</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Purge any items that can be purged, based on their expiry.</span>
+
+<span class="sd">        :returns: Count of items purged.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">purged_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_indexes</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">purge_if_expired</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+                <span class="n">purged_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">purged_count</span></div>
+
+<div class="viewcode-block" id="Handler.store"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.store">[docs]</a>    <span class="k">def</span> <span class="nf">store</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store an entry in the handler. Parameters can be either a `CacheItem`</span>
+<span class="sd">            or parameters to create one</span>
+<span class="sd">        </span>
+<span class="sd">        :param args|item: a `CacheItem` object, or arguments to create one.</span>
+<span class="sd">        :param kwargs: Keyword arguments to create a `CacheItem` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cacheblob</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">CacheItem</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_item</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">CacheItem</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store_item</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Handler.fetch"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.fetch">[docs]</a>    <span class="k">def</span> <span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch an item from the handler.</span>
+
+<span class="sd">        :param index: Index of the item to fetch. Indexes are expected to be unique at</span>
+<span class="sd">            any given time.</span>
+<span class="sd">        :returns: The item, or None if no unexpired items are found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Handler.fetch_with_status"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.fetch_with_status">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_with_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch an item from the handler. This differs from fetch() because it will also</span>
+<span class="sd">        return whether or not an item was found, which differs in the case of expired</span>
+<span class="sd">        items.</span>
+
+<span class="sd">        :param index: Index of the item to fetch. Indexes are expected to be unique at</span>
+<span class="sd">            any given time.</span>
+<span class="sd">        :returns: The item, or None if no unexpired items are found, and whether an item</span>
+<span class="sd">            was found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_memoized</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Handler.fetch_all"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.fetch_all">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch all of the items and return an iterator. Note that this function does</span>
+<span class="sd">        not guarantee that the items will not be modified between this function returning</span>
+<span class="sd">        and the user accessing the values.</span>
+
+<span class="sd">        :returns: An iterator that yields items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_indexes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">all_indexes</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">item</span></div>
+
+<div class="viewcode-block" id="Handler.fetch_all_with_status"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.fetch_all_with_status">[docs]</a>    <span class="k">def</span> <span class="nf">fetch_all_with_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fetch all of the items and return an iterator. Note that this function does</span>
+<span class="sd">        not guarantee that the items will not be modified between this function returning</span>
+<span class="sd">        and the user accessing the values. This differs from fetch_all() because it will</span>
+<span class="sd">        also return whether or not an item was found, which differs in the case of</span>
+<span class="sd">        expired items.</span>
+
+<span class="sd">        :returns: An iterator that yields pairs of items and their status.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_indexes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_index_memoized</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">all_indexes</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">fetch_with_status</span><span class="p">(</span><span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Handler.close"><a class="viewcode-back" href="../../../cacheblob.handlers.html#cacheblob.handlers.handler.Handler.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Close any associated databases. For this default handler, this does nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RDJ.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,977 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>cacheblob.handlers package &mdash; cacheblob  documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="cacheblob  documentation" href="index.html" />
+    <link rel="up" title="cacheblob package" href="cacheblob.html" />
+    <link rel="prev" title="cacheblob package" href="cacheblob.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cacheblob-handlers-package">
+<h1>cacheblob.handlers package<a class="headerlink" href="#cacheblob-handlers-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-cacheblob.handlers.gzip">
+<span id="cacheblob-handlers-gzip-module"></span><h2>cacheblob.handlers.gzip module<a class="headerlink" href="#module-cacheblob.handlers.gzip" title="Permalink to this headline">¶</a></h2>
+<p>This module implements a gzip handler. It stores item values as gzip files on disk and
+uses a SQLite database to store the metadata. This is most convenient if you are using
+items as files in another way, or otherwise prefer being able to interact with each item
+as a file, and each one is large enough to benefit from compression.</p>
+<dl class="class">
+<dt id="cacheblob.handlers.gzip.Gzip">
+<em class="property">class </em><code class="descclassname">cacheblob.handlers.gzip.</code><code class="descname">Gzip</code><span class="sig-paren">(</span><em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/gzip.html#Gzip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.gzip.Gzip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cacheblob.handlers.plaintext.Plaintext" title="cacheblob.handlers.plaintext.Plaintext"><code class="xref py py-class docutils literal"><span class="pre">cacheblob.handlers.plaintext.Plaintext</span></code></a></p>
+<p>This class implements a handler which stores items as gzip files on disk,
+with a SQLite database used for the indexing.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cacheblob.handlers.handler">
+<span id="cacheblob-handlers-handler-module"></span><h2>cacheblob.handlers.handler module<a class="headerlink" href="#module-cacheblob.handlers.handler" title="Permalink to this headline">¶</a></h2>
+<p>This module provides base handler functions, and basic functionality. Will
+successfully operate as a handler, but if used as one will only store data in-memory.</p>
+<dl class="class">
+<dt id="cacheblob.handlers.handler.Handler">
+<em class="property">class </em><code class="descclassname">cacheblob.handlers.handler.</code><code class="descname">Handler</code><span class="sig-paren">(</span><em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This module represents a handler for <cite>cacheblob.item</cite> objects. Handlers offer
+simple fetch() and store() capabilities, and other utilities. Items included are
+expected to be unique by index.</p>
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close any associated databases. For this default handler, this does nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.fetch">
+<code class="descname">fetch</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.fetch_all">
+<code class="descname">fetch_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.fetch_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.fetch_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields items.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.fetch_all_with_status">
+<code class="descname">fetch_all_with_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.fetch_all_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.fetch_all_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values. This differs from fetch_all() because it will
+also return whether or not an item was found, which differs in the case of
+expired items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields pairs of items and their status.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.fetch_with_status">
+<code class="descname">fetch_with_status</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.fetch_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.fetch_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler. This differs from fetch() because it will also
+return whether or not an item was found, which differs in the case of expired
+items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found, and whether an item
+was found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.get_indexes">
+<code class="descname">get_indexes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.get_indexes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.get_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all of the indexes stored in the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The list of indexes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.handler.Handler.may_purge_if_expired">
+<code class="descname">may_purge_if_expired</code><a class="headerlink" href="#cacheblob.handlers.handler.Handler.may_purge_if_expired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether or not expired items may be purged from the underlying
+persistent data store. Note that this does not guarantee that they will be
+purged, but instead allows them to be purged.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Whether items may be purged if they are expired.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.handler.Handler.memoize">
+<code class="descname">memoize</code><a class="headerlink" href="#cacheblob.handlers.handler.Handler.memoize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the memoization status.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Whether or not in-memory memoization is enabled.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.handler.Handler.memoize_max_entries">
+<code class="descname">memoize_max_entries</code><a class="headerlink" href="#cacheblob.handlers.handler.Handler.memoize_max_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the max number of memoized items at a given time.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The maximum number of items that will be memoized.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.handler.Handler.memoize_max_length">
+<code class="descname">memoize_max_length</code><a class="headerlink" href="#cacheblob.handlers.handler.Handler.memoize_max_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the max value length allowed for memoized items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The maximum value length allowed for items memoized.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.handler.Handler.overwrite">
+<code class="descname">overwrite</code><a class="headerlink" href="#cacheblob.handlers.handler.Handler.overwrite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the overwrite status.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Whether or not the object will overwrite entries with the same index.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.purge">
+<code class="descname">purge</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.purge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.purge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purge an item from the handler. The persistent value will be removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; The index of the item to be purged.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Whether or not an item was removed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.purge_any_expired">
+<code class="descname">purge_any_expired</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.purge_any_expired"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.purge_any_expired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purge any items that can be purged, based on their expiry.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Count of items purged.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.purge_if_expired">
+<code class="descname">purge_if_expired</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.purge_if_expired"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.purge_if_expired" title="Permalink to this definition">¶</a></dt>
+<dd><p>If an item is expired, purge it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; The index of the item to be purged.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Whether or not an item was removed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.handler.Handler.store">
+<code class="descname">store</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#Handler.store"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.Handler.store" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Store an entry in the handler. Parameters can be either a <cite>CacheItem</cite></dt>
+<dd>or parameters to create one</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>args|item</strong> &#8211; a <cite>CacheItem</cite> object, or arguments to create one.</li>
+<li><strong>kwargs</strong> &#8211; Keyword arguments to create a <cite>CacheItem</cite> object.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="cacheblob.handlers.handler.is_number">
+<code class="descclassname">cacheblob.handlers.handler.</code><code class="descname">is_number</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/handler.html#is_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.handler.is_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return if value is numeric, based on attempting to coerce to float.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> &#8211; The value in question.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the float(value) does not throw an exception, otherwise False.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cacheblob.handlers.mongo">
+<span id="cacheblob-handlers-mongo-module"></span><h2>cacheblob.handlers.mongo module<a class="headerlink" href="#module-cacheblob.handlers.mongo" title="Permalink to this headline">¶</a></h2>
+<p>This module implements a MongoDB handler. It stores the items in a MongoDB database.</p>
+<dl class="class">
+<dt id="cacheblob.handlers.mongo.Mongo">
+<em class="property">class </em><code class="descclassname">cacheblob.handlers.mongo.</code><code class="descname">Mongo</code><span class="sig-paren">(</span><em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cacheblob.handlers.handler.Handler" title="cacheblob.handlers.handler.Handler"><code class="xref py py-class docutils literal"><span class="pre">cacheblob.handlers.handler.Handler</span></code></a></p>
+<p>This class implements a MongoDB handler. It stores the items in a MongoDB
+database.</p>
+<dl class="attribute">
+<dt id="cacheblob.handlers.mongo.Mongo.client">
+<code class="descname">client</code><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the MongoDB client in use.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The MongoDB client.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.mongo.Mongo.database">
+<code class="descname">database</code><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the database in use. This is an internal utility that is not designed to
+be called by users.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The database.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.mongo.Mongo.database_name">
+<code class="descname">database_name</code><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.database_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the database name in use.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The database name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.fetch">
+<code class="descname">fetch</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.fetch_all">
+<code class="descname">fetch_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.fetch_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.fetch_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields items.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.fetch_all_with_status">
+<code class="descname">fetch_all_with_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.fetch_all_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.fetch_all_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values. This differs from fetch_all() because it will
+also return whether or not an item was found, which differs in the case of
+expired items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields pairs of items and their status.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.fetch_with_status">
+<code class="descname">fetch_with_status</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.fetch_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.fetch_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler. This differs from fetch() because it will also
+return whether or not an item was found, which differs in the case of expired
+items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found, and whether an item
+was found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.get_indexes">
+<code class="descname">get_indexes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.get_indexes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.get_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all of the indexes stored in the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The list of indexes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.open_database">
+<code class="descname">open_database</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.open_database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.open_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the mongo database and collection that will contain our items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the client could create the database and collection, otherwise
+None.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.mongo.Mongo.purge">
+<code class="descname">purge</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/mongo.html#Mongo.purge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.purge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purge an item from the handler. The persistent value will be removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; The index of the item to be purged.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Whether or not an item was removed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.mongo.Mongo.table">
+<code class="descname">table</code><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the MongoDB table in use.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The table.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.mongo.Mongo.table_name">
+<code class="descname">table_name</code><a class="headerlink" href="#cacheblob.handlers.mongo.Mongo.table_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the table name in use.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The table name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cacheblob.handlers.plaintext">
+<span id="cacheblob-handlers-plaintext-module"></span><h2>cacheblob.handlers.plaintext module<a class="headerlink" href="#module-cacheblob.handlers.plaintext" title="Permalink to this headline">¶</a></h2>
+<p>This module implements a plaintext handler. It stores item values in files on disk and
+uses a SQLite database to store the metadata. This is most convenient if you are using
+items as files in another way, or otherwise prefer being able to interact with each item
+as a file.</p>
+<dl class="class">
+<dt id="cacheblob.handlers.plaintext.Plaintext">
+<em class="property">class </em><code class="descclassname">cacheblob.handlers.plaintext.</code><code class="descname">Plaintext</code><span class="sig-paren">(</span><em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cacheblob.handlers.handler.Handler" title="cacheblob.handlers.handler.Handler"><code class="xref py py-class docutils literal"><span class="pre">cacheblob.handlers.handler.Handler</span></code></a></p>
+<p>This class implements a plaintext handler which stores items as files on disk,
+with a SQLite database used for the indexing.</p>
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.plaintext.Plaintext.database">
+<code class="descname">database</code><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the database in use. This is an internal utility that is not designed to
+be called by users.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The database.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.define_index">
+<code class="descname">define_index</code><span class="sig-paren">(</span><em>directory=None</em>, <em>index_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.define_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.define_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the full index file path, based on the directory and index_file. The
+directory and index_file need not be provided here, if previously defined.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory</strong> &#8211; The directory to use.</li>
+<li><strong>index_file</strong> &#8211; The SQLite file to use for item metadata.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.plaintext.Plaintext.directory">
+<code class="descname">directory</code><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the directory in which the item files and SQLite index database are
+stored.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The directory used.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.fetch">
+<code class="descname">fetch</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.fetch_all">
+<code class="descname">fetch_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.fetch_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.fetch_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields items.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.fetch_all_with_status">
+<code class="descname">fetch_all_with_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.fetch_all_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.fetch_all_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values. This differs from fetch_all() because it will
+also return whether or not an item was found, which differs in the case of
+expired items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields pairs of items and their status.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.fetch_with_status">
+<code class="descname">fetch_with_status</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.fetch_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.fetch_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler. This differs from fetch() because it will also
+return whether or not an item was found, which differs in the case of expired
+items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found, and whether an item
+was found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.get_indexes">
+<code class="descname">get_indexes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.get_indexes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.get_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all of the indexes stored in the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The list of indexes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.plaintext.Plaintext.index_file">
+<code class="descname">index_file</code><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.index_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the filename of the SQLite database for storing item metadata.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The name of the index file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.open_database">
+<code class="descname">open_database</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.open_database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.open_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the SQLite database that will be used to store the metadata.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.plaintext.Plaintext.purge">
+<code class="descname">purge</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/plaintext.html#Plaintext.purge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.plaintext.Plaintext.purge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purge an item from the handler. The persistent value will be removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; The index of the item to be purged.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Whether or not an item was removed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cacheblob.handlers.sqlite">
+<span id="cacheblob-handlers-sqlite-module"></span><h2>cacheblob.handlers.sqlite module<a class="headerlink" href="#module-cacheblob.handlers.sqlite" title="Permalink to this headline">¶</a></h2>
+<p>This module implements a SQLite handler. It stores items in a SQLite database.</p>
+<dl class="class">
+<dt id="cacheblob.handlers.sqlite.SQLite">
+<em class="property">class </em><code class="descclassname">cacheblob.handlers.sqlite.</code><code class="descname">SQLite</code><span class="sig-paren">(</span><em>opts=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#cacheblob.handlers.handler.Handler" title="cacheblob.handlers.handler.Handler"><code class="xref py py-class docutils literal"><span class="pre">cacheblob.handlers.handler.Handler</span></code></a></p>
+<p>This class implements a SQLite handler which stores items in a SQLite database,</p>
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.sqlite.SQLite.database">
+<code class="descname">database</code><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the database in use. This is an internal utility that is not designed to
+be called by users.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The database.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.define_index">
+<code class="descname">define_index</code><span class="sig-paren">(</span><em>directory=None</em>, <em>index_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.define_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.define_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the full index file path, based on the directory and index_file. The
+directory and index_file need not be provided here, if previously defined.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory</strong> &#8211; The directory to use.</li>
+<li><strong>index_file</strong> &#8211; The SQLite file to use for items.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.sqlite.SQLite.directory">
+<code class="descname">directory</code><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the directory in which the SQLite database is stored.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The directory used.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.fetch">
+<code class="descname">fetch</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.fetch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.fetch_all">
+<code class="descname">fetch_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.fetch_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.fetch_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields items.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.fetch_all_with_status">
+<code class="descname">fetch_all_with_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.fetch_all_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.fetch_all_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch all of the items and return an iterator. Note that this function does
+not guarantee that the items will not be modified between this function returning
+and the user accessing the values. This differs from fetch_all() because it will
+also return whether or not an item was found, which differs in the case of
+expired items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterator that yields pairs of items and their status.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.fetch_with_status">
+<code class="descname">fetch_with_status</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.fetch_with_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.fetch_with_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch an item from the handler. This differs from fetch() because it will also
+return whether or not an item was found, which differs in the case of expired
+items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; Index of the item to fetch. Indexes are expected to be unique at
+any given time.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The item, or None if no unexpired items are found, and whether an item
+was found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.get_indexes">
+<code class="descname">get_indexes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.get_indexes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.get_indexes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all of the indexes stored in the handler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The list of indexes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cacheblob.handlers.sqlite.SQLite.index_file">
+<code class="descname">index_file</code><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.index_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the filename of the SQLite database for storing items.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The name of the index file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.open_database">
+<code class="descname">open_database</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.open_database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.open_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the SQLite database that will be used to store the metadata.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cacheblob.handlers.sqlite.SQLite.purge">
+<code class="descname">purge</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cacheblob/handlers/sqlite.html#SQLite.purge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cacheblob.handlers.sqlite.SQLite.purge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Purge an item from the handler. The persistent value will be removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>index</strong> &#8211; The index of the item to be purged.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Whether or not an item was removed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-cacheblob.handlers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-cacheblob.handlers" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">cacheblob.handlers package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-cacheblob.handlers.gzip">cacheblob.handlers.gzip module</a></li>
+<li><a class="reference internal" href="#module-cacheblob.handlers.handler">cacheblob.handlers.handler module</a></li>
+<li><a class="reference internal" href="#module-cacheblob.handlers.mongo">cacheblob.handlers.mongo module</a></li>
+<li><a class="reference internal" href="#module-cacheblob.handlers.plaintext">cacheblob.handlers.plaintext module</a></li>
+<li><a class="reference internal" href="#module-cacheblob.handlers.sqlite">cacheblob.handlers.sqlite module</a></li>
+<li><a class="reference internal" href="#module-cacheblob.handlers">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="cacheblob.html">cacheblob package</a><ul>
+      <li>Previous: <a href="cacheblob.html" title="previous chapter">cacheblob package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/cacheblob.handlers.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, RDJ.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/cacheblob.handlers.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
