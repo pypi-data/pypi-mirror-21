@@ -1,0 +1,75 @@
+// This file contains the settings for project_explorer.
+//
+// All settings are re-applied when this file is modified. If this file is deleted, then it will be
+// recreated with the default settings.
+//
+// Relative paths will be interpreted as relative to the installation.
+
+{
+
+// List of file extensions that should not be shown.
+"filter_extensions" : [
+    ".pyc"
+],
+
+// Selected items context menu.
+// This should be a list of dictionaries, where each dictionary can have:
+//      - label (required)
+//          The text to show in the context menu.
+//
+//      - command (required)
+//          The command string to execute when the menu item is selected.
+//
+//          In this string, {0}, {1}, etc... can be used and will be replaced with the first,
+//          second, and so on file paths. If no paths the number of selected paths differs from the
+//          highest path reference + 1, the menu item will be disabled.
+//
+//          {selected} will be replaced with the full list of selected paths. If this is specified,
+//          and there are no selected items, then the menu item will be disabled.
+//
+//          {current_directory} will be replaced with the directory containing the current item, or
+//          the current item if it is a directory. If there is no current item, the menu item will
+//          be disabled.
+//
+//      - extensions
+//          A list of extensions (including the dot). If this is specified then the menu item will
+//          be disabled if any of the selected items is not a file that has an extension in this
+//          list.
+//
+//      - hide_if_disabled
+//          If specified and true, then the menu item will not be visible if it is disabled.
+"context_menu" : [
+    {
+        "label"            : "Run",
+        "command"          : "cmd /C start cmd /C \"python {0}\"",
+        "extensions"       : [".py"],
+        "hide_if_disabled" : true
+    },
+    {
+        "label"   : "Shell Here",
+        "command" : "cmd /C start cmd /K \"cd /d {current_directory}\""
+    },
+    {
+        "label"   : "Diff Selected",
+        "command" : "\"c:/Program Files (x86)/WinMerge/WinMergeU.exe\" {0} {1}"
+    },
+    {
+        "label"   : "Git Diff",
+        "command" : "cmd /C start cmd /K git diff {0}"
+    },
+    {
+        "label"   : "Git Status",
+        "command" : "cmd /C start cmd /K git status {current_directory}"
+    }
+],
+
+// Directory to store trash in.
+"trash_directory" : ".trash",
+
+// Directory to store projects in.
+"projects_directory" : ".projects",
+
+// Path to the theme file to use.
+"theme" : "default_theme.css"
+
+}
