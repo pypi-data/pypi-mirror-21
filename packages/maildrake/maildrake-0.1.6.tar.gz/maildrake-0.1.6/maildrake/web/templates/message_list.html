@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block title %}
+<h1>Message Queue</h1>
+{% endblock %}{# title #}
+{% block body %}
+  {% if session.logged_in %}
+    <ul>
+      <li>
+        <a href="{{ url_for('message_clear') }}"
+           >Delete all messages from queue</a>
+      </li>
+    </ul>
+  {% endif %}{# session.logged_in #}
+  <ul class="messages">
+  {% for message in messages %}
+    <li>
+      <a href="{{ url_for('message_detail', row_id=message.rowid) }}"
+         ><h2>{{ message.message_id }}</h2></a>
+      <dl>
+        <dt>Received</dt><dd>{{ message.created_at }}</dd>
+        <dt>Date</dt><dd>{{ message.date }}</dd>
+        <dt>From</dt><dd>{{ message.sender }}</dd>
+        <dt>To</dt><dd>{{ message.recipients }}</dd>
+        <dt>Subject</dt><dd>{{ message.subject|safe }}</dd>
+      </dl>
+    </li>
+  {% else %}
+    <li><em>No messages in the queue now.</em>
+    </li>
+  {% endfor %}{# messages #}
+  </ul>
+{% endblock %}{# body #}
