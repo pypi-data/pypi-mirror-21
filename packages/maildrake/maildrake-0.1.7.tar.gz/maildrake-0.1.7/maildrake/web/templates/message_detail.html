@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}
+<h1>Message</h1>
+{% endblock %}{# title #}
+{% block body %}
+  <ul id="nav-actions">
+    <li>
+      <a href="{{ url_for('message_list') }}"
+         >Message queue</a>
+    </li>
+  {% if session.logged_in %}
+    <li>
+      <a href="{{ url_for('message_clear') }}"
+         >Delete all messages from queue</a>
+    </li>
+  {% endif %}{# session.logged_in #}
+  </ul><!-- nav-actions -->
+  <dl class="message-detail">
+    <dt><label for="message_created">Received:</label></dt>
+    <dd id="message_created">{{ message.created_at }}</dd>
+    <dt><label for="message_id">Message-ID:</label></dt>
+    <dd id="message_id">{{ message.message_id }}</dd>
+    <dt><label for="message_date">Date:</label></dt>
+    <dd id="message_date">{{ message.date }}</dd>
+    <dt><label for="message_sender">Sender:</label></dt>
+    <dd id="message_sender">{{ message.sender }}</dd>
+    <dt><label for="message_recipients">Recipients:</label></dt>
+    <dd id="message_recipients">{{ message.recipients }}</dd>
+    <dt><label for="message_subject">Subject:</label></dt>
+    <dd id="message_subject">{{ message.subject|safe }}</dd>
+    <dt><label for="message_mimetype">MIME Type:</label></dt>
+    <dd id="message_mimetype">{{ message.mime_type }}</dd>
+    <dt><label for="message_body">Body:</label></dt>
+    <dd id="message_body">{{ message.body|safe }}</dd>
+    <dt><label for="message_length">Length:</label></dt>
+    <dd id="message_length">{{ message.length }}</dd>
+    <dt><label for="message_raw">Raw:</label></dt>
+    <dd id="message_raw">
+      <pre>{{ message.raw }}</pre>
+    </dt>
+  </dl><!-- message-detail -->
+{% endblock %}{# body #}

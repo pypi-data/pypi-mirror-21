@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<title>Mail Drake</title>
+<link
+   rel=stylesheet type=text/css
+   href="{{ url_for('static', filename='css/style.css') }}"/>
+</head><body>
+<div id="logo">
+  <p>Mail Drake</p>
+  <img
+     src="{{ url_for('static', filename='images/maildrake.png') }}"
+     alt="Mail Drake logo"
+     />
+</div>
+<div id="page">
+  {% block metanav %}
+  <div id="metanav">
+  {% if not session.logged_in %}
+    <a href="{{ url_for('login') }}">log in</a>
+  {% else %}
+    <a href="{{ url_for('logout') }}">log out</a>
+  {% endif %}
+  </div><!-- metanav -->
+  {% endblock %}{# metanav #}
+  {% block title %}
+  <h1>Mail Drake</h1>
+  {% endblock %}{# title #}
+  {% for message in get_flashed_messages() %}
+    <div class=flash>{{ message }}</div>
+  {% endfor %}
+  {% block body %}{% endblock %}
+</div><!-- page -->
+</body>
+</html>
