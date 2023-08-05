@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ldapcherry.backend &#8212; LdapCherry 0.5.2 Docs</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.5.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.png"/>
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="LdapCherry 0.5.2 Docs" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">LdapCherry 0.5.2 Docs</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for ldapcherry.backend</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># vim:set expandtab tabstop=4 shiftwidth=4:</span>
+<span class="c1">#</span>
+<span class="c1"># The MIT License (MIT)</span>
+<span class="c1"># LdapCherry</span>
+<span class="c1"># Copyright (c) 2014 Carpentier Pierre-Francois</span>
+
+<span class="kn">from</span> <span class="nn">ldapcherry.exceptions</span> <span class="k">import</span> <span class="n">MissingParameter</span>
+
+
+<div class="viewcode-block" id="Backend"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend">[docs]</a><span class="k">class</span> <span class="nc">Backend</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Backend.__init__"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrslist</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initialize the backend</span>
+
+<span class="sd">        :param config: the configuration of the backend</span>
+<span class="sd">        :type config: dict {&#39;config key&#39;: &#39;value&#39;}</span>
+<span class="sd">        :param logger: the cherrypy error logger object</span>
+<span class="sd">        :type logger: python logger</span>
+<span class="sd">        :param name: id of the backend</span>
+<span class="sd">        :type name: string</span>
+<span class="sd">        :param attrslist: list of the backend attributes</span>
+<span class="sd">        :type attrslist: list of strings</span>
+<span class="sd">        :param key: the key attribute</span>
+<span class="sd">        :type key: string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Backend.auth"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.auth">[docs]</a>    <span class="k">def</span> <span class="nf">auth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Check authentication against the backend</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param password: password of the user</span>
+<span class="sd">        :type password: string</span>
+<span class="sd">        :rtype: boolean (True is authentication success, False otherwise)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Backend.add_user"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.add_user">[docs]</a>    <span class="k">def</span> <span class="nf">add_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add a user to the backend</span>
+
+<span class="sd">        :param attrs: attributes of the user</span>
+<span class="sd">        :type attrs: dict ({&lt;attr&gt;: &lt;value&gt;})</span>
+
+<span class="sd">        .. warning:: raise UserAlreadyExists if user already exists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Backend.del_user"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.del_user">[docs]</a>    <span class="k">def</span> <span class="nf">del_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Delete a user from the backend</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Backend.set_attrs"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.set_attrs">[docs]</a>    <span class="k">def</span> <span class="nf">set_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set a list of attributes for a given user</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param attrs: attributes of the user</span>
+<span class="sd">        :type attrs: dict ({&lt;attr&gt;: &lt;value&gt;})</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Backend.add_to_groups"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.add_to_groups">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">groups</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add a user to a list of groups</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param groups: list of groups</span>
+<span class="sd">        :type groups: list of strings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Backend.del_from_groups"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.del_from_groups">[docs]</a>    <span class="k">def</span> <span class="nf">del_from_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">groups</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Delete a user from a list of groups</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param groups: list of groups</span>
+<span class="sd">        :type groups: list of strings</span>
+
+<span class="sd">        .. warning:: raise GroupDoesntExist if group doesn&#39;t exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Backend.search"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.search">[docs]</a>    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searchstring</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Search backend for users</span>
+
+<span class="sd">        :param searchstring: the search string</span>
+<span class="sd">        :type searchstring: string</span>
+<span class="sd">        :rtype: dict of dict ( {&lt;user attr key&gt;: {&lt;attr&gt;: &lt;value&gt;}} )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="Backend.get_user"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.get_user">[docs]</a>    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get a user&#39;s attributes</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :rtype: dict ( {&lt;attr&gt;: &lt;value&gt;} )</span>
+
+<span class="sd">        .. warning:: raise UserDoesntExist if user doesn&#39;t exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="Backend.get_groups"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.get_groups">[docs]</a>    <span class="k">def</span> <span class="nf">get_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get a user&#39;s groups</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :rtype: list of groups</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="Backend.get_param"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.backend.Backend.get_param">[docs]</a>    <span class="k">def</span> <span class="nf">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get a parameter in config (handle default value)</span>
+
+<span class="sd">        :param param: name of the parameter to recover</span>
+<span class="sd">        :type param: string</span>
+<span class="sd">        :param default: the default value, raises an exception</span>
+<span class="sd">            if param is not in configuration and default</span>
+<span class="sd">            is None (which is the default value).</span>
+<span class="sd">        :type default: string or None</span>
+<span class="sd">        :rtype: the value of the parameter or the default value if</span>
+<span class="sd">            not set in configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MissingParameter</span><span class="p">(</span><span class="s1">&#39;backends&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">param</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">LdapCherry 0.5.2 Docs</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>
