@@ -1,0 +1,512 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Full Configuration &#8212; LdapCherry 0.5.0 Docs</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="LdapCherry 0.5.0 Docs" href="index.html" />
+    <link rel="next" title="LdapCherry plugins list" href="external_plugins.html" />
+    <link rel="prev" title="Backends" href="backends.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="external_plugins.html" title="LdapCherry plugins list"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="backends.html" title="Backends"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="full-configuration">
+<h1>Full Configuration<a class="headerlink" href="#full-configuration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="main-ini-configuration-file">
+<h2>Main ini configuration file<a class="headerlink" href="#main-ini-configuration-file" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-ini"><div class="highlight"><pre><span></span><span class="c1"># global parameters</span>
+<span class="k">[global]</span>
+
+<span class="c1"># listing interface</span>
+<span class="na">server.socket_host</span> <span class="o">=</span> <span class="s">&#39;127.0.0.1&#39;</span>
+<span class="c1"># port</span>
+<span class="na">server.socket_port</span> <span class="o">=</span> <span class="s">8080</span>
+<span class="c1"># number of threads</span>
+<span class="na">server.thread_pool</span> <span class="o">=</span> <span class="s">8</span>
+<span class="c1">#don&#39;t show traceback on error</span>
+<span class="na">request.show_tracebacks</span> <span class="o">=</span> <span class="s">False</span>
+
+<span class="c1"># log configuration</span>
+<span class="c1"># /!\ you can&#39;t have multiple log handlers</span>
+<span class="c1">#####################################</span>
+<span class="c1">#   configuration to log in files   #</span>
+<span class="c1">#####################################</span>
+<span class="c1">## logger &#39;file&#39; for access log </span>
+<span class="c1">#log.access_handler = &#39;file&#39;</span>
+<span class="c1">## logger syslog for error and ldapcherry log </span>
+<span class="c1">#log.error_handler = &#39;file&#39;</span>
+<span class="c1">## access log file</span>
+<span class="c1">#log.access_file = &#39;/tmp/ldapcherry_access.log&#39;</span>
+<span class="c1">## error and ldapcherry log file</span>
+<span class="c1">#log.error_file = &#39;/tmp/ldapcherry_error.log&#39;</span>
+
+<span class="c1">#####################################</span>
+<span class="c1">#  configuration to log in syslog   #</span>
+<span class="c1">#####################################</span>
+<span class="c1"># logger syslog for access log </span>
+<span class="c1">#log.access_handler = &#39;syslog&#39;</span>
+<span class="c1">## logger syslog for error and ldapcherry log </span>
+<span class="na">log.error_handler</span> <span class="o">=</span> <span class="s">&#39;syslog&#39;</span>
+
+<span class="c1">#####################################</span>
+<span class="c1">#  configuration to not log at all  #</span>
+<span class="c1">#####################################</span>
+<span class="c1"># logger none for access log </span>
+<span class="na">log.access_handler</span> <span class="o">=</span> <span class="s">&#39;none&#39;</span>
+<span class="c1"># logger none for error and ldapcherry log </span>
+<span class="c1">#log.error_handler = &#39;none&#39;</span>
+
+<span class="c1"># log level</span>
+<span class="na">log.level</span> <span class="o">=</span> <span class="s">&#39;info&#39;</span>
+
+<span class="c1"># session configuration</span>
+<span class="c1"># activate session</span>
+<span class="na">tools.sessions.on</span> <span class="o">=</span> <span class="s">True</span>
+<span class="c1"># session timeout</span>
+<span class="na">tools.sessions.timeout</span> <span class="o">=</span> <span class="s">10</span>
+<span class="c1"># file session storage(to use if multiple processes, </span>
+<span class="c1"># default is in RAM and per process)</span>
+<span class="c1">#tools.sessions.storage_type = &quot;file&quot;</span>
+<span class="c1"># session </span>
+<span class="c1">#tools.sessions.storage_path = &quot;/var/lib/ldapcherry/sessions&quot;</span>
+
+<span class="k">[attributes]</span>
+
+<span class="c1"># file discribing form content</span>
+<span class="na">attributes.file</span> <span class="o">=</span> <span class="s">&#39;/etc/ldapcherry/attributes.yml&#39;</span>
+
+<span class="k">[roles]</span>
+
+<span class="c1"># file listing roles</span>
+<span class="na">roles.file</span> <span class="o">=</span> <span class="s">&#39;/etc/ldapcherry/roles.yml&#39;</span>
+
+<span class="k">[backends]</span>
+
+<span class="c1">#####################################</span>
+<span class="c1">#   configuration of ldap backend   #</span>
+<span class="c1">#####################################</span>
+
+<span class="c1"># name of the module</span>
+<span class="na">ldap.module</span> <span class="o">=</span> <span class="s">&#39;ldapcherry.backend.backendLdap&#39;</span>
+<span class="c1"># display name of the ldap</span>
+<span class="na">ldap.display_name</span> <span class="o">=</span> <span class="s">&#39;My Ldap Directory&#39;</span>
+
+<span class="c1"># uri of the ldap directory</span>
+<span class="na">ldap.uri</span> <span class="o">=</span> <span class="s">&#39;ldap://ldap.ldapcherry.org&#39;</span>
+<span class="c1"># ca to use for ssl/tls connexion</span>
+<span class="c1">#ldap.ca = &#39;/etc/dnscherry/TEST-cacert.pem&#39;</span>
+<span class="c1"># use start tls</span>
+<span class="c1">#ldap.starttls = &#39;off&#39;</span>
+<span class="c1"># check server certificate (for tls)</span>
+<span class="c1">#ldap.checkcert = &#39;off&#39;</span>
+<span class="c1"># bind dn to the ldap</span>
+<span class="na">ldap.binddn</span> <span class="o">=</span> <span class="s">&#39;cn=dnscherry,dc=example,dc=org&#39;</span>
+<span class="c1"># password of the bind dn</span>
+<span class="na">ldap.password</span> <span class="o">=</span> <span class="s">&#39;password&#39;</span>
+<span class="c1"># timeout of ldap connexion (in second)</span>
+<span class="na">ldap.timeout</span> <span class="o">=</span> <span class="s">1</span>
+
+<span class="c1"># groups dn</span>
+<span class="na">ldap.groupdn</span> <span class="o">=</span> <span class="s">&#39;ou=group,dc=example,dc=org&#39;</span>
+<span class="c1"># users dn</span>
+<span class="na">ldap.userdn</span> <span class="o">=</span> <span class="s">&#39;ou=people,dc=example,dc=org&#39;</span>
+<span class="c1"># ldapsearch filter to get a user</span>
+<span class="na">ldap.user_filter_tmpl</span> <span class="o">=</span> <span class="s">&#39;(uid=%(username)s)&#39;</span>
+<span class="c1"># ldapsearch filter to get groups of a user</span>
+<span class="na">ldap.group_filter_tmpl</span> <span class="o">=</span> <span class="s">&#39;(member=uid=%(username)s,ou=People,dc=example,dc=org)&#39;</span>
+<span class="c1"># filter to search users</span>
+<span class="na">ldap.search_filter_tmpl</span> <span class="o">=</span> <span class="s">&#39;(|(uid=%(searchstring)s*)(sn=%(searchstring)s*))&#39;</span>
+
+<span class="c1"># ldap group attributes and how to fill them</span>
+<span class="na">ldap.group_attr.member</span> <span class="o">=</span> <span class="s">&quot;%(dn)s&quot;</span>
+<span class="c1">#ldap.group_attr.memberUid = &quot;%(uid)s&quot;</span>
+<span class="c1"># object classes of a user entry</span>
+<span class="na">ldap.objectclasses</span> <span class="o">=</span> <span class="s">&#39;top, person, posixAccount, inetOrgPerson&#39;</span>
+<span class="c1"># dn entry attribute for an ldap user</span>
+<span class="na">ldap.dn_user_attr</span> <span class="o">=</span> <span class="s">&#39;uid&#39;</span>
+
+<span class="c1">#####################################</span>
+<span class="c1">#   configuration of ad backend     #</span>
+<span class="c1">#####################################</span>
+ 
+<span class="c1">## Name of the backend</span>
+<span class="c1">#ad.module = &#39;ldapcherry.backend.backendAD&#39;</span>
+<span class="c1">## display name of the ldap</span>
+<span class="c1">#ad.display_name = &#39;My Active Directory&#39;</span>
+<span class="c1">## ad domain</span>
+<span class="c1">#ad.domain = &#39;dc.ldapcherry.org&#39;</span>
+<span class="c1">## ad login</span>
+<span class="c1">#ad.login  = &#39;administrator&#39;</span>
+<span class="c1">## ad password </span>
+<span class="c1">#ad.password = &#39;qwertyP455&#39;</span>
+<span class="c1">## ad uri</span>
+<span class="c1">#ad.uri = &#39;ldap://ldap.ldapcherry.org&#39;</span>
+
+<span class="c1">## ca to use for ssl/tls connexion</span>
+<span class="c1">#ad.ca = &#39;/etc/dnscherry/TEST-cacert.pem&#39;</span>
+<span class="c1">## use start tls</span>
+<span class="c1">#ad.starttls = &#39;off&#39;</span>
+<span class="c1">## check server certificate (for tls)</span>
+<span class="c1">#ad.checkcert = &#39;off&#39;</span>
+
+<span class="c1">#####################################</span>
+<span class="c1">#   configuration of demo backend   #</span>
+<span class="c1">#####################################</span>
+ 
+<span class="c1">## Name of the backend</span>
+<span class="c1">#demo.module = &#39;ldapcherry.backend.backendDemo&#39;</span>
+<span class="c1">## Display name of the Backend</span>
+<span class="c1">#demo.display_name  = &#39;Demo Backend&#39;</span>
+<span class="c1">## Groups of admin user</span>
+<span class="c1">#demo.admin.groups  = &#39;DnsAdmins&#39;</span>
+<span class="c1">## Groups of basic user</span>
+<span class="c1">#demo.basic.groups  = &#39;Test 2, Test 1&#39;</span>
+<span class="c1">## Password attribute name</span>
+<span class="c1">#demo.pwd_attr = &#39;userPassword&#39;</span>
+<span class="c1">## Attribute to use for the search</span>
+<span class="c1">#demo.search_attributes = &#39;cn, sn, givenName, uid&#39;</span>
+<span class="c1">## Login of default admin user</span>
+<span class="c1">#demo.admin.user = &#39;admin&#39;</span>
+<span class="c1">## Password of default admin user</span>
+<span class="c1">#demo.admin.password = &#39;admin&#39;</span>
+<span class="c1">## Login of default basic user</span>
+<span class="c1">#demo.basic.user = &#39;user&#39;</span>
+<span class="c1">## Password of default basic user</span>
+<span class="c1">#demo.basic.password = &#39;user&#39;</span>
+
+<span class="k">[ppolicy]</span>
+
+<span class="c1"># password policy module</span>
+<span class="na">ppolicy.module</span> <span class="o">=</span> <span class="s">&#39;ldapcherry.ppolicy.simple&#39;</span>
+
+<span class="c1"># parameters of the module</span>
+<span class="na">min_length</span> <span class="o">=</span> <span class="s">8</span>
+<span class="na">min_upper</span> <span class="o">=</span> <span class="s">1</span>
+<span class="na">min_digit</span> <span class="o">=</span> <span class="s">1</span>
+
+<span class="c1"># authentification parameters</span>
+<span class="k">[auth]</span>
+
+<span class="c1"># Auth mode</span>
+<span class="c1"># * and: user must authenticate on all backends</span>
+<span class="c1"># * or:  user must authenticate on one of the backend</span>
+<span class="c1"># * none: disable authentification</span>
+<span class="c1"># * custom: custom authentification module (need auth.module param)</span>
+<span class="na">auth.mode</span> <span class="o">=</span> <span class="s">&#39;or&#39;</span>
+
+<span class="c1"># custom auth module to load</span>
+<span class="c1">#auth.module = &#39;ldapcherry.auth.modNone&#39;</span>
+
+<span class="c1"># resources parameters</span>
+<span class="k">[resources]</span>
+<span class="c1"># templates directory</span>
+<span class="na">templates.dir</span> <span class="o">=</span> <span class="s">&#39;/usr/share/ldapcherry/templates/&#39;</span>
+
+<span class="k">[/static]</span>
+<span class="c1"># enable serving static file through ldapcherry</span>
+<span class="c1"># set to False if files served directly by an</span>
+<span class="c1"># http server for better performance</span>
+<span class="na">tools.staticdir.on</span> <span class="o">=</span> <span class="s">True</span>
+<span class="c1"># static resources directory (js, css, images...)</span>
+<span class="na">tools.staticdir.dir</span> <span class="o">=</span> <span class="s">&#39;/usr/share/ldapcherry/static/&#39;</span>
+
+<span class="c1">## custom javascript files</span>
+<span class="c1">#[/custom]</span>
+<span class="c1">#</span>
+<span class="c1">## enable serving static file through ldapcherry</span>
+<span class="c1">## set to False if files served directly by an</span>
+<span class="c1">## http server for better performance</span>
+<span class="c1">#tools.staticdir.on = True</span>
+
+<span class="c1">## path to directory containing js files</span>
+<span class="c1">## use it to add custom auto-fill functions</span>
+<span class="c1">#tools.staticdir.dir = &#39;/etc/ldapcherry/custom_js/&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="yaml-attributes-configuration-file">
+<h2>Yaml Attributes configuration file<a class="headerlink" href="#yaml-attributes-configuration-file" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">cn</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;First</span><span class="nv"> </span><span class="s">Name</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">Display</span><span class="nv"> </span><span class="s">Name&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Display</span><span class="nv"> </span><span class="s">Name&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">string</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">30</span>
+    <span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span> 
+        <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcDisplayName</span>
+        <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">cn</span>
+<span class="c1">#        ad: cn</span>
+<span class="l l-Scalar l-Scalar-Plain">first-name</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;First</span><span class="nv"> </span><span class="s">name</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;First</span><span class="nv"> </span><span class="s">Name&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">search_displayed</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">string</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">20</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">givenName</span>
+<span class="c1">#        ad: givenName</span>
+<span class="l l-Scalar l-Scalar-Plain">name</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;Family</span><span class="nv"> </span><span class="s">name</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Name&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">search_displayed</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">string</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">sn</span>
+<span class="c1">#        ad: sn</span>
+<span class="l l-Scalar l-Scalar-Plain">email</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;Email</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Email&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">search_displayed</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">email</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">40</span>
+    <span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span> 
+        <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcMail</span>
+        <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+            <span class="p p-Indicator">-</span> <span class="s">&#39;@example.com&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">mail</span>
+<span class="c1">#        ad: mail</span>
+<span class="l l-Scalar l-Scalar-Plain">uid</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;UID</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;UID&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">search_displayed</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">key</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">string</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">50</span>
+    <span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span> 
+        <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcUid</span>
+        <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+            <span class="p p-Indicator">-</span> <span class="s">&#39;10000&#39;</span>
+            <span class="p p-Indicator">-</span> <span class="s">&#39;40000&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">uid</span>
+<span class="c1">#        ad: sAMAccountName</span>
+<span class="l l-Scalar l-Scalar-Plain">uidNumber</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;User</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">Number</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;UID</span><span class="nv"> </span><span class="s">Number&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">60</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">int</span>
+    <span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span> 
+        <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcUidNumber</span>
+        <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+            <span class="p p-Indicator">-</span> <span class="s">&#39;10000&#39;</span>
+            <span class="p p-Indicator">-</span> <span class="s">&#39;40000&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">uidNumber</span>
+<span class="c1">#        ad: uidNumber</span>
+<span class="l l-Scalar l-Scalar-Plain">gidNumber</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;Group</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">Number</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;GID</span><span class="nv"> </span><span class="s">Number&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">70</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">int</span>
+    <span class="l l-Scalar l-Scalar-Plain">default</span><span class="p p-Indicator">:</span> <span class="s">&#39;10000&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">gidNumber</span>
+<span class="c1">#        ad: gidNumber</span>
+<span class="l l-Scalar l-Scalar-Plain">shell</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;Shell</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Shell&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+    <span class="l l-Scalar l-Scalar-Plain">self</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">stringlist</span>
+    <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/bin/bash</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/bin/zsh</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/bin/sh</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">loginShell</span>
+<span class="c1">#        ad: loginShell </span>
+<span class="l l-Scalar l-Scalar-Plain">home</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;Home</span><span class="nv"> </span><span class="s">user</span><span class="nv"> </span><span class="s">path&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Home&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">90</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">string</span>
+    <span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span> 
+        <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcHomeDir</span>
+        <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/home/</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">homeDirectory</span>
+<span class="c1">#        ad: homeDirectory</span>
+<span class="l l-Scalar l-Scalar-Plain">password</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;Password</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;Password&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">31</span>
+    <span class="l l-Scalar l-Scalar-Plain">self</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">password</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">userPassword</span>
+<span class="c1">#        ad: unicodePwd</span>
+
+<span class="c1">#logscript:</span>
+<span class="c1">#    description: &quot;Windows login script&quot;</span>
+<span class="c1">#    display_name: &quot;Login script&quot;</span>
+<span class="c1">#    weight: 100</span>
+<span class="c1">#    type: fix</span>
+<span class="c1">#    value: login1.bat</span>
+<span class="c1">#    backends:</span>
+<span class="c1">#        ad: scriptPath</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="yaml-roles-configuration-file">
+<h2>Yaml Roles configuration file<a class="headerlink" href="#yaml-roles-configuration-file" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">admin-lv3</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Administrators Level 3</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Super administrators of the system</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=dns admins,ou=Group,dc=example,dc=org</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=nagios admins,ou=Group,dc=example,dc=org</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=puppet admins,ou=Group,dc=example,dc=org</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=users,ou=Group,dc=example,dc=org</span>
+<span class="c1">#        ad:</span>
+<span class="c1">#            - Administrators</span>
+<span class="c1">#            - Group Policy Creator Owners</span>
+<span class="c1">#            - Enterprise Admins</span>
+<span class="c1">#            - Schema Admins</span>
+<span class="c1">#            - Domain Admins</span>
+
+<span class="l l-Scalar l-Scalar-Plain">admin-lv2</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Administrators Level 2</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Basic administrators of the system</span>
+    <span class="l l-Scalar l-Scalar-Plain">LC_admins</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=nagios admins,ou=Group,dc=example,dc=org</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=users,ou=Group,dc=example,dc=org</span>
+<span class="c1">#        ad:</span>
+<span class="c1">#            - Administrators</span>
+
+<span class="l l-Scalar l-Scalar-Plain">developpers</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Developpers</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Developpers of the system</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=developpers,ou=Group,dc=example,dc=org</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=users,ou=Group,dc=example,dc=org</span>
+
+<span class="l l-Scalar l-Scalar-Plain">users</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Simple Users</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Basic users of the system</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">cn=users,ou=Group,dc=example,dc=org</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Full Configuration</a><ul>
+<li><a class="reference internal" href="#main-ini-configuration-file">Main ini configuration file</a></li>
+<li><a class="reference internal" href="#yaml-attributes-configuration-file">Yaml Attributes configuration file</a></li>
+<li><a class="reference internal" href="#yaml-roles-configuration-file">Yaml Roles configuration file</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="backends.html"
+                        title="previous chapter">Backends</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="external_plugins.html"
+                        title="next chapter">LdapCherry plugins list</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="external_plugins.html" title="LdapCherry plugins list"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="backends.html" title="Backends"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>

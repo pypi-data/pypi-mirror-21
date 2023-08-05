@@ -1,0 +1,769 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Deploy &#8212; LdapCherry 0.5.0 Docs</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="LdapCherry 0.5.0 Docs" href="index.html" />
+    <link rel="next" title="Backends" href="backends.html" />
+    <link rel="prev" title="Install" href="install.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="backends.html" title="Backends"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Install"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="deploy">
+<h1>Deploy<a class="headerlink" href="#deploy" title="Permalink to this headline">¶</a></h1>
+<p>LdapCherry aims to be as simple as possible to deploy.
+The Application is constituted of:</p>
+<ul class="simple">
+<li>ldapcherryd: the daemon to lauch LdapCherry.</li>
+<li>one ini file (ldapcherry.ini by default): the entry point for the configuration, containing all the &#8220;technical&#8221; attributes.</li>
+<li>two yaml files (roles.yml and attributes by default): the files containing the roles and attributes definition.</li>
+</ul>
+<p>The default configuration directory is <strong>/etc/ldapcherry/</strong>.</p>
+<div class="section" id="launch">
+<h2>Launch<a class="headerlink" href="#launch" title="Permalink to this headline">¶</a></h2>
+<p>LdapCherry is launched using the internal cherrypy server:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="c1"># ldapcherryd help</span>
+$ ldapcherryd -h
+
+<span class="c1"># launching ldapcherryd in the foreground</span>
+$ ldapcherryd -c /etc/ldapcherry/ldapcherry.ini
+
+<span class="c1"># launching ldapcherryd in the foreground in debug mode</span>
+$ ldapcherryd -c /etc/ldapcherry/ldapcherry.ini -D
+
+<span class="c1"># launching ldapcherryd as a daemon</span>
+$ ldapcherryd -c /etc/ldapcherry/ldapcherry.ini -p /var/run/ldapcherry/ldapcherry.pid -d
+</pre></div>
+</div>
+</div>
+<div class="section" id="roles-and-attributes-configuration">
+<h2>Roles and Attributes Configuration<a class="headerlink" href="#roles-and-attributes-configuration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="entry-point-in-main-configuration">
+<h3>Entry point in main configuration<a class="headerlink" href="#entry-point-in-main-configuration" title="Permalink to this headline">¶</a></h3>
+<p>The main configuration file (<strong>ldapcherry.ini</strong> by default) contains two parameters locating the roles and attributes configuration files:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="15%" />
+<col width="39%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Section</th>
+<th class="head">Description</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>attributes.file</td>
+<td>attributes</td>
+<td>Attributes configuration file</td>
+<td>Path to conf file</td>
+</tr>
+<tr class="row-odd"><td>roles.file</td>
+<td>roles</td>
+<td>Roles configuration file</td>
+<td>Path to conf file</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="attributes-configuration">
+<h3>Attributes Configuration<a class="headerlink" href="#attributes-configuration" title="Permalink to this headline">¶</a></h3>
+<p>The attributes configuration is done in a yaml file (<strong>attributes.yml</strong> by default).</p>
+<div class="section" id="mandatory-parameters">
+<h4>Mandatory parameters<a class="headerlink" href="#mandatory-parameters" title="Permalink to this headline">¶</a></h4>
+<p>The mandatory parameters for an attribute, and their format are the following:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">&lt;attr id&gt;</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;Human readable description of the attribute&gt;</span>                       <span class="c1"># (free text)</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;Display name in LdapCherry forms&gt;</span>                                 <span class="c1"># (free text)</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;weight controlling the display order of the attributes, lower is first&gt;</span> <span class="c1"># (integer)</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;type of the attributes&gt;</span>                                                   <span class="c1"># (in [&#39;int&#39;, &#39;string&#39;, &#39;email&#39;, &#39;stringlist&#39;, &#39;fix&#39;, &#39;textfield&#39;])</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>                                                                        <span class="c1"># (list of backend attributes name)</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 1&gt;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend 1 attribute name&gt;</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 2&gt;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend 2 attribute name&gt;</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">&lt;attr id&gt; (the attribute id) must be unique, LdapCherry won&#8217;t start if it&#8217;s not.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">&lt;backend id&gt; (the backend id) must be defined in main ini configuration file.
+LdapCherry won&#8217;t start if it&#8217;s not.</p>
+</div>
+</div>
+<div class="section" id="type-listing">
+<h4>Type listing<a class="headerlink" href="#type-listing" title="Permalink to this headline">¶</a></h4>
+<p>The following <strong>type</strong> are supported:</p>
+<ul class="simple">
+<li><strong>int</strong>:        an integer (ex: uid)</li>
+<li><strong>string</strong>:     a string (ex: first name)</li>
+<li><strong>stringlist</strong>: a string to choose from a given list of strings (ex: one of /bin/sh, /bin/bash /bin/zsh for a shell)</li>
+<li><strong>textfield</strong>:  free multiline text (ex: an SSH key)</li>
+<li><strong>email</strong>:      an email address</li>
+<li><strong>fix</strong>:        a fix value, only present shown information purposes</li>
+</ul>
+</div>
+<div class="section" id="type-stringlist-values">
+<h4>Type stringlist values<a class="headerlink" href="#type-stringlist-values" title="Permalink to this headline">¶</a></h4>
+<p>If <strong>type</strong> is set to <strong>stringlist</strong> the parameter <strong>values</strong> must be filled with the list of possible values:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">&lt;attr id&gt;</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;Human readable description of the attribute&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;Display name in LdapCherry forms&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;weight controlling the display order of the attributes)</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">stringlist</span>
+    <span class="l l-Scalar l-Scalar-Plain">values</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">value1</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">value2</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">value3</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend id&gt;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend attribute name&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="key-attribute">
+<h4>Key attribute:<a class="headerlink" href="#key-attribute" title="Permalink to this headline">¶</a></h4>
+<p>One attribute must be used as a unique key across all backends:</p>
+<p>To set the key attribute, you must set <strong>key</strong> to <strong>True</strong> on this attribute.</p>
+<p>Example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">uid</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;UID</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;UID&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">search_displayed</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+    <span class="l l-Scalar l-Scalar-Plain">key</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>                       <span class="c1"># defining the attribute as &quot;key&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">string</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">50</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">uid</span>
+        <span class="l l-Scalar l-Scalar-Plain">ad</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">sAMAccountName</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="authorize-self-modification">
+<h4>Authorize self modification<a class="headerlink" href="#authorize-self-modification" title="Permalink to this headline">¶</a></h4>
+<p>A user can modify some of his attributes (self modification).
+In such case, the parameter <strong>self</strong> must set to <strong>True</strong>:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">&lt;attr id&gt;</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;Human readable description of the attribute&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;Display name in LdapCherry forms&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;weight controlling the display order of the attributes)</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;type of the attributes&gt;</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">self</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 1&gt;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend 1 attribute name&gt;</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 2&gt;</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;backend 2 attribute name&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="autofill">
+<h4>Autofill<a class="headerlink" href="#autofill" title="Permalink to this headline">¶</a></h4>
+<p>LdapCherry has the possibility to auto-fill fields from other fields,
+to use this functionnality <strong>autofill</strong> must be set.</p>
+<p>Example:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">gidNumber</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="s">&quot;Group</span><span class="nv"> </span><span class="s">ID</span><span class="nv"> </span><span class="s">Number</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">user&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="s">&quot;GID</span><span class="nv"> </span><span class="s">Number&quot;</span>
+    <span class="l l-Scalar l-Scalar-Plain">weight</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">70</span>
+    <span class="l l-Scalar l-Scalar-Plain">type</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">int</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcUidNumber</span> <span class="c1"># name of the function to call</span>
+        <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>                 <span class="c1"># list of arguments</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>     <span class="c1">#</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+            <span class="p p-Indicator">-</span> <span class="s">&#39;10000&#39;</span>
+            <span class="p p-Indicator">-</span> <span class="s">&#39;40000&#39;</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">backends</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">ldap</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">gidNumber</span>
+</pre></div>
+</div>
+<p>Arguments of the <strong>autofill</strong> function work as follow:</p>
+<ul class="simple">
+<li>if argument starts with <strong>$</strong>, for example <strong>$my_field</strong>, the value of form input <strong>my_field</strong> will be passed to the function.</li>
+<li>otherwise, it will be treated as a fixed argument.</li>
+</ul>
+<p>Available <strong>autofill</strong> functions:</p>
+<ul class="simple">
+<li>lcUid: generate 8 characters ascii uid from 2 other fields (first letter of the first field, 7 first letters of the second):</li>
+</ul>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcUid</span>
+    <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>lcDisplayName: concatenate two fields (with a space as separator):</li>
+</ul>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcDisplayName</span>
+    <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>lcMail: generate an email address from 2 other fields and a domain (&lt;uid&gt;+domain):</li>
+</ul>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcMail</span>
+    <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+        <span class="p p-Indicator">-</span> <span class="s">&#39;@example.com&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>lcUidNumber: generate an uid number from 2 other fields and between a minimum and maximum value:</li>
+</ul>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcUidNumber</span>
+    <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+        <span class="p p-Indicator">-</span> <span class="s">&#39;10000&#39;</span>
+        <span class="p p-Indicator">-</span> <span class="s">&#39;40000&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>lcHomeDir: generate an home directory from 2 other fields and a root (&lt;root&gt;+&lt;uid&gt;):</li>
+</ul>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">autofill</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">function</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">lcHomeDir</span>
+    <span class="l l-Scalar l-Scalar-Plain">args</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$first-name</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">$name</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">/home/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="roles-configuration">
+<h3>Roles Configuration<a class="headerlink" href="#roles-configuration" title="Permalink to this headline">¶</a></h3>
+<p>The roles configuration is done in a yaml file (<strong>roles.yml</strong> by default).</p>
+<div class="section" id="id1">
+<h4>Mandatory parameters<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>Roles are seen as an aggregate of groups:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">&lt;role id&gt;</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;role display name in LdapCherry&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;human readable role description&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>                                <span class="c1"># list of backends</span>
+        <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 1&gt;</span><span class="p p-Indicator">:</span>                             <span class="c1"># list of groups in backend</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b1 group 1&gt;</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b1 group 2&gt;</span>
+        <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 2&gt;</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b2 group 1&gt;</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b2 group 2&gt;</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">&lt;role id&gt; must be unique, LdapCherry won&#8217;t start if it&#8217;s not</p>
+</div>
+</div>
+<div class="section" id="defining-ldapcherry-administrator-role">
+<h4>Defining LdapCherry Administrator role<a class="headerlink" href="#defining-ldapcherry-administrator-role" title="Permalink to this headline">¶</a></h4>
+<p>At least one of the declared roles must be tagged to be LdapCherry administrators.</p>
+<p>Doing so is done by setting <strong>LC_admins</strong> to <strong>True</strong> for the selected role:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">&lt;role id&gt;</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;Role display name in LdapCherry&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;human readable role description&gt;</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">LC_admins</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>                                <span class="c1"># list of backends</span>
+        <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 1&gt;</span><span class="p p-Indicator">:</span>                             <span class="c1"># list of groups in backend</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b1 group 1&gt;</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b1 group 2&gt;</span>
+        <span class="l l-Scalar l-Scalar-Plain">&lt;backend id 2&gt;</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b2 group 1&gt;</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">&lt;b2 group 2&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="nesting-roles">
+<h4>Nesting roles<a class="headerlink" href="#nesting-roles" title="Permalink to this headline">¶</a></h4>
+<p>LdapCherry handles roles nesting:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">parent_role</span><span class="p p-Indicator">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Role parent</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">The parent role</span>
+    <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend_id_1</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">b1_group_1</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">b1_group_2</span>
+        <span class="l l-Scalar l-Scalar-Plain">backend_id_2</span><span class="p p-Indicator">:</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">b2_group_1</span>
+            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">b2_group_2</span>
+    <span class="l l-Scalar l-Scalar-Plain">subroles</span><span class="p p-Indicator">:</span>
+        <span class="l l-Scalar l-Scalar-Plain">child_role_1</span><span class="p p-Indicator">:</span>
+            <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Child role 1</span>
+            <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">The first Child Role</span>
+            <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>
+                <span class="l l-Scalar l-Scalar-Plain">backend_id_1</span><span class="p p-Indicator">:</span>
+                    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">b1_group_3</span>
+        <span class="l l-Scalar l-Scalar-Plain">child_role_2</span><span class="p p-Indicator">:</span>
+            <span class="l l-Scalar l-Scalar-Plain">display_name</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Child role 2</span>
+            <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">The second Child Role</span>
+            <span class="l l-Scalar l-Scalar-Plain">backends_groups</span><span class="p p-Indicator">:</span>
+                <span class="l l-Scalar l-Scalar-Plain">backend_id_1</span><span class="p p-Indicator">:</span>
+                    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">b1_group_4</span>
+</pre></div>
+</div>
+<p>In that case, child_role_1 and child_role_2 will contain all groups of parent_role plus their own specific groups.</p>
+</div>
+</div>
+</div>
+<div class="section" id="main-configuration">
+<h2>Main Configuration<a class="headerlink" href="#main-configuration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="webserver">
+<h3>Webserver<a class="headerlink" href="#webserver" title="Permalink to this headline">¶</a></h3>
+<p>LdapCherry uses the embedded http server of CherryPy, however it has some limitations:</p>
+<ul class="simple">
+<li>no listening on port 80/443 (unless run as root, which is strongly discourage)</li>
+<li>no https</li>
+</ul>
+<p>The simpler way to properly deploy LdapCherry is to run it listening only on localhost
+with a port above 1024 and put it behind an http server like nginx, apache or lighttpd
+acting as a reverse http(s) proxy.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="7%" />
+<col width="26%" />
+<col width="19%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Section</th>
+<th class="head">Description</th>
+<th class="head">Values</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>server.socket_host</td>
+<td>global</td>
+<td>Listening IP</td>
+<td>IP on which to listen</td>
+<td>Use &#8216;0.0.0.0&#8217; to listen on any interfaces.</td>
+</tr>
+<tr class="row-odd"><td>server.socket_port</td>
+<td>global</td>
+<td>Listening Port</td>
+<td>TCP Port</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>server.thread_pool</td>
+<td>global</td>
+<td>Number of threads created
+by the CherryPy server</td>
+<td>Number of threads
+threads</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>tools.staticdir.on</td>
+<td>/static</td>
+<td>Serve static files through
+LdapCherry</td>
+<td>True, False</td>
+<td>These files could be server directly by an
+HTTP server for better performance.</td>
+</tr>
+<tr class="row-even"><td>tools.staticdir.dir</td>
+<td>/static</td>
+<td>Directory containing LdapCherry
+static resources (js, css, img...)</td>
+<td>Path to static resources</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p>example:</p>
+<div class="highlight-ini"><div class="highlight"><pre><span></span><span class="k">[global]</span>
+
+<span class="c1"># listing interface</span>
+<span class="na">server.socket_host</span> <span class="o">=</span> <span class="s">&#39;127.0.0.1&#39;</span>
+<span class="c1"># port</span>
+<span class="na">server.socket_port</span> <span class="o">=</span> <span class="s">8080</span>
+<span class="c1"># number of threads</span>
+<span class="na">server.thread_pool</span> <span class="o">=</span> <span class="s">8</span>
+
+<span class="c1"># enable cherrypy static handling</span>
+<span class="c1"># to comment if static content are handled otherwise</span>
+<span class="k">[/static]</span>
+<span class="na">tools.staticdir.on</span> <span class="o">=</span> <span class="s">True</span>
+<span class="na">tools.staticdir.dir</span> <span class="o">=</span> <span class="s">&#39;/usr/share/ldapcherry/static/&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="backends">
+<h3>Backends<a class="headerlink" href="#backends" title="Permalink to this headline">¶</a></h3>
+<p>Backends are configure in the <strong>backends</strong> section, the format is the following:</p>
+<div class="highlight-ini"><div class="highlight"><pre><span></span><span class="k">[backends]</span>
+
+<span class="c1"># backend python module path</span>
+<span class="na">&lt;backend id&gt;.module</span> <span class="o">=</span> <span class="s">&lt;python.module.path&gt;</span>
+
+<span class="c1"># display name of the backend in forms</span>
+<span class="na">&lt;backend id&gt;.display_name</span> <span class="o">=</span> <span class="s">&lt;display name of the backend&gt;</span>
+
+<span class="c1"># parameters of the module instance for backend &lt;backend id&gt;.</span>
+<span class="na">&lt;backend id&gt;.&lt;param&gt;</span> <span class="o">=</span> <span class="s">&lt;value&gt;</span>
+</pre></div>
+</div>
+<p>It&#8217;s possible to instanciate the same module several times.</p>
+</div>
+<div class="section" id="authentication-and-sessions">
+<h3>Authentication and sessions<a class="headerlink" href="#authentication-and-sessions" title="Permalink to this headline">¶</a></h3>
+<p>LdapCherry supports several authentication modes:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="7%" />
+<col width="16%" />
+<col width="36%" />
+<col width="24%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Section</th>
+<th class="head">Description</th>
+<th class="head">Values</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>auth.mode</td>
+<td>auth</td>
+<td>Authentication mode</td>
+<td><ul class="first last simple">
+<li>&#8216;and&#8217; (user must auth on all backends)</li>
+<li>&#8216;or&#8217; (user must auth on one of the backends)</li>
+<li>&#8216;none&#8217; (disable auth)</li>
+<li>&#8216;custom&#8217; (use custom auth module)</li>
+</ul>
+</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>auth.module</td>
+<td>auth</td>
+<td>Custom auth module</td>
+<td>python class path to module</td>
+<td>only used if auth.mode=&#8217;custom&#8217;</td>
+</tr>
+<tr class="row-even"><td>tools.sessions.timeout</td>
+<td>global</td>
+<td>Session timeout in
+minutes</td>
+<td>Number of minutes</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p>Different session backends can also be configured (see CherryPy documentation for details)</p>
+<div class="highlight-ini"><div class="highlight"><pre><span></span><span class="k">[global]</span>
+<span class="c1"># session configuration</span>
+<span class="c1"># activate session</span>
+<span class="na">tools.sessions.on</span> <span class="o">=</span> <span class="s">True</span>
+<span class="c1"># session timeout in minutes</span>
+<span class="na">tools.sessions.timeout</span> <span class="o">=</span> <span class="s">10</span>
+<span class="c1"># file session storage(to use if multiple processes,</span>
+<span class="c1"># default is in RAM and per process)</span>
+<span class="c1">#tools.sessions.storage_type = &quot;file&quot;</span>
+<span class="c1"># session</span>
+<span class="c1">#tools.sessions.storage_path = &quot;/var/lib/ldapcherry/sessions&quot;</span>
+
+<span class="k">[auth]</span>
+<span class="c1"># Auth mode</span>
+<span class="c1"># * and: user must authenticate on all backends</span>
+<span class="c1"># * or:  user must authenticate on one of the backend</span>
+<span class="c1"># * none: disable authentification</span>
+<span class="c1"># * custom: custom authentification module (need auth.module param)</span>
+<span class="na">auth.mode</span> <span class="o">=</span> <span class="s">&#39;or&#39;</span>
+
+<span class="c1"># custom auth module to load</span>
+<span class="c1">#auth.module = &#39;ldapcherry.auth.modNone&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="logging">
+<h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<p>LdapCherry has two loggers, one for errors and applicative actions (login, del/add, logout...) and one for access logs.</p>
+<p>Each logger can be configured to log to syslog, file or be disabled.</p>
+<p>Logging parameters:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="6%" />
+<col width="22%" />
+<col width="32%" />
+<col width="26%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Section</th>
+<th class="head">Description</th>
+<th class="head">Values</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>log.access_handler</td>
+<td>global</td>
+<td>Logger type for access log</td>
+<td>&#8216;syslog&#8217;, &#8216;file&#8217;, &#8216;none&#8217;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>log.error_handler</td>
+<td>global</td>
+<td>Logger type for applicative log</td>
+<td>&#8216;syslog&#8217;, &#8216;file&#8217;, &#8216;none&#8217;</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>log.access_file</td>
+<td>global</td>
+<td>log file for access log</td>
+<td>path to log file</td>
+<td>only used if log.access_handler=&#8217;file&#8217;</td>
+</tr>
+<tr class="row-odd"><td>log.error_file</td>
+<td>global</td>
+<td>log file for applicative log</td>
+<td>path to log file</td>
+<td>only used if log.error_handler=&#8217;file&#8217;</td>
+</tr>
+<tr class="row-even"><td>log.level</td>
+<td>global</td>
+<td>log level of LdapCherry</td>
+<td>&#8216;debug&#8217;, &#8216;info&#8217;, &#8216;warning&#8217;, &#8216;error&#8217;, &#8216;critical&#8217;</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-ini"><div class="highlight"><pre><span></span><span class="k">[global]</span>
+
+<span class="c1"># logger syslog for access log</span>
+<span class="na">log.access_handler</span> <span class="o">=</span> <span class="s">&#39;syslog&#39;</span>
+<span class="c1"># logger syslog for error and ldapcherry log</span>
+<span class="na">log.error_handler</span> <span class="o">=</span> <span class="s">&#39;syslog&#39;</span>
+<span class="c1"># log level</span>
+<span class="na">log.level</span> <span class="o">=</span> <span class="s">&#39;info&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-javascript">
+<h3>Custom javascript<a class="headerlink" href="#custom-javascript" title="Permalink to this headline">¶</a></h3>
+<p>It&#8217;s possible to add custom javascript to LdapCherry, mainly to add custom autofill functions.</p>
+<p>Configuration:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="6%" />
+<col width="22%" />
+<col width="18%" />
+<col width="41%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Section</th>
+<th class="head">Description</th>
+<th class="head">Values</th>
+<th class="head">Comment</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>tools.staticdir.on</td>
+<td>/custom</td>
+<td>Serve custom js files through
+LdapCherry</td>
+<td>True, False</td>
+<td>These files could be server directly by an
+HTTP server for better performance.</td>
+</tr>
+<tr class="row-odd"><td>tools.staticdir.dir</td>
+<td>/custom</td>
+<td>Directory containing custom js
+files</td>
+<td>Path to static resources</td>
+<td><ul class="first last simple">
+<li>custom js files must be put at the root if the directory</li>
+<li>only files ending with &#8221;.js&#8221; are taken into account</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="other-ldapcherry-parameters">
+<h3>Other LdapCherry parameters<a class="headerlink" href="#other-ldapcherry-parameters" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="18%" />
+<col width="13%" />
+<col width="39%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Section</th>
+<th class="head">Description</th>
+<th class="head">Values</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>template_dir</td>
+<td>resources</td>
+<td>LdapCherry template directory</td>
+<td>path to template dir</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-ini"><div class="highlight"><pre><span></span><span class="c1"># resources parameters</span>
+<span class="k">[resources]</span>
+<span class="c1"># templates directory</span>
+<span class="na">template_dir</span> <span class="o">=</span> <span class="s">&#39;/usr/share/ldapcherry/templates/&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Deploy</a><ul>
+<li><a class="reference internal" href="#launch">Launch</a></li>
+<li><a class="reference internal" href="#roles-and-attributes-configuration">Roles and Attributes Configuration</a><ul>
+<li><a class="reference internal" href="#entry-point-in-main-configuration">Entry point in main configuration</a></li>
+<li><a class="reference internal" href="#attributes-configuration">Attributes Configuration</a><ul>
+<li><a class="reference internal" href="#mandatory-parameters">Mandatory parameters</a></li>
+<li><a class="reference internal" href="#type-listing">Type listing</a></li>
+<li><a class="reference internal" href="#type-stringlist-values">Type stringlist values</a></li>
+<li><a class="reference internal" href="#key-attribute">Key attribute:</a></li>
+<li><a class="reference internal" href="#authorize-self-modification">Authorize self modification</a></li>
+<li><a class="reference internal" href="#autofill">Autofill</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#roles-configuration">Roles Configuration</a><ul>
+<li><a class="reference internal" href="#id1">Mandatory parameters</a></li>
+<li><a class="reference internal" href="#defining-ldapcherry-administrator-role">Defining LdapCherry Administrator role</a></li>
+<li><a class="reference internal" href="#nesting-roles">Nesting roles</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#main-configuration">Main Configuration</a><ul>
+<li><a class="reference internal" href="#webserver">Webserver</a></li>
+<li><a class="reference internal" href="#backends">Backends</a></li>
+<li><a class="reference internal" href="#authentication-and-sessions">Authentication and sessions</a></li>
+<li><a class="reference internal" href="#logging">Logging</a></li>
+<li><a class="reference internal" href="#custom-javascript">Custom javascript</a></li>
+<li><a class="reference internal" href="#other-ldapcherry-parameters">Other LdapCherry parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Install</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="backends.html"
+                        title="next chapter">Backends</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="backends.html" title="Backends"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Install"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Some Goodies &#8212; LdapCherry 0.5.0 Docs</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="LdapCherry 0.5.0 Docs" href="index.html" />
+    <link rel="next" title="Screenshots" href="screenshots.html" />
+    <link rel="prev" title="Changelog" href="changelog.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="screenshots.html" title="Screenshots"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="changelog.html" title="Changelog"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="some-goodies">
+<h1>Some Goodies<a class="headerlink" href="#some-goodies" title="Permalink to this headline">¶</a></h1>
+<p>Here are some goodies that might help deploying LdapCherry</p>
+<p>They are located in the <strong>goodies/</strong> directory.</p>
+<div class="section" id="init-script">
+<h2>Init Script<a class="headerlink" href="#init-script" title="Permalink to this headline">¶</a></h2>
+<p>Sample init script for Debian:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="ch">#! /bin/sh</span>
+
+<span class="c1">### BEGIN INIT INFO</span>
+<span class="c1"># Provides:        ldapcherryd</span>
+<span class="c1"># Required-Start:    $remote_fs $network $syslog</span>
+<span class="c1"># Required-Stop:    $remote_fs $network $syslog</span>
+<span class="c1"># Default-Start:    2 3 4 5</span>
+<span class="c1"># Default-Stop:        </span>
+<span class="c1"># Short-Description:    ldapcherry</span>
+<span class="c1">### END INIT INFO</span>
+
+<span class="nv">PIDFILE</span><span class="o">=</span>/var/run/ldapcherryd/ldapcherryd.pid
+<span class="nv">CONF</span><span class="o">=</span>/etc/ldapcherry/ldapcherry.ini
+<span class="nv">USER</span><span class="o">=</span>www-data
+<span class="nv">GROUP</span><span class="o">=</span>www-data
+<span class="nv">BIN</span><span class="o">=</span>/usr/local/bin/ldapcherryd
+<span class="nv">OPTS</span><span class="o">=</span><span class="s2">&quot;-d -c </span><span class="nv">$CONF</span><span class="s2"> -p </span><span class="nv">$PIDFILE</span><span class="s2">&quot;</span>
+
+. /lib/lsb/init-functions
+
+<span class="k">if</span> <span class="o">[</span> -f /etc/default/ldapcherryd <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+    . /etc/default/ldapcherryd
+<span class="k">fi</span>
+
+start_ldapcherryd<span class="o">(){</span>
+    log_daemon_msg <span class="s2">&quot;Starting ldapcherryd&quot;</span> <span class="s2">&quot;ldapcherryd&quot;</span> <span class="o">||</span> <span class="nb">true</span>
+    pidofproc -p <span class="nv">$PIDFILE</span> <span class="nv">$BIN</span> &gt;/dev/null
+    <span class="nv">status</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$?</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$status</span> -eq <span class="m">0</span> <span class="o">]</span>
+    <span class="k">then</span>
+        log_end_msg <span class="m">1</span> 
+        log_failure_msg <span class="se">\</span>
+        <span class="s2">&quot;ldapcherryd already started&quot;</span>
+        <span class="k">return</span> <span class="m">1</span>
+    <span class="k">fi</span>
+    mkdir -p <span class="sb">`</span>dirname <span class="nv">$PIDFILE</span><span class="sb">`</span> -m <span class="m">750</span>
+    chown <span class="nv">$USER</span>:<span class="nv">$GROUP</span> <span class="sb">`</span>dirname <span class="nv">$PIDFILE</span><span class="sb">`</span>
+    <span class="k">if</span> start-stop-daemon -c <span class="nv">$USER</span>:<span class="nv">$GROUP</span> --start <span class="se">\</span>
+        --quiet --pidfile <span class="nv">$PIDFILE</span> <span class="se">\</span>
+        --oknodo --exec <span class="nv">$BIN</span> -- <span class="nv">$OPTS</span>
+    <span class="k">then</span>
+        log_end_msg <span class="m">0</span> <span class="o">||</span> <span class="nb">true</span>
+        <span class="k">return</span> <span class="m">0</span>
+    <span class="k">else</span>
+        log_end_msg <span class="m">1</span> <span class="o">||</span> <span class="nb">true</span>
+        <span class="k">return</span> <span class="m">1</span>
+    <span class="k">fi</span>
+
+<span class="o">}</span>
+
+stop_ldapcherryd<span class="o">(){</span>
+    log_daemon_msg <span class="s2">&quot;Stopping ldapcherryd&quot;</span> <span class="s2">&quot;ldapcherryd&quot;</span> <span class="o">||</span> <span class="nb">true</span>
+    <span class="k">if</span> start-stop-daemon --stop --quiet <span class="se">\</span>
+        --pidfile <span class="nv">$PIDFILE</span>
+    <span class="k">then</span>
+        log_end_msg <span class="m">0</span> <span class="o">||</span> <span class="nb">true</span>
+        <span class="k">return</span> <span class="m">0</span>
+    <span class="k">else</span>
+        log_end_msg <span class="m">1</span> <span class="o">||</span> <span class="nb">true</span>
+        <span class="k">return</span> <span class="m">1</span>
+    <span class="k">fi</span>
+<span class="o">}</span>
+
+<span class="k">case</span> <span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span> in
+  start<span class="o">)</span>
+    start_ldapcherryd
+    <span class="nb">exit</span> <span class="nv">$?</span>
+    <span class="p">;;</span>
+  stop<span class="o">)</span>
+    stop_ldapcherryd
+    <span class="nb">exit</span> <span class="nv">$?</span>
+    <span class="p">;;</span>
+  restart<span class="o">)</span>
+    stop_ldapcherryd 
+    <span class="k">while</span> pidofproc -p <span class="nv">$PIDFILE</span> <span class="nv">$BIN</span> &gt;/dev/null
+    <span class="k">do</span>
+        sleep <span class="m">0</span>.5
+    <span class="k">done</span>
+    start_ldapcherryd
+    <span class="nb">exit</span> <span class="nv">$?</span>
+    <span class="p">;;</span>
+  status<span class="o">)</span>
+    status_of_proc -p <span class="nv">$PIDFILE</span> <span class="nv">$BIN</span> <span class="s2">&quot;ldapcherryd&quot;</span> <span class="se">\</span>
+        <span class="o">&amp;&amp;</span> <span class="nb">exit</span> <span class="m">0</span> <span class="o">||</span> <span class="nb">exit</span> <span class="nv">$?</span>
+    <span class="p">;;</span>
+  *<span class="o">)</span>
+    log_action_msg <span class="se">\</span>
+    <span class="s2">&quot;Usage: /etc/init.d/ldapcherryd {start|stop|restart|status}&quot;</span> <span class="se">\</span>
+    <span class="o">||</span> <span class="nb">true</span>
+    <span class="nb">exit</span> <span class="m">1</span>
+<span class="k">esac</span>
+
+<span class="nb">exit</span> <span class="m">0</span>
+</pre></div>
+</div>
+<p>This init script is available in <strong>goodies/init-debian</strong>.</p>
+</div>
+<div class="section" id="apache-vhost">
+<h2>Apache Vhost<a class="headerlink" href="#apache-vhost" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-xml"><div class="highlight"><pre><span></span>&lt;VirtualHost *:80&gt;
+
+    &lt;Location /&gt;
+        ProxyPass http://127.0.0.1:8080/
+        ProxyPassReverse http://127.0.0.1:8080/
+    &lt;/Location&gt;
+
+&lt;/VirtualHost&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="nginx-vhost">
+<h2>Nginx Vhost<a class="headerlink" href="#nginx-vhost" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">server {</span>
+    <span class="l l-Scalar l-Scalar-Plain">listen 80 default_server;</span>
+
+    <span class="l l-Scalar l-Scalar-Plain">server_name $hostname;</span>
+    <span class="l l-Scalar l-Scalar-Plain">#access_log /var/log/nginx/dnscherry_access_log;</span> 
+
+    <span class="l l-Scalar l-Scalar-Plain">location / {</span>
+        <span class="l l-Scalar l-Scalar-Plain">proxy_pass http://127.0.0.1:8080;</span>
+        <span class="l l-Scalar l-Scalar-Plain">proxy_set_header X-Real-IP $remote_addr;</span>
+        <span class="l l-Scalar l-Scalar-Plain">proxy_set_header X-Forwarded-for $proxy_add_x_forwarded_for;</span>
+        <span class="l l-Scalar l-Scalar-Plain">proxy_set_header Host $host:$server_port;</span>
+        <span class="l l-Scalar l-Scalar-Plain">proxy_set_header X-Forwarded-Proto $remote_addr;</span>
+    <span class="l l-Scalar l-Scalar-Plain">}</span>
+<span class="l l-Scalar l-Scalar-Plain">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lighttpd-vhost">
+<h2>Lighttpd Vhost<a class="headerlink" href="#lighttpd-vhost" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">server.modules += (&quot;mod_proxy&quot;)</span>
+
+<span class="l l-Scalar l-Scalar-Plain">$HTTP[&quot;host&quot;] == &quot;ldapcherry.kakwa.fr&quot; {</span>
+    <span class="l l-Scalar l-Scalar-Plain">proxy.server  = ( &quot;&quot; =&gt;</span> 
+        <span class="l l-Scalar l-Scalar-Plain">(( &quot;host&quot; =&gt; &quot;127.0.0.1&quot;, &quot;port&quot; =&gt; 8080 ))</span>
+    <span class="l l-Scalar l-Scalar-Plain">)</span>
+<span class="l l-Scalar l-Scalar-Plain">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Some Goodies</a><ul>
+<li><a class="reference internal" href="#init-script">Init Script</a></li>
+<li><a class="reference internal" href="#apache-vhost">Apache Vhost</a></li>
+<li><a class="reference internal" href="#nginx-vhost">Nginx Vhost</a></li>
+<li><a class="reference internal" href="#lighttpd-vhost">Lighttpd Vhost</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="changelog.html"
+                        title="previous chapter">Changelog</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="screenshots.html"
+                        title="next chapter">Screenshots</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="screenshots.html" title="Screenshots"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="changelog.html" title="Changelog"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>

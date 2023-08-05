@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ldapcherry.ppolicy &#8212; LdapCherry 0.5.0 Docs</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.png"/>
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="LdapCherry 0.5.0 Docs" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">LdapCherry 0.5.0 Docs</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for ldapcherry.ppolicy</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># vim:set expandtab tabstop=4 shiftwidth=4:</span>
+<span class="c1">#</span>
+<span class="c1"># The MIT License (MIT)</span>
+<span class="c1"># LdapCherry</span>
+<span class="c1"># Copyright (c) 2014 Carpentier Pierre-Francois</span>
+
+<span class="kn">from</span> <span class="nn">ldapcherry.exceptions</span> <span class="k">import</span> <span class="n">MissingParameter</span>
+
+
+<div class="viewcode-block" id="PPolicy"><a class="viewcode-back" href="../../ppolicy_api.html#ldapcherry.ppolicy.PPolicy">[docs]</a><span class="k">class</span> <span class="nc">PPolicy</span><span class="p">:</span>
+
+<div class="viewcode-block" id="PPolicy.__init__"><a class="viewcode-back" href="../../ppolicy_api.html#ldapcherry.ppolicy.PPolicy.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Password policy constructor</span>
+
+<span class="sd">        :param config: the configuration of the ppolicy</span>
+<span class="sd">        :type config: dict {&#39;config key&#39;: &#39;value&#39;}</span>
+<span class="sd">        :param logger: the cherrypy error logger object</span>
+<span class="sd">        :type logger: python logger</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="PPolicy.check"><a class="viewcode-back" href="../../ppolicy_api.html#ldapcherry.ppolicy.PPolicy.check">[docs]</a>    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Check if a password match the ppolicy</span>
+
+<span class="sd">        :param password: the password to check</span>
+<span class="sd">        :type password: string</span>
+<span class="sd">        :rtype: dict with keys &#39;match&#39; a boolean</span>
+<span class="sd">            (True if ppolicy matches, False otherwise)</span>
+<span class="sd">            and &#39;reason&#39;, an explaination string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;match&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="s1">&#39;no password policy&#39;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="PPolicy.info"><a class="viewcode-back" href="../../ppolicy_api.html#ldapcherry.ppolicy.PPolicy.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Give information about the ppolicy</span>
+
+<span class="sd">        :rtype: a string describing the ppolicy</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;There is no password policy configured&quot;</span></div>
+
+<div class="viewcode-block" id="PPolicy.get_param"><a class="viewcode-back" href="../../ppolicy_api.html#ldapcherry.ppolicy.PPolicy.get_param">[docs]</a>    <span class="k">def</span> <span class="nf">get_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get a parameter in config (handle default value)</span>
+
+<span class="sd">        :param param: name of the parameter to recover</span>
+<span class="sd">        :type param: string</span>
+<span class="sd">        :param default: the default value, raises an exception</span>
+<span class="sd">            if param is not in configuration and default</span>
+<span class="sd">            is None (which is the default value).</span>
+<span class="sd">        :type default: string or None</span>
+<span class="sd">        :rtype: the value of the parameter or the default value if</span>
+<span class="sd">            not set in configuration</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">default</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MissingParameter</span><span class="p">(</span><span class="s1">&#39;ppolicy&#39;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">LdapCherry 0.5.0 Docs</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>

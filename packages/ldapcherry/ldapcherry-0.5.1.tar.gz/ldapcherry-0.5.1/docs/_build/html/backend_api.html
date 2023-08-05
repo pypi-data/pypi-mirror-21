@@ -1,0 +1,591 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Implementing cutom backends &#8212; LdapCherry 0.5.0 Docs</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="LdapCherry 0.5.0 Docs" href="index.html" />
+    <link rel="next" title="Implementing password policy modules" href="ppolicy_api.html" />
+    <link rel="prev" title="LdapCherry plugins list" href="external_plugins.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="ppolicy_api.html" title="Implementing password policy modules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="external_plugins.html" title="LdapCherry plugins list"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="implementing-cutom-backends">
+<h1>Implementing cutom backends<a class="headerlink" href="#implementing-cutom-backends" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p>The backend modules must respect the following API:</p>
+<dl class="class">
+<dt id="ldapcherry.backend.Backend">
+<em class="property">class </em><code class="descclassname">ldapcherry.backend.</code><code class="descname">Backend</code><span class="sig-paren">(</span><em>config</em>, <em>logger</em>, <em>name</em>, <em>attrslist</em>, <em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>config</em>, <em>logger</em>, <em>name</em>, <em>attrslist</em>, <em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the backend</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>config</strong> (<em>dict {'config key': 'value'}</em>) &#8211; the configuration of the backend</li>
+<li><strong>logger</strong> (<em>python logger</em>) &#8211; the cherrypy error logger object</li>
+<li><strong>name</strong> (<em>string</em>) &#8211; id of the backend</li>
+<li><strong>attrslist</strong> (<em>list of strings</em>) &#8211; list of the backend attributes</li>
+<li><strong>key</strong> (<em>string</em>) &#8211; the key attribute</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.add_to_groups">
+<code class="descname">add_to_groups</code><span class="sig-paren">(</span><em>username</em>, <em>groups</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.add_to_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.add_to_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a user to a list of groups</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>username</strong> (<em>string</em>) &#8211; &#8216;key&#8217; attribute of the user</li>
+<li><strong>groups</strong> (<em>list of strings</em>) &#8211; list of groups</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.add_user">
+<code class="descname">add_user</code><span class="sig-paren">(</span><em>attrs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.add_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.add_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a user to the backend</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>attrs</strong> (<em>dict ({&lt;attr&gt;: &lt;value&gt;})</em>) &#8211; attributes of the user</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">raise UserAlreadyExists if user already exists</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.auth">
+<code class="descname">auth</code><span class="sig-paren">(</span><em>username</em>, <em>password</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.auth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.auth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check authentication against the backend</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>username</strong> (<em>string</em>) &#8211; &#8216;key&#8217; attribute of the user</li>
+<li><strong>password</strong> (<em>string</em>) &#8211; password of the user</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean (True is authentication success, False otherwise)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.del_from_groups">
+<code class="descname">del_from_groups</code><span class="sig-paren">(</span><em>username</em>, <em>groups</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.del_from_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.del_from_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a user from a list of groups</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>username</strong> (<em>string</em>) &#8211; &#8216;key&#8217; attribute of the user</li>
+<li><strong>groups</strong> (<em>list of strings</em>) &#8211; list of groups</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">raise GroupDoesntExist if group doesn&#8217;t exist</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.del_user">
+<code class="descname">del_user</code><span class="sig-paren">(</span><em>username</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.del_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.del_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a user from the backend</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>username</strong> (<em>string</em>) &#8211; &#8216;key&#8217; attribute of the user</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.get_groups">
+<code class="descname">get_groups</code><span class="sig-paren">(</span><em>username</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.get_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.get_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a user&#8217;s groups</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>username</strong> (<em>string</em>) &#8211; &#8216;key&#8217; attribute of the user</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list of groups</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.get_user">
+<code class="descname">get_user</code><span class="sig-paren">(</span><em>username</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.get_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.get_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a user&#8217;s attributes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>username</strong> (<em>string</em>) &#8211; &#8216;key&#8217; attribute of the user</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict ( {&lt;attr&gt;: &lt;value&gt;} )</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">raise UserDoesntExist if user doesn&#8217;t exist</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.search">
+<code class="descname">search</code><span class="sig-paren">(</span><em>searchstring</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search backend for users</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>searchstring</strong> (<em>string</em>) &#8211; the search string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict of dict ( {&lt;user attr key&gt;: {&lt;attr&gt;: &lt;value&gt;}} )</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.set_attrs">
+<code class="descname">set_attrs</code><span class="sig-paren">(</span><em>username</em>, <em>attrs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.set_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.set_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a list of attributes for a given user</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>username</strong> (<em>string</em>) &#8211; &#8216;key&#8217; attribute of the user</li>
+<li><strong>attrs</strong> (<em>dict ({&lt;attr&gt;: &lt;value&gt;})</em>) &#8211; attributes of the user</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Configuration for your backend is declared in the main ini file, inside [backends] section:</p>
+<p>For example with the configuration:</p>
+<div class="highlight-ini"><div class="highlight"><pre><span></span><span class="k">[backends]</span>
+
+<span class="c1"># class path to module</span>
+<span class="na">b_id.module</span> <span class="o">=</span> <span class="s">&quot;my.backend.module&quot;</span>
+
+<span class="na">b_id.param1</span> <span class="o">=</span> <span class="s">&quot;my value 1&quot;</span>
+<span class="na">b_id.param2</span> <span class="o">=</span> <span class="s">&quot;my value 2&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">One module can be instanciated several times, the prefix b_id permits
+to differenciate instances and their specific configuration.</p>
+</div>
+<p>The following hash will be passed as configuration to the module constructor as parameter config:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;param1&#39;</span><span class="p">:</span> <span class="s2">&quot;my value 1&quot;</span><span class="p">,</span>
+    <span class="s1">&#39;param2&#39;</span><span class="p">:</span> <span class="s2">&quot;my value 2&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>After having set <strong>self.config</strong> to <strong>config</strong> in the constructor, parameters can be recovered
+by <strong>self.get_param</strong>:</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">ldapcherry.backend.</code><code class="descname">Backend</code><span class="sig-paren">(</span><em>config</em>, <em>logger</em>, <em>name</em>, <em>attrslist</em>, <em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="ldapcherry.backend.Backend.get_param">
+<code class="descname">get_param</code><span class="sig-paren">(</span><em>param</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/backend.html#Backend.get_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.backend.Backend.get_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a parameter in config (handle default value)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>param</strong> (<em>string</em>) &#8211; name of the parameter to recover</li>
+<li><strong>default</strong> (<em>string or None</em>) &#8211; the default value, raises an exception
+if param is not in configuration and default
+is None (which is the default value).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">the value of the parameter or the default value if
+not set in configuration</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<p>The following exception can be used in your module</p>
+<span class="target" id="module-ldapcherry.exceptions"></span><dl class="exception">
+<dt id="ldapcherry.exceptions.UserDoesntExist">
+<em class="property">exception </em><code class="descclassname">ldapcherry.exceptions.</code><code class="descname">UserDoesntExist</code><span class="sig-paren">(</span><em>user</em>, <em>backend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/exceptions.html#UserDoesntExist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.exceptions.UserDoesntExist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="ldapcherry.exceptions.UserAlreadyExists">
+<em class="property">exception </em><code class="descclassname">ldapcherry.exceptions.</code><code class="descname">UserAlreadyExists</code><span class="sig-paren">(</span><em>user</em>, <em>backend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/exceptions.html#UserAlreadyExists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.exceptions.UserAlreadyExists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="ldapcherry.exceptions.GroupDoesntExist">
+<em class="property">exception </em><code class="descclassname">ldapcherry.exceptions.</code><code class="descname">GroupDoesntExist</code><span class="sig-paren">(</span><em>group</em>, <em>backend</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/exceptions.html#GroupDoesntExist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.exceptions.GroupDoesntExist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></code></p>
+</dd></dl>
+
+<p>These exceptions permit a nicer error handling and avoid a generic message to be thrown at the user.</p>
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Here is the ldap backend module that comes with LdapCherry:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># vim:set expandtab tabstop=4 shiftwidth=4:</span>
+<span class="c1">#</span>
+<span class="c1"># The MIT License (MIT)</span>
+<span class="c1"># LdapCherry</span>
+<span class="c1"># Copyright (c) 2014 Carpentier Pierre-Francois</span>
+
+<span class="c1"># This is a demo backend</span>
+
+<span class="kn">from</span> <span class="nn">sets</span> <span class="kn">import</span> <span class="n">Set</span>
+<span class="kn">import</span> <span class="nn">ldapcherry.backend</span>
+<span class="kn">from</span> <span class="nn">ldapcherry.exceptions</span> <span class="kn">import</span> <span class="n">UserDoesntExist</span><span class="p">,</span> \
+    <span class="n">GroupDoesntExist</span><span class="p">,</span> <span class="n">MissingParameter</span><span class="p">,</span> \
+    <span class="n">UserAlreadyExists</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<span class="k">class</span> <span class="nc">Backend</span><span class="p">(</span><span class="n">ldapcherry</span><span class="o">.</span><span class="n">backend</span><span class="o">.</span><span class="n">Backend</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attrslist</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initialize the backend</span>
+
+<span class="sd">        :param config: the configuration of the backend</span>
+<span class="sd">        :type config: dict {&#39;config key&#39;: &#39;value&#39;}</span>
+<span class="sd">        :param logger: the cherrypy error logger object</span>
+<span class="sd">        :type logger: python logger</span>
+<span class="sd">        :param name: id of the backend</span>
+<span class="sd">        :type name: string</span>
+<span class="sd">        :param attrslist: list of the backend attributes</span>
+<span class="sd">        :type attrslist: list of strings</span>
+<span class="sd">        :param key: the key attribute</span>
+<span class="sd">        :type key: string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">admin_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;admin.user&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">)</span>
+        <span class="n">admin_password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;admin.password&#39;</span><span class="p">,</span> <span class="s1">&#39;admin&#39;</span><span class="p">)</span>
+        <span class="n">admin_groups</span> <span class="o">=</span> <span class="n">Set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;\W+&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;admin.groups&#39;</span><span class="p">)))</span>
+        <span class="n">basic_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;basic.user&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">)</span>
+        <span class="n">basic_password</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;basic.password&#39;</span><span class="p">,</span> <span class="s1">&#39;user&#39;</span><span class="p">)</span>
+        <span class="n">basic_groups</span> <span class="o">=</span> <span class="n">Set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;\W+&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;basic.groups&#39;</span><span class="p">)))</span>
+        <span class="n">pwd_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;pwd_attr&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">search_attrs</span> <span class="o">=</span> <span class="n">Set</span><span class="p">(</span>
+            <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;\W+&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;search_attributes&#39;</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pwd_attr</span> <span class="o">=</span> <span class="n">pwd_attr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">admin_user</span> <span class="o">=</span> <span class="n">admin_user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">basic_user</span> <span class="o">=</span> <span class="n">basic_user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">admin_user</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">admin_user</span><span class="p">,</span>
+                <span class="n">pwd_attr</span><span class="p">:</span> <span class="n">admin_password</span><span class="p">,</span>
+                <span class="s1">&#39;groups&#39;</span><span class="p">:</span> <span class="n">admin_groups</span><span class="p">,</span>
+                <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">basic_user</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">basic_user</span><span class="p">,</span>
+                <span class="n">pwd_attr</span><span class="p">:</span> <span class="n">basic_password</span><span class="p">,</span>
+                <span class="s1">&#39;groups&#39;</span><span class="p">:</span> <span class="n">basic_groups</span><span class="p">,</span>
+                <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_check_fix_users</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">admin_user</span> <span class="o">==</span> <span class="n">username</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">basic_user</span> <span class="o">==</span> <span class="n">username</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;User cannot be modified&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">auth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Check authentication against the backend</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param password: password of the user</span>
+<span class="sd">        :type password: string</span>
+<span class="sd">        :rtype: boolean (True is authentication success, False otherwise)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">username</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">pwd_attr</span><span class="p">]</span> <span class="o">==</span> <span class="n">password</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">add_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add a user to the backend</span>
+
+<span class="sd">        :param attrs: attributes of the user</span>
+<span class="sd">        :type attrs: dict ({&lt;attr&gt;: &lt;value&gt;})</span>
+
+<span class="sd">        .. warning:: raise UserAlreadyExists if user already exists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">username</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UserAlreadyExists</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Set</span><span class="p">([])</span>
+
+    <span class="k">def</span> <span class="nf">del_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Delete a user from the backend</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fix_users</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UserDoesntExist</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set a list of attributes for a given user</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param attrs: attributes of the user</span>
+<span class="sd">        :type attrs: dict ({&lt;attr&gt;: &lt;value&gt;})</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fix_users</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">attrs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">add_to_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">groups</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add a user to a list of groups</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param groups: list of groups</span>
+<span class="sd">        :type groups: list of strings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fix_users</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+        <span class="n">current_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="n">new_groups</span> <span class="o">=</span> <span class="n">current_groups</span> <span class="o">|</span> <span class="n">Set</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_groups</span>
+
+    <span class="k">def</span> <span class="nf">del_from_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">groups</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Delete a user from a list of groups</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :param groups: list of groups</span>
+<span class="sd">        :type groups: list of strings</span>
+
+<span class="sd">        .. warning:: raise GroupDoesntExist if group doesn&#39;t exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_fix_users</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+        <span class="n">current_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="n">new_groups</span> <span class="o">=</span> <span class="n">current_groups</span> <span class="o">-</span> <span class="n">Set</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_groups</span>
+
+    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searchstring</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Search backend for users</span>
+
+<span class="sd">        :param searchstring: the search string</span>
+<span class="sd">        :type searchstring: string</span>
+<span class="sd">        :rtype: dict of dict ( {&lt;user attr key&gt;: {&lt;attr&gt;: &lt;value&gt;}} )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">search_attrs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">attr</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">]:</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">searchstring</span> <span class="o">+</span> <span class="s1">&#39;.*&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">][</span><span class="n">attr</span><span class="p">]):</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="n">user</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get a user&#39;s attributes</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :rtype: dict ( {&lt;attr&gt;: &lt;value&gt;} )</span>
+
+<span class="sd">        .. warning:: raise UserDoesntExist if user doesn&#39;t exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UserDoesntExist</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get a user&#39;s groups</span>
+
+<span class="sd">        :param username: &#39;key&#39; attribute of the user</span>
+<span class="sd">        :type username: string</span>
+<span class="sd">        :rtype: list of groups</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">username</span><span class="p">][</span><span class="s1">&#39;groups&#39;</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UserDoesntExist</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Implementing cutom backends</a><ul>
+<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="external_plugins.html"
+                        title="previous chapter">LdapCherry plugins list</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ppolicy_api.html"
+                        title="next chapter">Implementing password policy modules</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="ppolicy_api.html" title="Implementing password policy modules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="external_plugins.html" title="LdapCherry plugins list"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>

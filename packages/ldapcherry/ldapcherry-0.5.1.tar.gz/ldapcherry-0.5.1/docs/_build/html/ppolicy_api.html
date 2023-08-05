@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Implementing password policy modules &#8212; LdapCherry 0.5.0 Docs</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="LdapCherry 0.5.0 Docs" href="index.html" />
+    <link rel="next" title="Changelog" href="changelog.html" />
+    <link rel="prev" title="Implementing cutom backends" href="backend_api.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="changelog.html" title="Changelog"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="backend_api.html" title="Implementing cutom backends"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="implementing-password-policy-modules">
+<h1>Implementing password policy modules<a class="headerlink" href="#implementing-password-policy-modules" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p>The password policy modules must respect following API:</p>
+<dl class="class">
+<dt id="ldapcherry.ppolicy.PPolicy">
+<em class="property">class </em><code class="descclassname">ldapcherry.ppolicy.</code><code class="descname">PPolicy</code><span class="sig-paren">(</span><em>config</em>, <em>logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/ppolicy.html#PPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.ppolicy.PPolicy" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="ldapcherry.ppolicy.PPolicy.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>config</em>, <em>logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/ppolicy.html#PPolicy.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.ppolicy.PPolicy.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Password policy constructor</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>config</strong> (<em>dict {'config key': 'value'}</em>) &#8211; the configuration of the ppolicy</li>
+<li><strong>logger</strong> (<em>python logger</em>) &#8211; the cherrypy error logger object</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.ppolicy.PPolicy.check">
+<code class="descname">check</code><span class="sig-paren">(</span><em>password</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/ppolicy.html#PPolicy.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.ppolicy.PPolicy.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a password match the ppolicy</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>password</strong> (<em>string</em>) &#8211; the password to check</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict with keys &#8216;match&#8217; a boolean
+(True if ppolicy matches, False otherwise)
+and &#8216;reason&#8217;, an explaination string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="ldapcherry.ppolicy.PPolicy.info">
+<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/ppolicy.html#PPolicy.info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.ppolicy.PPolicy.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give information about the ppolicy</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">a string describing the ppolicy</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Parameters are declared in the main configuration file, inside the <strong>ppolicy</strong> section.</p>
+<p>After having set <strong>self.config</strong> to <strong>config</strong> in the constructor, parameters can be recovered
+by <strong>self.get_param</strong>:</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">ldapcherry.ppolicy.</code><code class="descname">PPolicy</code><span class="sig-paren">(</span><em>config</em>, <em>logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/ppolicy.html#PPolicy"><span class="viewcode-link">[source]</span></a></dt>
+<dd><dl class="method">
+<dt id="ldapcherry.ppolicy.PPolicy.get_param">
+<code class="descname">get_param</code><span class="sig-paren">(</span><em>param</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ldapcherry/ppolicy.html#PPolicy.get_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ldapcherry.ppolicy.PPolicy.get_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a parameter in config (handle default value)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>param</strong> (<em>string</em>) &#8211; name of the parameter to recover</li>
+<li><strong>default</strong> (<em>string or None</em>) &#8211; the default value, raises an exception
+if param is not in configuration and default
+is None (which is the default value).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">the value of the parameter or the default value if
+not set in configuration</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Here is the simple default ppolicy module that comes with LdapCherry:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># vim:set expandtab tabstop=4 shiftwidth=4:</span>
+<span class="c1">#</span>
+<span class="c1"># The MIT License (MIT)</span>
+<span class="c1"># LdapCherry</span>
+<span class="c1"># Copyright (c) 2014 Carpentier Pierre-Francois</span>
+
+<span class="kn">import</span> <span class="nn">ldapcherry.ppolicy</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+
+<span class="k">class</span> <span class="nc">PPolicy</span><span class="p">(</span><span class="n">ldapcherry</span><span class="o">.</span><span class="n">ppolicy</span><span class="o">.</span><span class="n">PPolicy</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;min_length&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;min_upper&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_digit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_param</span><span class="p">(</span><span class="s1">&#39;min_digit&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">password</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_length</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;match&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="s1">&#39;Password too short&#39;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[A-Z]&#39;</span><span class="p">,</span> <span class="n">password</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_upper</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s1">&#39;match&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="s1">&#39;Not enough upper case characters&#39;</span>
+                <span class="p">}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[0-9]&#39;</span><span class="p">,</span> <span class="n">password</span><span class="p">))</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_digit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;match&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="s1">&#39;Not enough digits&#39;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;match&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="s1">&#39;password ok&#39;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> \
+            <span class="s2">&quot;* Minimum length: </span><span class="si">%(len)d</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="s2">&quot;* Minimum number of uppercase characters: </span><span class="si">%(upper)d</span><span class="se">\n</span><span class="s2">&quot;</span> \
+            <span class="s2">&quot;* Minimum number of digits: </span><span class="si">%(digit)d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">{</span>
+                <span class="s1">&#39;upper&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_upper</span><span class="p">,</span>
+                <span class="s1">&#39;len&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_length</span><span class="p">,</span>
+                <span class="s1">&#39;digit&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_digit</span>
+                <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Implementing password policy modules</a><ul>
+<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="backend_api.html"
+                        title="previous chapter">Implementing cutom backends</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="changelog.html"
+                        title="next chapter">Changelog</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="right" >
+          <a href="changelog.html" title="Changelog"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="backend_api.html" title="Implementing cutom backends"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LdapCherry 0.5.0 Docs</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>

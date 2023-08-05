@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ldapcherry.exceptions &#8212; LdapCherry 0.5.0 Docs</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.png"/>
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="LdapCherry 0.5.0 Docs" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">LdapCherry 0.5.0 Docs</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for ldapcherry.exceptions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># vim:set expandtab tabstop=4 shiftwidth=4:</span>
+<span class="c1">#</span>
+<span class="c1"># The MIT License (MIT)</span>
+<span class="c1"># LdapCherry</span>
+<span class="c1"># Copyright (c) 2014 Carpentier Pierre-Francois</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">cherrypy</span>
+
+
+<span class="k">class</span> <span class="nc">MissingParameter</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="n">section</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;missing parameter &#39;</span><span class="si">%(key)s</span><span class="s2">&#39; in section &#39;</span><span class="si">%(section)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span> <span class="s1">&#39;section&#39;</span><span class="p">:</span> <span class="n">section</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">MissingKey</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">ymlfile</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="n">section</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymlfile</span> <span class="o">=</span> <span class="n">ymlfile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;missing key &#39;</span><span class="si">%(key)s</span><span class="s2">&#39; in section &#39;</span><span class="si">%(section)s</span><span class="s2">&#39;&quot;</span> \
+            <span class="s2">&quot; inside file &#39;</span><span class="si">%(ymlfile)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span> <span class="s1">&#39;section&#39;</span><span class="p">:</span> <span class="n">section</span><span class="p">,</span> <span class="s1">&#39;ymlfile&#39;</span><span class="p">:</span> <span class="n">ymlfile</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">DumplicateRoleKey</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="n">role</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;duplicate role key &#39;</span><span class="si">%(role)s</span><span class="s2">&#39; in role file&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="n">role</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">MissingRole</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="n">role</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;role &#39;</span><span class="si">%(role)s</span><span class="s2">&#39; does not exist in role file&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="n">role</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">MissingBackend</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;backend &#39;</span><span class="si">%(backend)s</span><span class="s2">&#39; does not exist in main config file&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;backend&#39;</span><span class="p">:</span> <span class="n">backend</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">WrongBackend</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">backend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;backend &#39;</span><span class="si">%(backend)s</span><span class="s2">&#39; does not exist&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;backend&#39;</span><span class="p">:</span> <span class="n">backend</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">DumplicateRoleContent</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role1</span><span class="p">,</span> <span class="n">role2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">role1</span> <span class="o">=</span> <span class="n">role1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">role2</span> <span class="o">=</span> <span class="n">role2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;role &#39;</span><span class="si">%(role1)s</span><span class="s2">&#39; and &#39;</span><span class="si">%(role2)s</span><span class="s2">&#39; are identical&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;role1&#39;</span><span class="p">:</span> <span class="n">role1</span><span class="p">,</span> <span class="s1">&#39;role2&#39;</span><span class="p">:</span> <span class="n">role2</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">MissingRolesFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rolefile</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rolefile</span> <span class="o">=</span> <span class="n">rolefile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;fail to open role file &#39;</span><span class="si">%(rolefile)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;rolefile&#39;</span><span class="p">:</span> <span class="n">rolefile</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">PasswordMissMatch</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="s2">&quot;password missmatch&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">PPolicyError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="s2">&quot;password doesn&#39;t match ppolicy&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">MissingMainFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;fail to open main file &#39;</span><span class="si">%(config)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="n">config</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">MissingAttributesFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributesfile</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attributesfile</span> <span class="o">=</span> <span class="n">attributesfile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;fail to open attributes file &#39;</span><span class="si">%(attributesfile)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;attributesfile&#39;</span><span class="p">:</span> <span class="n">attributesfile</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">BackendModuleLoadingFail</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;module &#39;</span><span class="si">%(module)s</span><span class="s2">&#39; not in python path&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="n">module</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">BackendModuleInitFail</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;fail to init module &#39;</span><span class="si">%(module)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;module&#39;</span><span class="p">:</span> <span class="n">module</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">WrongParamValue</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">possible_values</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">possible_values</span> <span class="o">=</span> <span class="n">possible_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="n">section</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="n">possible_values_str</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">possible_values</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;wrong value for param &#39;</span><span class="si">%(param)s</span><span class="s2">&#39; in section &#39;</span><span class="si">%(section)s</span><span class="s2">&#39;&quot;</span> \
+            <span class="s2">&quot;, possible values are [</span><span class="si">%(values)s</span><span class="s2">]&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span>
+                <span class="s1">&#39;param&#39;</span><span class="p">:</span> <span class="n">param</span><span class="p">,</span>
+                <span class="s1">&#39;section&#39;</span><span class="p">:</span> <span class="n">section</span><span class="p">,</span>
+                <span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">possible_values_str</span>
+            <span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">DumplicateUserKey</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attrid1</span><span class="p">,</span> <span class="n">attrid2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrid1</span> <span class="o">=</span> <span class="n">attrid1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrid2</span> <span class="o">=</span> <span class="n">attrid2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;duplicate key in &#39;</span><span class="si">%(attrid1)s</span><span class="s2">&#39; and &#39;</span><span class="si">%(attrid2)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;attrid1&#39;</span><span class="p">:</span> <span class="n">attrid1</span><span class="p">,</span> <span class="s1">&#39;attrid2&#39;</span><span class="p">:</span> <span class="n">attrid2</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">MissingUserKey</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="s2">&quot;missing key&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">WrongAttributeType</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">ymlfile</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="n">section</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymlfile</span> <span class="o">=</span> <span class="n">ymlfile</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;wrong attribute type &#39;</span><span class="si">%(key)s</span><span class="s2">&#39;&quot;</span> \
+            <span class="s2">&quot; in section &#39;</span><span class="si">%(section)s</span><span class="s2">&#39;&quot;</span> \
+            <span class="s2">&quot; inside file &#39;</span><span class="si">%(ymlfile)s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> \
+            <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span> <span class="s1">&#39;section&#39;</span><span class="p">:</span> <span class="n">section</span><span class="p">,</span> <span class="s1">&#39;ymlfile&#39;</span><span class="p">:</span> <span class="n">ymlfile</span><span class="p">}</span>
+
+
+<span class="k">class</span> <span class="nc">PasswordAttributesCollision</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;key &#39;&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;&#39; type is password,&quot;</span> \
+            <span class="s2">&quot; keys &#39;&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;1&#39; and &#39;&quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;2&#39;&quot;</span> \
+            <span class="s2">&quot; are reserved and cannot be used&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">WrongAttrValue</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">attrtype</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrtype</span> <span class="o">=</span> <span class="n">attrtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;input for attribute &#39;&quot;</span> <span class="o">+</span> <span class="n">attr</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span> \
+            <span class="s2">&quot; doesn&#39;t match type &#39;&quot;</span> <span class="o">+</span> <span class="n">attrtype</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">AttrNotDefined</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="n">attr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;attribute &#39;&quot;</span> <span class="o">+</span> <span class="n">attr</span> <span class="o">+</span> <span class="s2">&quot;&#39; is not defined in configuration&quot;</span>
+
+
+<div class="viewcode-block" id="UserDoesntExist"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.exceptions.UserDoesntExist">[docs]</a><span class="k">class</span> <span class="nc">UserDoesntExist</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bakend</span> <span class="o">=</span> <span class="n">backend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;user &#39;&quot;</span> <span class="o">+</span> <span class="n">user</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span> \
+            <span class="s2">&quot; does not exist&quot;</span> \
+            <span class="s2">&quot; in backend &#39;&quot;</span> <span class="o">+</span> <span class="n">backend</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span></div>
+
+
+<div class="viewcode-block" id="UserAlreadyExists"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.exceptions.UserAlreadyExists">[docs]</a><span class="k">class</span> <span class="nc">UserAlreadyExists</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">user</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bakend</span> <span class="o">=</span> <span class="n">backend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;user &#39;&quot;</span> <span class="o">+</span> <span class="n">user</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span> \
+            <span class="s2">&quot; already exists&quot;</span> \
+            <span class="s2">&quot; in backend &#39;&quot;</span> <span class="o">+</span> <span class="n">backend</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GroupDoesntExist"><a class="viewcode-back" href="../../backend_api.html#ldapcherry.exceptions.GroupDoesntExist">[docs]</a><span class="k">class</span> <span class="nc">GroupDoesntExist</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">backend</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bakend</span> <span class="o">=</span> <span class="n">backend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> \
+            <span class="s2">&quot;group &#39;&quot;</span> <span class="o">+</span> <span class="n">group</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span> \
+            <span class="s2">&quot; does not exist&quot;</span> \
+            <span class="s2">&quot; in backend &#39;&quot;</span> <span class="o">+</span> <span class="n">backend</span> <span class="o">+</span> <span class="s2">&quot;&#39;&quot;</span></div>
+
+
+<span class="k">class</span> <span class="nc">TemplateRenderError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="s2">&quot;Template Render Error: &quot;</span> <span class="o">+</span> <span class="n">error</span>
+
+
+<span class="k">def</span> <span class="nf">exception_decorator</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">ret</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">cherrypy</span><span class="o">.</span><span class="n">HTTPRedirect</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">except</span> <span class="n">cherrypy</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">cherrypy</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="mi">500</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_session</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">username</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">[</span><span class="s1">&#39;service_unavailable.tmpl&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+            <span class="n">is_admin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_admin</span><span class="p">()</span>
+            <span class="n">et</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">et</span> <span class="ow">is</span> <span class="n">UserDoesntExist</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">user</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">[</span><span class="s1">&#39;error.tmpl&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+                    <span class="n">is_admin</span><span class="o">=</span><span class="n">is_admin</span><span class="p">,</span>
+                    <span class="n">alert</span><span class="o">=</span><span class="s1">&#39;danger&#39;</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;User &#39;&quot;</span> <span class="o">+</span> <span class="n">user</span> <span class="o">+</span> <span class="s2">&quot;&#39; does not exist&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">et</span> <span class="ow">is</span> <span class="n">UserAlreadyExists</span><span class="p">:</span>
+                <span class="n">user</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">user</span>
+                <span class="n">cherrypy</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="mi">400</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">[</span><span class="s1">&#39;error.tmpl&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+                    <span class="n">is_admin</span><span class="o">=</span><span class="n">is_admin</span><span class="p">,</span>
+                    <span class="n">alert</span><span class="o">=</span><span class="s1">&#39;warning&#39;</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;User &#39;&quot;</span> <span class="o">+</span> <span class="n">user</span> <span class="o">+</span> <span class="s2">&quot;&#39; already exist&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">et</span> <span class="ow">is</span> <span class="n">GroupDoesntExist</span><span class="p">:</span>
+                <span class="n">group</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">group</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">[</span><span class="s1">&#39;error.tmpl&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+                    <span class="n">is_admin</span><span class="o">=</span><span class="n">is_admin</span><span class="p">,</span>
+                    <span class="n">alert</span><span class="o">=</span><span class="s1">&#39;danger&#39;</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Missing group, please check logs for details&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp</span><span class="p">[</span><span class="s1">&#39;error.tmpl&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
+                    <span class="n">is_admin</span><span class="o">=</span><span class="n">is_admin</span><span class="p">,</span>
+                    <span class="n">alert</span><span class="o">=</span><span class="s1">&#39;danger&#39;</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">&quot;An error occured, please check logs for details&quot;</span>
+                    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/logo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">LdapCherry 0.5.0 Docs</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Pierre-Francois Carpentier.
+      Last updated on Apr 06, 2017.
+    </div>
+  </body>
+</html>
