@@ -1,0 +1,374 @@
+#!/usr/bin/env python
+# =======================================================================
+# title             :SerialDo0n
+# description       :This program displays Information About Tv Series
+# author            :LinArcX
+# date              :03/21/2017
+# version           :1.2.0
+# mail              :linarcx@gmail.com
+# web               :stack.blog.ir
+# notes             :
+# python_version    :3.6.0
+# main api:         :http://www.tvmaze.com/api
+# second api:       :https://www.episodate.com/api
+# =======================================================================
+
+# Import the modules needed to run the script.
+import sys
+import os
+import pwd
+import re
+import pytvmaze
+
+from utility import tvMazeUtil
+from utility import fileUtil
+from utility import generalUtil
+
+from prettytable import PrettyTable
+from pyfiglet import figlet_format
+
+# =======================
+#     MENUS FUNCTIONS
+# =======================
+
+def main_menu():
+    os.system('clear')
+    fileUtil.checkConfExist()
+    username = pwd.getpwuid(os.getuid()).pw_name
+    print(generalUtil.color.BOLD + figlet_format('TvDo0n', font='starwars') + generalUtil.color.END)
+    print("Welcome " + username + ", Please Choose The Items:")
+    print("s. Search Tv Series")
+    print("m. My Favourites")
+    # print("u. Up-Coming Tv Show's")
+    print("w. Who Am I?")
+    print("h. Help")
+    print("c. Clear Screen")
+    print("\nq. Quit")
+    switchCreator("smuwhcq","","")
+    return
+
+
+def searchTvSeries(pItems=None):
+    items = ""
+    flag = 0
+    try:
+        if pItems is None:
+            os.system('clear')
+            itemShow = input("Enter Tv Show Name:")
+            items=pytvmaze.show_search(itemShow)
+        else:
+            items = pItems
+        x = PrettyTable()
+        for i, item in enumerate(items):
+            x.field_names = [i, "seriesname"]
+            x.add_row([i, item.name])
+        print(x)
+        print(generalUtil.color.CYAN + "for see more details, enter 'row Number' and hit ENTER.otherwise use below Capabilities." + generalUtil.color.END)
+    except Exception:
+        print("There Is No Matching Tv Show")
+    print("b. Back")
+    print("q. Quit")
+    while flag == 0:
+        mainChoice = input(" >>  ")
+        if mainChoice == 'b':
+            main_menu()
+        elif mainChoice == 'q':
+            quit()
+        elif re.match('\d',mainChoice):
+            try:
+                if int(mainChoice)<=len(items) and int(mainChoice)>=0:
+                    selectTvShow(items, items[int(mainChoice)].externals['thetvdb'])
+                else:
+                    print("You Entered Wrong Number.Please Try Again Later.")
+            except IndexError as e:
+                print("You Entered Wrong Number.Please Try Again Later.")
+        else:
+            print("Invalid selection, please try again.\n")
+    return
+
+
+def selectTvShow(pItems, tvdbID=None):
+    originalParams = "soabqfd"
+    finalParams = ""
+    try:
+        tvItem = ""
+        if tvdbID is not None:
+            tvItem = tvMazeUtil.extractTV(tvdbID, pItems)
+        else:
+            tvItem = pItems
+            tvdbID = tvItem.externals['thetvdb']
+        deltaDate, nextReleaseDate = tvMazeUtil.tvMazeDate(tvItem)
+        finalGenres = ""
+        favExists = False
+        try:
+            x = PrettyTable()
+            x.add_column("ID.", [tvdbID])
+            x.add_column("Name", [tvItem.name])
+            x.add_column("Rating", [tvItem.rating['average']])
+            for item in tvItem.genres:
+                finalGenres += str(item) + " | "
+            x.add_column("Genres", [finalGenres.rsplit('|',1)[0]])
+            x.add_column("Network", [tvItem.network.name])
+            x.add_column("RunTime", [tvItem.runtime])
+            x.add_column("Status", [tvItem.status])
+            x.add_column("Premiered", [tvItem.premiered])
+            x.add_column("Final Aired", [tvItem.previous_episode.airdate])
+            x.add_column("Last ses/ep", [str(tvItem.previous_episode.season_number) + "/" + str(tvItem.previous_episode.episode_number)])
+            if tvItem is not None:
+                x.add_column("Next Episode",[nextReleaseDate])
+                x.add_column("days to next...",[deltaDate])
+            print(x)
+        except ValueError:
+            main_menu()
+        except IndexError:
+            print("Oops! You Enter Incorrect Number.Please Select Another Series Again: ")
+            selectTvShow(pItems, tvdbID)
+        favFile = open(fileUtil.PATH + "favourites.conf", "r")
+        for line in favFile:
+            if tvItem.name in line:
+                favExists = True
+        favFile.close()
+        if favExists:
+            print(generalUtil.color.BOLD + generalUtil.color.CYAN + "This Is your Favourite Serie." + generalUtil.color.END)
+            print("d. Delete From Favourites")
+            finalParams = originalParams.replace("f", "")
+        else:
+            print("f. Favourite This!")
+            finalParams = originalParams.replace("d", "")
+        favFile.close()
+        print("s. Search Another Tv Show")
+        print("o. OverView")
+        print("a. Actors")
+        print("e. Episodes")
+    except:
+        print("there is no enough Information")
+        print("s. Search Another Tv Show")
+        finalParams = originalParams.replace("o", "")
+        finalParams = finalParams.replace("a", "")
+        finalParams = finalParams.replace("f", "")
+        finalParams = finalParams.replace("d", "")
+    print("b. Back")
+    print("q. Quit")
+    switchCreator(finalParams, pItems, "searchTvSeries", tvdbID)
+    return
+
+
+def OverView(pItems, tvdbID):
+    tvItem = tvMazeUtil.extractTV(tvdbID, pItems)
+    print("overview: \n")
+    print(generalUtil.color.RED + str(tvItem.summary) + generalUtil.color.END)
+    print("b. Back")
+    print("q. Quit")
+    switchCreator("bqas", pItems, "selectTvShow", tvdbID)
+    return
+
+def actors(pItems, tvdbID):
+    tvItem = tvMazeUtil.extractTV(tvdbID, pItems)
+    peoples = pytvmaze.show_cast(tvItem.maze_id).people
+    x = PrettyTable()
+    for i, people in enumerate(peoples):
+        x.field_names = [i, "character", "peron"]
+        x.add_row([i, generalUtil.color.GREEN + people.character.name + generalUtil.color.END,generalUtil.color.CYAN + people.name + generalUtil.color.END])
+    print(x)
+    print("b. Back")
+    print("q. Quit")
+    switchCreator("qbos", pItems, "selectTvShow", tvdbID)
+    return
+
+
+def favouriteThis(pItems, tvdbID):
+    tvItem = tvMazeUtil.extractTV(tvdbID, pItems)
+    favFile = open(fileUtil.PATH + "favourites.conf", "a")
+    favFile.write(tvItem.name + "-" + str(tvdbID) + "\n")
+    favFile.close()
+    print(generalUtil.color.GREEN + "'" + tvItem.name + "'" + " Successfully Added to Your Favourite List." +generalUtil.color.END )
+    print("b. Back")
+    print("q. Quit")
+    switchCreator("qbos", pItems, "selectTvShow", tvdbID)
+    return
+
+
+def deleteFavourites(pItems, tvdbID):
+    tvItem = tvMazeUtil.extractTV(tvdbID, pItems)
+
+    # open File in ReadOnly-Mode
+    f = open(fileUtil.PATH + "favourites.conf", "r")
+    rLines = f.readlines()
+    f.close()
+
+    # Open File in Write-Mode
+    f = open(fileUtil.PATH + "favourites.conf", "w")
+    for line in rLines:
+        if tvItem.name not in line:
+            f.write(line)
+
+    f.close()
+    print(generalUtil.color.CYAN + "'" + tvItem.name + "'" + " was Successfully removed from your favourite list" + generalUtil.color.END)
+    print("b. Back")
+    print("q. Quit")
+    switchCreator("qbos", pItems, "selectTvShow", tvdbID)
+    return
+
+
+def myFavourites():
+    flag = 0
+    lineCount = 0
+    allResults = []
+    x = PrettyTable()
+    favFile = open(fileUtil.PATH + "favourites.conf", "r")
+    if os.path.getsize(fileUtil.PATH + "favourites.conf") > 0:
+        for i, line in enumerate(favFile):
+            item=pytvmaze.lookup_tvdb(line.split("-")[1])
+            allResults.append(item)
+            deltaDate, nextReleaseDate = tvMazeUtil.tvMazeDate(item)
+            x.field_names = [i, "seriesname", "next Episode", "days to next..."]
+            x.add_row([i, line.split("-")[0], nextReleaseDate, deltaDate])
+            lineCount+=1
+        print(x)
+        print("b. Back")
+        print("q. Quit")
+        favFile.close()
+        while flag == 0:
+            mainChoice = input(" >>  ")
+            if mainChoice == 'b':
+                main_menu()
+            elif mainChoice == 'q':
+                quit()
+            elif re.match("\d", mainChoice):
+                try:
+                    if int(mainChoice) < lineCount and int(mainChoice) >= 0:
+                        selectTvShow(allResults[int(mainChoice)])
+                    else:
+                        print("You Entered Wrong Number.Please Try Again Later.")
+                except IndexError as e:
+                    print("You Entered Wrong Number.Please Try Again Later.")
+            else:
+                print("Invalid selection, please try again.\n")
+    else:
+        favFile.close()
+        print(generalUtil.color.RED + "there is no favourite tv show in the list!" + generalUtil.color.END)
+        print("b. Back")
+        print("q. Quit")
+        switchCreator("qb", "", "main_menu")
+    return
+
+
+def whoAmI():
+    print("i am nobody, please visit us on : http://www.bbs.archusers.ir!\n")
+    print("b. Back")
+    print("q. Quit")
+    switchCreator("qb", "", "main_menu")
+    return
+
+def help():
+    print("this program use english letters for get into other menu(sub-menu).\nfor example, if you see: 'b. Back', you must enter b letter, "+
+          "and hit enter from keyboard.")
+    print("b. Back")
+    print("q. Quit")
+    switchCreator("qb", "", "main_menu")
+    return
+
+def clear():
+    os.system('clear')
+    print("b. Back")
+    print("q. Quit")
+    switchCreator("qb", "", "main_menu")
+    return
+
+def quit():
+    sys.exit()
+
+
+def switchCreator(*args):
+
+    """call the appropriate function, according to arguments pass it.
+
+    :param args: args[0] =menu actions, args[1] =function parameters, args[2] =function name
+    :return:
+    """
+    flag = 0
+    while flag == 0:
+        mainChoice = input(" >>  ")
+        if mainChoice == 's' and 's' in args[0]:
+            searchTvSeries()
+        elif mainChoice == 'm' and 'm' in args[0]:
+            myFavourites()
+        elif mainChoice == 'f' and 'f' in args[0]:
+            favouriteThis(args[1], args[3])
+        elif mainChoice == 'd' and 'd' in args[0]:
+            deleteFavourites(args[1], args[3])
+        # elif mainChoice == 'u' and 'u' in args[0]:
+        #     upcoming()
+        elif mainChoice == 'w' and 'w' in args[0]:
+            whoAmI()
+        elif mainChoice == 'h' and 'h' in args[0]:
+            help()
+        elif mainChoice == 'c' and 'c' in args[0]:
+            clear()
+        elif mainChoice == 'q' and 'q' in args[0]:
+            quit()
+        elif mainChoice == 'o' and 'o' in args[0]:
+            OverView(args[1],args[3])
+        elif mainChoice == 'a' and 'a' in args[0]:
+            actors(args[1], args[3])
+        elif mainChoice == 'b' and 'b' in args[0]:
+            if args[2] == "main_menu":
+                result = main_menu()
+                return result
+            elif args[2] == "searchTvSeries":
+                searchTvSeries(args[1])
+            elif args[2] == "selectTvShow":
+                selectTvShow(args[1], args[3])
+        else:
+            print("Invalid selection, please try again.\n")
+
+
+def upcoming():
+    # tv_maze = pytvmaze.TVMaze()
+    # tvm = pytvmaze.TVMaze()
+    # show = tvm.get_show(show_name='game of thrones')
+    # print(show)
+    # print(show.name, show.status, show.maze_id)
+
+
+
+    schedule = pytvmaze.get_scheduleShow("Game of Thrones", 'US', '2017-07-16', )
+    print(schedule)
+    # print(show.schedule)
+    # print(show.next_episode)
+    #
+    # show = tvm.get_show(show_name='daredevil', show_year='2017', show_country='au', show_network='abc')
+    # print(show.premiered)
+    return
+
+
+# =======================
+#    MENUS DEFINITIONS
+# =======================
+# Menu definition
+
+menu_actions = {
+    'main_menu': main_menu,
+    's': searchTvSeries,
+    'w': whoAmI,
+    'h': help,
+    'c': clear,
+    't': selectTvShow,
+    'o': OverView,
+    'a': actors,
+    'm': myFavourites,
+    'f': favouriteThis,
+    'd': deleteFavourites,
+    'u': upcoming,
+    'q': quit,
+}
+
+# =======================
+#      MAIN PROGRAM
+# =======================
+# Tv Show Samples: Game of Thrones - stranger things - dexter - lost
+
+# Main Program
+if __name__ == "__main__":
+    # Launch main menu
+    main_menu()
