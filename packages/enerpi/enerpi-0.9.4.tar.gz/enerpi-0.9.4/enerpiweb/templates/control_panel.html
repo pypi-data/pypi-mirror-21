@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+{% from 'macros/macros.html' import alert_dismiss with context %}
+
+{% macro tag_file_download(p, label, btn_type)%}
+    <a href="{{ url_for('download_hdfstore_file', relpath_store=p, as_attachment=True) }}"
+       download="{{ url_for('download_hdfstore_file', relpath_store=p, as_attachment=True) }}"
+       style="margin-left: 10px; margin-right: 10px;">
+        <span class="tag tag-pill tag-{{ btn_type }} btn-sm">{{ label|safe }}</span>
+    </a>
+{% endmacro %}
+
+{% block content %}
+    <div class="jumbotron">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-4 col-md-3 col-lg-3 hidden-xs-down">
+                    <img class="img-fluid rounded-circle pull-xs-left" style="padding-left: 0; padding-right: 10px; max-width: 100%; height: auto; width: 100% \9;"
+                         src="{{ url_for('static', filename='img/icons/base.svg')}}">
+                </div>
+                <div class="col-xs-12 col-sm-8 col-md-9 col-lg-9">
+                    <h1 class="display-3"><strong>enerPI</strong> Control</h1>
+                </div>
+                <div class="col-xs-12 col-sm-8 col-md-9 col-lg-6">
+                    <br class="hidden-sm hidden-xs">
+                    <div class="btn-toolbar button-wrapper" role="toolbar" aria-label="Toolbar with enerPI LOG's">
+                      <div class="btn-group" role="group" aria-label="ENERPI LOG">
+                        <a class="btn btn-outline-success btn-block" href="{{ url_for('showfile', file='enerpi', tail=200, reverse=True)}}" role="button"><i class="fa fa-bolt" aria-hidden="true"></i> EnerPi LOG</a>
+                      </div>
+                      <div class="btn-group" role="group" aria-label="FLASK LOG">
+                        <a class="btn btn-outline-primary" href="{{ url_for('showfile', file='flask', tail=200, reverse=True)}}" role="button">Flask LOG</a>
+                        <a class="btn btn-outline-primary" href="{{ url_for('showfile', file='rsc', tail=200, reverse=True)}}" role="button">RSC gen.</a>
+                      </div>
+                      <br class="hidden-sm-up">
+                      <div class="btn-group" role="group" aria-label="ENERPI CONFIG">
+                        <a class="btn btn-outline-danger btn-block" href="{{ url_for('editfile', file='config')}}" role="button"><i class="fa fa-sliders" aria-hidden="true"></i> ENERPI Configuration</a>
+                      </div>
+                      <br class="hidden-sm-down">
+                      <br class="hidden-md-down">
+                      <div class="btn-group" role="group" aria-label="UWSGI+NGINX LOGs">
+                        <a class="btn btn-sm btn-outline-warning" href="{{ url_for('showfile', file='uwsgi', tail=200, reverse=True)}}" role="button">UWSGI LOG</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('showfile', file='nginx', tail=200, reverse=True)}}" role="button">NGINX Access</a>
+                        <a class="btn btn-sm btn-outline-danger" href="{{ url_for('showfile', file='nginx_err', tail=200, reverse=True)}}" role="button">NGINX Errors</a>
+                      </div>
+                        <a class="pushbullet-subscribe-widget btn btn-sm" data-channel="enerpi_notifications"
+                           data-widget="button" data-size="small"></a>
+                        <script type="text/javascript">
+                            (function(){
+                                var a=document.createElement('script');
+                                a.type='text/javascript';
+                                a.async=true;
+                                a.src='https://widget.pushbullet.com/embed.js';
+                                var b=document.getElementsByTagName('script')[0];
+                                b.parentNode.insertBefore(a,b);
+                            })();
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if alerta %}
+        {{ alert_dismiss(alerta) }}
+    {% endif %}
+    <div class="container-fluid">
+        <h3><strong><i class="fa fa-fire-extinguisher" aria-hidden="true"></i> enerPI logger administration</strong></h3>
+        <hr>
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
+        {% if is_sender_active and not after_sysop %}
+            <h6>Status: <strong class="tag tag-pill tag-success">ACTIVE</strong>; Host: <strong class="tag tag-pill tag-primary">{{ d_last_msg['host'] }}</strong> </h6>
+        {% else %}
+            <h6>Status: <strong class="tag tag-pill tag-danger">OFF</strong>; Host: <strong class="tag tag-pill tag-primary">{{ d_last_msg['host'] }}</strong> </h6>
+        {% endif %}
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4">
+        <div class="btn-toolbar button-wrapper float-sm-right float-md-left" role="toolbar" aria-label="Toolbar for ENERPI Logger stderr/stdout">
+            <div class="btn-group" role="group" aria-label="DEBUG">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('showfile', file='daemon_out', tail=500)}}" role="button">Daemon OUT</a>
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('showfile', file='daemon_err', tail=500)}}" role="button">Daemon ERR</a>
+            </div>
+        </div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
+        <div class=" button-wrapper float-sm-right" role="toolbar" aria-label="Toolbar for ENERPI Logger Control">
+            <form method="POST">
+                {{ form_operate.hidden_tag() }}
+                <div class="btn-group" role="group" aria-label="Start-Stop">
+{#                    TODO logic enerpi active in client -> jquery y api/active --> json: {active: True, **params}#}
+                    <input class="btn btn-sm btn-outline-{% if is_sender_active %}danger{% else %}success{% endif %}" type="submit"
+                           formaction="{% if is_sender_active %}{{ url_for('startstop', service='enerpi_stop')}}{% else %}{{ url_for('startstop', service='enerpi_start')}}{% endif %}"
+                           {% if after_sysop %}disabled{% endif %}
+                           value="{% if is_sender_active %}Stop{% else %}Start{% endif %} logger">
+                    <input class="btn btn-sm btn-outline-danger"
+                           {% if after_sysop %}disabled{% endif %}
+                           type="submit" formaction="{{ url_for('startstop', service='machine')}}"
+                           value="Reboot system">
+                </div>
+            </form>
+        </div>
+        </div>
+    </div>
+    <hr>
+    <div class="container-fluid">
+        <h3><strong><i class="fa fa-flag-checkered" aria-hidden="true"></i> Reports</strong></h3>
+        <hr>
+        <h6 style="line-height: 1.5em;">
+            <a class="btn btn btn-success" href="{{ url_for('send_status_email')}}" role="button"><i class="fa fa-envelope-o" aria-hidden="true"></i><strong> EMAIL Status last 24h</strong></a>
+        </h6>
+        <hr>
+        <h3><strong><i class="fa fa-database" aria-hidden="true"></i> HDF data stores</strong> <small>(from {{ d_catalog['ts_init']|ts_strftime }})</small></h3>
+        <hr>
+        <h6 style="line-height: 1.5em;">
+            <a href="{{ url_for('download_file', file_id='catalog', as_attachment=True) }}"
+               download="{{ url_for('download_file', file_id='catalog', as_attachment=False) }}" style="margin-left: 10px; margin-right: 10px;">
+                <span class="tag tag-pill tag-warning">
+                    <i class="fa fa-list" aria-hidden="true"></i><strong> Data CATALOG</strong> <small>({{ d_catalog['ts_catalog']|ts_strftime }})</small>
+                </span>
+            </a>
+            <a href="{{ url_for('download_file', file_id='raw_store', as_attachment=True) }}"
+               download="{{ url_for('download_file', file_id='raw_store', as_attachment=True) }}" style="margin-left: 10px; margin-right: 10px;">
+                <span class="tag tag-pill tag-danger">
+                    <i class="fa fa-exclamation-triangle" aria-hidden="true"></i><small> RAW Data</small>
+                </span>
+            </a>
+        </h6>
+        <hr>
+        <h5 style="line-height: 1.7em;">
+            {% for (p, label) in list_stores %}
+                {% if 'MONTH' in p %}
+                    {{ tag_file_download(p, label, 'success') }}
+                {% elif 'TODAY' in p %}
+                    {{ tag_file_download(p, label, 'warning') }}
+                {% else %}
+                    {{ tag_file_download(p, label, 'primary') }}
+                {% endif %}
+            {% endfor %}
+        </h5>
+        </div>
+    <hr>
+    <div class="container-fluid">
+        <p class="mx-auto text-xs-center font-italic"><a href="{{ url_for('api_help') }}">enerPI API Help</a></p>
+    </div>
+{% endblock %}
