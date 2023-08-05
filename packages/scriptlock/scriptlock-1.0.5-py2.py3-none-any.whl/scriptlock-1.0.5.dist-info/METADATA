@@ -1,0 +1,84 @@
+Metadata-Version: 2.0
+Name: scriptlock
+Version: 1.0.5
+Summary: Lock script to allow only one instance
+Home-page: https://github.com/alkivi-sas/python-scriptlock
+Author: Anthony Martinet
+Author-email: anthony@alkivi.fr
+License: LGPLv3
+Keywords: alkivi odoo
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Provides-Extra: dev
+Provides-Extra: test
+
+python-scriptlock
+=================
+
+|Build Status| |Requirements Status|
+
+Lock tool for scripts.
+
+Package
+-------
+
+Example
+
+.. code:: python
+
+    import time
+    import atexit
+
+    from scriptlock import Lock
+
+    lock = Lock()
+    atexit.register(lock.cleanup)  # Needed to clean the lock correctly
+
+    time.sleep(100)
+
+Launch another one and see what happend
+
+Workaround
+----------
+
+The use of atexit is necessary to correctly clean the lock. We tried to
+use the **del** module but it caused issues with the logger.
+
+Tests
+-----
+
+Testing is set up using `pytest <http://pytest.org>`__ and coverage is
+handled with the pytest-cov plugin.
+
+Run your tests with ``py.test`` in the root directory.
+
+Coverage is ran by default and is set in the ``pytest.ini`` file. To see
+an html output of coverage open ``htmlcov/index.html`` after running the
+tests.
+
+TODO
+
+Travis CI
+---------
+
+There is a ``.travis.yml`` file that is set up to run your tests for
+python 2.7 and python 3.2, should you choose to use it.
+
+TODO
+
+.. |Build Status| image:: https://travis-ci.org/alkivi-sas/python-scriptlock.svg?branch=master
+   :target: https://travis-ci.org/alkivi-sas/python-scriptlock
+.. |Requirements Status| image:: https://requires.io/github/alkivi-sas/python-scriptlock/requirements.svg?branch=master
+   :target: https://requires.io/github/alkivi-sas/python-scriptlock/requirements/?branch=master
+
+
