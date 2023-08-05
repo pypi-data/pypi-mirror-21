@@ -1,0 +1,46 @@
+{% for master in masters -%}
+{{ master.hostname }} ansible_host={{ master.ip }} ansible_private_key_file='{{ inventory_dir }}/.vagrant/machines/{{ master.hostname }}/virtualbox/private_key'
+{% endfor -%}
+{% for node in nodes -%}
+{{ node.hostname }} ansible_host={{ node.ip }} ansible_private_key_file='{{ inventory_dir }}/.vagrant/machines/{{ node.hostname }}/virtualbox/private_key'
+{% endfor %}
+
+[k8sdc:children]
+k8sdc-masters
+k8sdc-nodes
+etcd
+fileserver
+k8sdc-ca
+timeserver
+docker-registry-mirror
+
+[k8sdc:vars]
+ansible_ssh_user=vagrant
+ansible_connection=ssh
+
+[k8sdc-masters]
+{% for master in masters -%}
+{{ master.hostname }}
+{% endfor %}
+
+[k8sdc-nodes]
+{% for node in nodes -%}
+{{ node.hostname }}
+{% endfor %}
+
+[etcd]
+{% for etcd in etcd -%}
+{{ etcd }}
+{% endfor %}
+
+[fileserver]
+{{ fileserver }}
+
+[k8sdc-ca]
+{{ k8sdc_ca }}
+
+[timeserver]
+{{ timeserver }}
+
+[docker-registry-mirror]
+{{ docker_registry_mirror }}
