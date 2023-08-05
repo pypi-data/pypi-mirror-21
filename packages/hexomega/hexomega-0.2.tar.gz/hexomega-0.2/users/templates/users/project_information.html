@@ -1,0 +1,84 @@
+{%extends "users/base.html" %}
+{% block navi_content %}
+    {%include "users/includes/navicontents_admin.html" %}
+{% endblock %}
+{% block usernavi_content %}	
+    {%include "users/includes/usernavicontents_admin.html" %}
+{% endblock %}
+{% load del_tags %}
+
+{% block main_content %}
+	{% csrf_token %}
+	
+	
+	   <div class="col-md-6">
+	  
+        <div class="content table-responsive table-full-width" >
+<h4 class="title">{{ project.name}}'s Information</h4>
+            <table class="table table-hover table-striped" id="tabledetails">
+                                    
+                <tbody>
+                <tr>
+                    <td class="col-xs-3">Project Name</td>
+                    <td>{{ project.name }}</td>
+                </tr>
+                <tr>
+                    <td>Start Date</td>
+                    <td>{{ project.start_date|date }}</td>
+                </tr>
+                <tr>
+                    <td>End Date</td>
+                    <td>{{ project.end_date|date }}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    {% if project.status == '0' %}
+                        <td>Open</td>
+                    {% endif %}
+                    {% if project.status == '1' %}
+                        <td>Closed</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>Description</td>
+                    <td>{{ project.description }}</td>
+                </tr>
+				<tr>
+                    <td>Leader</td>
+                    <td>{{ project.leader }}</td>
+                </tr>
+				<tr>
+                    <td>Admin</td>
+                    <td>
+                        {% for admin in project.admins.all %}
+                            {{ admin.get_full_name }}<br>
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Tasks</td>
+                    <td>
+                        {% for task in project.actionlist.task_set.all %}
+                            <div style="width: 80%; height: 40px;">
+                                {{ task.title }}<br>
+                                <a href="{% url 'download_deliverable' user.username project.name task.pk %}">{{ task.deliverable.name|get_name }}</a>
+                            </div><br>
+                        {% endfor %}
+                    </td>
+                </tr>
+				<tr>
+				<td>Project Log</td>
+				
+				<td>
+				
+				<a href="{% url 'admin_log' user.username project.name %}">View Log</a>
+			
+				</td>
+				</tr>
+                </tbody>
+            </table>
+				<a href="{% url 'all_project' user.username %}" class="btn btn-info btn-fill">&lt;&lt;Back to list of projects</a>
+        </div>
+    </div>
+
+{% endblock %}

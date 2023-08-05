@@ -1,0 +1,47 @@
+{%extends "users/base.html" %}
+{% block navi_content %}
+    {%include "users/includes/navicontents_admin.html" %}
+{% endblock %}
+{% block usernavi_content %}
+    {%include "users/includes/usernavicontents_admin.html" %}
+{% endblock %}
+
+{% block main_content %}
+    {% block title %}<h4> Update {{ user.get_full_name }}'s Information</h4>{% endblock %}
+    <form action="" method="post">
+    {% if form.errors %}
+        <!-- Error messaging -->
+        <div id="errors">
+            <div class="inner">
+                <p>There were some errors in the information you entered. Please correct the following:</p>
+                {{ form.non_field_errors }}
+                <ul>
+                    {% for field in form %}
+                        {% if field.errors %}<li>{{ field.label }}: {{ field.errors|striptags }}</li>{% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <!-- /Error messaging -->
+    {% endif %}
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label >Email</label>
+                    <input type="email" class="form-control" placeholder="Email" name="email" value="{{ user.email }}">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label >Password</label>
+                    <input type="password" class="form-control" placeholder="" name="password" value="">
+                </div>
+            </div>
+        </div>
+        <br>
+        <button type="submit" class="btn btn-info btn-fill btnleft" value="Update">Update</button>
+    </form>
+{% endblock%}

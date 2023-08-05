@@ -1,0 +1,52 @@
+{%extends "users/base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load i18n %}
+ {% block navi_content %}
+		        {%include "users/includes/navicontents_leader.html" %}
+    
+{% endblock %}
+{% block usernavi_content %}
+		  {% include "users/includes/usernavicontents_leader.html" %}
+    
+{% endblock %}
+
+{% block main_content %}
+	<div class="header">
+        <h4 class="title">Create Member</h4>
+    </div>
+	
+<div style="color: black;">
+
+{% url 'admin:jsi18n' as jsi18nurl %}
+<script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/ "}}"></script>
+
+<fieldset>
+    <div class="form-row col-md-4">
+        <form action="" method="POST" class="form">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {# form.as_p #}
+            <button type="submit" class="btn btn-info btn-fill">
+                Submit
+            </button>
+        </form>
+    </div>
+</fieldset>
+
+
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"> -->
+
+<script type="text/javascript" src="{% static 'spc/jsi18n.js' %}"></script>
+<script type="text/javascript" src="/static/admin/js/core.js"></script>
+<script type="text/javascript" src="/static/admin/js/calendar.js"></script>
+<script type="text/javascript" src="/static/admin/js/admin/DateTimeShortcuts.js"></script>
+<script type="text/javascript" src="/static/admin/js/SelectBox.js"></script>
+<script type="text/javascript" src="/static/admin/js/SelectFilter2.js"></script>
+
+</div>
+						
+	                        
+
+{% endblock %}

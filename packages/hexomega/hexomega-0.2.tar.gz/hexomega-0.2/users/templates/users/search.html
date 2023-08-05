@@ -1,0 +1,77 @@
+{%extends "users/base.html" %}
+{% block navi_content %}
+    {%include "users/includes/navicontents_admin.html" %}
+{% endblock %}
+{% block usernavi_content %}
+    {%include "users/includes/usernavicontents_admin.html" %}
+{% endblock %}
+{% block main_content %}
+{% block title %}<h4>Users Search</h4>{% endblock %}
+    <form action="" method="get" name="search_form">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label >Username</label>
+                <input type="text" class="form-control" placeholder="Username" name="username">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label >First Name</label>
+                <input type="text" class="form-control" placeholder="First Name" name="first_name">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label >Last Name</label>
+                <input type="text" class="form-control" placeholder="Last Name" name="last_name">
+            </div>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-info btn-fill btnleft" value="Search" name="search">Search</button>
+    </form>
+    <div class="content">
+    
+    {% if result_list %}
+	<h4> Search Result</h4>
+        <div class="content table-responsive table-full-width">
+            <table class="table table-hover table-striped" summary="user_search_list">
+                <thead>
+                <th>Username</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+				<th style="text-align:center">Edit</th>
+                <th style="text-align:center" >Delete</th>
+                </thead>
+                <tbody>
+                {% for person in result_list.qs %}
+                    <tr>
+                        <td><a href="{% url 'user_detail' request.user.username person.username %}">{{ person.username }}</a></td>
+                        <td>{{ person.first_name }}</td>
+                        <td>{{ person.last_name }}</td>
+						 <td style="text-align:center">
+                             <a href="{% url 'update_user' request.user.username person.username %}">
+                                 <div class="font-icon-detail"><i class="pe-7s-note"></i>
+                                 </div>
+                             </a>
+                         </td>
+                         <td style="text-align:center">
+                             <a href="{% url 'delete_user' request.user.username person.username %}">
+                                 <div class="font-icon-detail"><i class="pe-7s-trash"></i>
+                                 </div>
+                             </a>
+                         </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td>No Results</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+    </div>
+{% endblock %}
