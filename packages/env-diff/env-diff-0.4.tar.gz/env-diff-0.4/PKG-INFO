@@ -1,0 +1,150 @@
+Metadata-Version: 1.1
+Name: env-diff
+Version: 0.4
+Summary: Compares expected environment variables to those set in production.
+Home-page: https://github.com/jacebrowning/env-diff
+Author: Jace Browning
+Author-email: jacebrowning@gmail.com
+License: GNU General Public License v3 (GPLv3)
+Description: Unix: |Unix Build Status| Windows: |Windows Build Status|\ Metrics:
+        |Coverage Status| |Scrutinizer Code Quality|\ Usage: |PyPI Version|
+        
+        Overview
+        ========
+        
+        ``diff-env`` is a command-line to tool to generate reports to compare
+        the value of environment variables in each of your environments against
+        the defaults defined in various files. It will help you you find:
+        
+        -  variables absent from production, but will be required for a new
+           feature in test
+        -  production values that shouldn't be shared to your staging
+           environment
+        -  variables set that are no longer referenced in any files
+        
+        This tool was built with
+        `Heroku <https://www.heroku.com/continuous-delivery>`__, but should work
+        with any infrastructure that supports running commands remotely.
+        
+        Setup
+        =====
+        
+        Requirements
+        ------------
+        
+        -  Python 3.6+
+        
+        Installation
+        ------------
+        
+        Install ``env-diff`` with pip:
+        
+        .. code:: sh
+        
+            $ pip install env-diff
+        
+        or directly from the source code:
+        
+        .. code:: sh
+        
+            $ git clone https://github.com/jacebrowning/env-diff.git
+            $ cd env-diff
+            $ python setup.py install
+        
+        Usage
+        =====
+        
+        Generate a sample config file:
+        
+        .. code:: sh
+        
+            $ env-diff --init
+        
+        Customize this file to match your project:
+        
+        -  ``sourcefiles``: contain references to environment variables used in
+           your project
+        
+           -  ``path``: relative path to source file
+        
+        -  ``environments``: the environments in which your project runs
+        
+           -  ``name``: name of the environment
+           -  ``command``: command to display currently set environment
+              variables
+        
+        Generate reports to show the differences between each environment
+        variable:
+        
+        .. code:: sh
+        
+            $ env-diff
+        
+        Demo
+        ====
+        
+        Input YAML config file:
+        
+        |input|
+        
+        Running in a terminal:
+        
+        |run|
+        
+        Output (as viewed in
+        `TableTool <https://github.com/jakob/TableTool>`__):
+        
+        |output|
+        
+        .. |Unix Build Status| image:: https://img.shields.io/travis/jacebrowning/env-diff/master.svg
+           :target: https://travis-ci.org/jacebrowning/env-diff
+        .. |Windows Build Status| image:: https://img.shields.io/appveyor/ci/jacebrowning/env-diff/master.svg
+           :target: https://ci.appveyor.com/project/jacebrowning/env-diff
+        .. |Coverage Status| image:: https://img.shields.io/coveralls/jacebrowning/env-diff/master.svg
+           :target: https://coveralls.io/r/jacebrowning/env-diff
+        .. |Scrutinizer Code Quality| image:: https://img.shields.io/scrutinizer/g/jacebrowning/env-diff.svg
+           :target: https://scrutinizer-ci.com/g/jacebrowning/env-diff/?branch=master
+        .. |PyPI Version| image:: https://img.shields.io/pypi/v/env-diff.svg
+           :target: https://pypi.python.org/pypi/env-diff
+        .. |input| image:: https://raw.githubusercontent.com/jacebrowning/env-diff/master/docs/demo/input.png
+        .. |run| image:: https://raw.githubusercontent.com/jacebrowning/env-diff/master/docs/demo/run.png
+        .. |output| image:: https://raw.githubusercontent.com/jacebrowning/env-diff/master/docs/demo/output.png
+        
+        
+        Revision History
+        ================
+        
+        0.4 (2017-04-03)
+        ----------------
+        
+        -  Added extra context around variable use in Heroku ``app.json`` files.
+        
+        0.3 (2017-03-30)
+        ----------------
+        
+        -  Added CSV report generation.
+        
+        0.2 (2017-03-30)
+        ----------------
+        
+        -  Added detection of source variables matching ``export FOO=bar``.
+        -  Added Markdown report generation.
+        
+        0.1 (2017-03-30)
+        ----------------
+        
+        -  Initial alpha release.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Topic :: Software Development :: Quality Assurance
+Classifier: Topic :: System :: Installation/Setup
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Utilities
