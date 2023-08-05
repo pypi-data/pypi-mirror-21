@@ -1,0 +1,66 @@
+{% extends "fragments/default.html" %}
+
+{% block navbar %}
+{% include "fragments/navbar.html" with active="servers" %}
+{% endblock %}
+
+
+{% block content %}
+
+    <h4>System capacity</h4>
+    <dl class="dl-horizontal">
+      <dt>Total free memory:</dt>
+      <dd>{{ global.freemem }} MB</dd>
+
+      <dt>Total memory:</dt>
+      <dd>{{ global.totalmem }} MB</dd>
+
+      <dt>Core contention:</dt>
+      <dd>{{ global.corecontend }}</dd>
+    </dl>
+
+    <h4>Templates</h4>
+    <dl class="dl-horizontal">
+      <dt></dt>
+      <dd>Free capacity</dd>
+
+      {% for template, count in template_slack %}
+      <dt>{{ template.name }}:</dt>
+      <dd>{{ count }}</dd>
+      {% endfor %}
+    </dl>
+
+    <h4>Servers</h4>
+    <p>
+      <table class="table table-hover table-bordered table-condensed">
+        <thead><tr><th>Hostname</th><th>Memory</th><th>CPU</th><th></th></tr></thead>
+        <tbody>
+          {% for server in servers %}
+          <tr class='info'>
+            <td><a href="{% url 'server_view' id=server.id %}">{{ server.hostname }}</a></td>
+            <td width="300em">
+                <div class="progress progress-striped">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="{{server.mem_util}}" aria-valuemin="0" aria-valuemax="100" style="width: {{server.mem_util}}%;">
+                    {{server.mem_used}}MB / {{server.mem_total}}MB
+                  </div>
+                </div>
+            </td>
+            <td width="300em">
+                <div class="progress progress-striped">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="{{server.cpu_util}}" aria-valuemin="0" aria-valuemax="100" style="width: {{server.cpu_util}}%;">
+                    {{server.cpu_util}}%
+                  </div>
+                </div>
+            </td>
+            <td width="1em">
+                <div class="btn-group btn-group-sm">
+                  <a type="button" class="btn btn-default" href="{% url 'server_edit' id=server.id %}" title="Edit settings"><span class="glyphicon electric glyphicon-edit"></span></a>
+                </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </p>
+
+{% endblock %}
