@@ -1,0 +1,79 @@
+#!/usr/bin/env python
+
+import logging
+import ast
+import time
+import os
+import socket
+import sys
+import librato
+import subprocess
+import psutil
+
+from cement.core.foundation import CementApp
+from cement.core.controller import CementBaseController, expose
+from librato_macos import MACOSAgent
+
+class MACOSBaseController(CementBaseController):
+    """
+    Base class for use with cement
+    """
+
+    class Meta:
+        """
+        Meta class for controller
+        """
+        label = 'base'
+        description = "librato-macos gathers information from the MAC for use with Librato"
+
+    @expose(hide=True)
+    def default(self):
+        agent = MACOSAgent(log_level=self.app.log.backend.level)
+        agent.run()
+
+
+    @expose(help="start librato-macos")
+    def start(self):
+        print("starting librato-macos....")
+        debug_switch = ""
+        if self.app.log.backend.level == logging.DEBUG:
+            debug_switch = "--debug "
+        p = subprocess.Popen("python bin/librato-macos %s> ~/librato-macos.log 2>&1 &" % debug_switch, shell=True)
+        p.wait()
+        print("started librato-macos")
+        exit(0)
+
+    @expose(help="create demo Spaces")
+    def create(self):
+        agent = MACOSAgent(log_level=self.app.log.backend.level)
+        ids = agent.create_spaces()
+        print( "%s:%s" % (ids[0], ids[1]))
+
+    @expose(help="stop librato-macos")
+    def stop(self):
+        print( "finding librato-macos...")
+        current = os.getpid()
+        for pid in psutil.process_iter():
+            try:
+                for cmd in pid.cmdline():
+                    # print pid.__dict__
+                    if "librato-macos" in cmd and pid._pid != current:
+                        pid.kill()
+                        print( "librato-macos stopped")
+                        exit(0)
+            except psutil.AccessDenied as e:
+                pass
+            except Exception as e:
+                print( e)
+        print( "couldn't find a running librato-macos process")
+        exit(1)
+
+class MacOSApp(CementApp):
+    class Meta:
+        label = 'librato-macos'
+        base_controller = 'base'
+        handlers = [MACOSBaseController]
+
+with MacOSApp() as app:
+    app.setup()
+    app.run()
