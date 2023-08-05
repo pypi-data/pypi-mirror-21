@@ -1,0 +1,91 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="collective.venue">
+
+  <i18n:registerTranslations directory="locales" />
+
+  <includeDependencies package="." />
+  <include package="collective.address"/>
+  <include package="collective.geolocationbehavior" zcml:condition="installed collective.geolocationbehavior"/>
+
+  <includeOverrides file="overrides.zcml"/>
+  <include package=".browser"/>
+
+  <plone:static
+      directory="resources"
+      name="collective.venue"
+      type="plone"
+      />
+
+  <plone:behavior
+      name="venue.locationreference"
+      title="collective.venue event location"
+      provides=".behaviors.ILocation"
+      />
+
+  <plone:behavior
+      name="venue.organizerreference"
+      title="collective.venue event organizer"
+      provides=".behaviors.IOrganizer"
+      />
+
+  <adapter name="SearchableText" factory=".indexer.searchable_text_indexer"/>
+  <utility component=".vocabularies.MapLayers" name="collective.venue.map_layers"/>
+
+  <genericsetup:registerProfile
+      name="base"
+      title="collective.venue base profile"
+      directory="profiles/base"
+      description="Dexterity venue type extension."
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:registerProfile
+      zcml:condition="installed collective.geolocationbehavior"
+      name="default"
+      title="collective.venue with geolocation support"
+      directory="profiles/default-geolocation"
+      description="Dexterity venue type extension with geolocation support."
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:registerProfile
+      zcml:condition="not-installed collective.geolocationbehavior"
+      name="default"
+      title="collective.venue without geolocation support"
+      directory="profiles/default-nogeolocation"
+      description="Dexterity venue type extension without geolocation support."
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:upgradeStep
+      title="Upgrade to Plone 5"
+      description="Migrate resources to new resource registry."
+      source="3"
+      destination="4"
+      handler="collective.venue.upgrades.upgrade_3_to_4"
+      profile="collective.venue:base"
+      />
+  <genericsetup:upgradeStep
+      title="Migrate resources"
+      description="Migrate resources to new version."
+      source="4"
+      destination="5"
+      handler="collective.venue.upgrades.upgrade_registry"
+      profile="collective.venue:base"
+      />
+
+
+  <utility
+      factory=".setuphandlers.HiddenProfiles"
+      name="collective.venue-hiddenprofiles"
+      />
+
+</configure>
