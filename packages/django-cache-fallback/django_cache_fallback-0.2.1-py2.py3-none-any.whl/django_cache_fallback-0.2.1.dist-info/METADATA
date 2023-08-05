@@ -1,0 +1,87 @@
+Metadata-Version: 2.0
+Name: django-cache-fallback
+Version: 0.2.1
+Summary: Django Cache Fallback
+Home-page: https://github.com/Kub-AT/django-cache-fallback
+Author: Jakub S
+Author-email: Kub-AT@users.noreply.github.com
+License: 3-clause BSD
+Keywords: django-cache-fallback,django cache,multiple cache,fallback cache
+Platform: any
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 1.11
+Classifier: Framework :: Django :: 1.10
+Classifier: Framework :: Django :: 1.9
+Classifier: Framework :: Django :: 1.8
+Classifier: Intended Audience :: Developers
+Requires-Dist: coverage
+Requires-Dist: django (>=1.8)
+Requires-Dist: mock
+Requires-Dist: pytest
+Requires-Dist: pytest-cov
+Requires-Dist: python-memcached
+
+==============================================================================
+Django Cache Fallback.
+==============================================================================
+:Info: This is the README file for Django Cache Fallback.
+:Author: Jakub S
+
+.. index: README
+.. image:: https://travis-ci.org/Kub-AT/django-cache-fallback.svg?branch=master
+   :target: https://travis-ci.org/Kub-AT/django-cache-fallback
+
+PURPOSE
+-------
+Allows you to set fallback cache backend (multiple cache backend).
+The data is not shared between cache backends.
+Example: Memcached is not available, backend switch to fallback. Site may slow down (cache have to be set)
+but will not rise an error (watch your logs)
+
+INSTALLATION
+------------
+
+.. code:: bash
+
+    pip install django-cache-fallback
+
+.. code:: python
+
+    INSTALLED_APPS = (
+       ...
+       'cache_fallback',
+    )
+
+USAGE
+-----
+Usage example PyLibMCCache + LocMemCache
+
+.. code:: python
+
+    CACHES = {
+        'default': {
+            'BACKEND': 'cache_fallback.FallbackCache',
+        },
+
+        'main_cache': {
+            'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+            'LOCATION': '/tmp/memcached.sock',
+            'TIMEOUT': 500,
+        },
+        'fallback_cache': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique'
+        }
+
+    }
+
+
