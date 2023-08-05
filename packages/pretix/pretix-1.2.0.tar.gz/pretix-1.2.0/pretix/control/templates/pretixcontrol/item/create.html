@@ -1,0 +1,25 @@
+{% extends "pretixcontrol/item/base.html" %}
+{% load i18n %}
+{% load bootstrap3 %}
+{% block inside %}
+    <form action="" method="post" class="form-horizontal" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            <legend>{% trans "General information" %}</legend>
+            {% bootstrap_field form.name layout="horizontal" %}
+            {% bootstrap_field form.copy_from layout="horizontal" %}
+            {% bootstrap_field form.has_variations layout="horizontal" %}
+            {% bootstrap_field form.admission layout="horizontal" %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Price settings" %}</legend>
+            {% bootstrap_field form.default_price layout="horizontal" %}
+            {% bootstrap_field form.tax_rate layout="horizontal" %}
+        </fieldset>
+        <div class="form-group submit-group">
+            <button type="submit" class="btn btn-primary btn-save">
+                {% trans "Save and continue with more settings" %}
+            </button>
+        </div>
+    </form>
+{% endblock %}
