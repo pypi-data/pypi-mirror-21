@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8sdc-grafana
+  namespace: {{ .Values.namespace }}
+  labels:
+    solution: m1_metrics
+    product:  grafana
+    heritage: {{ .Release.Service | quote }}
+    release:  {{ .Release.Name | quote }}
+    chart:    "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
+  strategy: {'type': 'Recreate'}
+  template:
+    metadata:
+      labels:
+        solution: m1_metrics
+        product:  grafana
+        heritage: {{ .Release.Service | quote }}
+        release:  {{ .Release.Name | quote }}
+        chart:    "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      containers:
+        - name:  k8sdc-grafana
+          image: {{ .Values.grafana_image }}:{{ .Values.grafana_tag }}
+          imagePullPolicy: {{ default "IfNotPresent" .Values.pullPolicy }}
+          ports:
+            - name:          http
+              containerPort: 3000
+              protocol:      TCP
+          env:          
+            - name:  GF_AUTH_BASIC_ENABLED
+              value: "true"
+            - name:  GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+          volumeMounts:
+            - name:      k8sdc-grafana
+              mountPath: /var
+          resources:
+            limits:
+              cpu:    200m
+              memory: 200Mi
+            requests:
+              cpu:    200m
+              memory: 200Mi
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 3000
+      volumes:
+        - name: k8sdc-grafana
+          persistentVolumeClaim:
+            claimName: k8sdc-grafana
+
+
+        
