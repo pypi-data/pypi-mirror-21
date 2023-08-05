@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import shutil
+import logging
+import glob
+from tempfile import mkdtemp
+import boto
+import boto.s3.connection
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+from backports import lzma
+
+
+def setup_logger():
+    logger = logging.getLogger('cdn-log-archiver')
+    logger.setLevel(int(os.environ.get('DEBUG', logging.INFO)))
+
+    console = logging.StreamHandler()
+    console.setLevel(int(os.environ.get('DEBUG', logging.INFO)))
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+
+    return logger
+
+
+def get_logger():
+    logger = logging.getLogger('cdn-log-archiver')
+    logger.setLevel(int(os.environ.get('DEBUG', logging.INFO)))
+    return logger
+
+
+@contextmanager
+def temp_directory():
+    temp_dir = mkdtemp()
+    try:
+        yield temp_dir
+    finally:
+        shutil.rmtree(temp_dir)
+
+
+def compress_logs(archive_file, temp_dir):
+    with lzma.open(archive_file, 'w') as archive:
+        for log_file in glob.glob("{0}/*".format(temp_dir)):
+            if os.path.getsize(log_file) > 0:
+                with open(log_file, 'r') as log:
+                    archive.write(log.read())
+
+
+def write_logs_to_temp(target_logs, dest):
+    logger = get_logger()
+    failed = []
+
+    for l in target_logs:
+        logger.debug('Getting contents of: {0} and writing to {1}/{2}'.format(l.name, dest, l.name[9:]))
+        try:
+            l.get_contents_to_filename('{0}/{1}'.format(dest, l.name[9:]))
+        except boto.exception.S3ResponseError, e:
+            logger.warn('Failed to fetch file: {0}\nError: {1}'.format(l.name, e.message))
+            failed.append(l.name)
+
+    return failed
+
+
+def archive_logs(bucket, target_logs, save_to, date):
+    bytes_written = 0
+    with temp_directory() as temp_dir:
+        archive_file = os.path.join(temp_dir, "../{0}.xz".format(date))
+        failed_logs = write_logs_to_temp(target_logs, temp_dir)
+        compress_logs(archive_file, temp_dir)
+
+        new_archive = bucket.new_key(os.path.join(save_to,
+                                     os.path.basename(archive_file)))
+
+        bytes_written = new_archive.set_contents_from_filename(archive_file)
+        os.remove(archive_file)
+
+    return failed_logs, bytes_written
+
+
+def remove_raw_logs(bucket, target_logs, failed_logs):
+    for l in target_logs:
+        if l.name in failed_logs:
+            continue
+
+        try:
+            bucket.delete_key(l)
+        except boto.exception.S3ResponseError, e:
+            continue
+
+
+def collect_logs(bucket, look_for):
+    return [k for k in bucket.list() if k.name.startswith(look_for)]
+
+
+def main():
+    s3_host = os.environ['S3_HOST']
+    access_key = os.environ['ACCESS_KEY']
+    secret_key = os.environ['SECRET_KEY']
+    bucket_name = os.environ['PYPI_LOG_BUCKET']
+
+    logger = setup_logger()
+
+    # Look for the date to archive in the env, default to yesterday
+    if os.environ.get('PYPI_LOG_DATE', None):
+        target_date = datetime.strptime(os.environ.get('PYPI_LOG_DATE'),
+                                        '%Y-%m-%d')
+    else:
+        target_date = (datetime.today() - timedelta(days=1))
+
+    look_for = 'incoming/{0}'.format(target_date.strftime('%Y-%m-%d'))
+    save_to = 'archive/{0}/{1}'.format(target_date.year,
+                                       target_date.month)
+
+    logger.debug('Working with bucket {0}'.format(bucket_name))
+    logger.debug('Looking for keys like {0}'.format(look_for))
+    logger.debug('Will save archive to {0}'.format(save_to))
+
+    conn = boto.connect_s3(
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        host=s3_host,
+        calling_format=boto.s3.connection.OrdinaryCallingFormat()
+    )
+
+    logger.debug('Connection: {0}'.format(conn))
+
+    bucket = conn.get_bucket(bucket_name)
+    target_logs = collect_logs(bucket, look_for)
+
+    logger.debug('What we are working with:\n {0}'.format(target_logs))
+
+    if len(target_logs) == 0:
+        logger.warn('No logs found at {0}'.format(look_for))
+        return 1
+
+    failed_logs, bytes_written = archive_logs(bucket, target_logs, save_to,
+                                              target_date.strftime('%Y-%m-%d'))
+
+    if failed_logs:
+        logger.warn('Logs that failed to download: {0}'.format(failed_logs))
+
+    if bytes_written and bytes_written > 0:
+        logger.info('{0} bytes written to {1}/{2}'.format(bytes_written,
+                                                          bucket_name, save_to))
+
+        remove_raw_logs(bucket, target_logs, failed_logs)
+        return 0
+    else:
+        logger.error('Nothing written to {0}/{1}'.format(bucket_name, save_to))
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())
