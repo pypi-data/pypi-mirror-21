@@ -1,0 +1,8 @@
+Collection of Deep Learning Computer Vision Algorithms implemented in Chainer
+
+Home-page: UNKNOWN
+Author: Yusuke Niitani
+Author-email: yuyuniitani@gmail.com
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
