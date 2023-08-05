@@ -1,0 +1,220 @@
+
+// Navigation menu
+@wiki-menu-width: 12em;
+@wiki-menu-width-ext: 36em;
+@wiki-shortcut-height: 3.6em;
+@wiki-shortcut-width: 4.1em;
+
+.wrapper {
+    transition: padding 200ms ease-in-out 0s;
+    padding-left: @wiki-shortcut-width;
+}
+.wrapper.wiki-menu-active {
+    padding-left: @wiki-menu-width !important;
+}
+.wrapper.wiki-menu-inactive {
+    padding-left: @wiki-shortcut-width !important;
+}
+
+.wiki-menu-a {
+    color: @color-gray-light;
+}
+.wiki-menu-a-hover {
+    background: @link-hover-color;
+    text-decoration: none;
+}
+
+#wiki-menu-shortcut {
+    &:hover {
+        color: @color-gray-light;
+        text-shadow: #EEE 0 0 1em;
+    }
+}
+
+#wiki-menu-pin {
+    height: @wiki-shortcut-height;
+    padding: 0 1.5em 0 @wiki-shortcut-width;
+    text-align: right;
+    color: @color-gray-medium;
+    cursor: pointer;
+
+    &:hover {
+        color: @color-gray-light;
+        text-shadow: #EEE 0 0 1em;
+    }
+
+    span {
+        line-height: @wiki-shortcut-height;
+    }
+}
+#wiki-menu-pin.wiki-menu-pin-active {
+    color: @color-gray-light;
+}
+
+#wiki-menu {
+    position: fixed !important;
+    top: 0;
+    bottom: 0;
+    left: -@wiki-menu-width;
+    width: @wiki-menu-width;
+    border: none;
+    z-index: 10;
+    overflow-y: auto;
+    color: @color-gray-light;
+    background-color: @color-gray-dark;
+    transition: left 200ms ease-in-out 0s,
+                width 200ms ease-in-out 0s,
+                !important;
+    a {
+        padding: 0.5em 1em;
+        .wiki-menu-a();
+    }
+    a:link, a:visited, a:active {
+        .wiki-menu-a();
+    }
+    a:hover, a:focus {
+        .wiki-menu-a-hover();
+    }
+
+    ul {
+        border-top: 1px solid @color-gray-medium;
+    }
+}
+
+#wiki-menu.wiki-menu-active {
+    left: 0 !important;
+}
+#wiki-menu.wiki-menu-inactive {
+    left: -@wiki-menu-width !important;
+}
+#wiki-menu.wiki-menu-ext {
+    width: @wiki-menu-width-ext !important;
+}
+
+#wiki-menu-shortcut {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    z-index: 11;
+    padding: 1.3em 1.5em;
+    line-height: 1em;
+    font-weight: bold;
+    color: @body-bg;
+    background: @color-gray-dark;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+@media (min-width: 48em) {
+    // Hide the shortcut and move the horizontal menu down.
+    #wiki-menu {
+        //left: 0;
+    }
+    .wrapper {
+        //padding-left: @wiki-menu-width;
+    }
+}
+
+// Search
+.search-result-hover {
+    background: @color-gray-light;
+}
+
+b.match {
+    color: @color-orange;
+    background: @color-gray-light;
+}
+
+form#search {
+    width: 100%;
+    padding: 0.2em 1em;
+
+    button {
+        background: none;
+        padding: 0.5em;
+        &:hover { color: @link-hover-color; }
+    }
+}
+
+ul#search-preview {
+    position: absolute;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    top: auto;
+    left: 1em;
+    z-index: 12;
+    visibility: visible;
+    background: #FFF;
+    border: 1px solid #CCC;
+    border-radius: 4px;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.3);
+
+    li {
+        border-bottom: 1px solid @color-gray-light;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+    a {
+        margin: 0;
+        padding: 0.5em;
+        display: inline-block;
+        width: 100%;
+        color: @color-gray-dark;
+
+        &:link, &:active, &:visited {
+            color: @color-gray-dark;
+        }
+        &:hover, &:focus {
+            color: @color-gray-dark;
+            .search-result-hover();
+        }
+    }
+}
+
+ul.search-results {
+    list-style: none;
+}
+
+// Footer
+.footer-wrapper {
+    margin: 0 auto;
+    padding: 0 1.5em;
+}
+footer {
+    color: @color-gray-dark;
+    border-top: 1px solid @color-gray-light;
+    padding: 1.5em 0;
+    font-size: 75%;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    text-align: center;
+
+    a {
+        text-decoration: none;
+        color: @color-gray-dark;
+        &:link { color: @color-gray-dark; }
+        &:visited { color: @color-gray-dark; }
+        &:hover { color: @color-green-dark; text-decoration: none; }
+        &:active { color: @color-gray-dark; }
+    }
+    ul {
+        list-type: none;
+    }
+    li {
+        display: inline-block;
+        margin: 0;
+        padding: 0 0.5em;
+    }
+    li:before {
+        content: '\2014';
+        font-weight: 700;
+        font-size: 100%;
+        margin-right: 1em;
+    }
+    li:first-child:before {
+        content: none;
+    }
+}
+
