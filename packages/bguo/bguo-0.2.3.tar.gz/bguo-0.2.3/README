@@ -1,0 +1,169 @@
+bguo
+====
+File-based contact management
+
+Concept
+-------
+Each contact corresponds to a single file inside of the bguo directory.
+Contact information should be edited in this directory and then exported
+to various output formats for use by other programs. They can also be
+roughly imported to this directory, but you will have to proofread the
+results; the importers are intended for one-time imports, not for
+regular synchronization with other programs.
+
+For our purposes, a contact is a thing with a single name.
+People, mailing lists, and organizations can all be
+contacts. bguo has no special features for grouping contacts.
+
+bguo contact file format
+------------------------
+Here is an example of a contact file. ::
+
+    name: Thomas Levine
+    email: sngmscrmrchroh@thomaslevine.com
+    phone: 8835 1000 990 2082
+    x-favorite-color: pink
+
+The contact file format is similar to that of an email
+(`RFC-5322 <https://tools.ietf.org/html/rfc5322>`_ internet message)
+except for the following changes.
+
+* Header names are different. (See below.)
+* Line breaks do not need to include carriage returns;
+  it is acceptable to break lines either with CRLF or just LF.
+* Non-ASCII data may be included in headers; MIME encoded-word syntax is
+  optional.
+* The message body must be empty.
+
+A contact file may contain any of the following case-insensitive fields
+and any field beginning with "x-" or "X-".
+
+name
+    Name of a person, mailing list, organization, &c.
+name-latin
+    Same as "name", but used when "name" isn't acceptable for the output
+    format because it is in a different alphabet
+phone
+    Telephone number
+email\*
+    Email address
+feed\*
+    News feed address, like for an RSS or Atom feed
+web
+    Website address
+post
+    Postal address
+
+bguo will report an error if any other field is present.
+Fields marked with "\*" may be included multiple times;
+other fields may be included only once.
+
+Usage
+-------
+Install ::
+
+    pip3 install bguo
+
+The Seltzer importer has a special dependency. If you need the Seltzer
+importer, install like this in order to ensure that the dependency is met.
+
+    pip3 install 'bguo[seltzer]'
+
+Help ::
+
+    bguo -h
+
+Examples are distributed with the package, in the "examples" directory.
+pip downloads the package, but you can download the package
+`from PyPI <https://pypi.python.org/pypi/bguo>`_, and you can download
+the development version
+`from thomaslevine.com <https://thomaslevine.com/scm/bguo/tarball/bguo.tar.gz>`_.
+
+Here is how you can download the development version and run the examples. ::
+    
+    wget https://thomaslevine.com/scm/bguo/tarball/bguo.tar.gz
+    tar xzf bguo.tar.gz
+    cd bguo/examples
+    make clean
+    make
+
+Supported formats
+-----------------
+bguo supports only the formats that I (`Tom <https://thomaslevine.com>`_) have used.
+Let's separate the formats into two groups. The first group of formats
+is for specific integrations with other software.
+
+konftel
+    `Konftel 300IP <http://www.konftel.com/Products/Konftel300IP>`_ phonebook file
+mh
+    `MH <http://rand-mh.sourceforge.net/>`_ aliases file
+mutt
+    `Mutt <http://www.mutt.org/>`_ ``alias_file``
+newsbeuter
+    `Newsbeuter <https://www.newsbeuter.org/>`_ ``~/.newsbeuter/urls``
+seltzer
+    `Seltzer CRM <https://github.com/elplatt/seltzer/wiki>`_ member listing (``/?q=members``)
+voipms
+    `VoIP.ms <https://voip.ms>`_ phonebook export
+
+The second group is generic exports that could be helpful for making
+your own exports.
+
+python (the default)
+    Python string representation, as a list of dicts, one dict per contact
+custom
+    Your own format, specified as a Python
+    `format string <https://docs.python.org/3/library/string.html#format-string-syntax>`_,
+    using the fields that you can check with the ``bguo format`` subcommand
+
+The format arguments include all of the raw fields from the contact file
+format (name, name-latin, &c.) and the following derived fields.
+
+phone-numeric
+    Phone number from the "phone" field with non-numeric characters removed
+post-formatted
+    Postal address from the "post" field formatted for inclusion on a
+    letter, with the contact's name or identifier and with slashes
+    replaced by line breaks.
+
+For most of these formats, only the import or the export is supported,
+not both. This is summarized in the table below.
+
+============= ====== ======
+Format        Import Export
+============= ====== ======
+Konftel       No     Yes
+MH            Yes    Yes
+Mutt          Yes    Yes
+Newsbeuter    Yes    Yes
+Seltzer       Yes    No
+VoIP.ms       Yes    No
+------------- ------ ------
+Python        No     Yes
+Custom        No     Yes
+============= ====== ======
+
+For imports, command-line program expects that you are converting from
+only one format to bguo. To merge multiple formats during an export,
+write a custom merging program with the functions in ``bguo.parse``.
+I did this once with email addresses (MH) and phone numbers (VoIP.MS);
+see ``examples/merge.py``.
+
+Export workflow
+---------------
+Let us categorize exports into two types.
+
+1. STDOUT is sent to a configuration file.
+2. STDOUT is sent directly to another program.
+
+An example of the former type is the MH format; I run a command like this,
+and my contacts are made available when I am composing emails. ::
+
+    bguo export ./my-contacts mh > ~/mh/aliases
+
+An example of the latter type is connecting the generic phone number
+export to a Session Initicialization Protocol (SIP) client; I can call
+myself with the following command.
+::
+
+    pjsua "$(bguo export ./thomas.levine custom 'sip:{phone-numeric}@paris.voip.ms')"
