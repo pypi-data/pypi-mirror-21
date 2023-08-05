@@ -1,0 +1,53 @@
+.. vim: set fileencoding=utf-8 :
+.. Fri 3 Feb 11:51:35 CEST 2016
+
+.. image:: http://img.shields.io/badge/docs-stable-yellow.png
+   :target: http://pythonhosted.org/bob.paper.jstsp_2017/index.html
+.. image:: http://img.shields.io/badge/docs-latest-orange.png
+   :target: https://www.idiap.ch/software/bob/docs/latest/bob/bob.paper.jstsp_2017/master/index.html
+.. image:: https://gitlab.idiap.ch/bob/bob.paper.jstsp_2017/badges/v1.0.0/build.svg
+   :target: https://gitlab.idiap.ch/bob/bob.paper.jstsp_2017/commits/v1.0.0
+.. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
+   :target: https://gitlab.idiap.ch/bob/bob.paper.jstsp_2017
+.. image:: http://img.shields.io/pypi/v/bob.paper.jstsp_2017.png
+   :target: https://pypi.python.org/pypi/bob.paper.jstsp_2017
+.. image:: http://img.shields.io/pypi/dm/bob.paper.jstsp_2017.png
+   :target: https://pypi.python.org/pypi/bob.paper.jstsp_2017
+
+
+=======================================================
+ Reproducing results of paper published in J-STSP 2017
+=======================================================
+
+This package is part of the Bob_ toolkit and it allows to reproduce the following paper::
+
+    @article{KorshunovJSTSP2017,
+        author = {P. Korshunov and S. Marcel},
+        title = {Impact of score fusion on voice biometrics and presentation attack detection in cross-database evaluations},
+        year = {2017},
+        journal = {IEEE Journal of Selected Topics in Signal Processing},
+    }
+
+If you use this package and/or its results, please cite the paper.
+
+
+Installation
+------------
+
+Follow our `installation`_ instructions and install Bob_ using Conda. Then, run the following commands::
+
+  $ conda install zc.buildout
+  $ buildout
+
+
+Contact
+-------
+
+For questions or reporting issues to this software package, contact our
+development `mailing list`_.
+
+
+.. Place your references here:
+.. _bob: https://www.idiap.ch/software/bob
+.. _installation: https://gitlab.idiap.ch/bob/bob/wikis/Installation
+.. _mailing list: https://groups.google.com/forum/?fromgroups#!forum/bob-devel
