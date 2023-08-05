@@ -1,0 +1,264 @@
+{% extends "base_with_margins.html" %}
+{% load notifications_extras %}
+{% load extras %}
+{% load staticfiles %}
+{% block title %}Alerts{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-sm-12">
+        <br class="non-mobile-only"/>
+        <h1>
+            <i class="fa fa-bullhorn fa-fw" aria-hidden="true"></i>
+            Alerts
+        </h1>
+        <p>This page shows your subscriptions to {{ CITY_VOCAB.COUNCIL_MEMBERS | lower }}, committee actions, committee events, bill searches, bill actions, and {{ CITY_VOCAB.EVENTS | lower }}.</p>
+        <hr />
+
+        <table class='table' id='subscriptions'>
+            <thead>
+                <tr>
+                    <th>Alert type</th>
+                    <th>Name</th>
+                    <th>RSS</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+
+                {% if subscriptions %}
+
+                {% for subscription in person_subscriptions %}
+                <tr class="subscription person" data-unsubscribe-url="/person/{{subscription.person.slug}}/unsubscribe/">
+                    <td>
+                        <i class="fa fa-user fa-fw" aria-hidden="true"></i>
+                        Council member
+                    </td>
+                    <td>
+                        <a href="{% url 'person' subscription.person.slug %}">{{subscription.person }}</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'person_feed' subscription.person.slug %}" title="RSS feed for Sponsored Legislation by {{person.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                    </td>
+                    <td align="left">
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% for subscription in committee_action_subscriptions %}
+                <tr class="subscription committee-action" data-unsubscribe-url="/committee/{{subscription.committee.slug}}/actions/unsubscribe/">
+                    <td>
+                        <i class="fa fa-users fa-fw" aria-hidden="true"></i>
+                        Committee actions
+                    </td>
+                    <td>
+                        <a href="{% url 'committee_detail' subscription.committee.slug %}">{{subscription.committee }}</a></td>
+                    <td>
+                        <a href="{% url 'committee_detail_action_feed' subscription.committee.slug %}" title="RSS feed for Actions for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                    </td>
+                    <td align="left">
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% for subscription in committee_event_subscriptions %}
+                <tr class="subscription committee-event" data-unsubscribe-url="/committee/{{subscription.committee.slug}}/events/unsubscribe/">
+                    <td>
+                        <i class="fa fa-calendar-o fa-fw" aria-hidden="true"></i>
+                        Committee events
+                    </td>
+                    <td>
+                        <a href="{% url 'committee_detail' subscription.committee.slug %}">{{subscription.committee }}</a></td>
+                    <td>
+                        <a href="{% url 'committee_detail_events_feed' subscription.committee.slug %}" title="RSS feed for Events for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                    </td>
+                    <td align="left">
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% for subscription in bill_search_subscriptions %}
+                <tr class="subscription bill-search" data-unsubscribe-url="/search_unsubscribe/{{subscription.id}}/">
+                    <td>
+                        <i class="fa fa-search fa-fw" aria-hidden="true"></i>
+                        Bill search
+                    </td>
+                    <td>
+                        <b>Search term:</b>
+                        <a href="{{ subscription|custom_reverse_search_url }}">
+                            {{subscription.search_params.term }}
+                        </a>
+                        <br/>
+                        <span class="small text-muted">
+                        {% for key, values in subscription.search_params.facets.items %}
+                            <b>{{key}}</b>:
+                            {% for v in values %}
+                                {{v}}
+                            {% endfor %} <br/>
+                        {% endfor %}
+                        </span>
+
+                    </td>
+                    <td>
+                        <a href="{# url 'councilmatic_search_feed' subscription.search_term #}" title="RSS feed for Actions for {{subscription.committee.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                    </td>
+                    <td align="left">
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% for subscription in bill_action_subscriptions %}
+                <tr class="subscription bill-action" data-unsubscribe-url="/legislation/{{subscription.bill.slug}}/unsubscribe/">
+                    <td>
+                        <i class="fa fa-list-ul fa-fw" aria-hidden="true"></i>
+                        Bill actions
+                    </td>
+                    <td>
+                        <a href="{% url 'bill_detail' subscription.bill.slug %}">{{subscription.bill}}</a></td>
+                    <td>
+                        <a href="{% url 'bill_detail_action_feed' subscription.bill.slug %}" title="RSS feed for Actions for {{subscription.bill.name}}"><i class="fa fa-rss-square" aria-hidden="true"></i></a>
+                    </td>
+                    <td align="left">
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% for subscription in events_subscriptions %} {# When the only possible subscription is for "all" events, there should only be one #}
+                <tr class="subscription events" data-unsubscribe-url="/events/unsubscribe/">
+                    <td>
+                        <i class="fa fa-calendar-o fa-fw" aria-hidden="true"></i>
+                        {{ CITY_VOCAB.EVENTS }}
+                    </td>
+                    <td>
+                        All
+                    </td>
+                    <td>&nbsp;</td>
+                    <td align="left">
+                        <button data-toggle="modal" data-target="#unsubscribe-modal" title="delete this alert" class="btn btn-default btn-xs prompt-unsubscribe"><i class="fa fa-trash-o fa-fw" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+
+
+                {% else %}
+                <tr>
+                    <td>You do not have any subscriptions. View pages for <a href="{% url 'council_members' %}">{{ CITY_VOCAB.COUNCIL_MEMBERS | lower }}</a>, <a href="/search">legislation</a>, <a href="{% url 'committees' %}">committees</a>, and <a href="{% url 'events' %}">{{ CITY_VOCAB.EVENTS | lower }}</a> to add alerts!</td>
+                </tr>
+                {% endif %}
+
+
+                </div>
+            </tbody>
+        </table>
+
+        <div class="modal fade" id="unsubscribe-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <p>
+                        Are you sure you want to unsubscribe from this alert?
+                    </p>
+                    <br/>
+
+                    <button id="trigger-unsubscribe" data-dismiss="modal" class="btn btn-default btn-unsubscribe">Yes, unsubscribe.</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">No, go back.</button>
+                </div>
+            </div>
+          </div>
+        </div>
+
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12 text-right">
+        <a href="#" class="btn btn-default" id="trigger-send-notifications">Send my notifications email</a>
+    </div>
+</div>
+
+<div class='row'>
+    <div class='pull-right col-sm-6' id='email_message' style="margin-top: 1em;"></div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div class="col-sm-12">
+        <p><i class="fa fa-unlock-alt" aria-hidden="true"></i> Want to update your password? <a href="{% url 'password_change' %}">Reset it now.</a></p>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/jquery.dataTables.sorting.js' %}"></script>
+<script src="{% static 'js/dataTables.bootstrap.js' %}"></script>
+
+<script>
+
+    $(document).ready(function(){
+        $('#unsubscribe-modal').modal({show:false})
+
+
+        // 1. Person Subscriptions
+        // 2. Committee Actions Subscriptions
+        // 3. Committee Events Subscriptions
+        // 4. Bill Search Subscriptions
+        // 5. Bill Actions Subscriptions
+        // 6. Events Subscriptions
+
+        var rowToDelete = null
+
+        $(".prompt-unsubscribe").click(function() {
+            rowToDelete = $(this).parents(".subscription");
+        });
+
+        $("#trigger-unsubscribe").click(function(){
+            removeSubscription(rowToDelete);
+        });
+
+        $('#trigger-send-notifications').on('click', function(e){
+            $.when($.get("/send-notifications/")).then(
+                function(data){
+                    if (data.email_sent == 'false') {
+
+                         var alertMsg = '<div class="alert alert-info" role="alert">' +
+                                '<strong>No email sent.</strong> Your subscriptions do not have updates at this time' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                                '</div>'
+
+                        $('#email_message').html(alertMsg);
+                    }
+                    else {
+                        var alertMsg = '<div class="alert alert-info" role="alert">' +
+                                '<strong>Email sent!</strong> Check your account to view all updates.' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                                '</div>'
+
+                        $('#email_message').html(alertMsg);
+                    }
+                }
+            )
+        });
+
+    })
+
+
+
+    // remove the actual interest
+    function removeSubscription(row) {
+
+        var del_url = row.attr("data-unsubscribe-url")
+        console.log(del_url)
+
+        $.post(del_url, function(data){
+            console.log("deleted "+del_url);
+            row.fadeOut();
+        }).error(function(){
+            console.log("error deleting "+del_url)
+        });
+    }
+
+
+
+</script>
+{% endblock %}

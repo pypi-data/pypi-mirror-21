@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+
+<body>
+    <span style="font-family: 'Trebuchet MS', Helvetica, sans-serif;">
+
+    <table>
+      <tr>
+        <td>
+          <h1>{{ SITE_META.site_name }}</h1>
+        </td>
+        <td>
+           <a id='logo' href="{{ SITE_META.site_url}}"><img src='{{SITE_META.site_url}}{% static 'images/logo.png' %}' alt='{{ SITE_META.site_name }}' style="width: 60px; padding-bottom: 8px;" /></a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color: #999999; margin-top: 0; margin-bottom: 2em;">{{ SITE_META.site_desc }}</p>
+
+    <hr style="border-top: 1px solid #F4F4F4;">
+
+    <h2 style="font-size: 24px">Notifications about your Councilmatic Subscriptions</h2>
+    <p style="font-size: 16px">{{ SITE_META.site_name }} has updates! This email provides information about your subscriptions to council members, committee actions, committee events, bill searches, bill actions, and meetings.</p>
+
+    <!-- Persons -->
+    {% if person_updates %}
+
+    <h2 style="font-size: 18px">{{ CITY_VOCAB.COUNCIL_MEMBER }} Notifications</h2>
+
+    <p style="font-style: italic;">Some people have been active! This list shows all new sponsorships and legislative actions by {{ CITY_VOCAB.COUNCIL_MEMBERS }}.</p>
+
+    {% for update in person_updates %}
+         {% for update_type, person in update.items %}
+             <h3>
+                 <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'person' person.slug %}">
+                     {{person.name}} - {{ update_type }}
+                 </a>
+             </h3>
+
+             <table id='subscriptions'>
+                 <thead>
+                     <tr>
+                         <th align='left'>Bill</th>
+                         {% if 'Sponsorship' in update_type %}
+                             <th align='left'>Description</th>
+                         {% else %}
+                             <th align='left'>Action</th>
+                         {% endif %}
+                     </tr>
+                 </thead>
+                 <tbody>
+                     {% for bill in person.bills %}
+                     <tr>
+                         <td style="white-space: nowrap; padding-right: 18px;">
+                             <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'bill_detail' bill.slug %}">
+                                 {{bill.identifier}}
+                             </a>
+                         </td>
+                         <td>
+                             {% if bill.action_description %}
+                                 {{ bill.action_date|date:"M j, Y"}}: {{ bill.action_description }}
+                             {% else %}
+                                 {{ bill.description }}
+                             {% endif %}
+                         </td>
+                     </tr>
+                     {% endfor %}
+                 </tbody>
+             </table>
+         {% endfor %}
+    {% endfor %}
+
+    {% endif %}
+
+    <!-- Committee Actions -->
+    {% if committee_action_updates %}
+         {% for committee in committee_action_updates %}
+             <h2 style="font-size: 18px">{{ committee.name }} Notifications</h2>
+             <p style="font-style: italic;">Some committees have been busy! This list shows all bills with new actions, as a result of committee activitiy.</p>
+             {% for bill in committee.bills %}
+                 <h3>Bill actions -
+                     <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'bill_detail' bill.slug %}">
+                         {{ bill.identifier }}
+                     </a>
+                 </h3>
+                 <table id='subscriptions'>
+                     <thead>
+                         <tr>
+                             <th align='left'>Date</th>
+                             <th align='left'>Action</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         {% for action in bill.actions %}
+                         <tr>
+                             <td align="left">
+                                 {{ action.date|date:"M j, Y" }}
+                             </td>
+                             <td>
+                                 <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'bill_detail' bill.slug %}">
+                                     {{ action.description }}
+                                 </a>
+                             </td>
+                         </tr>
+                         {% endfor %}
+                     </tbody>
+                 </table>
+              {% endfor %}
+          {% endfor %}
+    {% endif %}
+
+    <!-- Committee Events -->
+    {% if committee_event_updates %}
+
+    <h2 style="font-size: 18px">Committee Event Notifications</h2>
+    <p style="font-style: italic;">Some committees have things on the horizon! This list shows all newly listed upcoming committee events.</p>
+    {% for committee in committee_event_updates %}
+       <h3>{{ committee.name }}</h3>
+       <table id='subscriptions'>
+           <thead>
+               <tr>
+                   <th align='left'>Event</th>
+                   <th align='left'>Date</th>
+                   <th align='left'>Description</th>
+               </tr>
+           </thead>
+           <tbody>
+               {% for event in committee.events %}
+               <tr>
+                   <td align="left">
+                        <a style="color: #eb6864; text-decoration:  none;" href="{{ SITE_META.site_url }}{% url 'event_detail' event.slug %}">
+                            {{ event.name }}
+                        </a>
+                   </td>
+                   <td>
+                       {{event.start_time|date:"M j, Y fa"}}
+                   </td>
+                   <td>
+                        {{ event.description }}
+                   </td>
+               </tr>
+               {% endfor %}
+           </tbody>
+       </table>
+    {% endfor %}
+
+    {% endif %}
+
+    <!-- Bill searches -->
+    {% if bill_search_updates %}
+
+    <h2 style="font-size: 18px">Bill Search Notifications</h2>
+    <p style="font-style: italic;">Your search results have changed! This list shows new results for previous searches.</p>
+    {% for search in bill_search_updates %}
+       <h3>
+           Term: {{ search.params.term }}
+           {% if search.params.facets %}
+               <br />
+               Selected facets:&nbsp;
+               {% for facet, values in search.params.facets.items %}
+               {{ facet }}: {% for value in values %}{{ value }}{% if not forloop.last %}, {% endif %}{% endfor %}
+               {% endfor%}
+           {% endif %}
+       </h3>
+       <table id='subscriptions'>
+           <thead>
+           <tr>
+               <th align='left'>Bill</th>
+               <th align='left'>Description</th>
+           </tr>
+           </thead>
+           <tbody>
+               {% for bill in search.bills %}
+               <tr>
+                   <td>
+                       <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'bill_detail' bill.slug %}">{{bill.identifier}}</a>
+                   </td>
+                   <td>
+                       {{ bill.description }}
+                   </td>
+               </tr>
+                       {% endfor %}
+           </tbody>
+       </table>
+    {% endfor %}
+
+    {% endif %}
+
+    <!-- Bill actions -->
+    {% if bill_action_updates %}
+
+    <h2 style="font-size: 18px">Bill Action Notifications</h2>
+    <p style="font-style: italic;">Some bills have updates! This list shows which bills have new legislative actions.</p>
+
+    <table class='table' id='subscriptions'>
+      <thead>
+        <tr>
+           <th align='left'>Bill</th>
+           <th align='left'>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for bill, action in bill_action_updates %}
+         <tr>
+             <td align="left">
+                <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'bill_detail' bill.slug %}">
+                  {{bill.identifier}}
+                </a>
+             </td>
+             <td>
+                  {{action.date|date:"M j, Y"}}: {{action.description}}
+             </td>
+         </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    {% endif %}
+
+    <!-- Event updates -->
+    {% if new_events %}
+
+    <h2 style="font-size: 18px">New meetings</h2>
+    <p style="font-style: italic;">Mark your calendars! This list shows newly posted meetings.</p>
+
+    <table class='table' id='subscriptions'>
+      <thead>
+        <tr>
+           <th align='left'>Event</th>
+           <th align='left'>Location</th>
+           <th align='left'>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for event in new_events %}
+         <tr>
+             <td align="left">
+                <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'event_detail' event.slug %}">
+                  {{ event.name }}
+                </a>
+             </td>
+             <td>
+                  {{ event.location_name }}
+             </td>
+             <td>
+                  {% if event.all_day %}
+                      All Day
+                  {% else %}
+                  {{ event.start_time|date:"M/j/Y fa" }} {% if event.end_time %}- {{ event.end_time|date:"M/j/Y fa" }} {% endif %}
+                  {% endif %}
+             </td>
+         </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    {% endif %}
+
+    {% if updated_events %}
+
+    <h2 style="font-size: 18px">Updated meetings</h2>
+    <p style="font-style: italic;">Mark your calendars! This list shows meetings, where updates have been made to the location, the time, or other details.</p>
+    <table class='table' id='subscriptions'>
+      <thead>
+        <tr>
+           <th align='left'>Event</th>
+           <th align='left'>Location</th>
+           <th align='left'>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for event in updated_events %}
+         <tr>
+             <td align="left">
+                <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'event_detail' event.slug %}">
+                  {{ event.name }}
+                </a>
+             </td>
+             <td>
+                  {{ event.location_name }}
+             </td>
+             <td>
+                  {% if event.all_day %}
+                      All Day
+                  {% else %}
+                  {{ event.start_time|date:"M/j/Y fa" }} {% if event.end_time %}- {{ event.end_time|date:"M/j/Y fa" }} {% endif %}
+                  {% endif %}
+             </td>
+         </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+
+    {% endif %}
+
+    <br>
+
+    <hr style="border-top: 1px solid #F4F4F4;">
+
+    <p>Want to receive fewer or more notifications? <a style="color: #eb6864; text-decoration:  none;" href="{{SITE_META.site_url}}{% url 'notifications_login' %}">Visit your account</a> and manage alert preferences.</p>
+
+  </span>
+</body>
+

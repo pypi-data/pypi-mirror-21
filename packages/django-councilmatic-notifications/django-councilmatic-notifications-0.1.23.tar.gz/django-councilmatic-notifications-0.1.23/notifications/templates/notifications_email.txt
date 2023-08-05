@@ -1,0 +1,101 @@
+{% load staticfiles %}
+** Notifications about your {{ CITY_NAME_SHORT }} Councilmatic Subscriptions
+------------------------------------------------------------
+
+{{ CITY_NAME_SHORT }} has updates! This email provides information about your subscriptions to council members, committee actions, committee events, bill searches, bill actions, and meetings.
+
+** {{ CITY_VOCAB.COUNCIL_MEMBER }} Notifications
+
+    {% for update in person_updates %}
+         {% for update_type, person in update.items %}
+
+              ** {{person.name}} - {{ update_type }}
+
+              {% for bill in person.bills %}
+                Bill : {{bill.identifier}}
+                {% if bill.action_description %}
+                   Action : {{ bill.action_date|date:"M j, Y"}}: {{ bill.action_description }}
+                {% else %}
+                   Description : {{ bill.description }}
+                {% endif %}
+              {% endfor %}
+
+         {% endfor %}
+
+    {% endfor %}
+
+    <!-- Committee Actions -->
+    {% if committee_action_updates %}
+         {% for committee in committee_action_updates %}
+
+             ** {{ committee.name }} Notifications
+
+             {% for bill in committee.bills %}
+
+                 ** Bill actions - {{ bill.identifier }}
+
+                 {% for action in bill.actions %}
+                    Date : {{ action.date|date:"M j, Y" }}
+                    Action : {{ action.description }}
+                 {% endfor %}
+
+              {% endfor %}
+
+          {% endfor %}
+
+    {% endif %}
+
+    <!-- Committee Events -->
+    {% if committee_event_updates %}
+
+    ** Committee Event Notifications
+
+    {% for committee in committee_event_updates %}
+       ** {{ committee.name }}
+
+       {% for event in committee.events %}
+          Event : {{ event.name }}
+          Date : {{event.start_time|date:"M j, Y fa"}}
+          Description : {{ event.description }}
+       {% endfor %}
+
+    {% endfor %}
+
+    {% endif %}
+
+    <!-- Bill searches -->
+    {% if bill_search_updates %}
+
+    **Bill Search Notifications
+
+    {% for search in bill_search_updates %}
+       Term: {{ search.params.term }}
+          {% if search.params.facets %}
+             Selected facets :
+             {% for facet, values in search.params.facets.items %}
+             {{ facet }}: {% for value in values %}{{ value }}{% if not forloop.last %}, {% endif %}{% endfor %}
+             {% endfor%}
+          {% endif %}
+
+          {% for bill in search.bills %}
+            Bill : {{bill.identifier}}
+            Description : {{bill.description }}
+
+          {% endfor %}
+
+    {% endfor %}
+
+    {% endif %}
+
+    <!-- Bill actions -->
+    {% if bill_action_updates %}
+
+    ** Bill Action Notifications
+
+      {% for bill, action in bill_action_updates %}
+        Bill : {{bill.identifier}}
+        Action : {{action.date|date:"M j, Y"}}: {{action.description}}
+      {% endfor %}
+
+    {% endif %}
+
