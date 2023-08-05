@@ -1,0 +1,21 @@
+<div class="col-sm-3 col-md-2 sidebar">
+ <ul class="nav nav-sidebar">
+    <li {% if active == "home" %}class="active"{% endif %}>
+      <a href="{% url 'home' %}">Overview</a>
+    </li>
+    <li {% if active == "provision" %}class="active"{% endif %}>
+      <a href="{% url 'provision' %}">Provision</a>
+    </li>
+    {% if user.is_superuser %}
+    <li {% if active == "servers" %}class="active"{% endif %}>
+      <a href="{% url 'server_index' %}">Servers</a>
+    </li>
+    <li {% if active == "zones" %}class="active"{% endif %}>
+      <a href="{% url 'zone_index' %}">Zones</a>
+    </li>
+    <li {% if active == "templates" %}class="active"{% endif %}>
+      <a href="{% url 'template_index' %}">Templates</a>
+    </li>
+    {% endif %}
+  </ul>
+</div>
