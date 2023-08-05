@@ -1,0 +1,61 @@
+Metadata-Version: 1.1
+Name: rocket-python
+Version: 1.2.2
+Summary: RocketChat API with Python
+Home-page: http://github.com/dstegelman/rocket-python
+Author: Derek Stegelman
+Author-email: UNKNOWN
+License: MIT
+Description: #### RocketChat API
+        
+        Python API wrapper for the [Rocket chat API](https://rocket.chat/docs/developer-guides/rest-api)
+        
+        [Documentation](http://rocket-python.readthedocs.io/en/latest/)
+        
+        #### Install
+        
+            pip install rocket-python
+        
+        #### Usage
+        
+        Initialize the client with a username and password.  This user *must* have Admin privs::
+        
+            from rocketchat.api import RocketChatAPI
+        
+            api = RocketChatAPI(settings={'username': 'someuser', 'password': 'somepassword',
+                                          'domain': 'https://myrockethchatdomain.com'})
+        
+        ##### Available Calls
+            api.send_message('message', 'room_id')
+            api.get_private_rooms()
+            api.get_private_room_history('room_id', oldest=date)
+            api.get_public_rooms()
+            api.get_room_info('room_id')
+            api.get_private_room_info('room_id')
+            api.get_room_history('room_id')
+            api.get_my_info()
+        
+        check /rocketchat/calls/api.py for more.
+        
+        #### Running Tests
+        
+            py.test tests rocketchat
+        
+        ##### Sending a message
+        
+        You'll first need to get the _id of the room you want to send a message to.  Currently, Rocket
+        can only send messages to *public* rooms.
+        
+            api.send_message('Your message', room_id)
+        
+Keywords: rocketchat
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Utilities
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
