@@ -1,0 +1,136 @@
+
+
+.. _sphx_glr_auto_examples_plot_dom_hist.py:
+
+
+==================
+DOM hits.
+==================
+
+Estimate track/DOM distances using the number of hits per DOM.
+
+
+
+
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/home/moritz/.venv/km3/lib/python3.6/site-packages/sphinx_gallery/gen_rst.py", line 475, in execute_code_block
+        exec(code_block, example_globals)
+      File "<string>", line 70, in <module>
+      File "km3pipe/core.pyx", line 183, in km3pipe.core.Pipeline.drain (km3pipe/core.c:5708)
+      File "km3pipe/core.pyx", line 184, in km3pipe.core.Pipeline.drain (km3pipe/core.c:5657)
+      File "km3pipe/core.pyx", line 162, in km3pipe.core.Pipeline._drain (km3pipe/core.c:4823)
+      File "km3pipe/core.pyx", line 333, in km3pipe.core.Module.__call__ (km3pipe/core.c:9711)
+      File "/home/moritz/pkg/km3pipe/km3pipe/io/hdf5.py", line 229, in process
+        blob = self.get_blob(self.index)
+      File "/home/moritz/pkg/km3pipe/km3pipe/io/hdf5.py", line 271, in get_blob
+        hits = h5file['/hits/{}'.format(local_index)][:]
+      File "h5py/_objects.pyx", line 54, in h5py._objects.with_phil.wrapper (/tmp/pip-tnf92dft-build/h5py/_objects.c:2853)
+      File "h5py/_objects.pyx", line 55, in h5py._objects.with_phil.wrapper (/tmp/pip-tnf92dft-build/h5py/_objects.c:2811)
+      File "/home/moritz/.venv/km3/lib/python3.6/site-packages/h5py/_hl/dataset.py", line 482, in __getitem__
+        self.id.read(mspace, fspace, arr, mtype, dxpl=self._dxpl)
+      File "h5py/_objects.pyx", line 54, in h5py._objects.with_phil.wrapper (/tmp/pip-tnf92dft-build/h5py/_objects.c:2853)
+      File "h5py/_objects.pyx", line 55, in h5py._objects.with_phil.wrapper (/tmp/pip-tnf92dft-build/h5py/_objects.c:2811)
+      File "h5py/h5d.pyx", line 181, in h5py.h5d.DatasetID.read (/tmp/pip-tnf92dft-build/h5py/h5d.c:3397)
+      File "h5py/_proxy.pyx", line 130, in h5py._proxy.dset_rw (/tmp/pip-tnf92dft-build/h5py/_proxy.c:2008)
+      File "h5py/_proxy.pyx", line 84, in h5py._proxy.H5PY_H5Dread (/tmp/pip-tnf92dft-build/h5py/_proxy.c:1656)
+    OSError: Can't read data (Can't open directory: /usr/local/hdf5/lib/plugin)
+
+
+
+
+
+.. code-block:: python
+
+
+    # Author: Tamas Gal <tgal@km3net.de>
+    # License: BSD-3
+
+    from collections import defaultdict, Counter
+
+    import km3pipe as kp
+    import pandas as pd
+
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LogNorm
+
+    from km3modules.common import StatusBar
+    from km3pipe.math import pld3
+    import km3pipe.style
+    km3pipe.style.use("km3pipe")
+
+
+    filename = "data/km3net_jul13_90m_muatm50T655.km3_v5r1.JTE_r2356.root.0-499.h5"
+    geo = kp.Geometry(filename="data/km3net_jul13_90m_r1494_corrected.detx")
+
+
+    def filter_muons(blob):
+        """Write all muons from McTracks to Muons."""
+        tracks = blob['McTracks']
+        muons = [t for t in tracks if t.type == 5]
+        blob["Muons"] = kp.dataclasses.McTrackSeries(muons)
+        return blob
+
+
+    class DOMHits(kp.Module):
+        """Create histogram with n_hits and distance of hit to track."""
+        def configure(self):
+            self.hit_statistics = defaultdict(list)
+
+        def process(self, blob):
+            hits = blob['Hits']
+            #muons = blob['Muons']
+            muons = blob['McTracks']
+
+            highest_energetic_muon = max(muons, key=lambda x: x.energy)
+            muon = highest_energetic_muon
+
+            triggered_hits = hits.triggered_hits
+            dom_hits = Counter(triggered_hits.dom_id)
+            for dom_id, n_hits in dom_hits.items():
+                distance = pld3(geo.detector.dom_positions[dom_id],
+                                muon.pos,
+                                muon.dir)
+                self.hit_statistics['n_hits'].append(n_hits)
+                self.hit_statistics['distance'].append(distance)
+            return blob
+
+        def finish(self):
+            df = pd.DataFrame(self.hit_statistics)
+            sdf = df[(df['distance'] < 200) & (df['n_hits'] < 50)]
+            plt.hist2d(sdf['distance'], sdf['n_hits'], cmap='plasma',
+                       bins=(max(sdf['distance']) - 1, max(sdf['n_hits']) - 1),
+                       norm=LogNorm())
+            plt.xlabel('Distance between hit and muon track [m]')
+            plt.ylabel('Number of hits on DOM')
+            plt.show()
+
+
+    pipe = kp.Pipeline()
+    pipe.attach(kp.io.HDF5Pump, filename=filename)
+    pipe.attach(StatusBar, every=100)
+    pipe.attach(filter_muons)
+    pipe.attach(DOMHits)
+    pipe.drain()
+
+**Total running time of the script:** ( 0 minutes  0.000 seconds)
+
+
+
+.. container:: sphx-glr-footer
+
+
+  .. container:: sphx-glr-download
+
+     :download:`Download Python source code: plot_dom_hist.py <plot_dom_hist.py>`
+
+
+
+  .. container:: sphx-glr-download
+
+     :download:`Download Jupyter notebook: plot_dom_hist.ipynb <plot_dom_hist.ipynb>`
+
+.. rst-class:: sphx-glr-signature
+
+    `Generated by Sphinx-Gallery <http://sphinx-gallery.readthedocs.io>`_
