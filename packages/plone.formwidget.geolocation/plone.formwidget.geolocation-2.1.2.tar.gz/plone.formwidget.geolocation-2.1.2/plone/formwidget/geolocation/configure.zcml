@@ -1,0 +1,73 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:z3c="http://namespaces.zope.org/z3c"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    i18n_domain="plone.formwidget.geolocation">
+
+  <include package="plone.patternslib"/>
+
+  <adapter factory=".widget.GeolocationFieldWidget" />
+  <adapter factory=".converter.GeolocationConverter" />
+
+  <z3c:widgetTemplate
+      mode="display"
+      widget=".interfaces.IGeolocationWidget"
+      layer="z3c.form.interfaces.IFormLayer"
+      template="geolocation_display.pt"
+      />
+
+  <z3c:widgetTemplate
+      mode="input"
+      widget=".interfaces.IGeolocationWidget"
+      layer="z3c.form.interfaces.IFormLayer"
+      template="geolocation_input.pt"
+      />
+
+ <utility
+      zcml:condition="installed plone.supermodel"
+      component=".supermodel.GeolocationHandler"
+      name="plone.formwidget.geolocation.GeolocationField"
+      />
+
+  <genericsetup:registerProfile
+      name="default"
+      title="plone.formwidget.geolocation map install"
+      directory="profiles/default"
+      description='Extension profile for Plone.'
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:registerProfile
+      name="uninstall"
+      title="plone.formwidget.geolocation map uninstall"
+      directory="profiles/uninstall"
+      description='Extension profile for Plone.'
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <utility
+      factory=".setuphandlers.HiddenProfiles"
+      name="plone.formwidget.geolocation-hiddenprofiles"
+      />
+
+  <genericsetup:upgradeStep
+      title="Upgrade to Plone 5"
+      description="Migrate resources to new resource registry."
+      source="1"
+      destination="2"
+      handler="plone.formwidget.geolocation.upgrades.upgrade_1_to_2"
+      profile="plone.formwidget.geolocation:default"
+      />
+  <genericsetup:upgradeStep
+      title="Remove unused resources"
+      description="Remove unused bundles and resources, which are now provided by plone.patternslib."
+      source="2"
+      destination="3"
+      handler="plone.formwidget.geolocation.upgrades.upgrade_2_to_3"
+      profile="plone.formwidget.geolocation:default"
+      />
+
+</configure>
