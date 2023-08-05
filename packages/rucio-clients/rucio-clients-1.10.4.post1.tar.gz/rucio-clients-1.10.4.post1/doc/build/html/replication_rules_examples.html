@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Replication rule syntax &mdash; Rucio 0.3.8 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Rucio 0.3.8 documentation" href="index.html" />
+    <link rel="next" title="Accounting and quota" href="overview_Accounting_and_quota.html" />
+    <link rel="prev" title="Replica management" href="overview_Replica_management.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-32728665-1']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="overview_Accounting_and_quota.html" title="Accounting and quota"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="overview_Replica_management.html" title="Replica management"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Rucio 0.3.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="replication-rule-syntax">
+<h1>Replication rule syntax<a class="headerlink" href="#replication-rule-syntax" title="Permalink to this headline">¶</a></h1>
+<p>Replica management is based on replication rules defined on data identifiers. A
+replication rule gets resolved and issues replica locks on the physical
+replicas.</p>
+<p>A replication rule consists (besides other parameters) of a factor representing
+the numbers of replicas wanted and a replication rule expression. This page
+explains the syntax of these replication rule expressions.</p>
+<p>A replication rule expression gets resolved into a set of RSEs, which are
+possible destination RSEs for the number of replicas the user wants to create.</p>
+<div class="section" id="primitives">
+<h2>Primitives<a class="headerlink" href="#primitives" title="Permalink to this headline">¶</a></h2>
+<p>A replication rule expression consists of, at least, a single
+primitive. Primitives can be connected by operators (Defined in the next
+section) to form terms.
+The Rucio core resolves a primitive to a set of
+RSEs. For example, the expression &#8216;country=US&#8217; would be
+resolved to the set of all RSEs located in the US.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="20%" />
+<col width="65%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Element</th>
+<th class="head">Example</th>
+<th class="head">Regular Expression</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>RSE</td>
+<td>CERN_DATADISK</td>
+<td>([A-Z0-9]+((_|-)[A-Z0-9]+)*)</td>
+</tr>
+<tr class="row-odd"><td>RSE-Tag</td>
+<td>T1</td>
+<td>([A-Z0-9]+((_|-)[A-Z0-9]+)*)</td>
+</tr>
+<tr class="row-even"><td>RSE Attributes</td>
+<td>country=US</td>
+<td>([A-Za-z0-9.]+=[A-Za-z0-9])</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="operators">
+<h2>Operators<a class="headerlink" href="#operators" title="Permalink to this headline">¶</a></h2>
+<p>Operators are used to connect primitives or terms to form terms. The syntactic
+functionallity Rucio offers to form terms are the basic operations defined in
+mathematical set theory (Unions, Intersections and Complements). Using an
+operator on two sets of RSEs (as specified by a primitive or term) will
+construct a new set based on the given sets.</p>
+<p>The symbols <em>A</em> and <em>B</em> in this table stand for either a primitive element or a
+term.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="18%" />
+<col width="25%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Operator</th>
+<th class="head">Meaning</th>
+<th class="head">Interpretation</th>
+<th class="head">Example</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>A|B</td>
+<td>UNION</td>
+<td>A union B</td>
+<td>CERN_DATADISK | CERN_TAPE</td>
+</tr>
+<tr class="row-odd"><td>A&amp;B</td>
+<td>INTERSECT</td>
+<td>A intersect B</td>
+<td>T1&amp;country=de</td>
+</tr>
+<tr class="row-even"><td>A\B</td>
+<td>COMPLEMENT</td>
+<td>A complement B</td>
+<td>T1\BNL</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="order-of-operations">
+<h2>Order of Operations<a class="headerlink" href="#order-of-operations" title="Permalink to this headline">¶</a></h2>
+<p>The expression is generally evaluated from left to right. Parantheses can be used to specify the order of operations.</p>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>These examples, off course, depend on the attributes and tags defined in Rucio, but for the sake of this example we assume that the respective tags and attributes are defined. Users can use the <code class="docutils literal"><span class="pre">$</span> <span class="pre">rucio-admin</span> <span class="pre">rse</span> <span class="pre">get-attribute</span> <span class="pre">UKI-LT2-QMUL_DATADISK</span></code> command to get the attributes definied for a RSE.</p>
+<div class="section" id="example-1">
+<h3>Example 1<a class="headerlink" href="#example-1" title="Permalink to this headline">¶</a></h3>
+<p><em>I want to have 2 replicas on Tier 1 RSEs</em></p>
+<p><strong>Replication factor</strong>: 2</p>
+<p><strong>Rule expression</strong>: T1</p>
+</div>
+<div class="section" id="example-2">
+<h3>Example 2<a class="headerlink" href="#example-2" title="Permalink to this headline">¶</a></h3>
+<p><em>I want to have 2 replicas on T2 RSEs in the UK but it shouldn&#8217;t be Glasgow</em></p>
+<p><strong>Replication factor</strong>: 2</p>
+<p><strong>Rule expression</strong>: country=uk&amp;T2\GLASGOW</p>
+</div>
+<div class="section" id="example-3">
+<h3>Example 3<a class="headerlink" href="#example-3" title="Permalink to this headline">¶</a></h3>
+<p><em>I want to have 4 replicas on CERN or any RSE in the US but it shouldn&#8217;t be a T3</em></p>
+<p><strong>Replication factor</strong>: 4</p>
+<p><strong>Rule expression</strong>: (CERN|country=US)\T3</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div>
+   <img src="_static/rucio_logo.png" alt="Rucio logo" />
+</div>
+
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Replication rule syntax</a><ul>
+<li><a class="reference internal" href="#primitives">Primitives</a></li>
+<li><a class="reference internal" href="#operators">Operators</a></li>
+<li><a class="reference internal" href="#order-of-operations">Order of Operations</a></li>
+<li><a class="reference internal" href="#examples">Examples</a><ul>
+<li><a class="reference internal" href="#example-1">Example 1</a></li>
+<li><a class="reference internal" href="#example-2">Example 2</a></li>
+<li><a class="reference internal" href="#example-3">Example 3</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview_Replica_management.html"
+                        title="previous chapter">Replica management</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="overview_Accounting_and_quota.html"
+                        title="next chapter">Accounting and quota</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/replication_rules_examples.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="overview_Accounting_and_quota.html" title="Accounting and quota"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="overview_Replica_management.html" title="Replica management"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Rucio 0.3.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, CERN.
+    </div>
+<div class="footer">
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ?
+              'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+  })();
+</script>
+</div>
+
+  </body>
+</html>
