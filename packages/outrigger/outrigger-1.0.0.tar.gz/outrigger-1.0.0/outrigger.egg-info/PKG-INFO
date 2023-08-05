@@ -1,0 +1,454 @@
+Metadata-Version: 1.1
+Name: outrigger
+Version: 1.0.0
+Summary: Outrigger detects *de novo* exons and quantifies their percent spliced-in
+Home-page: https://github.com/yeolab/outrigger
+Author: Olga Botvinnik
+Author-email: olga.botvinnik@gmail.com
+License: BSD
+Description: .. -*- mode: rst -*-
+        
+        |OutriggerLogo|
+        
+        |BuildStatus|\ |codecov|\ |PyPIVersions|\ |PythonVersionCompatibility|
+        
+        .. |OutriggerLogo| image:: https://raw.githubusercontent.com/YeoLab/outrigger/master/logo/v1/logo_v1-300ppi.png
+            :target: https://github.com/YeoLab/outrigger
+        .. |BuildStatus| image:: https://travis-ci.org/YeoLab/outrigger.svg?branch=master
+            :target: https://travis-ci.org/YeoLab/outrigger
+        .. |codecov| image:: https://codecov.io/gh/YeoLab/outrigger/branch/master/graph/badge.svg
+            :target: https://codecov.io/gh/YeoLab/outrigger
+        .. |PyPIVersions| image:: https://img.shields.io/pypi/v/outrigger.svg
+            :target: https://pypi.python.org/pypi/outrigger
+        .. |PythonVersionCompatibility| image:: https://img.shields.io/pypi/pyversions/outrigger.svg
+            :target: https://pypi.python.org/pypi/outrigger
+        
+        =============================================================================
+        Large-scale detection and calculation of alternative splicing with Outrigger_
+        =============================================================================
+        
+        Outrigger_ is a program which uses junction reads from RNA seq data, and
+        a graph database to create a *de novo* alternative splicing annotation
+        with a graph database, and quantify percent spliced-in (Psi) of the
+        events.
+        
+        -  Free software: BSD license
+        -  Documentation is available here: http://yeolab.github.io/outrigger/
+        
+        Features
+        ========
+        
+        -  Finds novel splicing events, including novel exons!
+           (``outrigger index``) from ``.bam`` files
+        -  (optional) Validates that exons have correct splice sites, e.g. GT/AG
+           and AT/AC for mammalian systems (``outrigger validate``)
+        -  Calculate "percent spliced-in" (Psi/Ψ) scores for all your samples
+           given the validated events (or the original events if you opted not
+           to validate) via ``outrigger psi``
+        
+        |OutriggerOverview|
+        
+        .. |OutriggerOverview| image:: https://raw.githubusercontent.com/YeoLab/outrigger/master/docs/_static/outrigger_overview-300ppi.png
+            :target: https://raw.githubusercontent.com/YeoLab/outrigger/master/docs/_static/outrigger_overview-300ppi.png
+        
+        Installation
+        ============
+        
+        To install ``outrigger``, we recommend using the `Anaconda Python
+        Distribution <http://anaconda.org/>`__ and creating an environment.
+        
+        You'll want to add the `bioconda <https://bioconda.github.io/>`__
+        channel to make installing `bedtools <bedtools.readthedocs.io>`__ and
+        its Python wrapper, `pybedtools <https://daler.github.io/pybedtools/>`__
+        easy (these programs are necessary for both ``outrigger index`` and
+        ``outrigger validate``).
+        
+        ::
+        
+            conda config --add channels r
+            conda config --add channels bioconda
+        
+        Create an environment called ``outrigger-env``. Python 2.7, Python 3.4,
+        and Python 3.5 are supported.
+        
+        ::
+        
+            conda create --name outrigger-env outrigger
+        
+        Now activate that environment:
+        
+        ::
+        
+            source activate outrigger-env
+        
+        To check that it installed properly, try the command with the help
+        option (``-h``), ``outrigger -h``. The output should look like this:
+        
+        ::
+        
+            $ outrigger -h
+            usage: outrigger [-h] [--version] {index,validate,psi} ...
+        
+            outrigger (1.0.0dev). Calculate "percent-spliced in" (Psi) scores of
+            alternative splicing on a *de novo*, custom-built splicing index -- just for
+            you!
+        
+            positional arguments:
+              {index,validate,psi}  Sub-commands
+                index               Build an index of splicing events using a graph
+                                    database on your junction reads and an annotation
+                validate            Ensure that the splicing events found all have the
+                                    correct splice sites
+                psi                 Calculate "percent spliced-in" (Psi) values using the
+                                    splicing event index built with "outrigger index"
+        
+            optional arguments:
+              -h, --help            show this help message and exit
+              --version             show program's version number and exit
+        
+        Bleeding edge code from Github (here)
+        -------------------------------------
+        
+        For advanced users, if you have `git <https://git-scm.com/>`__ and
+        `Anaconda Python <https://www.continuum.io/downloads>`__ installed, you
+        can:
+        
+        #. Clone this repository
+        #. Change into that directory
+        #. Create an environment named ``outrigger-env`` with the necessary packages
+           from Anaconda and the Python Package Index (PyPI).
+        #. Activate the environment
+        
+        These steps are shown in code below.
+        
+        ::
+        
+            git clone https://github.com/YeoLab/outrigger.git
+            cd outrigger
+            conda env create --file environment.yml
+            source activate outrigger-env
+        
+        Quick start
+        ===========
+        
+        If you just want to know how to run this on your data with the default
+        parameters, start here. Let's say you performed your alignment in the
+        folder called ``~/projects/tasic2016/analysis/tasic2016_v1``, and that's
+        where your ``SJ.out.tab`` files from the STAR aligner are (they're
+        output into the same folder as the ``.bam`` files). First you'll need to
+        change directories to that folder with ``cd``.
+        
+        ::
+        
+            cd ~/projects/tasic2016/analysis/tasic2016_v1
+        
+        Then you need find all alternative splicing events, which you do by
+        running ``outrigger index`` on the splice junction files and the gtf.
+        Here is an example command:
+        
+        Input: ``.SJ.out.tab`` files
+        ----------------------------
+        
+        ::
+        
+            outrigger index --sj-out-tab *SJ.out.tab \
+                --gtf /projects/ps-yeolab/genomes/mm10/gencode/m10/gencode.vM10.annotation.gtf
+        
+        Input: ``.bam`` files
+        ---------------------
+        
+        If you're using ``.bam`` files instead of ``SJ.out.tab`` files, never despair!
+        Below is an example command. Keep in mind that for this program to work, the
+        events must be sorted and indexed.
+        
+        ::
+        
+            outrigger index --bam *sorted.bam \
+                --gtf /projects/ps-yeolab/genomes/mm10/gencode/m10/gencode.vM10.annotation.gtf
+        
+        Next, you'll want to validate that the splicing events you found follow
+        biological rules, such as being containing GT/AG (mammalian major
+        spliceosome) or AT/AC (mammalian minor splicesome) sequences. To do
+        that, you'll need to provide the genome name (e.g. ``mm10``) and the
+        genome sequences. An example command is below:
+        
+        ::
+        
+            outrigger validate --genome mm10 \
+                --fasta /projects/ps-yeolab/genomes/mm10/GRCm38.primary_assembly.genome.fa
+        
+        Finally, you can calculate percent spliced in (Psi) of your splicing
+        events! Thankfully this is very easy:
+        
+        ::
+        
+            outrigger psi
+        
+        It should be noted that ALL of these commands should be performed in the
+        same directory, so no moving.
+        
+        Quick start summary
+        -------------------
+        
+        Here is a summary the commands in the order you would use them for
+        outrigger!
+        
+        ::
+        
+            cd ~/projects/tasic2016/analysis/tasic2016_v1
+            outrigger index --sj-out-tab *SJ.out.tab \
+                --gtf /projects/ps-yeolab/genomes/mm10/gencode/m10/gencode.vM10.annotation.gtf
+            outrigger validate --genome mm10 \
+                --fasta /projects/ps-yeolab/genomes/mm10/GRCm38.primary_assembly.genome.fa
+            outrigger psi
+        
+        This will create a folder called ``outrigger_output``, which at the end
+        should look like the one below. Each file and folder is annotated with which command
+        produced it.
+        
+        ::
+        
+            $ tree outrigger_output
+            outrigger_output..........................................................index
+            ├── index.................................................................index
+            │   ├── gtf...............................................................index
+            │   │   ├── gencode.vM10.annotation.gtf...................................index
+            │   │   ├── gencode.vM10.annotation.gtf.db................................index
+            │   │   └── novel_exons.gtf...............................................index
+            │   ├── exon_direction_junction_triples.csv...............................index
+            │   ├── mxe...............................................................index
+            │   │   ├── event.bed.....................................................index
+            │   │   ├── events.csv....................................................index
+            │   │   ├── exon1.bed.....................................................index
+            │   │   ├── exon2.bed.....................................................index
+            │   │   ├── exon3.bed.....................................................index
+            │   │   ├── exon4.bed.....................................................index
+            │   │   ├── intron.bed....................................................index
+            │   │   ├── splice_sites.csv...........................................validate
+            │   │   └── validated..................................................validate
+            │   │       └── events.csv.............................................validate
+            │   └── se................................................................index
+            │       ├── event.bed.....................................................index
+            │       ├── events.csv....................................................index
+            │       ├── exon1.bed.....................................................index
+            │       ├── exon2.bed.....................................................index
+            │       ├── exon3.bed.....................................................index
+            │       ├── intron.bed....................................................index
+            │       ├── splice_sites.csv...........................................validate
+            │       └── validated..................................................validate
+            │           └── events.csv.............................................validate
+            ├── junctions.............................................................index
+            │   ├── metadata.csv......................................................index
+            │   └── reads.csv.........................................................index
+            └── psi.....................................................................psi
+                ├── mxe.................................................................psi
+                |   ├── psi.csv.........................................................psi
+                │   └── summary.csv.....................................................psi
+                ├── outrigger_psi.csv...................................................psi
+                └── se..................................................................psi
+                    ├── psi.csv.........................................................psi
+                    └── summary.csv.....................................................psi
+        
+            10 directories, 26 files
+        
+        
+        .. _Outrigger: https://github.com/YeoLab/outrigger
+        
+        
+        
+        
+        History
+        =======
+        
+        v1.0.0 (April 3rd, 2017)
+        ------------------------
+        
+        This is the first major release of ``outrigger``!!!
+        
+        v1.0.0 New features
+        ~~~~~~~~~~~~~~~~~~~
+        
+        - Parallelized event across chromosomes
+        - Added ``--low-memory`` flag for ``index``, ``validate``, and ``psi`` commands
+          to use a smaller memory footprint when reading CSV files.
+        - Added ``--splice-types`` option to specify only one kind of splicing you'd
+          like to find
+        - So the user can double-check the Psi calculation, create a ``summary.csv``
+          file indicating the number of reads found at each junction, for all samples
+          - This also shows which "Case" corresponds to each event in each sample, so you can see whether there were sufficient or insufficient reads on the junctions of each event, and how ``outrigger`` judged it.
+        - Added functions to extract constitutive and alternative exons separately
+        
+        v1.0.0 Bug fixes
+        ~~~~~~~~~~~~~~~~
+        
+        - Fixed a bug that stalled on ``.bam`` files while counting the junctions
+        
+        v1.0.0 Miscellaneous
+        ~~~~~~~~~~~~~~~~~~~~
+        
+        - Added ``GC/AG`` to valid splice sites
+        
+        
+        v0.2.9 (November 11th, 2016)
+        ----------------------------
+        
+        This is a non-breaking release with many speed improvements, and upgrade is
+        recommended.
+        
+        
+        v0.2.9 New features
+        ~~~~~~~~~~~~~~~~~~~
+        
+        - Add ``bam`` alignment files as input option
+        
+        
+        Miscellaneous
+        ~~~~~~~~~~~~~
+        
+        - Parallelized Psi calculation, the exact number of processors can be specified
+          with ``--n-jobs``, and by default, ``--n-jobs`` is ``-1``, which means use as
+          many processors as are available.
+        
+        
+        v0.2.8 (October 23rd, 2016)
+        ---------------------------
+        
+        Updated README/HISTORY files
+        
+        
+        v0.2.7 (October 23rd, 2016)
+        ---------------------------
+        
+        v0.2.7 New features
+        ~~~~~~~~~~~~~~~~~~~
+        
+        - Added ``outrigger validate`` command to check for canonical splice sites
+          by default: ``GT/AG`` (U1, major spliceosome) and ``AT/AC``
+          (U12, minor spliceosome). Both of these are user-adjustable as they are only
+          the standard for mammalian genomes.
+        
+        v0.2.7 API changes
+        ~~~~~~~~~~~~~~~~~~
+        
+        - Added ``--resume`` and ``--force`` options to ``outrigger index`` to prevent
+          the overwriting of interrupted indexing operations, or to force overwriting.
+          By default, ``outrigger`` complains and cowardly exits.
+        
+        v0.2.7 Bug fixes
+        ~~~~~~~~~~~~~~~~
+        
+        - Support ENSEMBL gtf files which specify chromsome names with a number, e.g.
+          ``4`` instead of ``chr4``. Thank you to lcscs12345_ for pointing this out!
+        
+        v0.2.7 Miscellaneous
+        ~~~~~~~~~~~~~~~~~~~~
+        
+        - Added version info with ``outrigger --version``
+        - Sped up gffutils queries and event finding by running ``ANALYZE`` on SQLite
+          databases.
+        
+        
+        .. _lcscs12345: https://github.com/lcscs12345
+        
+        
+        v0.2.6 (September 15th, 2016)
+        -----------------------------
+        
+        This is a non-breaking patch release
+        
+        v0.2.6 Bug fixes
+        ~~~~~~~~~~~~~~~~
+        
+        - Wasn't concatenating exons properly after parallelizing
+        
+        
+        v0.2.6 Miscellaneous
+        ~~~~~~~~~~~~~~~~~~~~
+        
+        - Clarified ``.gtf`` file example for directory output
+        
+        
+        
+        v0.2.5 (September 14th, 2016)
+        -----------------------------
+        
+        
+        v0.2.5 Bug fixes
+        ~~~~~~~~~~~~~~~~
+        
+        - Added ``joblib`` to requirements
+        
+        
+        v0.2.4 (September 14th, 2016)
+        -----------------------------
+        
+        This is a non-breaking patch release of ``outrigger``.
+        
+        v0.2.4 New features
+        ~~~~~~~~~~~~~~~~~~~
+        
+        - **Actually** parallelized exon finding for novel exons. Before had written the code and tested the non-parallelized version but now using actually parallelized version!
+        
+        
+        v0.2.4 Bug fixes
+        ~~~~~~~~~~~~~~~~
+        
+        - Don't need to turn on ``--debug`` command for outrigger to even run
+        
+        
+        
+        v0.2.3 (September 13th, 2016)
+        -----------------------------
+        
+        This is a patch release of outrigger, with non-breaking changes from the
+        previous one.
+        
+        
+        Bug fixes
+        ~~~~~~~~~
+        
+        - Subfolders get copied when installing
+        - Add test for checking that ``outrigger -h`` command works
+        
+        
+        v0.2.2 (September 12th, 2016)
+        -----------------------------
+        
+        This is a point release which includes the ``index`` submodule in the ``__all__`` statement.
+        
+        
+        v0.2.1 (September 12th, 2016)
+        -----------------------------
+        
+        This is a point release which actually includes the ``requirements.txt`` file that specifies which packages ``outrigger`` depends on.
+        
+        
+        v0.2.0 (September 9th, 2016)
+        ----------------------------
+        
+        This is the second release of ``outrigger``!
+        
+        New features
+        ~~~~~~~~~~~~
+        
+        - Parallelized exon finding for novel exons
+        - Added ``outrigger validate`` command to check that your new exons have proper splice sites (e.g. GT/AG and AT/AC)
+        - Added more test data for other event types (even though we don't detect them yet)
+        
+        
+        v0.1.0 (May 25, 2016)
+        ---------------------
+        
+        This is the initial release of ``outrigger``
+        
+Keywords: outrigger
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
