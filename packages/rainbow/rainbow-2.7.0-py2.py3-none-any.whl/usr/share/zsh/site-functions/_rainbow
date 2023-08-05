@@ -1,0 +1,142 @@
+#compdef rainbow
+# ----------------------------------------------------------------------
+# rainbow, a terminal colorizer - https://github.com/nicoulaj/rainbow
+# copyright (c) 2010-2017 rainbow contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ----------------------------------------------------------------------
+
+_rainbow() {
+  typeset -A opt_args
+  local context state line curcontext="$curcontext"
+
+  _arguments \
+    '*'{-r+,--red=}'[print pattern in red]:pattern:_rainbow_patterns' \
+    '*'{-g+,--green=}'[print pattern in green]:pattern:_rainbow_patterns' \
+    '*'{-y+,--yellow=}'[print pattern in yellow]:pattern:_rainbow_patterns' \
+    '*'{-b+,--blue=}'[print pattern in blue]:pattern:_rainbow_patterns' \
+    '*'{-m+,--magenta=}'[print pattern in magenta]:pattern:_rainbow_patterns' \
+    '*'{-c+,--cyan=}'[print pattern in cyan]:pattern:_rainbow_patterns' \
+    '*--red-before=[toggle foreground to red on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--green-before=[toggle foreground to green on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--yellow-before=[toggle foreground to yellow on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--blue-before=[toggle foreground to blue on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--magenta-before=[toggle foreground to magenta on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--cyan-before=[toggle foreground to cyan on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--reset-before=[reset foreground color on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--red-after=[toggle foreground to red on end of pattern]:pattern:_rainbow_patterns' \
+    '*--green-after=[toggle foreground to green on end of pattern]:pattern:_rainbow_patterns' \
+    '*--yellow-after=[toggle foreground to yellow on end of pattern]:pattern:_rainbow_patterns' \
+    '*--blue-after=[toggle foreground to blue on end of pattern]:pattern:_rainbow_patterns' \
+    '*--magenta-after=[toggle foreground to magenta on end of pattern]:pattern:_rainbow_patterns' \
+    '*--cyan-after=[toggle foreground to cyan on end of pattern]:pattern:_rainbow_patterns' \
+    '*--reset-after=[reset foreground color on end of pattern]:pattern:_rainbow_patterns' \
+    '*--background-red=[print pattern with red background]:pattern:_rainbow_patterns' \
+    '*--background-green=[print pattern with green background]:pattern:_rainbow_patterns' \
+    '*--background-yellow=[print pattern with yellow background]:pattern:_rainbow_patterns' \
+    '*--background-blue=[print pattern with blue background]:pattern:_rainbow_patterns' \
+    '*--background-magenta=[print pattern with magenta background]:pattern:_rainbow_patterns' \
+    '*--background-cyan=[print pattern with cyan background]:pattern:_rainbow_patterns' \
+    '*--background-red-before=[toggle background to red on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--background-green-before=[toggle background to green on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--background-yellow-before=[toggle background to yellow on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--background-blue-before=[toggle background to blue on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--background-magenta-before=[toggle background to magenta on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--background-cyan-before=[toggle background to cyan on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--background-reset-before=[reset background color on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--background-red-after=[toggle background to red on end of pattern]:pattern:_rainbow_patterns' \
+    '*--background-green-after=[toggle background to green on end of pattern]:pattern:_rainbow_patterns' \
+    '*--background-yellow-after=[toggle background to yellow on end of pattern]:pattern:_rainbow_patterns' \
+    '*--background-blue-after=[toggle background to blue on end of pattern]:pattern:_rainbow_patterns' \
+    '*--background-magenta-after=[toggle background to magenta on end of pattern]:pattern:_rainbow_patterns' \
+    '*--background-cyan-after=[toggle background to cyan on end of pattern]:pattern:_rainbow_patterns' \
+    '*--background-reset-after=[reset background color on end of pattern]:pattern:_rainbow_patterns' \
+    '*--bold=[print pattern in bold]:pattern:_rainbow_patterns' \
+    '*--bold-before=[toggle bold on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--bold-after=[toggle bold on end of pattern]:pattern:_rainbow_patterns' \
+    '*--faint=[print pattern with decreased intensity]:pattern:_rainbow_patterns' \
+    '*--faint-before=[toggle faint on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--faint-after=[toggle faint on end of pattern]:pattern:_rainbow_patterns' \
+    '*--intensity-reset-before=[reset text intensity (bold, faint) on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--intensity-reset-after=[reset text intensity (bold, faint) on end of pattern]:pattern:_rainbow_patterns' \
+    '*--italic=[print pattern in italic]:pattern:_rainbow_patterns' \
+    '*--italic-before=[toggle italic on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--italic-after=[toggle italic on end of pattern]:pattern:_rainbow_patterns' \
+    '*--italic-reset-before=[reset italic on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--italic-reset-after=[reset italic on end of pattern]:pattern:_rainbow_patterns' \
+    '*--underline=[print pattern underlined]:pattern:_rainbow_patterns' \
+    '*--underline-before=[toggle underline on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--underline-after=[toggle underline on end of pattern]:pattern:_rainbow_patterns' \
+    '*--underline-double=[print pattern double underlined]:pattern:_rainbow_patterns' \
+    '*--underline-double-before=[toggle double underline on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--underline-double-after=[toggle double underline on end of pattern]:pattern:_rainbow_patterns' \
+    '*--underline-reset-before=[reset underline on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--underline-reset-after=[reset underline on end of pattern]:pattern:_rainbow_patterns' \
+    '*--blink=[print pattern blinking]:pattern:_rainbow_patterns' \
+    '*--blink-before=[toggle blinking on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--blink-after=[toggle blinking on end of pattern]:pattern:_rainbow_patterns' \
+    '*--blink-rapid=[print pattern blinking rapidly]:pattern:_rainbow_patterns' \
+    '*--blink-rapid-before=[toggle rapid blinking on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--blink-rapid-after=[toggle rapid blinking on end of pattern]:pattern:_rainbow_patterns' \
+    '*--blink-reset-before=[reset blinking on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--blink-reset-after=[reset blinking on end of pattern]:pattern:_rainbow_patterns' \
+    '*--negative=[print pattern swapping foreground and background]:pattern:_rainbow_patterns' \
+    '*--negative-before=[toggle negative on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--negative-after=[toggle negative on end of pattern]:pattern:_rainbow_patterns' \
+    '*--negative-reset-before=[reset negative on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--negative-reset-after=[reset negative on end of pattern]:pattern:_rainbow_patterns' \
+    '*--hide=[print pattern hidden]:pattern:_rainbow_patterns' \
+    '*--hide-before=[toggle hiding on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--hide-after=[toggle hiding on end of pattern]:pattern:_rainbow_patterns' \
+    '*--hide-reset-before=[reset hiding on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--hide-reset-after=[reset hiding on end of pattern]:pattern:_rainbow_patterns' \
+    '*--reset-all=[reset all colors]:pattern:_rainbow_patterns' \
+    '*--reset-all-before=[reset all colors on beginning of pattern]:pattern:_rainbow_patterns' \
+    '*--reset-all-after=[reset all colors on end of pattern]:pattern:_rainbow_patterns' \
+    '(- 1 *)'{-h,--help}'[print program usage]' \
+    '(- 1 *)--version[print program version]' \
+    '(- 1 *)--print-path[print config paths]' \
+    '(- 1 *)--print-config-names[print config names]' \
+    '*'{-v,--verbose}'[verbose mode]' \
+    '--disable-stderr-filtering[disable STDERR filtering]' \
+    '*'{-f,--config=}'[rainbow config file]:rainbow config:_rainbow_configs' \
+      '(-):command name: _command_names -e' \
+      '*::arguments:_normal' && ret=0
+}
+
+(( $+functions[_rainbow_patterns] )) ||
+_rainbow_patterns() {
+  _message -e pattern "pattern"
+}
+
+(( $+functions[_rainbow_configs] )) ||
+_rainbow_configs() {
+  _alternative \
+    'config-names:config name:_rainbow_config_names' \
+    'config-files:config file:_rainbow_config_files'
+}
+
+(( $+functions[_rainbow_config_names] )) ||
+_rainbow_config_names() {
+  local rainbow_config_names
+  rainbow_config_names=( "${(f)$(_call_program configs rainbow --print-config-names 2>/dev/null)}" )
+  _describe -t 'rainbow config names' 'rainbow config name' rainbow_config_names
+}
+
+(( $+functions[_rainbow_config_files] )) ||
+_rainbow_config_files() {
+  _files -g "*.cfg"
+}
+
+_rainbow "$@"
