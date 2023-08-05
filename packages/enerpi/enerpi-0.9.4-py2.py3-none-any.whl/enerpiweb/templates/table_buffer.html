@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block scripts %}
+    <script>
+    $(document).ready(function() {
+        sse = new EventSource("{{ url_table }}");
+        sse.onmessage = function(message) {
+            console.log('Mensaje recibido!')
+            if (message.data == '"CLOSE"') {
+                sse.close();
+            } else {
+                var data = JSON.parse(message.data);
+                if (data['success']) {
+                    console.log('Mensaje recibido con success!')
+                    if (data.hasOwnProperty('table') && data.hasOwnProperty('took')) {
+                        console.log('Mensaje tabla!')
+                        $("#table-buffer").html(data['table']);
+                        $("#table-took").html(' (Took ' + data['took'] + ' secs)');
+                        $("#table-took").removeClass('invisible');
+                    }
+{#                    else if (data.hasOwnProperty('bokeh_div') && data.hasOwnProperty('took')) {#}
+{#                        console.log('Mensaje plot!')#}
+{#                        $('#div-plot-bokeh').html(data['bokeh_div']);#}
+{#                        $("body").append(data['script_bokeh']);#}
+{#                        $("#bokeh-plot-took").html('PLOT TOOK ' + data['took'] + 'secs');#}
+{#                        $("#bokeh-plot-took").removeClass('invisible');#}
+{#                    }#}
+                }
+            }
+        };
+    });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <br>
+    <div class="container-fluid">
+        <div>
+         <h3 class="pull-xs-left"><i class="fa fa-table" aria-hidden="true"></i> Last samples:</h3><span id="table-took" class="pull-xs-right invisible"></span>
+        </div>
+         <div class="row">
+             <div class="col-xs-12 col-sm-12 col-md-9 col-lg-6"><div id="table-buffer" class="container-fluid"></div></div>
+         </div>
+    </div>
+
+{% endblock %}
