@@ -1,0 +1,218 @@
+{% extends "../bootstrap/layout.html" %}
+
+{%- block extrahead %}
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+    <meta name='viewport'
+        content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link type="text/css" href="_static/datatables/jquery.dataTables_themeroller.css" 
+        rel=stylesheet>
+    <link type="text/css" href="_static/datatables/DT_bootstrap.css" 
+        rel=stylesheet>
+    <link type="text/css" href="_static/themeroller_smoothness/jquery-ui-1.8.4.custom.css" 
+        rel=stylesheet>
+    <link type="text/css" href="_static/tabletools/TableTools.css" 
+        rel=stylesheet>
+    <link rel="stylesheet" href="_static/slimbox/slimbox2.css" type="text/css"
+        media="screen" />
+    <script type="text/javascript" language="javascript"
+        src="_static/datatables/jquery.dataTables.js">
+    </script>
+    <script type="text/javascript" language="javascript"
+        src="_static/datatables/DT_bootstrap.js">
+    </script>
+    <script type="text/javascript" src="_static/tabletools/ZeroClipboard.js">
+    </script>
+    <script type="text/javascript" src="_static/tabletools/TableTools.min.js">
+    </script>
+    <script type="text/javascript" src="_static/colvis/ColVis.min.js">
+    </script>
+    <style type="text/css" title="currentStyle">
+        .section > p {
+        /* for backwards compatibility only; will be removed */
+            font-size: 18px;
+            line-height: 18px;
+            margin: 0px 0px 10px 0px;
+        }
+        cite {
+            font-style: italic;
+        }
+        h3 {
+            font-size: 18px;
+            line-height: 18px;
+            margin: 0px 0px 10px 0px;
+        }
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .container > .section > .section > p, .container > .section > p {
+            padding-left: 10px;
+        }
+        .container > .section > p {
+            font-size: 14px;
+        }
+        .container > .section > .section {
+            width: 100%;
+            display: inline-block;
+        }
+        .container > .section > .section > .section {
+            float: left;
+            margin: 0px 30px 30px 0px;
+            border: 1px solid lightgray;
+            border-radius: 5px;
+            box-shadow: 6px 6px 4px gray;
+            padding: 10px;
+            width: auto;
+            width: -moz-fit-content;
+            max-width: 97% !important;
+        }
+        #status {
+            float: none;
+        }
+        .dataTables_wrapper {
+            overflow-x: auto;
+        }
+        .container, .navbar-static-top .container,
+        .navbar-fixed-top .container, .navbar-fixed-bottom .container {
+            width: 95% !important;
+        }
+        .table {
+            width: auto !important;
+            float: left !important;
+        }
+        .table-bordered img {
+            max-width: 200px;
+        }
+        .table-bordered col {
+            width: auto !important;
+        }
+        .table-bordered tbody tr, .table-striped tbody tr, .table-striped tbody tr td {
+            background: none !important;
+        }
+        table td, table th {
+            border-left: 1px solid #DDDDDD !important;
+        }
+        table {
+            border-top: 1px solid #DDDDDD !important;
+            border-right: 1px solid #DDDDDD !important;
+            border-bottom: 1px solid #DDDDDD !important;
+            border-left: 1px solid #DDDDDD !important;
+        }
+        thead th, .dataTables_length label, .dataTables_paginate ul li a, .ColVis button, .DTTT_container a, .dataTables_length select {
+            background-color: none !important;
+            background: -webkit-gradient(center top , #FFFFFF 0%, #F3F3F3 89%, #F9F9F9 100%) repeat scroll 0 0 transparent !important;
+            background: -webkit-linear-gradient(center top , #FFFFFF 0%, #F3F3F3 89%, #F9F9F9 100%) repeat scroll 0 0 transparent !important;
+            background: -moz-linear-gradient(center top , #FFFFFF 0%, #F3F3F3 89%, #F9F9F9 100%) repeat scroll 0 0 transparent !important;
+            background: -o-linear-gradient(center top , #FFFFFF 0%, #F3F3F3 89%, #F9F9F9 100%) repeat scroll 0 0 transparent !important;
+            background: -ms-linear-gradient(center top , #FFFFFF 0%, #F3F3F3 89%, #F9F9F9 100%) repeat scroll 0 0 transparent !important;
+            background: linear-gradient(center top , #FFFFFF 0%, #F3F3F3 89%, #F9F9F9 100%) repeat scroll 0 0 transparent !important;
+        }
+        .dataTables_length select {
+            height: 18px !important;
+            margin: -2px 4px 0px 0px !important;
+            padding: 0px !important;
+            line-height: 20px !important;
+            border: none !important;
+            width: auto !important;
+        }
+       .dataTables_length, .dataTables_length label, .dataTables_paginate, .dataTables_paginate ul li a, .dataTables_wrapper .DTTT_container, .DTTT_button, .ColVis, .ColVis button {
+            float: left !important;
+            line-height: 20px !important;
+            padding: 0px 10px 0px 10px!important;
+            margin: 3px 0px 3px -5px !important;
+            border-color: darkgray !important;
+            border-radius: 0px !important;
+        }
+        .dataTables_length label {
+            border: 1px solid darkgray !important;
+            margin 0px !important;
+        }
+        .dataTables_length label, .dataTables_length select, .dataTables_paginate li, .DTTT_button span, .ColVis button span {
+            font-size: 12px;
+        }
+        .ui-state-default, .dataTables_paginate ul li a {
+            color: black;
+        }
+    </style>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+                "num-html-pre": function ( a ) {
+                    var x = String(a).replace( /<[\s\S]*?>/g, "" );
+                    return parseFloat( x );
+                },
+                "num-html-asc": function ( a, b ) {
+                    return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+                },
+                "num-html-desc": function ( a, b ) {
+                    return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+                }
+            } );
+            $("table.table-bordered").dataTable( {
+                "bJQueryUI": true,
+                "bSort": false,
+                "bPaginate": false,
+                "bFilter": false,
+                "bInfo": false,
+                "bAutoWidth": false,
+                "sDom": '<lfr>t<ip>',
+            } );
+            $("table.table-striped").dataTable( {
+                "bJQueryUI": true,
+                "bSort": true,
+                "bPaginate": false,
+                "bFilter": false,
+                "bInfo": false,
+                "bAutoWidth": false,
+                "sDom": '<lfr>t<ipCT>',
+                "oTableTools": {
+                    "sRowSelect": "multi",
+                    "sSwfPath": "_static/tabletools/copy_csv_xls_pdf.swf",
+                    "aButtons": [
+                        "copy",
+                        "print",
+                        "csv",
+                        "xls",
+                        {
+                            "sExtends": "pdf",
+                            "sPdfOrientation": "landscape"
+                        }
+                    ]
+                }
+            } );
+            $("table.table-hovered").dataTable( {
+                "bJQueryUI": true,
+                "bSort": true,
+                "bPaginate": true,
+                "bFilter": false,
+                "bInfo": false,
+                "bAutoWidth": false,
+                "aoColumnDefs": [
+                    { "aTargets": ['_all'], "sType": "num-html"}
+                ],
+                "sDom": '<fr>t<iplCT>',
+                "oTableTools": {
+                    "sRowSelect": "multi",
+                    "sSwfPath": "_static/tabletools/copy_csv_xls_pdf.swf",
+                    "aButtons": [
+                        "copy",
+                        "print",
+                        "csv",
+                        "xls",
+                        {
+                            "sExtends": "pdf",
+                            "sPdfOrientation": "landscape"
+                        }
+                    ]
+                }
+            } );
+            $("td a").attr("rel", "lightbox");
+        } );
+    </script>
+    <script type="text/javascript" src="_static/slimbox/slimbox2.js"></script>
+{% endblock %}
+
+{%- block sidebarsearch %}
+{% endblock %}
