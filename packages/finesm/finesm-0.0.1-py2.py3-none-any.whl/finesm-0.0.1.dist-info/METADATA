@@ -1,0 +1,72 @@
+Metadata-Version: 2.0
+Name: finesm
+Version: 0.0.1
+Summary: A fine state machine
+Home-page: https://github.com/wesleyks/finesm
+Author: UNKNOWN
+Author-email: UNKNOWN
+License: MIT
+Keywords: finite-state machine state
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: License :: OSI Approved :: MIT License
+
+finesm |Build Status| |Coverage Status|
+=======================================
+
+Installation
+------------
+
+``pip install finesm``
+
+Usage
+-----
+
+.. code:: python
+
+    from finesm import State, StateMachine
+
+    class MyStateMachine(StateMachine):
+        stop = State(default=True)
+        go = State()
+
+        @stop.on_message('switch')
+        def stop_switch(self):
+            self.set_state(go)
+
+        @stop.on_exit
+        def stop_exit(self):
+            print('exiting stop state')
+
+        @go.on_enter
+        def go_enter(self):
+            print('entering go state')
+
+        @go.on_update
+        def go_update(self):
+            print('tick')
+
+
+    sm = MyStateMachine()
+    sm.state  # stop
+    sm.update()  #
+    sm.send_message('switch')  # exiting stop state
+                               # entering go state
+    sm.update()  # tick
+
+.. |Build Status| image:: https://travis-ci.org/wesleyks/finesm.svg?branch=master
+   :target: https://travis-ci.org/wesleyks/finesm
+.. |Coverage Status| image:: https://coveralls.io/repos/github/wesleyks/finesm/badge.svg?branch=master
+   :target: https://coveralls.io/github/wesleyks/finesm?branch=master
+
+
