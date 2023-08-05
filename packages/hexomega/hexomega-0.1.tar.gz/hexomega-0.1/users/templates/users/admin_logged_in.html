@@ -1,0 +1,39 @@
+{% extends 'users/base.html' %}
+
+{% block main_content %}
+    {% csrf_token %}
+
+    {% if li %}
+        <p>
+            <h3>Welcome {{ user.get_full_name }}</h3>
+            <h4>Project: {{ user.project.name }}</h4>
+            <h4>is_admin: {{ user.is_admin }}</h4>
+            <h4>is_leader: {{ user.is_leader }}</h4>
+            <h4>is_member: {{ user.is_member }}</h4>
+            <h4>Admin{{ user.project.admins.all|pluralize }}</h4>
+            <ul>
+                {% for admin in user.project.admins.all %}
+                    <li><h4>{{ admin.get_full_name }}</h4></li>
+                {% endfor %}
+            </ul>
+            <h4>Leader: {{ user.project.leader.get_full_name }}</h4>
+            <h4>Other Member{{ user.project.memberuser_set.all|pluralize }}</h4>
+            <ul>
+                {% for member in user.project.memberuser_set.all %}
+                    {% if member.username != user.username %}
+                        <li><h4>{{ member.get_full_name}}</h4></li>
+                    {% else %}
+                        <li><h4><i>No other member.</i></h4></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+            <h4>Group: {{ user.groups.all|first }}</h4>
+            <h4>Action List: {{ user.project.actionlist|default_if_none:'None??!' }}</h4>
+            <h4>Activity Log: {{ user.project.activitylog|default_if_none:'None??!' }}</h4>
+            <h4>Activity Log::Content: {{ user.project.activitylog.content|default_if_none:'None??!' }}</h4>
+
+    {% else %}
+        Login Unsuccessful.
+    {% endif %}
+    <a href="{% url 'jump_ship' %}"><input type="button" value="Log out"></a>
+{% endblock %}

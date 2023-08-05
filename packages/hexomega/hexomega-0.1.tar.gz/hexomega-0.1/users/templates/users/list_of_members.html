@@ -1,0 +1,44 @@
+{%extends "users/base.html" %}
+{% block navi_content %}
+    {%include "users/includes/navicontents_leader.html" %}
+{% endblock %}
+{% block usernavi_content %}
+    {%include "users/includes/usernavicontents_leader.html" %}
+{% endblock %}
+{% block main_content %}
+<h4>List of Members</h4>
+ <div class="content table-responsive table-full-width" >
+     
+     <table class="table table-hover table-striped" summary="member_user_list">
+         {% if member_list %}
+             <thead>
+                                        
+             <th>Username</th>
+             <th>First Name</th>
+             <th>Last Name</th>
+             <th>Email Address</th>
+			 <th>Role</th>
+             
+                                        
+             </thead>
+             <tbody>
+             {% for users in member_list %}
+                 <tr>
+                                            
+                     <td><a href="{% url 'display_member' users.username %}">{{ users.username }}</a></td>
+                     <td>{{ users.first_name }}</td>
+                     <td>{{ users.last_name }}</td>
+                     <td>{{ users.email }}</td>
+                     <td>{{users.role.title}}</td>
+                                            
+                 </tr>
+             {% endfor %}
+             </tbody>
+         {% else %}
+             <p>No members have been created</p>
+         {% endif %}
+     </table>
+     {%include "users/includes/pagni.html" with page=member_list %}
+
+</div>
+{% endblock%}

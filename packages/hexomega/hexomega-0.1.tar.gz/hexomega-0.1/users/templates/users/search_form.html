@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Form</title>
+</head>
+<body>
+    {% if errors %}
+        {% for error in errors %}
+        <p style="color: red;">
+            {{ error }}
+        </p>
+        {% endfor %}
+    {% endif %}
+    <form action="/search/" method="get">
+        <input type="text" name="q">
+        <input type="submit" value="Search">
+    </form>
+    <br>
+    {% if projects %}
+        You searched for: <b>{{ query }}</b><hr>
+        {% for project in projects %}
+            Project Name : {{ project.name }} <br>
+            Admin(s) :
+            <ul>
+                {% for admin in project.admins.all %}
+                    <li>{{ admin.get_full_name }}</li>
+                {% endfor %}
+            </ul>
+            Leader : {{ project.leader.get_full_name }}<br>
+            Member(s) :
+            <ul>
+                {% for member in project.memberuser_set.all %}
+                    <li>{{ member.get_full_name }}</li>
+                {% endfor %}
+            </ul>
+            <hr>
+        {% endfor %}
+    {% else %}
+        {% if not first %}
+            {% if not errors %}
+                <i>No matches found.</i>
+            {% endif %}
+        {% endif %}
+    {%  endif %}
+
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+{%extends "users/base.html" %}
+{% load bootstrap3 %}
+{% block navi_content %}
+    {%include "users/includes/navicontents_leader.html" %}
+{% endblock %}
+{% block usernavi_content %}
+    {%include "users/includes/usernavicontents_leader.html" %}
+{% endblock %}
+{% block main_content %}
+ <div class="header">
+        <h4 class="title">Create Project</h4>
+ </div>
+ <div style="padding:15%; color: black;">
+
+<fieldset>
+    <div class="form-row">
+        <form action="" method="POST" class="form">
+            {# form.errors #}
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button type="submit" class="btn btn-primary">
+                    {% bootstrap_icon "star" %} Submit
+                </button>
+            {% endbuttons %}
+        </form>
+    </div>
+</fieldset>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<link href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<script src="//cdn.bootcss.com/moment.js/2.17.1/moment.min.js"></script>
+<script src="//cdn.bootcss.com/bootstrap-datetimepicker/4.17.44/js/bootstrap-datetimepicker.min.js"></script>
+<script>
+    $(function () {
+        $('.datetime-input').datetimepicker({
+            format:'YYYY-MM-DD'
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    addEvent(window, "load", function(e) { SelectFilter.init("id_pricetags", "pricetags", 0, "{{ STATIC_URL }}admin/"); });
+</script>
+
+</div>
+{% endblock%}

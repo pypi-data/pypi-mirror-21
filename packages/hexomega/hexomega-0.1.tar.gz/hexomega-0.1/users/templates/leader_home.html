@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+		{% load static %}
+		{% load i18n%}
+		{% load bootstrap3 %}
+	<meta charset="utf-8" />
+	<link rel="icon" type="image/png" href="{% static 'users/img/favicon.ico'%}">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>{{ user.username }} | Home</title>
+
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
+
+
+    <!-- Bootstrap core CSS     -->
+    <link href="{% static 'users/css/bootstrap.min.css' %}" rel="stylesheet" />
+
+    <link href="{% static 'users/css/dashboard.css' %}" rel="stylesheet"/>
+
+    <link href="{% static 'users/css/style.css' %}" rel="stylesheet" />
+    <!--     Fonts and icons     -->
+
+    <link href="{% static 'users/css/pe-icon-7-stroke.css' %}" rel="stylesheet" />
+
+	    
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar" data-color="black" data-image="{% static 'users/img/sidebar-4.jpg' %}">
+
+    	<div class="sidebar-wrapper">
+            <div class="logo">
+                 <a href= "{% url 'index' %}" class="simple-text">
+                    <img src="{% static 'users/img/core_omega.png' %}" style="width:50px;">
+                </a>
+            </div>
+
+			{% include "users/includes/navicontents_leader.html" %}
+    	</div>
+    </div>
+
+    <div class="main-panel">
+        <nav class="navbar navbar-default navbar-fixed">
+            <div class="container-fluid">
+                <div class="navbar-header" id="navbar1">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navigation-example-2">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <p><a class="navbar-brand" href="#">Home</a></p>
+                </div>
+                <div class="collapse navbar-collapse" id="navbar2">
+                      {%include "users/includes/usernavicontents_leader.html" %} 
+                </div>
+            </div>
+        </nav>
+
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+
+        <div class="col-md-12">
+                    <div class="card">
+                    <div class="col-md-12">
+                    {% if messages %}
+                    <ul class="messages" style="text-align: left; color: lightgreen; list-style-type: none">
+                        {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                            <h1 style="color: white;">Tasks</h1>
+                            {% if not user.project %}
+
+                                    <a href="{% url 'create_project' user.username %}">
+                                        <button type="submit" class="btn btn-info btn-fill" style="margin-top: 30px;">
+                                            Create Project
+                                        </button>
+                                    </a>
+                            {% else %}
+
+                                <div class="col-md-6">
+                                    <div class="content table-responsive table-full-width" >
+
+                                        <table class="table" id="tabledetails" style="color: white;">
+                                        {% for task in tasks %}
+                                            <thead style="margin-top: 10px;">
+                                            <tr>
+                                                <!-- <td class="col-xs-3">Task </td> -->
+                                                <th>
+                                                <a style="color: white;" href="{% url 'leader_update_task' username=user.username pk=task.id %}">
+                                                    <h3>{{ task.title }}</h3>
+                                                </a>
+                                                </th>
+
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <tr>
+                                                <td class="col-xs-3">Status </td>
+                                                <td>{{ task.status|center:'50' }}</td>
+                                                </tr>
+                                                <tr>
+                                                <td class="col-xs-3">Deadline </td>
+                                                <td>{{ task.est_end|date|center:'50' }}</td>
+                                                </tr>
+
+                                                <tr>
+                                                <td class="col-xs-3">Members involved </td>
+                                                <td>{{ task.members.all|unordered_list|center:'50' }}</td>
+                                                </tr>
+
+                                                <tr>
+                                                <td class="col-xs-3">Am I doing this? </td>
+                                                <td>{{ task.to_leader|center:'50' }}</td>
+                                                </tr>
+                                            </tr>
+
+                                            </tbody>
+                                        {% endfor %}
+                                        </table>
+
+                                    </div>
+                                </div>
+
+                            {% endif %}
+                            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+                    </div>
+
+                    </div>
+        </div>
+
+             </div>
+        </div>
+ </div>
+    <footer class="footer">
+            <div class="container-fluid">
+                <nav class="pull-left">
+                    <ul>
+                        <li>
+                            <a href="{% url 'index' %}">
+                                Home
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'index' %}#aboutus">About Us</a>
+                        </li>
+
+                    </ul>
+                </nav>
+                <div class="pull-right">
+                <p class="copyright">
+                    &copy;
+					{% now "Y" as current_year %}
+                    {% blocktrans %}Copyright {{ current_year }}{% endblocktrans %}
+					<a href="{% url 'index' %}">Hex Omega</a>
+                </p>
+            </div>
+            </div>
+        </footer>
+</div>
+
+</div>
+</body>
+
+    <!--   Core JS Files   -->
+    <script src="{% static 'users/js/jquery-1.10.2.js' %}" type="text/javascript"></script>
+	<script src="{% static 'users/js/bootstrap.min.js' %}" type="text/javascript"></script>
+	<script src="{% static 'users/js/dashboard.js' %}"></script>
+
+	
+
+</html>

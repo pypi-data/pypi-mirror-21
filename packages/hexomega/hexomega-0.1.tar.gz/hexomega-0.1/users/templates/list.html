@@ -1,0 +1,77 @@
+{%extends "users/base.html" %}
+{% load bootstrap3 %}
+{% load del_tags %}
+{% block navi_content %}
+{% ifequal user.groups.all.0 'leader_group' %}
+		{%include "users/includes/navicontents_leader.html" %}
+    
+	{% else %}
+		{%include "users/includes/navicontents_member.html" %}
+    {% endifequal %}
+{% endblock %}
+{% block usernavi_content %}
+    {% ifequal user.groups.all.0 'leader_group' %}
+		{%include "users/includes/usernavicontents_leader.html" %}
+    
+	{% else %}
+		{%include "users/includes/usernavicontents_member.html" %}
+    {% endifequal %}
+{% endblock %}
+
+{% block main_content %}
+ <div class="header">
+        <h4 class="title"> {{ request.user.first_name }}'s Tasks</h4>
+    </div>
+		
+    <div class="col-md-6">
+        <div class="content table-responsive table-full-width" >
+
+            <table class="table table-hover table-striped" id="tabledetails">
+                                    
+
+				{% for task in tasks %}
+                <thead>
+                <tr>
+                    <td><h2>{{ task.title }}</h2></td>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="col-xs-3">Task Description</td>
+                    <td>{{ task.description|default_if_none:"No description has been added yet." }}</td>
+                </tr>
+                <tr>
+                    <td>Task Deadline</td>
+                    <td>{{ task.est_end|date }}</td>
+                </tr>
+                <tr>
+                    <td>Upload Deliverable</td>
+                    <td>{% if not done %}
+                    
+
+                        <form action="{% url 'member_upload' user.username task.title %}" method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="file" name="up_file"/><br>
+                                <button type="submit" style="color: black">
+                                    {% bootstrap_icon "" %} Submit
+                                </button>
+                        </form>
+                        {% else %}
+                            {% if task.deliverable.name %}
+                                [{{ task.deliverable.name|get_name }}] has been uploaded for this task.
+                            {% else %}
+                                No deliverable has been uploaded and time has lapsed.
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                    <tr></tr>
+                {% endfor %}
+                <br>
+                </tbody>
+				
+            </table>
+
+        </div>
+    </div>
+{% endblock%}
