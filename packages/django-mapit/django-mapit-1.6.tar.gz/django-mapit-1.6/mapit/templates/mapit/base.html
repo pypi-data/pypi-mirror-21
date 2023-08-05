@@ -1,0 +1,48 @@
+{% load static from staticfiles %}
+{% load i18n %}
+
+<!DOCTYPE HTML>
+<html lang="en-gb">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="imagetoolbar" content="false">
+    <meta name="description" content="{% block description %}{% trans "MapIt: a web service that maps postcodes and geographical points to administrative areas." %}{% endblock %}">
+
+    <title>{% block fulltitle %}{% block title %}{% endblock %} - MapIt{% endblock %}</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block main_css %}<link href="{% static "mapit/css/mapit.css" %}" rel="stylesheet">{% endblock %}
+    <link rel="stylesheet" href="{% static "mapit/leaflet/leaflet.css" %}" />
+    <!--[if lte IE 8]>
+        <link rel="stylesheet" href="{% static "mapit/leaflet/leaflet.ie.css" %}" />
+        <script src="{% static "mapit/js/html5shiv.min.js" %}"></script>
+        <script src="{% static "mapit/js/respond.min.js" %}"></script>
+    <![endif]-->
+    <script src="{% static "mapit/js/reqwest.min.js" %}"></script>
+    <script src="{% static "mapit/leaflet/leaflet.js" %}"></script>
+
+    {% block extra_css %}{% endblock %}
+
+{% if norobots %}
+    <meta name="robots" content="noindex, follow">
+{% endif %}
+
+    {% include "mapit/analytics.html" %}
+
+</head>
+<body>
+
+    {% include "mapit/header.html" %}
+
+    {% block content_outer %}
+        <div class="content {% block article-class %}{% endblock %}">
+            {% block content %}{% endblock %}
+        </div>
+    {% endblock %}
+
+    {% include "mapit/footer.html" %}
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

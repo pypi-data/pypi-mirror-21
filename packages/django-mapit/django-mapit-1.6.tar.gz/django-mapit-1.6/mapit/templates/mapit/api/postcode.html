@@ -1,0 +1,50 @@
+{% load i18n %}
+<section id="api-by_postcode">
+    <h3>
+        {% blocktrans trimmed %}
+        <em>lookup by</em> postcode
+        {% endblocktrans %}
+    </h3>
+    <dl>
+        <dt>URL:</dt>
+        <dd> /postcode/<em>[{% trans "postcode" %}]</em> </dd>
+
+        <dt>{% trans "Returns" %}:</dt>
+        <dd>
+            {% blocktrans trimmed %}
+                <p>Information on a particular postcode, including its
+                location in WGS84 latitude/longitude, and the areas it is
+                contained within.</p>
+            {% endblocktrans %}
+        </dd>
+
+        <dt>{% trans "Optional query parameters" %}:</dt>
+        <dd>
+            {% blocktrans trimmed %}
+                <p><i>generation</i>, to return results from a previous generation.</p>
+            {% endblocktrans %}
+        </dd>
+
+        {% include "mapit/api/postcode-example.html" %}
+    </dl>
+</section>
+
+{% if partial_postcodes_available %}
+<section id="api-by_partial_postcode">
+    <h3>{% blocktrans trimmed %}<em>lookup by</em> partial postcode{% endblocktrans %}</h3>
+
+    <dl>
+        <dt>URL:</dt>
+        <dd> /postcode/partial/<em>[{% trans "partial postcode" %}]</em> </dd>
+
+        <dt>{% trans "Returns" %}:</dt>
+        <dd>
+            {% blocktrans trimmed %}
+                <p>Geographical details for the centroid of the partial postcode specified.</p>
+            {% endblocktrans %}
+        </dd>
+
+        {% include "mapit/api/postcode-example-partial.html" %}
+    </dl>
+</section>
+{% endif %}
