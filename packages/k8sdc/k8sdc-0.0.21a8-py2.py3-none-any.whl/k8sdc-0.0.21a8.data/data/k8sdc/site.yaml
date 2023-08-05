@@ -1,0 +1,90 @@
+---
+- name: Test distribution
+  hosts:
+    - k8sdc
+  tasks:
+    - assert:
+        that: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+  tags: confirm_os
+
+
+- name: Common components setup
+  hosts:
+    - k8sdc
+  become:  yes
+  vars_files:
+    - "{{ inventory_dir }}/provider.yaml"
+  roles:
+    - common
+  tags: common_setup
+
+
+- name: k8sdc-ca certificate authority setup
+  hosts:
+    - k8sdc-ca
+  become: yes
+  vars_files:
+    - "{{ inventory_dir }}/provider.yaml"
+  roles:
+    - k8sdc-ca
+  tags: 
+    - k8sdc_ca_setup
+    - k8sdc_security
+
+
+- name: Etcd setup
+  hosts: 
+    - etcd
+  become:  yes
+  vars_files:
+    - "{{ inventory_dir }}/provider.yaml"
+  roles:
+    - etcd
+  tags: etcd_setup
+
+
+- name: Flannel setup
+  hosts: 
+    - k8sdc-masters
+    - k8sdc-nodes
+  become:  yes
+  vars_files:
+    - "{{ inventory_dir }}/provider.yaml"
+  roles:
+    - flannel
+  tags: flannel_setup
+
+
+- name: Docker setup
+  hosts: 
+    - k8sdc-masters
+    - k8sdc-nodes
+  become:  yes
+  vars_files:
+    - "{{ inventory_dir }}/provider.yaml"
+  roles:
+    - docker
+  tags: docker_setup
+
+
+- name: Docker registry mirror setup
+  hosts: 
+    - docker-registry-mirror
+  become:  yes
+  vars_files:
+    - "{{ inventory_dir }}/provider.yaml"
+  roles:
+    - registry-mirror
+  tags: docker_registry_mirror_setup
+
+
+- name: Kubernetes setup
+  hosts: 
+    - k8sdc-masters
+    - k8sdc-nodes
+  become: yes
+  vars_files:
+    - "{{ inventory_dir }}/provider.yaml"
+  roles:  
+    - kubernetes
+  tags: k8s_setup

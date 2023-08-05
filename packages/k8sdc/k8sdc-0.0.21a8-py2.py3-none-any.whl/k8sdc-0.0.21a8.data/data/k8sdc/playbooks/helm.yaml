@@ -1,0 +1,13 @@
+---
+- name: Deploy Helm to the k8s cluster
+  hosts: 
+    - localhost
+  tasks: 
+    - name: Helm init
+      command: bin/helm init
+      args:
+        chdir: "{{ inventory_dir }}"
+      environment:
+        http_proxy:  "{{ kubectl_http_proxy }}"
+        https_proxy: "{{ kubectl_https_proxy }}"
+        KUBECONFIG:  "{{ inventory_dir }}/config/kubectl.kubeconfig"
