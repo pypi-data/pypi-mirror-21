@@ -1,0 +1,163 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Sample script which shows usage of TopShape.
+"""
+import os
+import signal
+from datetime import datetime, timedelta
+from collections import Counter
+import psutil
+
+from topshape import TopShape
+
+processes = {}
+
+
+def header():
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+        uptime_string = str(timedelta(seconds=uptime_seconds))
+
+    user_count = len(psutil.users())
+
+    line1 = 'top - {} up {}, {:>2} users,  load average: {}'
+    line1 = line1.format(str(datetime.now().time()).split('.')[0],
+                         uptime_string.split('.')[0][:-3],
+                         user_count,
+                         str(os.getloadavg())[1:-1])
+
+    c = Counter()
+    for pid in psutil.pids():
+        try:
+            process = psutil.Process(pid)
+        except psutil.NoSuchProcess:
+            continue
+        c[process.status()] += 1
+
+    line2 = 'Tasks: {:>3} total, {:>3} running, {:>3} sleeping, ' \
+            '{:>3} stopped, {:>3} zombie'
+    line2 = line2.format(sum(c.values()), c['running'], c['sleeping'],
+                         c['stopped'], c['zombie'])
+
+    line3 = '%Cpu(s): {:>4} us, {:>4} sy, {:>4} ni, {:>4} id, {:>4} wa, ' \
+            '{:>4} hi, {:>4} si, {:>4} st'
+    percents = list(psutil.cpu_times_percent())
+    sys_percent = percents[2]  # sy and ni are reversed
+    percents[2] = percents[1]
+    percents[1] = sys_percent
+    line3 = line3.format(*percents[:-2])
+
+    line4 = 'KiB Mem : {:>8} total, {:>8} free, {:>8} used, {:>8} buff/cache'
+    virtual_memory = psutil.virtual_memory()
+    line4 = line4.format(virtual_memory.total//1024,
+                         virtual_memory.free//1024,
+                         virtual_memory.used//1024,
+                         (virtual_memory.buffers+virtual_memory.cached)//1024)
+
+    line5 = 'KiB Swap: {:>8} total, {:>8} free, {:>8} used. {:>8} avail Mem'
+    swap_memory = psutil.swap_memory()
+    line5 = line5.format(swap_memory.total//1024,
+                         swap_memory.free//1024,
+                         swap_memory.used//1024,
+                         virtual_memory.available//1024)
+
+    return '\n'.join((line1, line2, line3, line4, line5))
+
+
+def body():
+    result = []
+    global processes
+    for pid in psutil.pids():
+        try:
+            if pid not in processes.keys():
+                processes[pid] = psutil.Process(pid)
+                processes[pid].cpu_percent()  # first call always returns 0.0
+            process = processes[pid]
+        except psutil.NoSuchProcess:
+            continue
+
+        pid = process.pid
+        user = process.username()
+        ni = process.nice()
+        virt = process.memory_info().vms//1024
+        res = process.memory_info().rss//1024
+        shr = process.memory_info().shared//1024
+        status_map = {'sleeping': 'S', 'running': 'R', 'stopped': 'T',
+                      'zombie': 'Z'}
+        st = status_map.get(process.status(), '?')
+        cpu = process.cpu_percent()
+        mem = round(process.memory_percent(), 1)
+        seconds = process.cpu_times().user+process.cpu_times().system
+        m, s = divmod(seconds, 60)
+        time = '{}:{:05.2f}'.format(int(m), round(s, 2))
+        command = process.name()
+
+        result.append((str(pid), user, str(ni), str(virt), str(res), str(shr),
+                       st, str(cpu), str(mem), time, command))
+    return result
+
+
+def footer():
+    return 'Press \'h\' for help, \'q\' to quit.'
+
+
+def handle_q(app):
+    app.exit()
+
+
+def handle_sortleft(app):
+    app.move_sort_left()
+
+
+def handle_sortright(app):
+    app.move_sort_right()
+
+
+def handle_h(app):
+    app.handle_help()
+
+
+def handle_term(app, answer):
+    if answer == '':
+        return
+
+    try:
+        os.kill(int(answer), signal.SIGTERM)
+    except:
+        pass
+
+
+if __name__ == '__main__':
+    columns = ({'label': 'PID', 'size': 5, 'alignment': 'right'},
+               {'label': 'USER', 'size': 8, 'alignment': 'left'},
+               {'label': 'NI', 'size': 3, 'alignment': 'right'},
+               {'label': 'VIRT', 'size': 7, 'alignment': 'right'},
+               {'label': 'RES', 'size': 6, 'alignment': 'right'},
+               {'label': 'SHR', 'size': 6, 'alignment': 'right'},
+               {'label': 'S', 'size': 1, 'alignment': 'center'},
+               {'label': '%CPU', 'size': 5, 'alignment': 'right'},
+               {'label': '%MEM', 'size': 4, 'alignment': 'right'},
+               {'label': 'TIME+', 'size': 9, 'alignment': 'right'},
+               {'label': 'COMMAND', 'size': 40, 'alignment': 'left'})
+
+    key_mapping = {'q': handle_q,
+                   '<': handle_sortleft,
+                   '>': handle_sortright,
+                   't': (handle_term, 'PID to terminate')}
+
+    _help = """\
+Help for Interactive commands
+
+<,>      Move sort column: '<'/'>' left/right
+t        Terminate process (asks for PID as input)
+q        quit
+h        help
+
+Type q or <esc> to continue
+"""
+
+    app = TopShape.create_app(columns, body, header, footer,
+                              key_map=key_mapping, sorting_column='%CPU',
+                              refresh_rate=2, help_text=_help)
+    app.run()
