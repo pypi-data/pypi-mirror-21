@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pycppa3:ChannelProfileConfig
+    xmlns:cppa="http://docs.oasis-open.org/ebcore/ns/cppa/v3.0"
+    xmlns:pycppa3="https://pypi.python.org/pypi/cppa3">
+    <pycppa3:ChannelProfiles>
+        <cppa:ebMS3Channel>
+            <cppa:ChannelProfile>http://docs.oasis-open.org/ebxml-msg/ebms/v3.0/ns/cprofiles/200809/as4ebhandler</cppa:ChannelProfile>
+            <cppa:SOAPVersion>1.2</cppa:SOAPVersion>
+            <cppa:WSSecurityBinding pycppa3:ifused="true">
+                <cppa:WSSVersion>1.1</cppa:WSSVersion>
+                <cppa:Signature pycppa3:ifused="true">
+                    <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>
+                </cppa:Signature>
+                <cppa:Encryption pycppa3:ifused="true">
+                    <cppa:DataEncryption>
+                        <cppa:EncryptionAlgorithm>http://www.w3.org/2009/xmlenc11#aes128-gcm</cppa:EncryptionAlgorithm>
+                    </cppa:DataEncryption>
+                </cppa:Encryption>
+            </cppa:WSSecurityBinding>
+        </cppa:ebMS3Channel>
+        <cppa:ebMS3Channel>
+            <cppa:ChannelProfile>multi_enc_alg</cppa:ChannelProfile>
+            <cppa:SOAPVersion>1.2</cppa:SOAPVersion>
+            <cppa:WSSecurityBinding pycppa3:ifused="true">
+                <cppa:WSSVersion>1.1</cppa:WSSVersion>
+                <cppa:Signature pycppa3:ifused="true">
+                    <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>
+                </cppa:Signature>
+                <cppa:Encryption>
+                    <cppa:DataEncryption>
+                        <cppa:EncryptionAlgorithm>http://www.w3.org/2009/xmlenc11#aes128-gcm</cppa:EncryptionAlgorithm>
+                        <cppa:EncryptionAlgorithm>http://www.w3.org/2001/04/xmlenc#aes128-cbc</cppa:EncryptionAlgorithm>
+                    </cppa:DataEncryption>
+                </cppa:Encryption>
+            </cppa:WSSecurityBinding>
+        </cppa:ebMS3Channel>
+        <cppa:ebMS3Channel package="entsog_package" includeAgreementRef="false" >
+            <cppa:Description xml:lang="en">Channel for any ENTSOG AS4 User Messages</cppa:Description>
+            <cppa:ChannelProfile>http://www.entsog.eu/publications/as4#AS4-USAGE-PROFILE/v2.0/UserMessageChannel</cppa:ChannelProfile>
+            <cppa:SOAPVersion>1.2</cppa:SOAPVersion>
+            <cppa:WSSecurityBinding>
+                <cppa:WSSVersion>1.1</cppa:WSSVersion>
+                <cppa:Signature>
+                    <cppa:SignatureAlgorithm>https://www.w3.org/2001/04/xmldsig-more#rsa-sha256</cppa:SignatureAlgorithm>
+                    <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>       
+                </cppa:Signature>
+                <cppa:Encryption>
+                    <cppa:KeyEncryption>
+                        <cppa:EncryptionAlgorithm> http://www.w3.org/2009/xmlenc11#rsa-oaep</cppa:EncryptionAlgorithm>
+                        <cppa:MaskGenerationFunction>http://www.w3.org/2009/xmlenc11#mgf1sha256</cppa:MaskGenerationFunction>
+                        <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>
+                    </cppa:KeyEncryption>
+                    <cppa:DataEncryption>
+                        <cppa:EncryptionAlgorithm>http://www.w3.org/2009/xmlenc11#aes128-gcm</cppa:EncryptionAlgorithm>
+                    </cppa:DataEncryption>
+                </cppa:Encryption>
+            </cppa:WSSecurityBinding>
+            <cppa:AS4ReceptionAwareness>
+                <cppa:DuplicateHandling>
+                    <cppa:DuplicateElimination>true</cppa:DuplicateElimination>
+                    <cppa:PersistDuration>P10D</cppa:PersistDuration>        
+                </cppa:DuplicateHandling>
+                <cppa:RetryHandling>
+                    <cppa:Retries>5</cppa:Retries>
+                    <cppa:RetryInterval>PT30S</cppa:RetryInterval>        
+                </cppa:RetryHandling>
+            </cppa:AS4ReceptionAwareness>
+            <cppa:ErrorHandling>
+                <cppa:DeliveryFailuresNotifyProducer>true</cppa:DeliveryFailuresNotifyProducer>
+            </cppa:ErrorHandling>
+            <cppa:Compression>
+                <cppa:CompressionAlgorithm>application/gzip</cppa:CompressionAlgorithm>
+            </cppa:Compression>
+        </cppa:ebMS3Channel>        
+        <cppa:ebMS3Channel package="entsog_package" includeAgreementRef="false" pycppa3:direction='send' >
+            <cppa:Description xml:lang="en">Channel for outgoing ENTSOG AS4 User Messages</cppa:Description>
+            <cppa:ChannelProfile>http://www.entsog.eu/publications/as4#AS4-USAGE-PROFILE/v2.0/UserMessageChannel</cppa:ChannelProfile>
+            <cppa:SOAPVersion>1.2</cppa:SOAPVersion>
+            <cppa:WSSecurityBinding>
+                <cppa:WSSVersion>1.1</cppa:WSSVersion>
+                <cppa:Signature>
+                    <cppa:SignatureAlgorithm>https://www.w3.org/2001/04/xmldsig-more#rsa-sha256</cppa:SignatureAlgorithm>
+                    <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>       
+                </cppa:Signature>
+                <cppa:Encryption>
+                    <cppa:KeyEncryption>
+                        <cppa:EncryptionAlgorithm> http://www.w3.org/2009/xmlenc11#rsa-oaep</cppa:EncryptionAlgorithm>
+                        <cppa:MaskGenerationFunction>http://www.w3.org/2009/xmlenc11#mgf1sha256</cppa:MaskGenerationFunction>
+                        <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>
+                    </cppa:KeyEncryption>
+                    <cppa:DataEncryption>
+                        <cppa:EncryptionAlgorithm>http://www.w3.org/2009/xmlenc11#aes128-gcm</cppa:EncryptionAlgorithm>
+                    </cppa:DataEncryption>
+                </cppa:Encryption>
+            </cppa:WSSecurityBinding>
+            <cppa:AS4ReceptionAwareness>
+                <cppa:DuplicateHandling>
+                    <cppa:DuplicateElimination>true</cppa:DuplicateElimination>
+                    <cppa:PersistDuration>P10D</cppa:PersistDuration>        
+                </cppa:DuplicateHandling>
+                <cppa:RetryHandling>
+                    <cppa:Retries>5</cppa:Retries>
+                    <cppa:RetryInterval>PT30S</cppa:RetryInterval>        
+                </cppa:RetryHandling>
+            </cppa:AS4ReceptionAwareness>
+            <cppa:ErrorHandling>
+                <cppa:DeliveryFailuresNotifyProducer>true</cppa:DeliveryFailuresNotifyProducer>
+                <cppa:ReceiverErrorsReportChannelId>entsog_signal_channel_on_sent</cppa:ReceiverErrorsReportChannelId>
+            </cppa:ErrorHandling>
+            <cppa:ReceiptHandling>
+                <cppa:ReceiptChannelId>entsog_signal_channel_on_sent</cppa:ReceiptChannelId>
+            </cppa:ReceiptHandling>
+            <cppa:Compression>
+                <cppa:CompressionAlgorithm>application/gzip</cppa:CompressionAlgorithm>
+            </cppa:Compression>
+        </cppa:ebMS3Channel>        
+        <cppa:ebMS3Channel package="entsog_package" id="entsog_signal_channel_on_sent" asResponse="true">
+            <cppa:Description xml:lang="en">Channel for ENTSOG AS4 Signal Messages</cppa:Description>
+            <cppa:ChannelProfile>http://www.entsog.eu/publications/as4#AS4-USAGE-PROFILE/v2.0/SignalMessageChannel</cppa:ChannelProfile>
+            <cppa:SOAPVersion>1.2</cppa:SOAPVersion>
+            <cppa:WSSecurityBinding>
+                <cppa:WSSVersion>1.1</cppa:WSSVersion>
+                <cppa:Signature>
+                    <cppa:SignatureAlgorithm>https://www.w3.org/2001/04/xmldsig-more#rsa-sha256</cppa:SignatureAlgorithm>
+                    <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm> 
+                </cppa:Signature>
+            </cppa:WSSecurityBinding>
+        </cppa:ebMS3Channel>
+        <cppa:ebMS3Channel package="entsog_package" includeAgreementRef="false" pycppa3:direction='receive' >
+            <cppa:Description xml:lang="en">Channel for incoming ENTSOG AS4 User Messages</cppa:Description>
+            <cppa:ChannelProfile>http://www.entsog.eu/publications/as4#AS4-USAGE-PROFILE/v2.0/UserMessageChannel</cppa:ChannelProfile>
+            <cppa:SOAPVersion>1.2</cppa:SOAPVersion>
+            <cppa:WSSecurityBinding>
+                <cppa:WSSVersion>1.1</cppa:WSSVersion>
+                <cppa:Signature>
+                    <cppa:SignatureAlgorithm>https://www.w3.org/2001/04/xmldsig-more#rsa-sha256</cppa:SignatureAlgorithm>
+                    <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>       
+                </cppa:Signature>
+                <cppa:Encryption>
+                    <cppa:KeyEncryption>
+                        <cppa:EncryptionAlgorithm> http://www.w3.org/2009/xmlenc11#rsa-oaep</cppa:EncryptionAlgorithm>
+                        <cppa:MaskGenerationFunction>http://www.w3.org/2009/xmlenc11#mgf1sha256</cppa:MaskGenerationFunction>
+                        <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm>
+                    </cppa:KeyEncryption>
+                    <cppa:DataEncryption>
+                        <cppa:EncryptionAlgorithm>http://www.w3.org/2009/xmlenc11#aes128-gcm</cppa:EncryptionAlgorithm>
+                    </cppa:DataEncryption>
+                </cppa:Encryption>
+            </cppa:WSSecurityBinding>
+            <cppa:AS4ReceptionAwareness>
+                <cppa:DuplicateHandling>
+                    <cppa:DuplicateElimination>true</cppa:DuplicateElimination>
+                    <cppa:PersistDuration>P10D</cppa:PersistDuration>        
+                </cppa:DuplicateHandling>
+                <cppa:RetryHandling>
+                    <cppa:Retries>5</cppa:Retries>
+                    <cppa:RetryInterval>PT30S</cppa:RetryInterval>        
+                </cppa:RetryHandling>
+            </cppa:AS4ReceptionAwareness>
+            <cppa:ErrorHandling>
+                <cppa:DeliveryFailuresNotifyProducer>true</cppa:DeliveryFailuresNotifyProducer>
+                <cppa:ReceiverErrorsReportChannelId>entsog_signal_channel_on_received</cppa:ReceiverErrorsReportChannelId>
+            </cppa:ErrorHandling>
+            <cppa:ReceiptHandling>
+                <cppa:ReceiptChannelId>entsog_signal_channel_on_received</cppa:ReceiptChannelId>
+            </cppa:ReceiptHandling>
+            <cppa:Compression>
+                <cppa:CompressionAlgorithm>application/gzip</cppa:CompressionAlgorithm>
+            </cppa:Compression>
+        </cppa:ebMS3Channel>        
+        <cppa:ebMS3Channel package="entsog_package" id="entsog_signal_channel_on_received" asResponse="true">
+            <cppa:Description xml:lang="en">Channel for ENTSOG AS4 Signal Messages</cppa:Description>
+            <cppa:ChannelProfile>http://www.entsog.eu/publications/as4#AS4-USAGE-PROFILE/v2.0/SignalMessageChannel</cppa:ChannelProfile>
+            <cppa:SOAPVersion>1.2</cppa:SOAPVersion>
+            <cppa:WSSecurityBinding>
+                <cppa:WSSVersion>1.1</cppa:WSSVersion>
+                <cppa:Signature>
+                    <cppa:SignatureAlgorithm>https://www.w3.org/2001/04/xmldsig-more#rsa-sha256</cppa:SignatureAlgorithm>
+                    <cppa:DigestAlgorithm>http://www.w3.org/2001/04/xmlenc#sha256</cppa:DigestAlgorithm> 
+                </cppa:Signature>
+            </cppa:WSSecurityBinding>
+        </cppa:ebMS3Channel>
+    </pycppa3:ChannelProfiles>
+</pycppa3:ChannelProfileConfig>
