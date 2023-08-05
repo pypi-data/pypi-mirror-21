@@ -1,0 +1,1 @@
+.. include:: ../../seda/doc/seda.rst
