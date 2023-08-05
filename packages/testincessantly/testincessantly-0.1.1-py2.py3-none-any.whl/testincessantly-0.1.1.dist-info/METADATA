@@ -1,0 +1,47 @@
+Metadata-Version: 2.0
+Name: testincessantly
+Version: 0.1.1
+Summary: A tool to run your tests way more often than necessary.
+Home-page: https://github.com/speezepearson/testincessantly
+Author: speezepearson
+Author-email: speeze.pearson@gmail.com
+License: UNKNOWN
+Keywords: test tool command-line
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Testing
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Requires-Dist: inotify
+Provides-Extra: dev
+Provides-Extra: test
+Requires-Dist: pytest; extra == 'test'
+
+A tool to run your tests way more often than necessary.
+
+Basically, just run:
+
+```bash
+    $ testincessantly dir test-cmd ...
+```
+
+and every time you create/modify/delete a file under `dir`, `test-cmd ...` will get executed.
+
+I typically invoke this as
+
+```bash
+    $ testincessantly -e '.*' -e '__pycache__' . pytest
+```
+The `-e` options exclude dotfiles and anything named `__pycache__`.
+
+Okay, that was a lie. I actually typically invoke
+```bash
+    $ testincessantly -e '.*' -e '__pycache__' . chime-success pytest
+```
+`chime-success` is [a script](https://gist.github.com/speezepearson/83c234c40d16c9f7fba73d8bca7a1a75) on my `PATH` that makes a noise indicating whether the argument-command passed or failed. Now, every time I save a file, I get a chime telling me whether things are still good or not.
+
+
