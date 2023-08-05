@@ -1,0 +1,172 @@
+Metadata-Version: 1.1
+Name: icemac.install.addressbook
+Version: 1.2
+Summary: Install, update and archive installations of icemac.addressbook.
+Home-page: https://github.com/icemac/icemac.install.addressbook
+Author: Michael Howitz
+Author-email: icemac@gmx.net
+License: ZPL 2.1
+Description: ==========================
+        icemac.install.addressbook
+        ==========================
+        
+        Scripts to ease the installation and update an existing installation of
+        `icemac.addressbook`_  to a new version of the package.
+        
+        .. _`icemac.addressbook` : https://pypi.org/project/icemac.addressbook/
+        
+        .. contents::
+        
+        Copyright
+        =========
+        
+        Copyright (c) 2016-2017 Michael Howitz
+        
+        All Rights Reserved.
+        
+        This software is subject to the provisions of the Zope Public License,
+        Version 2.1 (ZPL).  A copy of the ZPL should accompany this distribution.
+        THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
+        WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
+        FOR A PARTICULAR PURPOSE.
+        
+        
+        Installation of the scripts
+        ===========================
+        
+        Install the package `icemac.install.addressbook` using pip::
+        
+            $ pip install icemac.install.addressbook
+        
+        This creates two scripts in the `bin` directory:
+        
+            * ``install-addressbook``
+            * ``archive-addressbook``
+        
+        Usage
+        =====
+        
+        install-addressbook
+        -------------------
+        
+        Start the script using::
+        
+            $ bin/install-addressbook [VERSION_NUMBER]
+        
+        Where ``VERSION_NUMBER`` is the number of the version you want to install resp.
+        you want to update to. If you leave it out the newest version is used.
+        
+        
+        The script executes the following steps:
+        
+        1. Download the source distribution of `icemac.addressbook` to a temporary
+           directory.
+        2. Extract the source distribution to the current working directory.
+        3. Run the install script. If there is a symlink named ``current`` pointing to
+           a previous `icemac.addressbook` installation it uses its
+           configuration as default answers for the questions in the installation
+           process.
+        4. Create or replace the new symlink named ``current`` pointing to the new
+           installation.
+        
+        
+        make-current-addressbook
+        ------------------------
+        
+        This script is helpful if you want to switch back to an older installed address
+        book version in case of an error.
+        
+        Start the script using::
+        
+            $ bin/make-current-addressbook VERSION_NUMBER
+        
+        Where ``VERSION_NUMBER`` is the number of the version you want to make the
+        current one.
+        
+        The script executes the following steps:
+        
+        1. Create or replace the new symlink named ``current`` pointing to the new
+           installation.
+        
+        
+        archive-addressbook
+        -------------------
+        
+        After installing a new version of the address book you could archive the
+        previous one using this script.
+        
+        Start the script using::
+        
+            $ bin/archive-addressbook 4.1
+        
+        Where ``4.1`` is the version number of the installation you want to archive.
+        
+        The script executes the following steps:
+        
+        1. Create an archive of the requested
+           `icemac.addressbook` installation (as installed by install-addressbook_) in
+           a directory named ``archive``. (The ``archive`` directory is created if it
+           not yet exists.)
+        2. Delete the requested `icemac.addressbook` installation.
+        
+        
+        Copyright (c) 2016 Michael Howitz
+        All Rights Reserved.
+        
+        This software is subject to the provisions of the Zope Public License,
+        Version 2.1 (ZPL). A copy of the ZPL should accompany this distribution.
+        THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
+        WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+        WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
+        FOR A PARTICULAR PURPOSE.
+        
+        
+        ==========
+        Change log
+        ==========
+        
+        1.2 (2017-04-08)
+        ================
+        
+        - `install-addressbook` now prints a message before starting the download.
+        
+        - `archive-addressbook` now prints a message before starting archiving.
+        
+        1.1.1 (2017-01-07)
+        ==================
+        
+        - Prevent an error in `archive-addressbook` if the ``bz2`` module is not
+          available.
+        
+        
+        1.1 (2017-01-07)
+        ================
+        
+        - Add ``make-current-addressbook`` script to ease usage of the `current`
+          symlink in case of an error.
+        
+        
+        1.0 (2017-01-06)
+        ================
+        
+        - Initial release.
+        
+Keywords: icemac addressbook install update archive manage
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved
+Classifier: License :: OSI Approved :: Zope Public License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 2 :: Only
+Classifier: Programming Language :: Python :: Implementation
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Topic :: System
+Classifier: Topic :: System :: Archiving
+Classifier: Topic :: System :: Installation/Setup
