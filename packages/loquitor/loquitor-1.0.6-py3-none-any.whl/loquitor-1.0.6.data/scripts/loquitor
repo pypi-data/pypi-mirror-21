@@ -1,0 +1,96 @@
+#!python
+
+import argparse
+from code import interact
+from getpass import getpass
+import os
+import sys
+import time
+
+from Loquitor import bot
+
+def get_site(default):
+    usable = ('stackoverflow.com', 'stackexchange.com', 'meta.stackexchange.com')
+    site = input("Site (hit Enter to choose stackoverflow.com): ").strip()
+    while site not in usable:
+        if site:
+            site = input("Please choose one of {}: ".format(', '.join(usable))).strip()
+        else:
+            return default
+    return site
+
+def get_input(which, no_input=False, default_site=None):
+    if default_site is None:
+        default_site = 'stackoverflow.com'
+    if no_input:
+        if which == 'site':
+            return default_site
+        raise ValueError("Can't find {!r}".format(which))
+    if which == 'username':
+        return input("E-mail: ")
+    elif which == 'password':
+        return getpass('Password: ')
+    elif which == 'site':
+        return get_site(default_site)
+    elif which == 'room':
+        room = input("Room ID: ")
+        while True:
+            try:
+                return int(room)
+            except ValueError:
+                room = input("Please enter an integer: ")
+    else:
+        raise ValueError("I don't know how to find {!r}".format(which))
+
+
+def get_from_options():
+    parser = argparse.ArgumentParser(
+        description="Chatbot for Stack Exchange",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument("-u", "--username", help='E-mail address with which to login')
+    parser.add_argument("-p", "--password", help="Password wich which to login")
+    parser.add_argument(
+        "-s", "--site", help="Host for the chat room",
+        choices=("stackoverflow.com", "stackexchange.com", "meta.stackexchange.com")
+    )
+    parser.add_argument("-r", "--room", help="ID of the room to join", type=int)
+    parser.add_argument("-c", "--config-dir", help="Alternate folder to search for configuration files")
+    parser.add_argument("--no-input", help="Do not ask for input", action="store_true")
+    return parser.parse_args()
+
+if __name__ == '__main__':
+    config = vars(get_from_options())
+    envs = {
+        'username': 'LOQ_EMAIL',
+        'password': 'LOQ_PASSWORD',
+        'site': 'LOQ_SITE',
+        'room': 'LOQ_ROOM',
+    }
+    keys = ['username', 'password', 'room', 'config_dir', 'site', 'no_input']
+    no_input = config['no_input']
+    for key in keys:
+        if config[key] is None and key in envs:
+            config[key] = os.getenv(envs[key])
+
+            if config[key] is None:
+                try:
+                    config[key] = get_input(key, no_input)
+                except ValueError:
+                    sys.exit("Could not find all configuration options.")
+
+    if config['config_dir'] is None:
+        config['config_dir'] = os.path.expanduser("~/.loquitor")
+
+    print("Loading...", end="\r")
+    client, room, bot = bot.main(*(config[key] for key in keys))
+    if bot.no_input:
+        try:
+            print("Loquitor successfully started in {}.".format(room.name))
+            while True:
+                time.sleep(5)
+        except KeyboardInterrupt:
+            pass
+    else:
+        send = room.send_message
+        interact(banner="Welcome to Loquitor!", local=locals())
