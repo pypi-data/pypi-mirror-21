@@ -1,0 +1,183 @@
+metadata:
+  name: "PRCCDC 2016 Competition Scenario definition"
+  description: "Same as the other competition example, only with some services defined as Docker containers."
+  activity: "Pacific Rim Collegiate Cyber Defense Competition"
+  prefix: "PRCCDC"
+  date-created: "2016-11-01"
+  version: "0.9.0"
+  infrastructure-config-file: "infra.yaml"
+  folder-name: "Competitions/PRCCDC/prccdc-2016"
+
+groups:
+  Blue Team:  # Defenders
+    instances: 10
+    filename: "examples/blue-teams.json"
+  Red Team:   # Attackers
+    ad-group: "Red Team"
+  Black Team: # Infrastructure team
+    ad-group: "Black Team"
+
+services:
+  host-type-a:
+    template: "PRCCDC Windows 7 Host"
+    note: "Default password is Windows1"
+  host-type-b:
+    template: "PRCCDC Windows 10 Host"
+    note: "Default password is Windows1"
+  host-type-c:
+    template: "PRCCDC Ubuntu 14.04 Host"
+    note: "Default password is Password1"
+  score-bot:
+    image: "prccdc/score-bot"
+    tag: "0.1.2"
+  firewall:
+    template: "PRCCDC Firewall"
+    note: "Default Username: vyos   Password: vyos"
+    template-config:
+      video: no
+  domain-controller:
+    template: "PRCCDC Domain Controller"
+    note: "Default password is Windows1"
+    template-config:
+      video: no # RDP is used
+  web-server:
+    template: "PRCCDC Web Server"
+    note: "Default password is Password1"
+  database-server:
+    image: "prccdc/mysql-server"
+    note: "Default password is Password1"
+    tag: "7"
+  file-server:
+    template: "PRCCDC File Server"
+    note: "Default password is Windows1"
+    template-config:
+      video: no
+  mail-server:
+    template: "PRCCDC Mail Server"
+    note: "Default password is Windows1"
+    template-config:
+      video: no # RDP is used
+  hvac-server:
+    image: "prccdc/hvac-server"
+    note: "Default password is Password1"
+    tag: "1"
+
+networks:
+  unique-networks:
+    competition:
+      subnet: "172.30.0.0/16"
+      vswitch: "competition_vswitch"
+    outside-world: 
+      subnet: "172.20.0.0/16"
+      vswitch: "competition_vswitch"
+    management: 
+      subnet: "10.10.10.0/24"
+      vswitch: "competition_vswitch"
+  generic-networks:
+    hosts:
+      subnet: "10.0.0.0/24"
+      vswitch: "competition_vswitch"
+    services: 
+      subnet: "192.168.0.0/24"
+      vswitch: "competition_vswitch"
+      increment: yes
+
+folders:
+  external:
+    group: "Black Team"
+    description: "The open competition network, where red team and the score bot sit" 
+    services:
+      edge-router: 
+        description: "Connection to outside internet"
+        service: firewall
+        networks: ["outside-world", "competition", "management"]
+      competition-dc: 
+        description: "Provides DNS and DHCP"
+        service: domain-controller
+        networks: ["competition", "management"]
+      # Scorebots communicate over management network to randomly select which team gets pinged from which scorebot
+      score-bot:  
+        description: "Used to score teams"
+        service: score-bot
+        networks: ["competition", "management"]
+        instances:
+          number: 14
+          prefix: "Scorebot "
+  blue-team:
+    instances:
+      number: 14
+      prefix: "Blue Team "
+    group: "Blue Team"
+    services:
+      windows-hosts:
+        description: "Windows hosts that the blue team members use to access their services"
+        instances: 
+          prefix: "Host "
+          number: 6 # Number of users on a blue team
+        service: host-type-a
+        networks: ["hosts"]
+      linux-hosts:
+        description: "Linux hosts that the Blue team members use to access their services"
+        instances: 
+          prefix: "Linux Host "
+          number: 2
+        service: host-type-b
+        networks: ["hosts"]
+      gateway:
+        description: "Gateway connecting Blue team networks to the larger competition network"
+        service: firewall
+        networks: ["competition", "hosts", "services"]
+      dc: 
+        description: "Domain Controller for Blue Team network. Runs DNS, DHCP, and Active Directory."
+        service: domain-controller
+        networks: ["services"]
+      web:
+        description: "Web server hosting the team's page"
+        service: web-server
+        networks: ["services"]
+        scoring:
+          ports: [80, 443]
+          protocols: ["http", "https"]
+          criteria: "criteria-file.yaml"
+      db:
+        description: "Database"
+        service: database-server
+        networks: ["services"]
+      mail:
+        description: "Mail Server"
+        service: mail-server
+        networks: ["services"]
+        scoring:
+          ports: [25]
+          protocols: ["smtp"]
+          criteria: "criteria-file.yaml"
+      hvac:
+        description: "HVAC Server"
+        service: hvac-server
+        networks: ["services"]
+        scoring:
+          ports: [22]
+          protocols: ["ssh"]
+          criteria: "criteria-file.yaml"
+      file:
+        description: "File Server"
+        service: file-server
+        networks: ["services"]
+        scoring:
+          ports: [21, 445]
+          protocols: ["sftp", "smb"]
+          criteria: "criteria-file.yaml"
+  red-team:    
+    group: "Red Team"
+    services:
+      windows-hosts:
+        instances:
+          number: 28
+          prefix: "Attacker "
+        description: "Hosts used by Red Team to attack blue teams"
+        service: host-type-b
+        networks: ["competition"]
+      collaboration-server:
+        description: "Server for Red Team collaboration, including Armitage, SFTP, and IRC"
+        service: web-server
+        networks: ["competition"]
