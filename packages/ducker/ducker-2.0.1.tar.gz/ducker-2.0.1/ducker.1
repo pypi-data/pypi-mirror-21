@@ -1,0 +1,232 @@
+.TH DUCKER "1" "March 2017" "Ducker 2.0.1" "User Commands"
+.SH NAME
+Ducker \- search with DuckDuckGo from the command line
+.SH SYNOPSIS
+Ducker [OPTION]... [KEYWORD]...
+.SH DESCRIPTION
+.SS "positional arguments:"
+.TP
+search_str
+what you want to search
+.SS "optional arguments:"
+.TP
+\fB\-m\fR, \fB\-\-multiple\-search\fR
+launch a search for every word given
+.TP
+\fB\-i\fR, \fB\-\-image\-search\fR
+search for images
+.TP
+\fB\-v\fR, \fB\-\-video\-search\fR
+search for videos
+.TP
+\fB\-w\fR, \fB\-\-website\-search\fR
+search for websites
+.TP
+\fB\-H\fR, \fB\-\-no\-javascript\fR
+search with DuckDuckGo html interface
+.TP
+\fB\-l\fR, \fB\-\-lite\fR
+search with DuckDuckGo lite interface
+.TP
+\fB\-s\fR N, \fB\-\-start\fR N
+start at the Nth result
+.TP
+\fB\-n\fR N, \fB\-\-count\fR N
+show N results (default 8)
+.TP
+\fB\-c\fR REG, \fB\-\-reg\fR REG
+region-specific search e.g. 'ar-es' for Argentina; visit https://duckduckgo.com/params
+.TP
+\fB\-x\fR, \fB\-\-exact\fR
+disable automatic spelling correction
+.TP
+\fB\-C\fR \fB\-\-nocolor\fR
+disable color output
+.TP
+\fB\-colors\fR COLORS
+set output colors
+.TP
+\fB\-t\fR DURATION \fB\-\-time\fR DURATION
+time limit search [a (any time), d (past day), w (past week), m (past month)]
+.TP
+\fB\-\-site\fR SITE
+search a site using DuckDuckGo
+.TP
+\fB\-p\fR PROXY \fB\-\-proxy\fR PROXY
+tunnel traffic through an HTTPS proxy (HOST:PORT)
+.TP
+\fB\-\-noua\fR
+disable user agent
+.TP
+\fB\-\-json\fR
+output in JSON format; implies --noprompt
+.TP
+\fB\-\-np\fR \fB\-\-nopromp\fR
+perform search and exit, do not prompt
+.TP
+\fB\-d\fR \fB\-\-debug\fR
+enable debugging
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.TP
+\fB\-\-version\fR
+output version information and exit
+.SH INTERACTIVE MODE KEYS
+.TP
+.BI "n, p"
+Fetch the next or previous set of search results.
+.TP
+.BI "index"
+Open the result corresponding to index in browser.
+.TP
+.BI "f"
+Jump to the first page.
+.TP
+.BI o " [index ...]"
+Open space-separated result indices in the browser. Open the current search in the browser, if no arguments.
+.TP
+.BI g " keywords"
+Initiate a new DuckDuckGo search for \fIkeywords\fR with original options. This key should be used to search omniprompt keys (including itself) and indices.
+.TP
+.BI "q, ^D, double Enter"
+Exit Ducker.
+.TP
+.BI "?"
+Show help for interactive mode.
+.TP
+.BI *
+Any other string initiates a new search with original options.
+.SH COLORS
+\fBDucker\fR allows you to customize the color scheme via a six-letter string, reminiscent of BSD \fBLSCOLORS\fR. The six letters represent the colors of
+.IP - 2
+indices
+.PD 0 \" Change paragraph spacing to 0 in the list
+.IP - 2
+titles
+.IP - 2
+URLs
+.IP - 2
+nothing (may probably be used in a later version)
+.IP - 2
+abstracts
+.IP - 2
+prompts
+.PD 1 \" Restore paragraph spacing
+.TP
+respectively. The six-letter string is passed in either as the argument to the \fB--colors\fR option.
+.TP
+We offer the following colors/styles:
+.TS
+tab(;) box;
+l|l
+-|-
+l|l.
+Letter;Color/Style
+a;black
+b;red
+c;green
+d;yellow
+e;blue
+f;magenta
+g;cyan
+h;white
+i;bright black
+j;bright red
+k;bright green
+l;bright yellow
+m;bright blue
+n;bright magenta
+o;bright cyan
+p;bright white
+A-H;bold version of the lowercase-letter color
+I-P;bold version of the lowercase-letter bright color
+x;normal
+X;bold
+y;reverse video
+Y;bold reverse video
+.TE
+.TP
+.TP
+The default colors string is \fIGKlgxy\fR, which stands for
+.IP - 2
+bold bright cyan indices
+.PD 0 \" Change paragraph spacing to 0 in the list
+.IP - 2
+bold bright green titles
+.IP - 2
+bright yellow URLs
+.IP - 2
+cyan metadata/publishing info
+.IP - 2
+normal abstracts
+.IP - 2
+reverse video prompts
+.PD 1 \" Restore paragraph spacing
+.TP
+Note that
+.IP - 2
+Bright colors (implemented as \\x1b[90m - \\x1b[97m) may not be available in all color-capable terminal emulators;
+.IP - 2
+Some terminal emulators draw bold text in bright colors instead;
+.IP - 2
+Some terminal emulators only distinguish between bold and bright colors via a default-off switch.
+.TP
+Please consult the manual of your terminal emulator as well as \fIhttps://en.wikipedia.org/wiki/ANSI_escape_code\fR for details.
+.SH EXAMPLES
+.PP
+.IP 1. 4
+Search \fBhello world\fR with your default browser in DuckDuckGo HTML version:
+.PP
+.EX
+.IP
+.B ducker --no-javascript hello world
+.EE
+.PP
+.IP 2. 4
+Search for \fBresults\fR updated within the last \fBmonth\fR for the keywords \fBMetropolis\fR in \fBsite\fR archive.org:
+.PP
+.EX
+.IP
+.B ducker -n 4 -t m -w arhive.org Metropolis
+.EE
+.PP
+.IP 3. 4
+Open Ducker interactive mode disabling automatic spelling correction:
+.PP
+.EX
+.IP
+.B ducker --exact
+.EE
+.PP
+.IP 4. 4
+Search for a \fBspecific file type\fR:
+.PP
+.EX
+.IP
+.B ducker book type:pdf
+.EE
+.PP
+.IP 5. 4
+Use a \fBcustom color scheme\fR, e.g., one warm color scheme designed for Solarized Dark:
+.PP
+.EX
+.IP
+.B ducker --colors bjdxxy
+.EE
+.SH HOME
+.I https://www.freakspot.net/programas/ducker
+.SH REPORTING BUGS
+.I https://notabug.org/Ducker/ducker/issues
+.SH "SEE ALSO"
+The full documentation for
+.B Ducker
+is maintained as a Texinfo manual.  If the
+.B info
+and
+.B Ducker
+programs are properly installed at your site, the command
+.IP
+.B info Ducker
+.PP
+should give you access to the complete manual.
