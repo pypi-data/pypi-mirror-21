@@ -1,0 +1,94 @@
+# Bash completion suppot for LXDock
+#
+# Provides completion for commands and container names.
+#
+# Installation instructions:
+#   - place this script at /etc/bash_completion.d/lxdock
+#   - restart your shell
+#
+
+
+__lxdock_quiet() {
+  lxdock 2>/dev/null "$@"
+}
+
+# Returns all containers names of the project.
+___lxdock_container_names() {
+  __lxdock_quiet config --containers
+}
+
+_lxdock_complete () {
+  local cur cmd commands
+
+  commands='config destroy halt help init provision shell status up'
+
+  cur=${COMP_WORDS[COMP_CWORD]}
+  cmd=${COMP_WORDS[1]}
+
+  case ${COMP_CWORD} in
+    1)
+      COMPREPLY=($(compgen -W "$commands" -- "$cur" )) ;;
+    *)
+      case "${cmd}" in
+        config)
+          case "${cur}" in
+            -*)
+              COMPREPLY=($(compgen -W "--containers" -- ${cur})) ;;
+          esac
+          ;;
+        destroy)
+          case "${cur}" in
+            -*)
+              COMPREPLY=($(compgen -W "-f --force" -- ${cur})) ;;
+            *)
+              containers="$(___lxdock_container_names)"
+              COMPREPLY=($(compgen -W "$containers" -- ${cur}))
+              ;;
+          esac
+          ;;
+        halt)
+          containers="$(___lxdock_container_names)"
+          COMPREPLY=($(compgen -W "$containers" -- ${cur}))
+          ;;
+        help)
+          COMPREPLY=($(compgen -W "$commands" -- "$cur" )) ;;
+        halt)
+          containers="$(___lxdock_container_names)"
+          COMPREPLY=($(compgen -W "$containers" -- ${cur}))
+          ;;
+        init)
+          case "${cur}" in
+            -*)
+              COMPREPLY=($(compgen -W "-f --force --image --project" -- ${cur})) ;;
+          esac
+          ;;
+        provision)
+          containers="$(___lxdock_container_names)"
+          COMPREPLY=($(compgen -W "$containers" -- ${cur}))
+          ;;
+        shell)
+          case "${cur}" in
+            -*)
+              COMPREPLY=($(compgen -W "-u --username" -- ${cur})) ;;
+            *)
+              containers="$(___lxdock_container_names)"
+              COMPREPLY=($(compgen -W "$containers" -- ${cur}))
+              ;;
+          esac
+          ;;
+        status)
+          containers="$(___lxdock_container_names)"
+          COMPREPLY=($(compgen -W "$containers" -- ${cur}))
+          ;;
+        up)
+          containers="$(___lxdock_container_names)"
+          COMPREPLY=($(compgen -W "$containers" -- ${cur}))
+          ;;
+      esac
+      ;;
+  esac
+
+  return 0
+}
+
+complete -F _lxdock_complete lxdock
