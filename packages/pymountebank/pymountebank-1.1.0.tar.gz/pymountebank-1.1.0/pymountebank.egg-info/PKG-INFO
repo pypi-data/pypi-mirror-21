@@ -1,0 +1,55 @@
+Metadata-Version: 1.1
+Name: pymountebank
+Version: 1.1.0
+Summary: Mountebank wrapper for mocking HTTP APIs
+Home-page: https://github.com/quid/pymountebank
+Author: Quid Inc
+Author-email: infrastructure@quid.com
+License: BSD 3-Clause License
+Description: Mountebank
+        ==========
+        
+        This is a simple wrapper library around mountebank. It's useful for
+        mocking HTTP API services.
+        
+        Usage
+        -----
+        
+        ::
+        
+            from mountebank import Imposter
+        
+            imposter = Imposter()
+            imposter.add_stub("/text", "GET", "What I'm expecting")
+            with imposter.mockhttp() as url:
+                assert requests.get(url + "/test").text == "What I'm expecting"
+        
+        Development
+        -----------
+        
+        To run the containers:
+        
+        ::
+        
+            docker-compose up --build
+        
+        To test:
+        
+        ::
+        
+            docker-compose exec tests /bin/bash -c "cd /apps/mountebank/tests;pytest"
+            docker-compose exec tests2 /bin/bash -c "cd /apps/mountebank/tests;pytest"
+        
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
