@@ -1,0 +1,47 @@
+language: python
+
+cache: pip
+
+install:
+  - pip install tox coveralls
+
+env:
+  - TOXENV=pep8
+  - TOXENV=py27
+
+script:
+  - tox
+
+after_success:
+  - coveralls
+
+before_deploy:
+  - pip install 'pbr>=1.9' 'setuptools>=17.1'
+
+deploy:
+  # test pypi
+  - provider: pypi
+    distributions: sdist bdist_wheel
+    server: https://testpypi.python.org/pypi
+    user: MirantisWorkloadMobility
+    password:
+      secure: CztDEKUb0YXJBfh1ST8esBhKXDm3sLo3NY9nhx7iRb7YqEapbXOps5Eg5TQBDIuYD92SHVEIaqt23bVftGXo1Tbg8X5zhAzNOi5GltVuUq/8S6sFY7WN5nSqi8sRLvUPBcGQ6qBPzV3Tdz3PzbNMITPMB42P0UhsNDpPiaeolj80jL/Azh0zQ6sW7c9R6DKm5AY/lLJm1SIjIgM7nbi++nVKO1Iya6bsB6CyfYg8imjqfJDgPUnrYHvcwzAaqMcGBKj3mqMw4YylxMgREFVRR9z9H1oBoFZAnPLNihN/KDWN2729PRMAszInPzVzcpMKSVQN9lGU6Mho60JFABKenYpN4m/4dhRkbgPUiJN33mtbotE/3H+zO6/MAPR3dyo2ocMnBENxL2z+8PvadXRi4nqAIVBbJfo1IMCnu9cg/q4knvS8ZCcjZDPgnWFruOdQOy2mptorcX3Muis4YRaK52zv/SmOsB2J0E0rqT72vHbctr4+P9iEvu+J5KZvcHMCkrDvP0JSMT4lN9QWS9Bu4mJtpUYKjwijxDvTfXEpVx6f4gfGAJ21WmJDwDyQphhKsZNgtDIRqQktwWCEVrJtVHmlIL3DN0pL+/RYPnLPuQ/7SKMC31IUfOGo91CW6sO5LPfpAt6U8PWAzQqyNGIbHQJ/bTkyiNul+c3aKhNDXS8=
+    on:
+      tags: false
+      branch: master
+      python: 2.7
+      condition: $TOXENV = py27
+    skip_upload_docs: true
+
+  # production pypi
+  - provider: pypi
+    distributions: sdist bdist_wheel
+    user: MirantisWorkloadMobility
+    password:
+      secure: CztDEKUb0YXJBfh1ST8esBhKXDm3sLo3NY9nhx7iRb7YqEapbXOps5Eg5TQBDIuYD92SHVEIaqt23bVftGXo1Tbg8X5zhAzNOi5GltVuUq/8S6sFY7WN5nSqi8sRLvUPBcGQ6qBPzV3Tdz3PzbNMITPMB42P0UhsNDpPiaeolj80jL/Azh0zQ6sW7c9R6DKm5AY/lLJm1SIjIgM7nbi++nVKO1Iya6bsB6CyfYg8imjqfJDgPUnrYHvcwzAaqMcGBKj3mqMw4YylxMgREFVRR9z9H1oBoFZAnPLNihN/KDWN2729PRMAszInPzVzcpMKSVQN9lGU6Mho60JFABKenYpN4m/4dhRkbgPUiJN33mtbotE/3H+zO6/MAPR3dyo2ocMnBENxL2z+8PvadXRi4nqAIVBbJfo1IMCnu9cg/q4knvS8ZCcjZDPgnWFruOdQOy2mptorcX3Muis4YRaK52zv/SmOsB2J0E0rqT72vHbctr4+P9iEvu+J5KZvcHMCkrDvP0JSMT4lN9QWS9Bu4mJtpUYKjwijxDvTfXEpVx6f4gfGAJ21WmJDwDyQphhKsZNgtDIRqQktwWCEVrJtVHmlIL3DN0pL+/RYPnLPuQ/7SKMC31IUfOGo91CW6sO5LPfpAt6U8PWAzQqyNGIbHQJ/bTkyiNul+c3aKhNDXS8=
+    on:
+      tags: true
+      branch: master
+      python: 2.7
+      condition: $TOXENV = py27
+    skip_upload_docs: true
