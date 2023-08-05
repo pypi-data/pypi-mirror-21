@@ -1,0 +1,115 @@
+
+
+.. _sphx_glr_auto_examples_segmentation_plot_rag_merge.py:
+
+
+===========
+RAG Merging
+===========
+
+This example constructs a Region Adjacency Graph (RAG) and progressively merges
+regions that are similar in color. Merging two adjacent regions produces
+a new region with all the pixels from the merged regions. Regions are merged
+until no highly similar region pairs remain.
+
+
+
+
+
+.. code-block:: pytb
+
+    Traceback (most recent call last):
+      File "/Users/jni/projects/scikit-image/doc/source/../ext/sphinx_gallery/gen_rst.py", line 498, in execute_script
+        exec(code_block, example_globals)
+      File "<string>", line 58, in <module>
+      File "/Users/jni/conda/envs/ana3/lib/python3.5/site-packages/skimage/future/graph/graph_merge.py", line 130, in merge_hierarchical
+        _revalidate_node_edges(rag, new_id, edge_heap)
+      File "/Users/jni/conda/envs/ana3/lib/python3.5/site-packages/skimage/future/graph/graph_merge.py", line 38, in _revalidate_node_edges
+        heapq.heappush(heap_list, heap_item)
+    TypeError: unorderable types: float() > dict()
+
+
+
+
+
+.. code-block:: python
+
+
+    from skimage import data, io, segmentation, color
+    from skimage.future import graph
+    import numpy as np
+
+
+    def _weight_mean_color(graph, src, dst, n):
+        """Callback to handle merging nodes by recomputing mean color.
+
+        The method expects that the mean color of `dst` is already computed.
+
+        Parameters
+        ----------
+        graph : RAG
+            The graph under consideration.
+        src, dst : int
+            The vertices in `graph` to be merged.
+        n : int
+            A neighbor of `src` or `dst` or both.
+
+        Returns
+        -------
+        data : dict
+            A dictionary with the `"weight"` attribute set as the absolute
+            difference of the mean color between node `dst` and `n`.
+        """
+
+        diff = graph.node[dst]['mean color'] - graph.node[n]['mean color']
+        diff = np.linalg.norm(diff)
+        return {'weight': diff}
+
+
+    def merge_mean_color(graph, src, dst):
+        """Callback called before merging two nodes of a mean color distance graph.
+
+        This method computes the mean color of `dst`.
+
+        Parameters
+        ----------
+        graph : RAG
+            The graph under consideration.
+        src, dst : int
+            The vertices in `graph` to be merged.
+        """
+        graph.node[dst]['total color'] += graph.node[src]['total color']
+        graph.node[dst]['pixel count'] += graph.node[src]['pixel count']
+        graph.node[dst]['mean color'] = (graph.node[dst]['total color'] /
+                                         graph.node[dst]['pixel count'])
+
+
+    img = data.coffee()
+    labels = segmentation.slic(img, compactness=30, n_segments=400)
+    g = graph.rag_mean_color(img, labels)
+
+    labels2 = graph.merge_hierarchical(labels, g, thresh=35, rag_copy=False,
+                                       in_place_merge=True,
+                                       merge_func=merge_mean_color,
+                                       weight_func=_weight_mean_color)
+
+    g2 = graph.rag_mean_color(img, labels2)
+
+    out = color.label2rgb(labels2, img, kind='avg')
+    out = segmentation.mark_boundaries(out, labels2, (0, 0, 0))
+    io.imshow(out)
+    io.show()
+
+**Total running time of the script:**
+(0 minutes 0.000 seconds)
+
+
+
+.. container:: sphx-glr-download
+
+    **Download Python source code:** :download:`plot_rag_merge.py <plot_rag_merge.py>`
+
+
+.. container:: sphx-glr-download
+
+    **Download IPython notebook:** :download:`plot_rag_merge.ipynb <plot_rag_merge.ipynb>`
