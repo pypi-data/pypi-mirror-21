@@ -1,0 +1,44 @@
+---
+- name: Install Docker
+  yum:
+    name: docker
+    state: installed
+
+- name: Create Docker group
+  group:
+    name:  docker
+    gid:   "{{ docker_gid }}"
+    state: present
+
+- name: Add Docker group to the admin user
+  user: 
+    name:   "{{ admin_user }}"
+    append: yes
+    groups: docker
+
+- name: Copy docker socket file
+  copy:
+    src: docker.socket
+    dest: /usr/lib/systemd/system/docker.socket
+  notify:
+    - Reload Systemd
+    - Restart Docker
+  tags:
+    - copy_docker_socket_file
+
+- name: Copy Docker service file
+  template:
+    src:  docker.service.j2
+    dest: /usr/lib/systemd/system/docker.service
+  notify: 
+    - Reload Systemd
+    - Restart Docker
+  tags:
+    - copy_docker_service_file
+
+- name: Enable and start Docker service
+  service:
+    name:    docker
+    enabled: yes
+    state:   started
+  ignore_errors: yes
