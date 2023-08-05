@@ -1,0 +1,15 @@
+image: python:3
+
+before_script:
+  - python -m pip install -U twine pip setuptools wheel
+
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+    - python setup.py sdist bdist_wheel
+    - twine upload -u $PYPI_USER -p $PYPI_PASS --skip-existing dist/*
+  only:
+    - tags
