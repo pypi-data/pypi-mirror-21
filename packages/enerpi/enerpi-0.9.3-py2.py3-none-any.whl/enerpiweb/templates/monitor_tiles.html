@@ -1,0 +1,230 @@
+{% from 'macros/macros.html' import style_class_greyscale %}
+
+{#.tile-enerpi_data-power {#}
+{#    background-image: radial-gradient(farthest-corner at 70% 70%, rgba(12, 187, 67, 0.83), rgba(55, 245, 119, 0.27));}#}
+{#.tile-enerpi_data-power-text { color: #10371a; }#}
+{#.tile-enerpi_data-kWh {#}
+{#    background-image: radial-gradient(farthest-corner at 70% 70%, rgba(140, 39, 211, 0.83), rgba(191, 160, 245, 0.27));}#}
+{#.tile-enerpi_data-kWh-text { color: #2c1037; }#}
+{#.tile-enerpi_data-ldr {#}
+{#    background-image: radial-gradient(farthest-corner at 70% 70%, rgba(244, 216, 63, 0.83), rgba(219, 221, 13, 0.33));}#}
+{#.tile-enerpi_data-ldr-text { color: #333718; }#}
+
+
+{% macro monitor_tile_stream(title, type_data, mag, unit, glyp, c1, c2) %}
+<div id="tile-{{ type_data + '-' + mag }}"
+{#     class="tile-monitor tile-{{ type_data + '-' + mag }}">#}
+     class="tile-monitor"
+     style="background-image: radial-gradient(farthest-corner at 70% 70%, {{ c1|color }}, {{ c2|color }});">
+     <img id="tile-{{ type_data + '-' + mag }}-img" class="tile-img-bg" alt="last 24h ev."
+          src="{{ url_for('static', filename='img/generated/tile_{}_{}_last_72h.svg'.format(type_data, mag)) }}">
+    <div class="tile-monitor-innerContent">
+        {% if unit|length > 0 %}
+        <span class="tile-monitor-label float-left">
+            <strong><i class="fa fa-{{ glyp }}" aria-hidden="true"></i> {{ title }}</strong>
+            <br><span class="tile-monitor-label-sub stream-ts-{{ mag }}"></span>
+        </span>
+        <span id="tile-{{ type_data + '-' + mag }}-text" class="float-right">
+            <p class="tile-monitor-unit">{{ unit }}</p>
+            <p class="tile-monitor-value stream-{{ mag }}"></p>
+        </span>
+        {% else %}
+        <span class="tile-monitor-label" style="margin-top: 2%;">
+            <strong><i class="fa fa-{{ glyp }}" aria-hidden="true"></i> {{ title }}</strong>
+            <br><span class="tile-monitor-label-sub stream-ts-{{ mag }}"></span>
+        </span>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro monitor_tiles_styles() %}
+    <link href="{{ url_for('static', filename='css/tiles.css') }}" rel="stylesheet">
+    {{ style_class_greyscale('tile-inactive', 90) }}
+    {{ style_class_greyscale('tile-no-stream', 30) }}
+{#    {{ style_class_greyscale('tile-monitor:hover', 50) }}#}
+{% endmacro %}
+
+{% macro monitor_tiles(data_monitor, with_consumption) %}
+<div class="tile-monitor-container-join">
+    {% for s in data_monitor['sensors'] %}
+      {{ monitor_tile_stream(s['description'].upper(), 'enerpi_data', s['name'], s['unit'], s['icon'], s['tile_gradient_st'], s['tile_gradient_end']) }}
+    {% endfor %}
+    {% if with_consumption %}
+    {{ monitor_tile_stream('CONSUMPTION', 'enerpi_data', 'kWh', '', 'bar-chart', (140, 39, 211, 0.83), (191, 160, 245, 0.27)) }}
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro monitor_tiles_scripts(data_monitor) %}
+    <script src="https://raw.github.com/phstc/jquery-dateFormat/master/dist/jquery-dateFormat.min.js"></script>
+    <script type="text/javascript">
+        function refresh_static_tile_bg(type_data, type_mag) {
+            var $item = $("#tile-" + type_data + "-" + type_mag + "-img");
+            var bgimg_url = $item.attr("src");
+            var $downloadingImage = $("<img>");
+            $downloadingImage.load(function(){
+                $item.fadeOut(250, function(){
+                    $(this).attr("src", $downloadingImage.attr("src")).fadeIn(250);
+                });
+            });
+            bgimg_url = bgimg_url.replace(/.svg(\?)?([0-9]*)?/i, ".svg?" + String(new Date().getTime()));
+            $downloadingImage.attr("src", bgimg_url);
+        }
+        function execAndSetIntervalSwitchTileBg(type_data, type_mag) {
+            var item = $("#tile-" + type_data + "-" + type_mag + "-img");
+            if (item.length > 0) {
+                refresh_static_tile_bg(type_data, type_mag);
+                setInterval(function() { refresh_static_tile_bg(type_data, type_mag); }, 60000);
+            }
+            return 0;
+        }
+        function delay_remove_class(obj, class_remove, delay_ms) {
+            setTimeout(function() { obj.removeClass(class_remove); }, delay_ms);
+            return 0;
+        }
+        function checkTilesWithWidth() {
+            var tile = $(".tile-monitor");
+            tile.each(function (index, value){
+                var width = parseInt($(this).width());
+                var bgimg_url = $(this).find('img').attr("src");
+                var delta_tile;
+                if (width > 650) {
+                    delta_tile = '72h';
+                } else if (width > 400) {
+                    delta_tile = '48h';
+                } else {
+                    delta_tile = '24h';
+                }
+                if (bgimg_url.indexOf(delta_tile) == -1) {
+                    var new_bgimg_url = bgimg_url.replace('72h', delta_tile).replace('48h', delta_tile)
+                            .replace('24h', delta_tile);
+                    console.log(width + '-> ' + bgimg_url + ' => CAMBIO A: ' + new_bgimg_url);
+                    $(this).find('img').attr("src", new_bgimg_url);
+                }
+            });
+        }
+        $(document).ready(
+            function() {
+                var animate_value = 'minipulse';
+                var tile = $(".tile-monitor");
+                var container_height = parseInt(tile.height());
+
+                var fontSizeValue = container_height * 0.72+"px";
+                var fontSizeUnit = container_height * 0.26+"px";
+                var fontSizeLabel = container_height * 0.12+"px";
+                var fontSizeLabelSub = container_height * 0.1+"px";
+
+                $(".tile-monitor-value").css('font-size', fontSizeValue);
+                $(".tile-monitor-unit").css('font-size', fontSizeUnit);
+                $(".tile-monitor-label").css('font-size', fontSizeLabel);
+                $(".tile-monitor-label-sub").css('font-size', fontSizeLabelSub);
+
+                checkTilesWithWidth();
+                $(window).on('resize', '', {}, checkTilesWithWidth);
+
+                {% for s in data_monitor['sensors'] %}
+                    execAndSetIntervalSwitchTileBg('enerpi_data', '{{ s['name'] }}');
+                {% endfor %}
+                execAndSetIntervalSwitchTileBg('enerpi_data', 'kWh');
+
+                var sse = new EventSource('{{ url_for("stream_sensors")}}');
+                sse.onmessage = function (message) {
+                    if (message.data == '"CLOSE"') {
+                        console.log('detectando id CLOSE y cerrando');
+                        $('.tile-monitor').not('.tile-inactive').addClass('tile-no-stream');
+                        sse.close();
+                    } else {
+                        var data = JSON.parse(message.data);
+{#                        var table = $('#table_body_stream');#}
+{#                        var hay_table = table.length > 0;#}
+                        var text_values = tile.find('p.tile-monitor-value');
+                        var labeled_nsamples = false;
+                        {% set ts_column = data_monitor['ts'] %}
+                        {% for s in data_monitor['sensors'] %}
+                            {% if config['EXTRA_INFO'] %}
+                            if (!labeled_nsamples) {
+                                $('.stream-ts-' + '{{ s['name'] }}').html(data['{{ ts_column }}'] + ' (#ref=' + String(data['ref']) + ')');
+                                labeled_nsamples = true;
+                            } else {
+                                $('.stream-ts-' + '{{ s['name'] }}').html(data['{{ ts_column }}']);
+                            }
+                            {% else %}
+                            $('.stream-ts-' + '{{ s['name'] }}').html(data['{{ ts_column }}']);
+                            {% endif %}
+                            {% if s['is_rms'] %}
+                            $('.stream-' + '{{ s['name'] }}').html(data['{{ s['name'] }}']);
+                            {% else %}
+                            $('.stream-' + '{{ s['name'] }}').html(Math.round(data['{{ s['name'] }}'] * 1000) / 10);
+                            {% endif %}
+                        {% endfor %}
+                        text_values.addClass(animate_value);
+                        delay_remove_class(text_values, animate_value, 500);
+{#                    TODO Rehacer tabla stream valores#}
+{#                        if (hay_table) {#}
+{#                            var new_row = '<tr><td>' + $.format.date(data.ts, "HH:mm:ss")#}
+{#                                    + '</td><td style="text-align: left" class="hidden-md-down">' + data.msg + '</td><td><strong>'#}
+{#                                    + data.power + '</strong></td><td>' + (100 * data.ldr).toFixed(1) + '</td><td>'#}
+{#                                    + data.ref + '</td><td class="hidden-xs-down">' + data.noise + '</td></tr>'#}
+{#                            table.prepend(new_row);#}
+{#                        }#}
+                    }
+                };
+            });
+    </script>
+{% endmacro %}
+
+{% macro table_last_samples_with_stream(data_monitor, last_samples) %}
+<div id="container_table_stream" class="container-fluid">
+    <div class="col-xs-12 px-auto">
+    <h3><strong><span class="glyphicons glyphicons-stats"></span>Last samples:</strong></h3>
+    <div class="table-responsive">
+    <table class="table table-sm table-stripped table-hover table-not-bordered"
+           width="100%"
+           style="text-align: center">
+        <thead class="bg-success">
+            <tr>
+                <th>Time</th>
+                <th class="hidden-md-down">Raw MSG</th>
+                {% for s in data_monitor['sensors'] %}
+                    <th>{{ s['description'] }} ({{ s['unit'] }})</th>
+{#                <th>Power (W)</th>#}
+{#                <th>LDR (%)</th>#}
+{#                <th>nº samples</th>#}
+{#                <th class="hidden-xs-down">noise</th>#}
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody id="table_body_stream">
+        {% for sample in last_samples|reverse %}
+            <tr>
+            <td>{{ sample['ts'].strftime('%H:%M:%S') }}</td>
+            <td style="text-align: left" class="hidden-md-down">{{ sample['msg'] }}</td>
+
+            {% for s in data_monitor['sensors'] %}
+            {% if s['is_rms'] %}
+                <td>{{ sample[s['name']]|int }}</td>
+            {% else %}
+                <td>{{ (sample[s['name']] * 100)|round(1)}}</td>
+            {% endif  %}
+{#                <th>Power (W)</th>#}
+{#                <th>LDR (%)</th>#}
+{#                <th>nº samples</th>#}
+{#                <th class="hidden-xs-down">noise</th>#}
+            {% endfor %}
+{#            <td><strong>{{ sample['power']|int }}</strong></td>#}
+{#            <td>{{ (sample['ldr'] * 100)|round(1)}}</td>#}
+{#            <td>{{ sample['ref']|int }}</td>#}
+{#            <td class="hidden-xs-down">{{ sample['noise'] }}</td>#}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    </div>
+{#    {% for sample in last_samples %}#}
+{#        <p><strong>{{ sample['ts'].strftime('%H:%M:%S') }}</strong> - {{ sample }}</p>#}
+{#    {% endfor %}#}
+
+</div>
+{% endmacro %}
