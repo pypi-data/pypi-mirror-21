@@ -1,0 +1,28 @@
+{% load wagtailcore_tags i18n %}
+    <div class="comment__reply-thread">
+      {% with notice.target as article %}
+      {% with notice.action_object as comment %}
+        {% if comment.user_name.lower == 'anonymous' %}
+        <span class="comment__username">{{comment.user_name}}</span>
+      {% else %}
+        {% if not comment.user.profile.alias %}
+          <span class="comment__username">{% trans "Anonymous" %}</span>
+        {% else %}
+          <span class="comment__username">{{comment.user.profile.alias}}</span>
+        {% endif %}
+      {% endif %}
+
+      {% trans "replied to your comment on:" %}<a href="{% pageurl article %}">{{ article.title }}</a>
+        <span class="comment__timestamp">{{ notice.timesince }} {% trans "ago" %}</span>
+      {% endwith %}
+      {% endwith %}
+    </div>
+
+    <div class="comment__reply-thread-content comment__reply-thread--">
+      <h3 class="comment__heading">Your Comment:</h3>
+      <p class="comment__subtitle">{{ notice.action_object.parent.comment }}</p>
+    </div>
+    <div class="comment__reply-thread-content">
+      <h3 class="comment__heading">Their Reply:</h3>
+      <p class="comment__subtitle">{{ notice.action_object.comment }}</p>
+    </div>
