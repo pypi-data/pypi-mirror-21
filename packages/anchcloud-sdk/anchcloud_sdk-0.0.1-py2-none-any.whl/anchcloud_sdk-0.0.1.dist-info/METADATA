@@ -1,0 +1,93 @@
+Metadata-Version: 2.0
+Name: anchcloud-sdk
+Version: 0.0.1
+Summary: Software Development Kit for AnchCloud.
+Home-page: UNKNOWN
+Author: chenyl
+Author-email: chenyl@51idc.com
+License: UNKNOWN
+Keywords: anchcloud iaas qingstor sdk
+Platform: UNKNOWN
+Requires-Dist: datetime
+Requires-Dist: oauth2
+
+========================
+AnchnetCloud Python SDK
+========================
+
+This repository allows you to access `AnchCloud <https://openapi.51idc.com/>`_
+and control your resources from your applications.
+
+This SDK is licensed under
+`Apache Licence, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
+
+.. note::
+  Requires Python 2.7,
+  for more information please see
+  `AnchCloud SDK Documentation <https://openapi.51idc.com/api-console/>`_
+
+
+------------
+Installation
+------------
+
+Install via `pip <http://www.pip-installer.org>`_ ::
+
+    $ pip install anchcloud-sdk
+
+Upgrade to the latest version ::
+
+    $ pip install --upgrade anchcloud-sdk
+
+---------------
+Getting Started
+---------------
+
+In order to operate AnchCloud IaaS.
+you need apply **access key** on `anchcloud console <https://console.51idc.com/user/apikeypair/>`_ first.
+
+
+QingCloud IaaS API
+'''''''''''''''''''
+Pass access key id and secret key into class ``APIConnection`` to create connection ::
+
+  >>> from anchcloud.iaas.instances import *
+  >>> conn = APIConnection('CLIENTID','SECRETKEY')
+
+The variable ``APIConnection`` is the instance of ``anchcloud.iaas.conn.iaas_client``,
+we can use it to call resource related methods.
+
+Example::
+
+  # launch instances
+  >>> d = {
+            "instance": {
+                "zone": "ac2",
+                "image_id": "centos64x64c",
+                "instance_type": "PERFORMANCE",
+                "cpu": 1,
+                "memory": 1024,
+                "count": 1,
+                "login_mode": "passwd",
+                "login_passwd": "Abcd1234"
+            },
+            "order": {
+                "payment_type": "POSTPAY"
+            }
+        }
+  >>> ret = Instances(conn).create("ac2",d)
+
+  # stop instances
+  >>> d = {
+          "instances": [
+            "ins-Y4DFAOQ"
+            ]
+          }
+  >>> ret = Instances(conn).stop("ac2",d)
+
+  # describe instances
+  >>> d = {"status": "running,stopped"]}
+  >>> ret = Instances(conn).list("ac2",d)
+
+
+
