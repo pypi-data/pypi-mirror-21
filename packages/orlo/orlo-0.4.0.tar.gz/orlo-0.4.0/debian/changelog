@@ -1,0 +1,354 @@
+orlo (0.3.1-3) UNRELEASED; urgency=medium
+
+  [ Alex Forbes ]
+  * Fix exec path
+
+  [ vagrant ]
+
+ -- Alex Forbes <github@al4.co.nz>  Thu, 24 Nov 2016 10:09:28 +0000
+
+orlo (0.3.1-2) jessie; urgency=medium
+
+  [ Alex Forbes ]
+  * Fix path to gunicorn in systemd unit
+
+  [ vagrant ]
+
+ -- Alex Forbes <github@al4.co.nz>  Wed, 23 Nov 2016 18:02:42 +0000
+
+orlo (0.3.1-1) jessie; urgency=medium
+
+  [ Alex Forbes ]
+  * Fix test
+  * Rename __init__ to test_base and update imports
+  * Create multiple vagrant machines for testing
+  * Add jessie and xenial vagrant boxes for build/testing
+  * Run python setup.py clean in make clean
+  * Change deb install location to /opt/venvs
+  * Add initial tox.ini
+  * Default internal config should be sqlite
+  * Configure tests to use postgres in vagrant
+  * Remove trusty vm, fix IP
+  * Use main repos, upgrade dh-virtualenv, fix missing \
+  * Add db clients and restart postgres
+  * Small doc fix
+  * Remove dependency on passwd file by mocking the verification function
+  * Use tox to run tests in travis
+  * mock has moved under py3
+  * Set test database to localhost if running in Travis
+  * Set posargs for tox and maxfail for pytest
+  * Pass travis env car through to tox
+  * Rename DeployTest as LiveDbTest, move to test_base
+  * Add stress test
+  * Add liveserver config to app, refactor db test with classmethods
+  * Close the session in our json streamer to avoid leaking connections
+  * Test refactor
+  * Fix test failure caused by previous tests not clearing db connection
+  * Bump version to 0.3.1
+  * Fix locale in vagrantfile (for me anyway 😁), use tox for testing
+
+  [ vagrant ]
+
+ -- Alex Forbes <github@al4.co.nz>  Wed, 23 Nov 2016 17:39:48 +0000
+
+orlo (0.3.1) trusty; urgency=medium
+
+  * Add support for filtering by reference
+
+ -- Alex Forbes <github@al4.co.nz>  Tue, 05 Jul 2016 17:24:17 +0000
+
+orlo (0.3.0) trusty; urgency=medium
+
+  * Make vagrant owner of /vagrant for builds
+  * Reorganise tests
+  * Add basic /packages endpoint
+  * Bump version
+  * Fix /packages test
+
+ -- Alex Forbes <github@al4.co.nz>  Tue, 05 Jul 2016 15:19:56 +0000
+
+orlo (0.2.0) trusty; urgency=medium
+
+  [ Alex Forbes ]
+  * Add dependant python virtualenv package to Vagrantfile
+  * Add outline for Deploy process
+  * Use release object instead of re-declaring, add live server test
+
+  [ Ivan Coppa ]
+  * Support for Release metadata attributes, Deploy endpoint
+  * disabling debug
+
+  [ Alex Forbes ]
+  * Add integrated dummy deployer test
+  * Use relative path for deployer.rb
+
+  [ Marcel Kuiper ]
+  * Added POC for Token based AUthentication
+
+  [ Ivan Coppa ]
+  * enable deploy api call
+
+  [ Marcel Kuiper ]
+  * processed flake8 recommendations on user_auth.py
+
+  [ ivancoppa ]
+  * create base data
+
+  [ Alex Forbes ]
+  * Add last minute changes to create script
+  * Add last minute hacks to make everything work
+  * Add orlo_release to deployer env
+  * Create configuration for auth +
+  * Make URL a parameter for auth tests
+  * Only apply login_required when security is enabled
+  * Rename test classes to start with "Test"
+  * Move auth config into setup/teardown
+  * Add root page, test fixes
+  * Skip deploy test for now
+  * Move route_api to route_releases, rename metadatas => metadata
+  * Make token lifetime configurable, update orlo.ini with new options
+  * Bump version of Flask-HTTPAuth
+  * Add status code to OrloAuthError and add OrloConfigError
+  * Remove login_handler in favour or separate TokenAuth module
+  * Seperate token auth from http basic auth
+  * Only require auth when configured
+  * Implement deployer.py test deployer script
+  * Bump orloclient version, use py.test for travis
+  * Add pytz to requirements.txt
+  * Add requirements_testing.txt
+  * Move pytest to requirements_testing
+  * Use /bin/true in deploy shell test
+
+  [ Dustin Nguyen ]
+  * Added ldap auth
+  * Added ldap mock test
+
+  [ Alex Forbes ]
+  * Misc changes to deploy
+  * Tidy up example deployer
+  * Bump to pre-release 0.2
+  * Tidy comments in example deployer
+  * Use absolute path for version file
+  * Use orlo.cli as entry point instead of custom script
+  * Update Vagrantfile
+  * Fix silly bug, read config from file after set
+  * Move debian packaging files in to debian dir
+  * Explicitly set synced_folder to virtualbox provider
+  * [lintian] fix description
+  * Add /version url and test
+  * Add --version option to command line
+  * Handle getting an invalid release id gracefully
+  * Reduce test verbosity by disabling debug and removing prints
+  * [debian] Add prerm script to stop service
+  * Separate post_releases_start and post_releases_deploy
+  * Log output of deploy
+  * Use json.dumps instead of str() for reliable conversion
+  * Return output of deploy to client
+  * Add .DS_Store to gitignore
+  * Add payload of arguments to error
+  * Add configuration to documentation
+  * Break out ExecStart command into multiple lines for clarity
+  * Add note to test_auth file
+  * Make config file configurable by environment variable
+  * Include logger name in logs
+  * Update requirements for py3, use >= where possible
+  * Remove indirect dependencies
+  * Update Vagrantfile to Ubuntu Xenial
+  * Remove indirect imports
+  * [py3] fix import errors
+  * Fix tests to run under python3
+  * Fix for python2 again
+  * Add own fork of flask-testing
+  * Fix /versions sometimes returning wrong version
+
+  [ Ubuntu ]
+
+  [ Alex Forbes ]
+  * Add pyldap dependency
+  * Set back to python2 in debian build
+  * Bump version to 0.2.0
+  * Fix /info/packages tests failing
+  * Add ability to filter by none/null
+  * Raise version field length to 32
+  * Fix deprecation warnings
+  * Refine path handling in setup.py, revert Vagrantfile to Trusty
+
+ -- Alex Forbes <alforbes@gumtree.com>  Thu, 14 Apr 2016 16:17:34 +0000
+
+orlo (0.1.1) stable; urgency=medium
+
+  * Cast package_rollback as a boolean
+  * Add log files for gunicorn
+  * Separate debug mode and debug logging
+  * Return 400 when getting /releases with no filter
+  * Remove skip from documentation, it was renamed to offset
+  * Fix tests, require filter on GET /releases
+  * Bump vagrant box cpus to 2
+  * Implement stats by date/time
+  * Fix query in release stats to group by release
+  * Add boolean True to acceptable success values
+  * Bump version
+  * Cast package_rollback as a boolean
+  * Add log files for gunicorn
+  * Separate debug mode and debug logging
+  * Return 400 when getting /releases with no filter
+  * Remove skip from documentation, it was renamed to offset
+  * Fix tests, require filter on GET /releases
+  * Bump vagrant box cpus to 2
+  * Implement stats by date/time
+  * Fix query in release stats to group by release
+  * Add boolean True to acceptable success values
+  * Bump version
+
+ -- Alex Forbes <alforbes@gumtree.com>  Mon, 01 Feb 2016 18:19:03 +0000
+
+orlo (0.1.0) stable; urgency=medium
+
+  * Move orlo to /api/ in nginx
+  * Add ability to filter on rollback
+  * Add DB created to vagrant file
+  * Add more get_releases package filters and "latest" option
+  * Abstract filtering logic +
+  * Show easy to understand json message when filtering on invalid field
+  * Fix last/latest parameter name
+  * Use limit(1) instead of first for latest query
+  * Move helper functions from views.py to util.py
+  * Rename views.py to route_api.py
+  * Move filter function to util
+  * Start adding stats endpoints and functions
+  * Add index to stime field on Release
+  * Add __version__ attribute to package
+  * Add _version.py to gitignore
+  * Move cli interface into python page
+  * Add queries, for use by the stats and info routes
+  * Implement more /info endpoints, separate tests from stats
+  * Refactor non-endpoint tests to use internal methods rather than http
+  * Remove data.py
+  * Make the release counting function (now count_releases) more generic
+  * Add rollback filter to count_packages
+  * Comments, plus bump version
+  * Install requirements in vagrant file
+  * Fix platform name in log message
+  * Implement /stats endpoints
+  * Add /stats/package and consolidate the dictionary creation
+  * Handle poorly formatted time gracefully in stats endpoints
+  * Bump version
+  * Reverse Release-Package relationship
+  * Fix missing arguments passed to count_releases and implement /stats
+  * Fix to package_versions
+  * Rename /info urls
+  * Documentation updates
+  * Update Travis config to use Postgres
+  * Remove password from test postgres DB
+  * Fix postgres command
+  * Fix database setup
+  * Fix quotes in travis DB string
+  * Fix package_versions under postgres
+  * Set Flask packages to >= $version in requirements.txt
+  * Change /info/user endpoint
+  * Remove print statement, fix minor documentation bugs in /info
+  * Move platform in /info routes to query parameter
+  * Stream output of GET /releases to reduce memory usage
+  * Move /releases streaming json generator to util.py
+  * Add example curl to documentation for /import
+  * Abstract release logic away from the get_releases route
+  * Add status to get_releases parameters
+  * Remove "latest" filter option in favour of "desc" and "limit"
+  * Rename test_import
+  * Add offset to get_releases
+  * Ensure limit and offset are ints
+  * Implement time-based stats for charts
+  * Move orlo.conf to orlo/orlo.ini
+  * Rename package from python-orlo to orlo
+  * Deb packaging fixes
+  * Add tests for stop package
+  * Bump version to 0.1.0
+
+ -- Alex Forbes <alforbes@ebay.com>  Tue, 19 Jan 2016 16:07:52 +0000
+
+python-orlo (0.0.4) stable; urgency=medium
+
+  * Update debian description
+  * Rename /import/release to /releases/import, update docstring
+  * Fix release import error
+  * Add .deb files to gitignore
+  * Bump version
+  * Handle import of documents that omit optional parameters
+  * Add support for importing notes
+
+ -- Alex Forbes <alforbes@gumtree.com>  Fri, 11 Dec 2015 12:52:59 +0000
+
+python-orlo (0.0.3) stable; urgency=medium
+
+  * Multiple changes
+  * Convert platforms field to table reference, make import accept list
+  * Make platform.name unique
+
+ -- Alex Forbes <alforbes@gumtree.com>  Wed, 09 Dec 2015 16:13:44 +0000
+
+python-orlo (0.0.2) stable; urgency=medium
+
+  * Update readme post-rename
+  * Update documentation post-rename
+  * Add sphinxcontrib-httpdomain for readthedocs build
+  * Add requirements for readthedocs
+  * Add docs badge
+  * Remove circular reference
+  * Add host and port arguments to run_server
+  * Add diff_url to DbPackage initialisation
+  * Move Flask-Testing to tests_require
+  * Remove binary test db file
+  * Add /import endpoint for importing historical data
+  * Add rollback parameter to package
+  * Remove runserver command from travis, not needed
+  * Remove binary test db
+  * Fix runserver port type
+  * Bump version to 0.0.2
+
+ -- Alex Forbes <alforbes@ebay.com>  Tue, 24 Nov 2015 20:00:56 +0000
+
+python-orlo (0.0.1) stable; urgency=medium
+
+  [ Alex Forbes ]
+  * Initial commit
+  * Add .gitignore
+  * Add Vagrantfile
+  * Remove elasticsearch dependency
+  * Refactor tests to use TestCase, add config.py
+
+  [ sielaq ]
+  * Add travis
+
+  [ Wojciech Sielski ]
+  * Update README.md
+
+  [ Alex Forbes ]
+  * Fix tests
+  * Improvements to data/orm layer
+  * Add Travis widget to readme
+  * Fix duplicate if statement
+  * Add skeleton tests for missing api endpoints, misc tidy up
+  * No point in iterating over all in types test
+  * Add package/{start,stop} endpoints
+  * Create exceptions.py and move InvalidUsage to it
+  * Rename _package_input_is_valid and change how it is called
+  * Rename "release" endpoint to "releases"
+  * Add GET /releases endpoint
+  * Fixes to ORM
+  * Change all "now" times to utcnow()
+  * Store timezone in DbRelease and DbPackage
+  * Add skeleton tests for our release filters
+  * Add to_dict for DbPackage, and add packages to to_dict for DbRelease
+  * Implement the release/package and start/stop methods in the base class
+  * Implement package_name filter
+  * Change default time format to match ISO 8601
+  * Implement user filter
+  * Implement release platform filter
+  * Change stime and ftime to Arrow objects
+  * Implement stime_before filter
+  * Implement stime_after filter
+  * Implement ftime before and after filters
+  * Implement duration filters
+  * Implement team filter
+
+ -- Alex Forbes <alforbes@ebay.com>  Mon, 26 Oct 2015 17:07:03 +0000

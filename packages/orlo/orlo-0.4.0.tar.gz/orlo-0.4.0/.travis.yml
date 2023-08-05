@@ -1,0 +1,28 @@
+language: python
+dist: trusty
+
+notifications:
+  slack: ebayclassifiedsgroup:lH5V2FnojyNCh8X84Qi1FKjk
+
+python:
+  - "2.7"
+  - "3.4"
+
+addons:
+  apt:
+    packages:
+    - curl
+  postgresql: "9.4"
+
+services:
+  - postgresql
+
+before_script:
+  - psql -c "CREATE USER orlo PASSWORD 'password';"
+  - psql -c "CREATE DATABASE orlo OWNER orlo;" -U postgres
+
+before_install:
+  - pip install tox tox-travis
+
+script:
+  - tox -v -- --maxfail=2
