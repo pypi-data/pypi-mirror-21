@@ -1,0 +1,26 @@
+#!/bin/bash
+
+for (( i=1; i<=$#; i++ ))
+do [[ "${!i}" = "-h" ]] && { 
+        python -m ncsv.fastncsv "$@"
+        exit
+    }
+done
+
+[[ -t 0 ]] && [[ -t 1 ]] && {
+   #echo no stdin, no stdout, 
+    python -m ncsv.fastncsv "$@" | less -S
+}
+[[ -t 0 ]] && [[ ! -t 1 ]] && {
+   #echo no stdin, stdout redirected
+    python -m ncsv.fastncsv "$@"
+}
+[[ ! -t 0 ]] && [[ -t 1 ]] && {
+   #echo stdin redir, stdout not used
+   cat - | python -m ncsv.fastncsv "$@" | less -S
+}
+[[ ! -t 0 ]] && [[ ! -t 1 ]] && {
+   #echo stdin redir, stdout redirected
+   cat - | python -m ncsv.fastncsv "$@"
+}
+
