@@ -1,0 +1,42 @@
+{%extends "users/base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+{% load i18n %}
+{% block navi_content %}
+    {%include "users/includes/navicontents_leader.html" %}
+{% endblock %}
+{% block usernavi_content %}
+    {%include "users/includes/usernavicontents_leader.html" %}
+{% endblock %}
+
+{% block main_content %}
+ <div class="header">
+        <h1 class="title">Task Function</h1>
+ </div>
+<div style="color:black;" class="col-md-6">
+			
+			       <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css"/>
+                   <link rel="stylesheet" type="text/css" href="/static/admin/css/base.css"/>
+                   <link rel="stylesheet" type="text/css" href="/static/admin/css/widgets.css"/>
+				   {% url 'admin:jsi18n' as jsi18nurl %}
+                   <script type="text/javascript" src="{{ jsi18nurl|default:"../../../jsi18n/ " }}"></script>
+<fieldset style="color: white">
+    <div class="form-row">
+        <form action="" method="POST" class="form" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+                <button type="submit" class="btn btn-info btn-fill">
+                    Submit
+                </button>
+        </form>
+    </div>
+</fieldset>
+
+<script type="text/javascript" src="{% static 'spc/jsi18n.js' %}"></script>
+<script type="text/javascript" src="/static/admin/js/core.js"></script>
+<script type="text/javascript" src="/static/admin/js/calendar.js"></script>
+<script type="text/javascript" src="/static/admin/js/admin/DateTimeShortcuts.js"></script>
+<script type="text/javascript" src="/static/admin/js/SelectBox.js"></script>
+<script type="text/javascript" src="/static/admin/js/SelectFilter2.js"></script>
+</div>
+{% endblock%}

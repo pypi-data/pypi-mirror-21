@@ -1,0 +1,41 @@
+{%extends "users/base.html" %}
+ {% block navi_content %}
+		{%include "users/includes/navicontents_admin.html" %}
+{% endblock %}
+{% block usernavi_content %}
+		
+       {%include "users/includes/usernavicontents_admin.html" %} 
+
+{% endblock %}
+{% block main_content %}
+ <div class="content table-responsive table-full-width" >
+     <h4>List of Open Projects</h4>
+     <table class="table table-hover table-striped" summary="open_project_list">
+         {% if open_project_list %}
+             <thead>
+             <th style="text-align:center">Name</th>
+             <th style="text-align:center">Start Date</th>
+             <th style="text-align:center">End Date</th>
+             <th style="text-align:center">Status</th>
+             </thead>
+             <tbody>
+             {% for proj in open_project_list %}
+                 <tr>
+                     <td><a href="{% url 'project_detail' request.user.username proj.name %}">{{ proj.name }}</a></td>
+                     <td>{{ proj.start_date }}</td>
+                     <td>{{ proj.end_date }}</td>
+                     {% if proj.status == '0' %}
+                         <td>Open</td>
+                     {% else %}
+                         <td>Closed</td>
+                     {% endif %}
+                 </tr>
+             {% endfor %}
+             </tbody>
+         {% else %}
+             <p>No open projects</p>
+         {% endif %}
+     </table>
+	 {%include "users/includes/pagni.html" with page=open_project_list %}
+</div>
+{% endblock%}
