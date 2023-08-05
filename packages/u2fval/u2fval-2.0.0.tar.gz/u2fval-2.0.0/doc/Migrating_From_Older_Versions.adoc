@@ -1,0 +1,64 @@
+== Migrating From Older Versions
+When installing a new major version (X.0.0) of U2FVAL you may have to make some
+adjustments before it is usable. This documents lists backwards incompatible
+changes between versions.
+
+=== Version 2.0.0
+==== General changes
+The DATABASE_CONFIGURATION setting has been renamed to SQLALCHEMY_DATABASE_URI.
+The old name continues to work for now, but will log a warning.
+
+The "wsgi.py" file has been removed from this release. You can simply provide
+your own WSGI file to run the application in a WSGI container. At minimal, such
+a file should contain:
+
+  from u2fval import app as application
+
+See link:Apache_Deployment.adoc[Apache Deployment] for an example of how this
+can be done.
+
+==== Command line tool changes
+The command line utility has been rewritten, and the arguments may have changed
+slightly. Check the output of `u2fval --help` or `u2fval [command] --help` for
+more details. Providing a configuration file to use can now be done via the
+U2FVAL_SETTINGS environment variable.
+
+==== API changes
+This version uses a new version of the U2FVAL API. For a full specification,
+see https://developers.yubico.com/U2F/Standalone_servers/U2FVAL_REST_API.html.
+The structure of the responses have been changed to align with the FIDO U2F
+JavaScript API v1.1
+
+==== Database changes
+Some database columns have changed in this version. To migrate existing data
+from an older version of U2FVAL follow these steps:
+
+1. Dump the data from the database using mysqldump, pg_dump or similar for your
+   database. Dump the data only, not the table structure. Verify that the dump
+   contains your data!
+2. Drop the tables from the database, then re-create them using the
+   `u2fval db init` command from the new version of u2fval.
+3. Import the data from step 1 into the new tables.
+4. Run the recalculate-fingerprints.py script with the connection string for
+   your database (located in the source .tar.gz):
+
+  $ python recalc-fingerprints.py "sqlite:////path/to/database.db"
+
+You can manually change the columns in-place as an alternative, but you will
+still need to run the `recalc-fingerprints.py` afterwards. It is advised you
+create a backup of all data before attempting this.
+
+Detailed changes:
+- The `name` column in the `clients` table has been resized to 40 characters to
+  be in line with other name columns.
+- The `key` column in the `properties` table has been resized to 40 characters
+  to be in line with other name columns.
+- The `fingerprint` column in the `certificates` table has been resized to 128
+  characters to accommodate larger fingerprints.
+
+==== Logging changes
+The app now uses Flask's built-in logging which is based on the logging module
+included in Python. The recommended way to configure custom logging for
+production is by creating a `.wsgi` file to serve the app in a wsgi container,
+and configuring the logging in that file. See link:Logging.adoc[Logging] for
+more details.
