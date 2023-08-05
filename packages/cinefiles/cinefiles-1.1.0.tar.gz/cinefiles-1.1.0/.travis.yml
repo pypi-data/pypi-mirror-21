@@ -1,0 +1,39 @@
+#matrix:
+#  include:
+#    - os: linux
+#      dist: trusty
+#      sudo: required
+#    - os: osx
+#      osx_image: xcode7.2
+os:
+# osx tests queue for a long time
+  - linux
+#  - osx
+sudo: required
+language: python
+python:
+#  - "2.6"
+#  - "2.7"
+#  - "3.2"
+#  - "3.3"
+#  - "3.4"
+  - "3.5"
+#  - "3.5-dev" # 3.5 development branch
+#  - "3.6"
+#  - "3.6-dev" # 3.6 development branch
+#  - "3.7-dev" # 3.7 development branch
+#  - "nightly" # currently points to 3.7-dev
+# command to install dependencies
+#before_install:
+
+
+install:  
+  - pip install -e .[test]
+# command to run tests
+script:
+#  coverage run --source=cinefiles setup.py test
+#  pytest --cov=cinefiles --cov-report term-missing
+  pytest --cov=./
+  
+after_success:
+  codecov --flag-feature skip
