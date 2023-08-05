@@ -1,0 +1,17 @@
+intent: raw_input_test
+conversations:
+  default:
+    parrot:
+      node_type: response
+      pattern: "echo *"
+      responses:
+        - "You said: {user_input}"
+    command:
+      node_type: simple_logic
+      pattern: "run *"
+      command: "'{user_input}'"
+      next_node: print_result
+    print_result:
+      node_type: response
+      responses:
+        - "Command result: {command_result}"

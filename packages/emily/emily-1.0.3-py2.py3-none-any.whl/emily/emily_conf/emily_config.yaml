@@ -1,0 +1,44 @@
+# Standard config variables
+log_file: log/emily.log
+logging_level: DEBUG
+write_log_to_file: True
+emily_port: 8000
+default_session_vars: {'conversation':'default'}
+
+# Brain
+
+# Use LOCAL for local brain storage, DYNAMODB for AWS storage
+brain_source: LOCAL
+
+# Path to brain directory when source is LOCAL
+# DynamoDB table name when source is DYNAMODB
+brain_path: brain
+
+# Session variables
+
+# Use LOCAL for local session variable storage, DYNAMODB for AWS storage
+session_vars_source: LOCAL
+
+# Path to session vars file when source is LOCAL
+# DynamoDB table name when source is DYNAMODB
+session_vars_path: data/session_vars.json
+
+# Used when source is DYNAMODB only
+region: us-east-1
+
+
+# Optional Parameters for Alternate Functionality
+
+# By setting itent_command to a string like: go_find_intent.example("{user_input}")
+#   Emily will run the command and pass the user's input to your function. She will expect
+#   a string value in return, and use that value to filter the brain files by intent.
+intent_command: null
+
+# By setting preformat_command to a string like: preformat_the_input.example("{user_input}")
+#   Emily will run the command and pass the user's input to your function. She will expect
+#   a string value in return, and use that value as the new input to pass to the brain files.
+preformat_command: null
+
+# For use with conversations. If a starting node is specified, Emily will begin the conversation
+#   with that node and continue from there.
+starting_node: null
