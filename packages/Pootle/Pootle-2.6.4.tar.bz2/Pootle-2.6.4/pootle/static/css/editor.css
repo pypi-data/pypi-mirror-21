@@ -1,0 +1,1349 @@
+/*
+ * TRANSLATE PAGE
+ */
+
+body.translate #content
+{
+    margin: 1em 0;
+}
+
+/* MAIN TOOLBAR */
+
+textarea#view_unit
+{
+    display: none;
+}
+
+#toolbar
+{
+    background-color: #f8f8f8;
+    border-top: 1px solid #d9d9d9;
+    text-align: left;
+    width: 100%;
+    height: 46px;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    box-shadow: 0px 0px 20px #d9d9d9;
+}
+
+html[dir="rtl"] #toolbar
+{
+    text-align: right;
+}
+
+.toolbar > div
+{
+    display: inline-block;
+    padding: 10px;
+}
+
+/* Navigation buttons */
+
+#prevnext #item-navigation
+{
+    font-size: 120%;
+    margin: 0 0.5em;
+}
+
+#prevnext #item-number
+{
+    margin: 0; padding: 0;
+    text-align: center;
+    position: relative;
+    top: 1px;
+    border: 1px solid transparent;
+    background: transparent;
+}
+
+#prevnext #item-number:hover,
+#prevnext #item-number:focus
+{
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    outline: 0;
+}
+
+#prevnext #items-count
+{
+    display: inline-block;
+    min-width: 1em;
+}
+
+
+/* SPECIAL FOOTER */
+
+#translate-footer
+{
+    margin: 0 0 46px; /* this should be equal to the height of the #toolbar */
+}
+
+
+/* EDITOR - GENERAL */
+
+/* for the translation content, use regular sans-serif to ensure the maximum
+Unicode ranges is supported, and that they all look the same */
+.translation-text,
+#tm-results .suggestion-original,
+#tm-results .suggestion-translation,
+#id_search {
+    font-family: sans-serif;
+}
+
+#editor
+{
+    position: relative;
+}
+
+.editor-overlay
+{
+    background-color: rgba(255, 255, 255, 0.8);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    text-align: center;
+}
+
+.loader > div
+{
+    margin: 180px auto;
+}
+
+.editor-overlay > div.alert
+{
+    display: block;
+    margin: 180px auto 0;
+    width: 400px;
+}
+
+.toolbar-message
+{
+    position: fixed;
+    bottom: 46px; /* #toolbar height */
+    left: 50%;
+    width: 400px;
+    margin-left: -200px;
+    z-index: 101;
+    text-align: center;
+}
+
+.toolbar-message > div
+{
+    border-radius: 5px 5px 0 0;
+    border: 1px solid #d9d9d9;
+    border-bottom: 0px;
+    background-color: #f8f8f8;
+    padding: 0.5em 1em;
+    display: table;
+    margin: 0 auto;
+}
+
+
+/* TRANSLATE TABLE */
+
+table.translate-table
+{
+    width: 100%;
+    table-layout: fixed;
+    margin-top: 0;
+}
+
+table.translate-table td
+{
+    vertical-align: middle;
+}
+
+th.translate-original,
+th.translate-translation
+{
+    width: 50%;
+}
+
+tr.edit-row
+{
+    /*background-color: #f1f7f8;*/
+}
+
+tr.edit-row.with-ctx
+{
+    background-color: #dbe3e4;
+}
+
+.delimiter-row td
+{
+    padding: 0;
+}
+
+.delimiter-row .hd h2
+{
+    margin: 1em 25px 0.5em;
+    font-size: 1.5em;
+    border-bottom: 1px solid #ccc;
+}
+
+.delimiter-row:first-child .hd h2
+{
+    margin-top: 0;
+}
+
+/* Context */
+
+tr.edit-ctx
+{
+    font-size: 82%;
+}
+
+tr.edit-ctx td
+{
+    text-align: center;
+    color: #d9d9d9;
+    padding: 0;
+    overflow: hidden;
+}
+
+tr.edit-ctx a
+{
+     text-decoration: none;
+     opacity: 0.5;
+}
+
+tr.edit-ctx a:hover
+{
+     text-decoration: none;
+     opacity: 1;
+}
+
+tr.edit-ctx.before .edit-ctx-wrapper
+{
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.2) inset;
+    padding: 10px 0 20px;
+    margin: 0 -20px -10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+tr.edit-ctx.after .edit-ctx-wrapper
+{
+    box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.2) inset;
+    padding: 20px 0 10px;
+    margin: -10px -20px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+tr.ctx-row,
+tr.view-row
+{
+    font-size: 92%;
+    cursor: pointer;
+}
+
+tr.edit-ctx,
+tr.ctx-row
+{
+    background-color: #dbe3e4;
+}
+
+tr.ctx-row
+{
+    color: #889294;
+}
+
+tr.ctx-row:hover
+{
+    background-color: #ccdadb;
+}
+
+tr.view-row:hover
+{
+    background-color: #d9edf4;
+}
+
+.translation-text
+{
+    max-width: 100%;
+    overflow: auto;
+    font-size: 115%;
+}
+
+div.sources
+{
+    margin-top: 2em;
+    margin-bottom: -0.5em;
+}
+
+
+div.sources .translation-text
+{
+    padding: 0.1em 0;
+}
+
+.translation-text-headers
+{
+    color: #999;
+    font-size: 85%;
+    position: relative;
+    border-bottom: 1px dotted #d9d9d9;
+    padding-top: 0.5em;
+}
+
+.translation-space
+{
+    padding: 0 4px;
+    margin: 0 0.2em;
+    background-image: url('../images/squiggle.png');
+    background-repeat: repeat-x;
+    background-position: text-bottom;
+    vertical-align: middle;
+}
+
+/* TRANSLATION UNIT LAYOUT */
+
+div.translate-container
+{
+    position: relative;
+    margin: -5px 5px;
+    padding: 1em 0;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+    background-color: #f1f7f8;
+    overflow: hidden;
+    clear: both;
+}
+
+/* in translation editor, make hanging spaces more prominent */
+div.translate-container .translation-space
+{
+    background-color: yellow;
+    border: 1px solid red;
+}
+
+div.translate-container.error
+{
+    background-color: #fdd;
+}
+
+div.unit-path
+{
+    background-color: #0489b7;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    padding: 5px 20px;
+    color: rgba(255, 255, 255, 0.4);
+
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+div.unit-path li
+{
+    display: inline-block;
+    margin-right: 0.3em;
+}
+
+div.unit-path li:after
+{
+    content: '→';
+}
+
+html[dir="rtl"] div.unit-path li:after
+{
+    content: "←";
+}
+
+div.unit-path li:last-child:after
+{
+    content: '';
+}
+
+html[dir="rtl"] div.unit-path li:last-child:after
+{
+    content: '';
+}
+
+div.unit-path li span.content-wrapper
+{
+    display: inline-block;
+    margin-right: 0.5em;
+    color: #fff;
+}
+
+div.unit-path li a
+{
+    color: #cff;
+    filter: alpha(opacity=80);
+    opacity: .8;
+}
+
+div.translate-left,
+div.translate-right
+{
+    margin-top: 2em;
+}
+
+div.translate-left
+{
+    display: inline-block;
+    width: 24.5%;
+}
+
+div.translate-middle
+{
+    display: inline-block;
+    vertical-align: top;
+    width: 50%;
+    margin: 1em auto 0.5em;
+    position: relative;
+}
+
+div.translate-right
+{
+    float: right;
+    width: 24.5%;
+}
+
+/* ORIGINAL */
+
+div.source-language
+{
+    margin-bottom: 1em;
+}
+
+div.language-name
+{
+    border-top: 1px dotted #d9d9d9;
+    border-left: 1px dotted #d9d9d9;
+    border-right: 1px dotted #d9d9d9;
+    border-bottom: 1px solid #f1f7f8;
+    border-radius: 5px 5px 0 0;
+
+    padding: 1px 5px 0px;
+    display: inline-block;
+    position: absolute;
+    bottom: -1px;
+}
+
+.translate-focus div.translate-original,
+{
+    color: #130f30;
+}
+
+div.source-language.alternative
+{
+    color: #777;
+    margin-bottom: 2em;
+}
+
+table td.translate-original,
+table td.translate-translation
+{
+    padding: 0.5em 5px;
+    width: 50%;
+}
+
+table td.translate-original
+{
+    padding-left: 25px;
+}
+
+table td.translate-translation
+{
+    padding-right: 25px;
+}
+
+/* COMMENTS */
+
+.comments
+{
+    clear: both;
+    color: #666;
+}
+
+.comments p
+{
+    display: inline;
+    font-size: 85%;
+    line-height: 120%;
+    word-break: break-word;
+}
+
+/* Force-wrap URLs */
+.comments p a,
+.developer-images a
+{
+    white-space: normal !important;
+}
+
+.sidetitle,
+.comments .developer-comments
+{
+    display: inline;
+}
+
+.developer-comments + .developer-images
+{
+    margin-top: 1em;
+}
+
+.developer-images img
+{
+    width: 29%;
+    height: auto;
+    margin: 2px;
+    vertical-align: top;
+}
+
+.translate-locations,
+.translate-context-value
+{
+    font-size: 90%;
+    display: inline;
+    word-wrap: break-word;
+}
+
+.translate-context-value
+{
+    font-weight: bold;
+}
+
+#comment-form textarea
+{
+    vertical-align: top;
+    padding: 0;
+    min-height: 1em;
+    width: 100%;
+    color: #666;
+    font-size: 90%;
+    line-height: 1.2em;
+    margin-bottom: 5px;
+}
+
+/* TODO: review this */
+.terminology div.translator-comments
+{
+    background-color: #eaf0f4;
+    border: 1px solid #d2e1ed;
+    overflow: auto;
+    padding: 5px;
+}
+
+
+/* TRANSLATION */
+
+td.translate-focus
+{
+    vertical-align: top;
+}
+
+td.translate-full div.translate-original
+{
+    width: 100%;
+    margin: 0.5em 0;
+}
+
+td.translate-full textarea.translation
+{
+    width: 100%;
+    margin: 0 auto 0.5em;
+    padding: 0;
+    min-height: 2.7em;
+}
+
+.translate-translation .textcomplete-wrapper
+{
+    width: 100%;
+    display: block !important;
+}
+
+/* TM and suggestions */
+
+.sidebar
+{
+    padding: 0 30px 1em 20px;
+}
+
+html[dir="rtl"] .sidebar
+{
+    padding: 0 20px 1em 30px;
+}
+
+.sidetitle,
+.unit-meta,
+.extra-item-meta,
+.extra-item-title
+{
+    color: #999;
+    font-size: 85%;
+}
+
+.unit-meta
+{
+    position: absolute;
+    right: 0;
+    text-align: right;
+}
+
+html[dir="rtl"] .unit-meta
+{
+    right: auto;
+    left: 0;
+    text-align: left;
+}
+
+.extra-item-meta
+{
+    float: right;
+}
+
+html[dir="rtl"] .extra-item-meta
+{
+    float: left;
+}
+
+#tm
+{
+    position: relative;
+}
+
+.tm-unit
+{
+    margin: 0 0.5em 0.5em 0;
+    padding: 0.1em 0.5em;
+    background-color: #ffc;
+    border: 1px dotted #999;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 90%;
+}
+
+.tm-unit:hover
+{
+    background-color: #ff9;
+}
+
+.tm-original
+{
+    font-weight: bolder;
+    padding-right: 0.3em;
+}
+
+#tm[dir="rtl"] .tm-original
+{
+    padding-right: auto;
+    padding-left: 0.3em;
+}
+
+.tm-translation
+{
+    font-style: oblique;
+}
+
+.tm-translation[dir="rtl"]
+{
+    text-align: right;
+}
+
+/* EXTRAS: SUGGESTIONS, TM RESULTS, COMMENTS */
+
+#suggestions,
+#timeline-results,
+#tm-results,
+#translator-comment
+{
+    clear: both;
+    margin-top: 1em;
+}
+
+#extras-bar a
+{
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 0.9em;
+}
+
+html[dir="rtl"] #extras-bar a
+{
+    margin-right: 0;
+    margin-left: 10px;
+}
+
+.extra-item-block
+{
+    clear: both;
+    position: relative;
+}
+
+.extra-item-block:last-child
+{
+    margin-bottom: 0;
+}
+
+.suggestion-action img
+{
+    top: 50%;
+    opacity: 0.1;
+}
+
+a.suggestion-action
+{
+    float: right;
+}
+
+html[dir="rtl"] .suggestion-action
+{
+    float: left;
+}
+
+.suggestion-translation-body
+{
+    unicode-bidi: embed;
+}
+
+.extra-item-block:hover .suggestion-action img
+{
+    opacity: 0.5;
+}
+
+.extra-item-block .suggestion-action img:hover
+{
+    opacity: 1;
+}
+
+.extra-item
+{
+    background-color: #f1f7e4;
+    border: 1px dotted #d9d9d9;
+    color: #444;
+    line-height: 140%;
+    padding: 0.5em;
+}
+
+.extra-item:hover
+{
+    background-color: #fff;
+}
+
+#translator-comment .extra-item:hover
+{
+    background-color: #f1f7e4;
+}
+
+.suggestion-original
+{
+    font-weight: bolder;
+    color: #130f30;
+    padding-right: 1em;
+    float: left;
+}
+
+#target-item-gravatar a
+{
+    opacity: 1;
+}
+
+.extra-item-gravatar,
+#target-item-gravatar
+{
+    position: absolute;
+    margin-top: 4px;
+    margin-left: -30px;
+}
+
+html[dir="rtl"] .extra-item-gravatar,
+html[dir="rtl"] #target-item-gravatar
+{
+    margin-left: auto;
+    margin-right: -30px;
+}
+
+.extra-item-tm-content
+{
+    float: left;
+    margin-bottom: -1px;
+    width: 100%;
+}
+
+.extra-item-tm-user
+{
+    float: left;
+    margin-top: 4px;
+    margin-left: -30px;
+}
+
+html[dir="rtl"] .extra-item-tm-user
+{
+    float: right;
+    margin-left: auto;
+    margin-right: -30px;
+}
+.extra-item-tm-project
+{
+    text-align: center;
+    font-size: x-small;
+    float: right;
+    width: 40px;
+    margin-top: 4px;
+    margin-right: -40px;
+}
+
+html[dir="rtl"] .extra-item-tm-project
+{
+    float: left;
+}
+
+.extra-item-content,
+#target-item-content
+{
+    margin-bottom: -1px;
+    width: 100%;
+}
+
+.extra-item-comment
+{
+    unicode-bidi: embed;
+}
+
+.timeline-extra
+{
+    position:absolute;
+    top: 0;
+    left: 100%;
+    font-size: 0.9em;
+    padding: 2px;
+}
+
+html[dir="rtl"] .timeline-extra
+{
+    left: auto;
+    right: 100%;
+}
+
+.timeline-field-3,
+.timeline-field-0
+{
+    font-size: 85%;
+}
+
+.timeline-field-3 .sidetitle
+{
+    font-size: 100%;
+}
+
+.timeline-field-body
+{
+    unicode-bidi: embed;
+}
+
+.timeline-arrow:before
+{
+    content: "→";
+}
+
+html[dir="rtl"] .timeline-arrow:before
+{
+    content: "←";
+}
+
+#editor-comment
+{
+    margin: 10px 0;
+}
+
+/* CHECKS */
+
+ul.checks
+{
+    display: inline;
+    font-size: 85%;
+}
+
+div.check a
+{
+    cursor: help;
+}
+
+.checkinfo
+{
+    vertical-align: top;
+    margin-top: 3px;
+}
+
+#translate-checks-block
+{
+    position: absolute;
+    left: 100%;
+    margin: 14px 10px 0 20px;
+    width: 46%;
+}
+
+[dir="rtl"] #translate-checks-block
+{
+    right: 100%;
+}
+
+#translate-checks-block .sidetitle
+{
+    color: rgba(0, 0, 0, 0.75);
+    float: left;
+    display: inline-block;
+    margin: 0.1em 1em 0 0;
+}
+
+[dir="rtl"] #translate-checks-block .sidetitle
+{
+    float: right;
+}
+
+li.check
+{
+    display: inline-block;
+    margin: 0 1em 0.5em -0.5em;
+    padding: 0.1em 0.5em;
+    border-radius: 4px;
+}
+
+li.check[dir="rtl"]
+{
+    float: right;
+}
+
+#translate-checks-block.blink li.check
+{
+    background-color: #900;
+}
+
+#translate-checks-block.blink .checks a
+{
+    color: #fff;
+}
+
+li.check:hover
+{
+    background-color: #fff;
+}
+
+li.check > a
+{
+    cursor: help;
+}
+
+li.check.false-positive > a
+{
+    color: rgba(0, 0, 0, 0.5);
+}
+
+#translate-checks-block i
+{
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.check .unmute-check
+{
+    display: none;
+}
+
+.check.false-positive .mute-check
+{
+    display: none;
+}
+
+.check.false-positive .unmute-check
+{
+    display: inline-block;
+}
+
+/* CONTROLS */
+
+.translate-buttons-block
+{
+    left: 100%;
+    position: absolute;
+    margin: 0 10px 0 20px;
+}
+
+.translate-buttons-block[dir="rtl"]
+{
+    left: auto;
+    right: 102%;
+}
+
+.translate-buttons-block .btn
+{
+    margin-bottom: 0.5em;
+    min-width: 110px;
+}
+
+.translate-buttons-block input.suggest
+{
+    display: none;
+}
+
+table.suggest-mode .translate-buttons-block input.suggest
+{
+    display: block;
+}
+
+table.suggest-mode .translate-buttons-block input.submit
+{
+    display: none;
+}
+
+.translate-fuzzy-block
+{
+    text-align: center;
+    font-style: italic;
+    white-space: nowrap;
+}
+
+.translate-fuzzy-block label
+{
+    vertical-align: middle;
+}
+
+input.fuzzycheck
+{
+    vertical-align: middle;
+}
+
+table.suggest-mode .translate-fuzzy-block
+{
+    display: none;
+}
+
+.switch-suggest-mode
+{
+    position: absolute;
+    left: 120px;
+    top: 0px;
+    padding: 5px 0;
+    line-height: 150%;
+}
+
+.translate-full[dir="rtl"] .switch-suggest-mode
+{
+    left: 0px;
+    right: 120px;
+}
+
+.switch-suggest-mode .suggest
+{
+    display: none;
+}
+
+table.suggest-mode .switch-suggest-mode .suggest
+{
+    display: inherit;
+}
+
+table.suggest-mode .switch-suggest-mode .submit
+{
+    display: none;
+}
+
+.translate-toolbar
+{
+    position: absolute;
+    top: -12px;
+    /* LTR */
+    right: 0;
+}
+
+.translate-toolbar a
+{
+    margin-left: 0.5em;
+}
+
+
+div.translation-text-headers[dir="rtl"] div.translate-toolbar
+{
+    right: auto;
+    left: 0;
+}
+
+div.translation-text-headers[dir="rtl"] div.translate-toolbar a
+{
+    margin-left: 0;
+    margin-right: 0.5em;
+}
+
+.translate-toolbar a,
+.js-editor-copytext
+{
+    cursor: pointer;
+}
+
+.translate-container a
+{
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.7;
+}
+
+.translate-container a:hover
+{
+    opacity: 1;
+}
+
+/* We don't want the above hover activity for links in the comments. */
+.developer-comments a
+{
+    text-decoration: none;
+    opacity: 1;
+}
+
+.developer-comments a:hover
+{
+    text-decoration: underline;
+}
+
+.editor-specialchars-block
+{
+    text-align: center;
+}
+
+a.editor-specialchar
+{
+    padding: 0 0.2em;
+    min-width: 1.3em;
+    margin: 2px 0;
+    display: inline-block;
+}
+
+a.editor-specialchar:hover
+{
+    background-color: #fff;
+    text-decoration: none;
+}
+
+/* DIFF */
+
+.diff-replace,
+.diff-delete,
+.diff-insert
+{
+    color: #130f30;
+    background-color: #ffb;
+    border: 1px dotted #999;
+}
+
+.diff-delete,
+.diff-delete *
+{
+    color: #aaa !important;
+    text-decoration: line-through;
+}
+
+/* DIFF FOR TM SERVER ENTRIES */
+
+.tm-server .diff-replace,
+.tm-server .diff-delete,
+.tm-server .diff-insert
+{
+    color: #999;
+    border: 1px dotted #d9d9d9;
+    background-color: #F1F7F8; /* same as edit-row bg */
+}
+
+.tm-server .diff-delete,
+.tm-server .diff-delete *
+{
+    color: #d9d9d9 !important;
+    font-weight: normal;
+}
+
+
+/* HIGHLIGHT */
+
+.highlight-escape
+{
+    color: purple;
+}
+
+.highlight-html,
+.placeable
+{
+    color: #840;
+}
+
+.highlight-escape,
+.placeable
+{
+    /* Switch the next two lines to “unicode-bidi: isolate” once it is widely
+     * supported and let the browser determine the direction, instead of
+     * assuming that all placeables are left-to-right string.
+     */
+    direction: ltr;
+    unicode-bidi: embed;
+}
+
+.placeable:hover,
+.highlight-escape:hover,
+#js-selected-placeable
+{
+    color: #000;
+    background-color: #90ee90;
+}
+
+.tm-server .suggestion-original .highlight-html
+{
+    color: #630;
+}
+
+a.editor-specialchar,
+.highlight-punctuation
+{
+    border: 1px dotted #999;
+    color: #666;
+}
+
+.highlight
+{
+    background-color: #FFC;
+}
+
+/* FUZZY TRANSLATION */
+
+div.translate-translation
+{
+    min-height: 1.5em;
+}
+
+/* Special handling for languages with big fonts */
+td.translate-full div.translate-translation:lang(bn),
+td.translate-full div.translate-translation:lang(fa),
+td.translate-full div.translate-translation:lang(ja),
+td.translate-full div.translate-translation:lang(ko),
+td.translate-full div.translate-translation:lang(zh)
+{
+    margin-bottom: 35px;
+}
+
+tr.view-row td.fuzzy-unit .translation-text
+{
+    color: #888;
+    font-style: italic;
+}
+
+tr.edit-row.fuzzy-unit textarea.translation
+{
+    font-style: italic;
+}
+
+table.suggest-mode tr.edit-row.fuzzy-unit textarea.translation
+{
+    color: inherit;
+    font-style: normal;
+}
+
+
+textarea.translation
+{
+    resize: vertical;
+    font-size: 115%;
+}
+
+textarea.translation:disabled
+{
+    background: none;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* TERMINOLOGY MANAGEMENT */
+
+td.translate-delete-terminology input
+{
+    display: block;
+    margin: 0 auto;
+}
+
+.translate-term-original
+{
+    padding: 0 10px;
+}
+
+.translate-term-translation
+{
+    padding: 0 25px;
+}
+
+.left
+{
+    float: left;
+}
+
+.right
+{
+    float: right;
+}
+
+/* HISTORY */
+
+table.history,
+table.history td
+{
+    width: 100%;
+    border: 1px solid black;
+}
+
+table.history td
+{
+    padding: 5px;
+}
+
+/* Keyboard shortcuts dialog */
+
+#keyboard-button
+{
+    float: right;
+    margin: 0;
+    margin-top: .8em;
+    margin-right: 2em;
+    text-align: center;
+    line-height: 1.5em;
+    font-size: 1em;
+    vertical-align: text-top;
+}
+
+html[dir="rtl"] #keyboard-button
+{
+    float: left;
+    margin-right: 0;
+}
+
+#keyboard-button .kbd-icon
+{
+    float: right;
+    font-size: 1.5em;
+    margin: 0;
+    margin-left: .3em;
+}
+
+html[dir="rtl"] #keyboard-button .kbd-icon
+{
+    float: left;
+    margin-right: .3em;
+    margin-left: 0;
+}
+
+td.keyboard-shortcut
+{
+    padding: 1em;
+    font-weight: bold;
+}
+
+kbd
+{
+    border: 1px solid #aaa;
+    border-radius: 2px;
+    box-shadow: 1px 2px 2px #ddd;
+    background-color: #f9f9f9;
+    background-image: linear-gradient(top, #eee, #f9f9f9, #eee);
+    padding: 1px 3px;
+    font-family: inherit;
+}
