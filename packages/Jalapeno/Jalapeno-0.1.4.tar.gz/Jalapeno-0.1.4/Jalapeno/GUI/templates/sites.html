@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <meta charset="UTF-8">
+    <title>Jquery Ajax Test</title>
+    <link rel='stylesheet' href='{{gui.css.sites}}'>
+	<script src="{{gui.js.jquery}}"></script>
+	
+
+
+	</head>
+	
+	
+	<body>
+	<div class="content">
+		<div class="center container">
+
+			<h1>You may like ...</h1>
+				<ul>
+					<li><button id="createsite" class ='sitebtn btn btn-primary btn-info'>Create Site</button></li>
+					<li><button id="switchsite" class ='sitebtn btn btn-primary btn-info'>Site Switch</button></li>
+					<li><button id="currentsite" class ='sitebtn btn btn-primary btn-info'>Current Site</button></li>
+				</ul>
+
+
+		</div>
+		
+	</div>
+	
+		<script type="text/javascript">
+			$("#createsite").click(function(){
+					var sitename = prompt("Please enter new Site name:");
+					$.post("/sites/site-create",sitename);
+				
+				});
+			$("#switchsite").click(function(){
+					var sitename = prompt("Ente the Site name you want switch to :");
+					$.post("/sites/switch-site",sitename);
+				});
+			$("#currentsite").click(function(){
+					var sitename = $.get("/sites/current-site",function(data,status){
+      					alert("Your Current Site is '" + data +"'");
+    					});
+				});
+			
+
+		</script>
+	
+	</body>
+	
+	
+	
+</html>
+

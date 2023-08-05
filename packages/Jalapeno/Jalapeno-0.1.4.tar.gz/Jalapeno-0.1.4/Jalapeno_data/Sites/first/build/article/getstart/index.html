@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>
+使用Jalapeno快速搭建博客
+|| 老钱</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel='stylesheet' href='/static/css/normalize.css'>
+		<link rel='stylesheet' href="/static/css/mono.css">
+		<link rel='stylesheet' href='/static/css/bootstrap.css'>
+		<link rel='stylesheet' media="screen and (min-width:1023px)"  href='/static/css/homepage.css'>
+		<link rel='stylesheet' media="screen and (max-width:1023px)"  href='/static/icss/ihomepage.css'>
+        
+
+<link rel='stylesheet' media="screen and (min-width:1025px)"  href='/static/css/article.css'>
+
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='/static/icss/iarticle.css'>
+
+
+        
+        <script src="https://carnivalapp.io/sites/559/init.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", Carnival.init);
+</script>
+        
+                 <script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-83291137-1', 'auto');
+              ga('send', 'pageview');
+
+        </script> 
+        
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+<script>
+(function() {
+var v = document.createElement('script'); v.async = true;
+v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+})();
+</script> 
+        
+
+    
+    
+    </head>
+    
+    <body>
+        <div id="wrapper">
+        <div id='main-page'>
+           <div class="mask"></div>
+            <header>
+                <nav>
+                    <div class="logo"><a href="/">老钱</a></div>
+                    <button class="menu_trigger">☰</button>
+                    <ul class="menu">
+                        
+                           
+                        <li><a href='/'>文章</a></li> 
+<!--
+                        <li><a href='#'>归档</a></li> 
+                        <li><a href='#'>关于</a></li>     
+-->
+                    </ul>
+                    
+                </nav>
+                <div class="hr"></div>
+            </header>
+            <div class='content'>
+                <div class="content_wrapper">
+                    
+    <div class="article_header">
+        <h1 class="article_title"><a>使用Jalapeno快速搭建博客</a></h1>                   
+		<div class="article_info">2017-01-19 | 分类于:  <a class = 'tag' href="/tag/Flask/">Flask</a></div>
+	</div>
+	<article>
+        
+        
+
+<p>上次我们讲了如何使用Flask系列来搭建静态博客，但是实际上功能仍然比较单一。为了省去大家重复造轮子的辛苦，老钱同志在今年年初发布了Jalapeno。由于偷懒原因（逃），官方文档一直未能发布。这次我们讲如何使用Jalapeno快速搭建自己的博客网站。</p>
+<p><img alt="" src="/image/getstart/init.png" /></p>
+<p>注：Jalapeno当前支持Mac/Linux， Windows目前尚未测试。</p>
+<!--More-->
+
+<h2 id="_1">安装</h2>
+<p>在使用Jalapeno之前，我们需要先将所需的软件下载下来。如果已经安装或者电脑上带有，则跳过此环节</p>
+<ul>
+<li>Python3</li>
+<li>pip3(Python3的软件包管理器)</li>
+<li>Jalapeno(我们的博客生成器)</li>
+<li>git(将网页文件部署至Github／Coding)</li>
+</ul>
+<h3 id="python3pip3">Python3/pip3 系列安装</h3>
+<p>我们在<a href="https://www.python.org/downloads/">Python</a>的官方网站可以下载对应的版本，最新版本为3.6.0</p>
+<h3 id="_2">终端安装方法</h3>
+<p>我们以Fedora（Linux）为例</p>
+<p>sudo dnf install python3 python3-pip</p>
+<p>Ubuntu:</p>
+<p>sudo apt-get install python3 python3-pip</p>
+<p>Mac:</p>
+<p>先安装homwbrew</p>
+<div class="codehilite"><pre><span></span>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;
+</pre></div>
+
+
+<p>使用brew(包管理器，类似于dnf/apt)</p>
+<div class="codehilite"><pre><span></span>brew install python3
+</pre></div>
+
+
+<p>让我们来测试一下</p>
+<p>在终端输入'python3'：</p>
+<div class="codehilite"><pre><span></span><span class="n">localhost</span><span class="o">:</span><span class="n">pages</span> <span class="n">Jakob$</span> <span class="n">python3</span>
+</pre></div>
+
+
+<p>成功进入到Python3的交互界面,注意版本号，当前版本是3.5.1，对我们来说3.4以上的版本最好</p>
+<div class="codehilite"><pre><span></span>Python 3.5.1 (default, Jan 22 2016, 08:52:08) 
+[GCC 4.2.1 Compatible Apple LLVM 7.0.2 (clang-700.1.81)] on darwin
+Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.
+&gt;&gt;&gt;
+</pre></div>
+
+
+<p>再来看我们的pip3,在终端输入'pip3 -V'查看版本：</p>
+<div class="codehilite"><pre><span></span><span class="n">localhost</span><span class="o">:</span><span class="n">pages</span> <span class="n">Jakob$</span> <span class="n">pip3</span> <span class="o">-</span><span class="n">V</span>
+</pre></div>
+
+
+<p>得到（pip3版本号8以上即可)</p>
+<div class="codehilite"><pre><span></span>pip 8.0.2 from /usr/local/lib/python3.5/site-packages (python 3.5)
+</pre></div>
+
+
+<p>大功告成！来看我们如何安装Jalapeno</p>
+<h3 id="jalapeno">Jalapeno安装</h3>
+<p>Jalapeno的安装过程十分简单，你只需要在终端执行以下代码即可。如果你遇到无法解决的问题，在这里<a href="">提交问题</a>，我会尽快作出回应。</p>
+<div class="codehilite"><pre><span></span>$sudo pip3 install Jalapeno
+
+Collecting Jalapeno
+  Downloading Jalapeno-0.0.8.tar.gz (4.5MB)
+    100% |████████████████████████████████| 4.5MB 91kB/s 
+Installing collected packages: Jalapeno
+  Running setup.py install for Jalapeno ... done
+Successfully installed Jalapeno-0.0.8
+$
+</pre></div>
+
+
+<p>我们测试一下，直接在终端输入'Jalop',会得到</p>
+<div class="codehilite"><pre><span></span><span class="n">ERROR</span><span class="o">:</span> <span class="n">Not</span> <span class="n">enough</span> <span class="n">or</span> <span class="n">too</span> <span class="n">many</span> <span class="n">parameters</span><span class="o">.</span> <span class="n">use</span> <span class="s2">&quot;Jalop help&quot;</span> <span class="n">or</span> <span class="s2">&quot;Jalop -h&quot;</span> <span class="k">for</span> <span class="n">help</span>
+</pre></div>
+
+
+<p>上面的报错是Jalop执行的结果，我们可以看到Jalop是已经被安装到电脑上的。</p>
+<h2 id="jalapeno_1">初始化Jalapeno目录</h2>
+<p>首先我们在终端执行</p>
+<div class="codehilite"><pre><span></span>$Jalop -s
+</pre></div>
+
+
+<p>或</p>
+<div class="codehilite"><pre><span></span>$Jalop shortcuts
+</pre></div>
+
+
+<p>该指令可以在你的用户主目录（下载／文档／图片／...的上一级目录）下生成一个'Jalapeno'文件夹，但是你的文件夹上面会有一把锁子的图标，意味着你的文件夹需要访问权限，需要输入密码才能修改，你可能会说这多不方便啊。于是我们有了下面的操作，把这把锁子去掉</p>
+<div class="codehilite"><pre><span></span>$Jalop -u
+</pre></div>
+
+
+<p>或</p>
+<div class="codehilite"><pre><span></span>$Jalop unlock
+</pre></div>
+
+
+<p>好了，来看我们的目录文件夹吧。</p>
+<p><img alt="" src="/image/getstart/shortcutdir.png" /></p>
+<h2 id="jalapeno_2">Jalapeno目录介绍</h2>
+<p>我们来看一下新的Jalapeno文件夹目录构成</p>
+<div class="codehilite"><pre><span></span>Jalapeno
+├── Profile
+|      └── profile.yaml 
+|
+├── build 
+├── source
+|     ├── pages
+|     └──  image
+</pre></div>
+
+
+<p>Jalapeno由三个文件夹构成，其中</p>
+<ul>
+<li>Profile存放配置文件及个人信息，目前版本所有信息存放于profile.yaml</li>
+<li>source 存放文档及资源文件<ul>
+<li>pages存放文档，你将来写的博客文章存放在这里</li>
+<li>image存放图片，将来所有的图片都将存放在这里，建议大家在image中创建于文章名对应的文件夹并将图片放入其中，比如目前我们有一篇文章名字为test.md,我们就在image下创建test文件夹，并将test.md中使用的图片放在该目录下</li>
+</ul>
+</li>
+</ul>
+<h2 id="jalapeno_3">配置Jalapeno</h2>
+<p>在第一次运行前我们需要对Jalapeno进行简单的配置，例如你的个人信息什么的，在我们生成的Jalapeno文件夹的Profile子文件夹中有一个'profile.yaml'文件，用编辑器打开它，找到并修改以下内容</p>
+<div class="codehilite"><pre><span></span><span class="n">Name</span><span class="o">:</span> <span class="err">我的博客</span>
+<span class="n">Motto</span><span class="o">:</span> <span class="err">你总有一个坚持下去的理由</span>
+<span class="n">Github</span><span class="o">:</span> <span class="n">https</span><span class="o">://</span><span class="n">github</span><span class="o">.</span><span class="na">com</span><span class="o">/</span><span class="n">ChenghaoQ</span>
+<span class="n">copyright</span><span class="o">:</span> <span class="err">版权归</span><span class="n">ChenghaoQ所有</span>
+</pre></div>
+
+
+<p>除此之外，本主题含有的页面头像对应Jalapeno/source/image/theme/Selfie.jpg,如果需要更改使用其他文件替换即可</p>
+<p>效果展示</p>
+<p><img alt="" src="/image/getstart/desktop.png" /></p>
+<h2 id="_3">开始一篇博客</h2>
+<p>现在你准备好了吗？</p>
+<p>首先我们要在'pages'文件夹下创建一个空白文档'test.md',这里test只是一个名字，你可以给你的文章起任何名字，它将会影响到你未来网页的链接地址：</p>
+<div class="codehilite"><pre><span></span>yourwebsite.com/article/test
+</pre></div>
+
+
+<p>接着我们要编辑文档的开头，注意冒号后面要空格</p>
+<div class="codehilite"><pre><span></span><span class="n">title</span><span class="o">:</span> <span class="err">这里写文章标题</span>
+<span class="n">date</span><span class="o">:</span> <span class="err">这里写发表日期，格式为</span> <span class="n">YYYY</span><span class="o">-</span><span class="n">MM</span><span class="o">-</span><span class="n">DD</span> 
+<span class="n">tag</span><span class="o">:</span> <span class="err">这里是你的文章分类</span><span class="o">/</span><span class="err">标签名称</span>
+</pre></div>
+
+
+<p>接着我们编写正文，正文要与之前的开头用一个空行隔开</p>
+<div class="codehilite"><pre><span></span>hello world!balabalabala....
+
+balabalabala....
+
+balabalabala....
+</pre></div>
+
+
+<p>在之前我们提到过图片都放在image文件夹下的文章同名子文件夹下，现在假设我们的testpic.jpg在image/test文件夹下，路径为</p>
+<div class="codehilite"><pre><span></span>Jalapeno/source/image/test/testimg.jpg
+</pre></div>
+
+
+<p>我们配合Markdown引用图片的语法:</p>
+<div class="codehilite"><pre><span></span>\!\[\]\(\图片地址)
+</pre></div>
+
+
+<p>而我们的图片地址表示方法为</p>
+<div class="codehilite"><pre><span></span>\{\{image.子文件夹名.图片名}}，
+</pre></div>
+
+
+<p>所以最后引用的方法为</p>
+<div class="codehilite"><pre><span></span>hello world!balabalabala....
+
+\!\[]\(\{\{image.test.testpic}})
+
+balabalabala....
+
+balabalabala....
+</pre></div>
+
+
+<p>如果你想在文章列表中显示摘要，我们使用&lt;!--More--&gt;来进行分隔。&lt;!--More--&gt;之前内容会被放到你的文章列表的摘要中</p>
+<div class="codehilite"><pre><span></span>hello world!balabalabala....
+
+&lt;!\--More--&gt;
+
+balabalabala....
+
+balabalabala....
+</pre></div>
+
+
+<p>如果你想在你的文章中启用索引/目录，我们使用[TOC]作为标示，将[TOC]放入你希望的位置，Jalapeno会在该位置生成目录。前提是你有使用'#'号来注明各个子标题</p>
+<div class="codehilite"><pre><span></span>\[TOC\]
+
+hello world!balabalabala....
+
+&lt;!\--More--&gt;
+
+##第一个标题
+
+balabalabala....
+
+##第二个标题
+
+balabalabala....
+</pre></div>
+
+
+<p>如果你想将目录放入侧边栏而不是正文，我们使用&lt;!--Siderbar--&gt;进行标记，&lt;!--Siderbar--&gt;上面的内容会被放入侧边栏目录中，注意，与[TOC]用空行隔开</p>
+<div class="codehilite"><pre><span></span>\[TOC\]
+
+&lt;!\--Siderbar--&gt;
+
+hello world!balabalabala....
+
+&lt;!\--More--&gt;
+
+##第一个标题
+
+balabalabala....
+
+##第二个标题
+
+balabalabala....
+</pre></div>
+
+
+<p>想要了解更多Markdown语法，参见<a href="https://github.com/riku/Markdown-Syntax-CN/blob/master/syntax.md">Markdown 语法说明</a></p>
+<p>到这里，我们的博客就写完啦，在发布前我们需要对其测试</p>
+<h2 id="_4">本地测试</h2>
+<div class="codehilite"><pre><span></span>$Jalop -r
+
+
+$Jalop run
+</pre></div>
+
+
+<p>终端显示</p>
+<div class="codehilite"><pre><span></span>localhost:~ Jakob$ Jalop run
+ * Running on http://127.0.0.1:9999/ (Press CTRL+C to quit)
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger pin code: 111-037-567
+ ...
+</pre></div>
+
+
+<p>这时打开浏览器，进入127.0.0.1:9999，就可以看到我们的网站啦</p>
+<p>预览效果</p>
+<p><img alt="" src="/image/getstart/desktop1.png" />
+<img alt="" src="/image/getstart/preview.png" />
+<img alt="" src="/image/getstart/preview1.png" />
+<img alt="" src="/image/getstart/preview2.png" />
+<img alt="" src="/image/getstart/preview3.png" /></p>
+<h2 id="_5">网页生成</h2>
+<p>当我们在测试服务器上确认网页运行正常后，我们将要生成网页</p>
+<p>执行</p>
+<div class="codehilite"><pre><span></span>$Jalop -f
+</pre></div>
+
+
+<p>或</p>
+<div class="codehilite"><pre><span></span>$Jalop freeze
+</pre></div>
+
+
+<p>生成后就可以看到我们生成的网页啦。</p>
+<p><img alt="" src="/image/getstart/freeze.png" /></p>
+<h2 id="_6">部署</h2>
+<p>接着我们将生成的网页部署在</p>
+<ul>
+<li>自己的服务器上</li>
+</ul>
+<p>或托管在免费的</p>
+<ul>
+<li><a href="https://pages.github.com">Github pages</a></li>
+<li><a href="https://coding.net/help/doc/pages/">Coding pages</a></li>
+</ul>
+<p>上.详细方法点击链接参见说明文档。过程很简单，就是将生成的文件上传至指定位置即可。</p>
+		
+	</article>
+	<div id="copyright"><a href="/copyright">&copy;著作权归作者所有</a></div>
+	<hr>
+    <div id="vc-main" data-access-token="11c8370248773a268137e6fb158a3884"></div>
+    
+    <div id="vc-feelback-main" data-access-token="bd6f14702ab835406654dbd001f2c721" data-display-type="4" ></div> 
+
+                </div>
+    
+            </div>
+            
+            <footer>
+                <ul class="share-group">
+                    <li><a href="#">Jalapeno急速运转中</a></li>
+                    <!--<li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>--> 
+                </ul>   
+                <div class="copyright">
+                    &copy ChenghaoQ;
+                </div>
+
+            </footer>
+            
+            
+            <div class="back-to-top">
+            	<span class="glyphicon glyphicon-chevron-up"></span>
+            </div>
+            <div id="closeBar">
+                <span class="glyphicon glyphicon-remove"></span>
+            </div>
+        
+        </div>
+          
+            
+        
+        
+        
+        
+        
+        
+        <div id="sidebar">
+            <div id="sidebar-menu">
+
+               	<div id="home"><a href="/"><span class="glyphicon glyphicon-home"></span></a></div>
+               	<ul>
+               	    
+<li id="catalog" class="item">
+    <span class="glyphicon glyphicon-list-alt"></span>
+
+</li>
+
+
+               	    <li id="site-view" class="item">
+                        <span class="glyphicon glyphicon-align-center"></span>
+                    
+                    </li>
+               	 </ul>
+                
+            </div>
+            <div id="sidebar-content" >
+                
+
+<div class="nav-content" id="catalog-content">
+    <div class="nav-con-close">
+        <span class='glyphicon glyphicon-chevron-right'></span>
+    </div>
+    <div class="nav-con-title">目录</div>
+    <div class="inner-content">
+        <div class="toc">
+<ul>
+<li><a href="#_1">安装</a><ul>
+<li><a href="#python3pip3">Python3/pip3 系列安装</a></li>
+<li><a href="#_2">终端安装方法</a></li>
+<li><a href="#jalapeno">Jalapeno安装</a></li>
+</ul>
+</li>
+<li><a href="#jalapeno_1">初始化Jalapeno目录</a></li>
+<li><a href="#jalapeno_2">Jalapeno目录介绍</a></li>
+<li><a href="#jalapeno_3">配置Jalapeno</a></li>
+<li><a href="#_3">开始一篇博客</a></li>
+<li><a href="#_4">本地测试</a></li>
+<li><a href="#_5">网页生成</a></li>
+<li><a href="#_6">部署</a></li>
+</ul>
+</div>
+
+    </div>
+</div>
+
+                    <div class="nav-content" id="site-view-content">
+                    <div class="nav-con-close">
+                        <span class='glyphicon glyphicon-chevron-right'></span>
+                    </div>
+                
+                    <div class="inner-content">
+                        <div class="selfie"><img src='/image/theme/Selfie.JPG'</div>
+                        <div class="site-view-info">
+                         
+                            <p class="motto">你总有一个坚持下去的理由</p>
+                
+                            <h3 class="myself">老钱</h3>
+                            
+                            <ul class="posts-info">
+                            </ul>
+                            <div class="extern-links">
+                               <ul>
+                                   <li><a href="https://github.com/ChenghaoQ">Github</a></li>
+                               <li><a>Wechat</a></li>            
+                               </ul>
+     
+                            </div>
+                
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+            
+        </div>
+		<script src="/static/js/jquery.js"></script>
+        <!--<script src="/static/js/home.js"></script>
+        <script src="/static/ijs/ihome.js"></script>-->
+        <script type = "text/javascript">
+        $(document).ready(function(){
+            if($(window).width()>1024){
+                temp = 'desktop';
+                $.getScript( "/static/js/home.js" )
+            }
+            else
+            {
+                temp = 'mobile';
+                $.getScript( "/static/ijs/ihome.js" )
+            }
+            console.log('reload');
+            function refresher(){
+                if($(window).width()>1024)
+                    var status = 'desktop';
+                else
+                    var status = 'mobile';
+                if (status!= temp)
+                {
+                    location=location;//refresh page
+                    
+                    temp = status;
+                    
+                }
+                console.log(temp)
+            };
+
+            $(window).resize(refresher);
+        });
+        </script>
+
+        
+        
+
+<!--         
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+        <script>
+        (function() {
+        var v = document.createElement('script'); v.async = true;
+        v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+        })();
+        </script>  -->
+
+
+        <!-- Carnival comments -->
+        <!-- <script src="https://carnivalapp.io/sites/559/init.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", Carnival.init);
+        </script> -->
+
+
+
+    </body>
+
+
+
+
+
+</html>

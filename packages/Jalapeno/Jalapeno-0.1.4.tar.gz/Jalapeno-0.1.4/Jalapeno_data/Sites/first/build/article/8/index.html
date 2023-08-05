@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>
+变得更pythonic(懒)-三元表达式和列表解析式
+|| 老钱</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel='stylesheet' href='/static/css/normalize.css'>
+		<link rel='stylesheet' href="/static/css/mono.css">
+		<link rel='stylesheet' href='/static/css/bootstrap.css'>
+		<link rel='stylesheet' media="screen and (min-width:1023px)"  href='/static/css/homepage.css'>
+		<link rel='stylesheet' media="screen and (max-width:1023px)"  href='/static/icss/ihomepage.css'>
+        
+
+<link rel='stylesheet' media="screen and (min-width:1025px)"  href='/static/css/article.css'>
+
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='/static/icss/iarticle.css'>
+
+
+        
+        <script src="https://carnivalapp.io/sites/559/init.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", Carnival.init);
+</script>
+        
+                 <script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-83291137-1', 'auto');
+              ga('send', 'pageview');
+
+        </script> 
+        
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+<script>
+(function() {
+var v = document.createElement('script'); v.async = true;
+v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+})();
+</script> 
+        
+
+    
+    
+    </head>
+    
+    <body>
+        <div id="wrapper">
+        <div id='main-page'>
+           <div class="mask"></div>
+            <header>
+                <nav>
+                    <div class="logo"><a href="/">老钱</a></div>
+                    <button class="menu_trigger">☰</button>
+                    <ul class="menu">
+                        
+                           
+                        <li><a href='/'>文章</a></li> 
+<!--
+                        <li><a href='#'>归档</a></li> 
+                        <li><a href='#'>关于</a></li>     
+-->
+                    </ul>
+                    
+                </nav>
+                <div class="hr"></div>
+            </header>
+            <div class='content'>
+                <div class="content_wrapper">
+                    
+    <div class="article_header">
+        <h1 class="article_title"><a>变得更pythonic(懒)-三元表达式和列表解析式</a></h1>                   
+		<div class="article_info">2016-09-15 | 分类于:  <a class = 'tag' href="/tag/Python/">Python</a></div>
+	</div>
+	<article>
+        
+        
+
+<p>也许你只是刚刚开始接触python, 也许你已经走上python的不归路，也许你厌倦了条件循环的换行和缩进。To be pythonic, 你不会错过每一个由繁到简的转变。本文简单介绍了python的三元表达式，列表解析式以及它们的结合用法，轻轻松松使用一行代码解决判断与循环，走上pythonic(懒)之路。</p>
+<!--More-->
+
+<h2 id="_1">三元表达式</h2>
+<p>在学习python之前你可能已经接触过了三目运算符</p>
+<div class="codehilite"><pre><span></span>判断条件 ？ 为真的结果 : 为假的结果
+</pre></div>
+
+
+<p>python并没有三目运算符这样的语法，取而代之的是我们的三元表达式</p>
+<div class="codehilite"><pre><span></span>(True) if condition else (False)
+</pre></div>
+
+
+<p>举个栗子让我们来看看什么是三元表达式</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span><span class="n">b</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">:</span>
+<span class="o">...</span>     <span class="n">c</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="o">...</span> 
+<span class="o">&gt;&gt;&gt;</span> <span class="n">c</span>
+<span class="bp">True</span>
+</pre></div>
+</td></tr></table>
+
+<p>使用三元表达式</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="codehilite"><pre><span></span>&gt;&gt;&gt; a = 5;b = 3
+&gt;&gt;&gt; c = True if a &gt; b else False
+&gt;&gt;&gt; c
+True
+</pre></div>
+</td></tr></table>
+
+<p>或者 </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">condition</span> <span class="o">=</span><span class="bp">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">condition</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+<span class="mi">1</span>
+</pre></div>
+</td></tr></table>
+
+<p>同三目运算符一样， 三元表达式不支持复杂的操作。如果三元表达式支持复杂的操作，那么将所有代码挤到一行里并不是一个明智的选择。那些简单的if statement 才是三元表达式的用武之地。</p>
+<h2 id="_2">列表解析式</h2>
+<h3 id="_3">什么是列表解析式？</h3>
+<p>列表解析式就是将任何可迭代的对象转换成列表的工具。你可以在转换过程中添加条件进行过滤，</p>
+<h3 id="for">for循环与列表解析式</h3>
+<p>任何列表解析式都可以改写成for循环，因为其本事就是由for循环构成</p>
+<p>举个for循环的栗子:</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each</span><span class="p">)</span>
+<span class="o">...</span> 
+<span class="o">&gt;&gt;&gt;</span> <span class="n">a</span>
+<span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+</pre></div>
+</td></tr></table>
+
+<p>如果用了列表解析式，你可以这样写</p>
+<div class="codehilite"><pre><span></span>a = [each for each in range(5)]
+</pre></div>
+
+
+<h3 id="_4">嵌套</h3>
+<p>列表解析式支持for循环嵌套，并且在列表操作上比单纯的for循环更加灵活。</p>
+<div class="codehilite"><pre><span></span>【【 元素 子列表解析式】主列表解析式】
+</pre></div>
+
+
+<p>假设我们需要创造一个而5x5的棋盘:</p>
+<p>使用for循环并不是那么轻松简单；</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">board</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="o">...</span>     <span class="n">board</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+<span class="o">...</span>     <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="o">...</span>             <span class="n">board</span><span class="p">[</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">board</span>
+<span class="p">[[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">]]</span>
+</pre></div>
+</td></tr></table>
+
+<p>注意，如果不太了解python而为数组但有C的经验的话，很可能会写出下面的代码</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">board</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span>
+</pre></div>
+</td></tr></table>
+
+<p>然而这是不对的，python你并不支持通过定点赋值的方法添加新的列表元素，所以代码显得很臃肿。然而此时你已经掌握了列表解析式的嵌套</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">board</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;+&#39;</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)]</span>
+</pre></div>
+</td></tr></table>
+
+<p>现在你变得更pythonic(懒)了。</p>
+<h2 id="_5">条件筛选（综合）</h2>
+<p>如果你想对一个可迭代的对象进行筛选,你就不得不使用for循环来找出每一个子元素并加以判断，大致过程如下：</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">list1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">list2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<p>这样你就可以把所有符合判断条件的list1元素重新组合成新的列表list2中去，举个栗子:</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">secretWord</span> <span class="o">=</span> <span class="s1">&#39;apple&#39;</span> 
+<span class="o">&gt;&gt;&gt;</span> <span class="n">lettersGuessed</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">]</span>
+</pre></div>
+</td></tr></table>
+
+<p>使用for循环来找出secretWord中重合的字母</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">list2</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">secretWord</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">lettersGuessed</span><span class="p">:</span>
+        <span class="n">list2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span><span class="n">list2</span>
+<span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">]</span>
+</pre></div>
+</td></tr></table>
+
+<p>忘了告诉你，python中的列表解析式支持条件过滤，格式如下:</p>
+<div class="codehilite"><pre><span></span>[元素 列表解析式 if条件]
+</pre></div>
+
+
+<p>有了这个法宝，再回头看我们刚刚的例子</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">list2</span> <span class="o">=</span> <span class="p">[</span><span class="n">each</span> <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">secretWord</span> <span class="k">if</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">lettersGuessed</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span><span class="n">list2</span>
+<span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">]</span>
+</pre></div>
+</td></tr></table>
+
+<p>只要一行，轻轻松松。现在你觉得自己又pythonic(懒)了一分。但是我们现在要做一个猜谜游戏，如果sercretWord中字母不在lettersGuessed 中，我们要用'_'来表示:('_pp_e').然而列表解析式只支持if条件判断并不支持if...else... 好像阻挡了你pythonic(懒)的脚步，但是这是你突然想起了另一样法宝:</p>
+<p><strong>三元表达式</strong>，然后你把代码写成了这样</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">list2</span> <span class="o">=</span> <span class="p">[</span><span class="n">each</span> <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">secretWord</span> <span class="k">if</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">lettersGuessed</span> <span class="k">else</span> <span class="s1">&#39;_&#39;</span><span class="p">]</span>
+</pre></div>
+</td></tr></table>
+
+<p>然后就报错了，python告诉你语法错误。知道了列表解析式只支持if条件而不是if..else, 而事实证明确实如此</p>
+<div class="codehilite"><pre><span></span>[元素 列表解析式 if条件]        == **正确**
+[元素 列表解析式 if条件else]    == **错误**
+</pre></div>
+
+
+<p>这是怎么回事，难道三元表达式和列表解析式真的不能双修吗</p>
+<p>其实不然，列表解析式挂载的if条件的方式和与三元表达式结合的方式并不一样，前者在后，后者在前:</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">list2</span> <span class="o">=</span> <span class="p">[</span><span class="n">each</span> <span class="k">if</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">lettersGuessed</span> <span class="k">else</span> <span class="s1">&#39;_&#39;</span> <span class="k">for</span> <span class="n">each</span> <span class="ow">in</span> <span class="n">secretWord</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">list2</span>
+<span class="p">[</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">]</span>
+</pre></div>
+</td></tr></table>
+
+<p>真是pythonic(懒)极了。</p>
+<p>在<strong>创建新列表</strong>或函数<strong>return</strong>时，效果极佳。</p>
+<p><strong>-- End -- </strong></p>
+		
+	</article>
+	<div id="copyright"><a href="/copyright">&copy;著作权归作者所有</a></div>
+	<hr>
+    <div id="vc-main" data-access-token="11c8370248773a268137e6fb158a3884"></div>
+    
+    <div id="vc-feelback-main" data-access-token="bd6f14702ab835406654dbd001f2c721" data-display-type="4" ></div> 
+
+                </div>
+    
+            </div>
+            
+            <footer>
+                <ul class="share-group">
+                    <li><a href="#">Jalapeno急速运转中</a></li>
+                    <!--<li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>--> 
+                </ul>   
+                <div class="copyright">
+                    &copy ChenghaoQ;
+                </div>
+
+            </footer>
+            
+            
+            <div class="back-to-top">
+            	<span class="glyphicon glyphicon-chevron-up"></span>
+            </div>
+            <div id="closeBar">
+                <span class="glyphicon glyphicon-remove"></span>
+            </div>
+        
+        </div>
+          
+            
+        
+        
+        
+        
+        
+        
+        <div id="sidebar">
+            <div id="sidebar-menu">
+
+               	<div id="home"><a href="/"><span class="glyphicon glyphicon-home"></span></a></div>
+               	<ul>
+               	    
+<li id="catalog" class="item">
+    <span class="glyphicon glyphicon-list-alt"></span>
+
+</li>
+
+
+               	    <li id="site-view" class="item">
+                        <span class="glyphicon glyphicon-align-center"></span>
+                    
+                    </li>
+               	 </ul>
+                
+            </div>
+            <div id="sidebar-content" >
+                
+
+<div class="nav-content" id="catalog-content">
+    <div class="nav-con-close">
+        <span class='glyphicon glyphicon-chevron-right'></span>
+    </div>
+    <div class="nav-con-title">目录</div>
+    <div class="inner-content">
+        <div class="toc">
+<ul>
+<li><a href="#_1">三元表达式</a></li>
+<li><a href="#_2">列表解析式</a><ul>
+<li><a href="#_3">什么是列表解析式？</a></li>
+<li><a href="#for">for循环与列表解析式</a></li>
+<li><a href="#_4">嵌套</a></li>
+</ul>
+</li>
+<li><a href="#_5">条件筛选（综合）</a></li>
+</ul>
+</div>
+
+    </div>
+</div>
+
+                    <div class="nav-content" id="site-view-content">
+                    <div class="nav-con-close">
+                        <span class='glyphicon glyphicon-chevron-right'></span>
+                    </div>
+                
+                    <div class="inner-content">
+                        <div class="selfie"><img src='/image/theme/Selfie.JPG'</div>
+                        <div class="site-view-info">
+                         
+                            <p class="motto">你总有一个坚持下去的理由</p>
+                
+                            <h3 class="myself">老钱</h3>
+                            
+                            <ul class="posts-info">
+                            </ul>
+                            <div class="extern-links">
+                               <ul>
+                                   <li><a href="https://github.com/ChenghaoQ">Github</a></li>
+                               <li><a>Wechat</a></li>            
+                               </ul>
+     
+                            </div>
+                
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+            
+        </div>
+		<script src="/static/js/jquery.js"></script>
+        <!--<script src="/static/js/home.js"></script>
+        <script src="/static/ijs/ihome.js"></script>-->
+        <script type = "text/javascript">
+        $(document).ready(function(){
+            if($(window).width()>1024){
+                temp = 'desktop';
+                $.getScript( "/static/js/home.js" )
+            }
+            else
+            {
+                temp = 'mobile';
+                $.getScript( "/static/ijs/ihome.js" )
+            }
+            console.log('reload');
+            function refresher(){
+                if($(window).width()>1024)
+                    var status = 'desktop';
+                else
+                    var status = 'mobile';
+                if (status!= temp)
+                {
+                    location=location;//refresh page
+                    
+                    temp = status;
+                    
+                }
+                console.log(temp)
+            };
+
+            $(window).resize(refresher);
+        });
+        </script>
+
+        
+        
+
+<!--         
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+        <script>
+        (function() {
+        var v = document.createElement('script'); v.async = true;
+        v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+        })();
+        </script>  -->
+
+
+        <!-- Carnival comments -->
+        <!-- <script src="https://carnivalapp.io/sites/559/init.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", Carnival.init);
+        </script> -->
+
+
+
+    </body>
+
+
+
+
+
+</html>

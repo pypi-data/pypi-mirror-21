@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>{% block title %} {% endblock %}|| {{Jalo.Name}}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel='stylesheet' href='{{asset.css.normalize}}'>
+		<link rel='stylesheet' href="{{asset.css.mono}}">
+		<link rel='stylesheet' href='{{asset.css.bootstrap}}'>
+		<link rel='stylesheet' media="screen and (min-width:1023px)"  href='{{asset.css.homepage}}'>
+		<link rel='stylesheet' media="screen and (max-width:1023px)"  href='{{asset.icss.ihomepage}}'>
+        {% block css %}{% endblock %}
+        {% for ext in extensions %}
+        {{ext}}
+        {% endfor %}
+
+    
+    
+    </head>
+    
+    <body>
+        <div id="wrapper">
+        <div id='main-page'>
+           <div class="mask"></div>
+            <header>
+                <nav>
+                    <div class="logo"><a href="{{url_for('posts.postwall')}}">{{Jalo.Name}}</a></div>
+                    <button class="menu_trigger">☰</button>
+                    <ul class="menu">
+                        
+                           
+                        <li><a href='{{url_for("posts.postwall")}}'>文章</a></li> 
+<!--
+                        <li><a href='#'>归档</a></li> 
+                        <li><a href='#'>关于</a></li>     
+-->
+                    </ul>
+                    
+                </nav>
+                <div class="hr"></div>
+            </header>
+            <div class='content'>
+                <div class="content_wrapper">
+                    {% block content %} {% endblock %}
+                </div>
+    
+            </div>
+            
+            <footer>
+                <ul class="share-group">
+                    <li><a href="#">Jalapeno急速运转中</a></li>
+                    <!--<li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>--> 
+                </ul>   
+                <div class="copyright">
+                    &copy {{Jalo.copyright}};
+                </div>
+
+            </footer>
+            
+            
+            <div class="back-to-top">
+            	<span class="glyphicon glyphicon-chevron-up"></span>
+            </div>
+            <div id="closeBar">
+                <span class="glyphicon glyphicon-remove"></span>
+            </div>
+        
+        </div>
+          
+            
+        
+        
+        
+        
+        
+        
+        <div id="sidebar">
+            <div id="sidebar-menu">
+
+               	<div id="home"><a href="{{ url_for('posts.postwall') }}"><span class="glyphicon glyphicon-home"></span></a></div>
+               	<ul>
+               	    {% block sidebar_menu %}{% endblock %}
+               	    <li id="site-view" class="item">
+                        <span class="glyphicon glyphicon-align-center"></span>
+                    
+                    </li>
+               	 </ul>
+                
+            </div>
+            <div id="sidebar-content" >
+                {% block sidebarcontent %}{% endblock %}
+                    <div class="nav-content" id="site-view-content">
+                    <div class="nav-con-close">
+                        <span class='glyphicon glyphicon-chevron-right'></span>
+                    </div>
+                
+                    <div class="inner-content">
+                        <div class="selfie"><img src='{{image.theme.Selfie}}'</div>
+                        <div class="site-view-info">
+                         
+                            <p class="motto">{{Jalo.Motto}}</p>
+                
+                            <h3 class="myself">{{Jalo.Name}}</h3>
+                            
+                            <ul class="posts-info">
+                            </ul>
+                            <div class="extern-links">
+                               <ul>
+                                   <li><a href="{{Jalo.Github}}">Github</a></li>
+                               <li><a>Wechat</a></li>            
+                               </ul>
+     
+                            </div>
+                
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+            
+        </div>
+		<script src="{{asset.js.jquery}}"></script>
+        <!--<script src="{{asset.js.home}}"></script>
+        <script src="{{asset.ijs.ihome}}"></script>-->
+        <script type = "text/javascript">
+        $(document).ready(function(){
+            if($(window).width()>1024){
+                temp = 'desktop';
+                $.getScript( "{{asset.js.home}}" )
+            }
+            else
+            {
+                temp = 'mobile';
+                $.getScript( "{{asset.ijs.ihome}}" )
+            }
+            console.log('reload');
+            function refresher(){
+                if($(window).width()>1024)
+                    var status = 'desktop';
+                else
+                    var status = 'mobile';
+                if (status!= temp)
+                {
+                    location=location;//refresh page
+                    
+                    temp = status;
+                    
+                }
+                console.log(temp)
+            };
+
+            $(window).resize(refresher);
+        });
+        </script>
+
+        {% block js %}{% endblock %}
+        <!-- Carnival comments -->
+        <!-- <script src="https://carnivalapp.io/sites/559/init.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", Carnival.init);
+        </script> -->
+
+
+
+    </body>
+
+
+
+
+
+</html>

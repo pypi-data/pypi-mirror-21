@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>
+Flask-FlatPages 使用手册
+|| 老钱</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel='stylesheet' href='/static/css/normalize.css'>
+		<link rel='stylesheet' href="/static/css/mono.css">
+		<link rel='stylesheet' href='/static/css/bootstrap.css'>
+		<link rel='stylesheet' media="screen and (min-width:1023px)"  href='/static/css/homepage.css'>
+		<link rel='stylesheet' media="screen and (max-width:1023px)"  href='/static/icss/ihomepage.css'>
+        
+
+<link rel='stylesheet' media="screen and (min-width:1025px)"  href='/static/css/article.css'>
+
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='/static/icss/iarticle.css'>
+
+
+        
+        <script src="https://carnivalapp.io/sites/559/init.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", Carnival.init);
+</script>
+        
+                 <script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-83291137-1', 'auto');
+              ga('send', 'pageview');
+
+        </script> 
+        
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+<script>
+(function() {
+var v = document.createElement('script'); v.async = true;
+v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+})();
+</script> 
+        
+
+    
+    
+    </head>
+    
+    <body>
+        <div id="wrapper">
+        <div id='main-page'>
+           <div class="mask"></div>
+            <header>
+                <nav>
+                    <div class="logo"><a href="/">老钱</a></div>
+                    <button class="menu_trigger">☰</button>
+                    <ul class="menu">
+                        
+                           
+                        <li><a href='/'>文章</a></li> 
+<!--
+                        <li><a href='#'>归档</a></li> 
+                        <li><a href='#'>关于</a></li>     
+-->
+                    </ul>
+                    
+                </nav>
+                <div class="hr"></div>
+            </header>
+            <div class='content'>
+                <div class="content_wrapper">
+                    
+    <div class="article_header">
+        <h1 class="article_title"><a>Flask-FlatPages 使用手册</a></h1>                   
+		<div class="article_info">2016-08-15 | 分类于:  <a class = 'tag' href="/tag/Flask/">Flask</a></div>
+	</div>
+	<article>
+        
+        <p>Flask-FlatPages是Flask应用的一个小工具，规则基于YAML和Markdown，实现了文本文档和模板的结合。用户可以通过编写‘.md’（默认）文本文档即可轻松生成网页。在与Frozen-Flask配合使用是可以更轻松地实现资源管理。</p>
+<p>（翻译自官方文档，英文版请点击<a href="https://pythonhosted.org/Flask-FlatPages/">这里</a>)。</p>
+<h2 id="flask-flatpages"><a name='1'>什么是Flask FlatPages</a></h2>
+<p>Flask-FlatPages 为你的<a href="http://flask.pocoo.org/">Flask</a>应用提供了一系列的网页，这些网页基于文本文档(flat text files)而不是关系型数据库。</p>
+<ul>
+<li>BSD licensed</li>
+<li>最新的文档在<a href="https://pythonhosted.org/Flask-FlatPages/">python.org</a></li>
+<li>源码，问题和访问请求在<a href="https://github.com/SimonSapin/Flask-FlatPages/">Github</a></li>
+<li>发行在<a href="https://pypi.python.org/pypi/Flask-FlatPages">PyPI</a></li>
+</ul>
+<!--More-->
+
+<h2 id="_1">安装</h2>
+<p>通过其中一个以下的命令来安装本扩展</p>
+<div class="codehilite"><pre><span></span>$ easy_install Flask-FlatPages
+</pre></div>
+
+
+<p>如果你安装了pip</p>
+<div class="codehilite"><pre><span></span>$ pip install Flask-FlatPages
+</pre></div>
+
+
+<p>或者你可以通过Github获得<a href="https://github.com/SimonSapin/Flask-FlatPages">源代码</a></p>
+<h2 id="_2">配置</h2>
+<p>首先你需要初始化一个<strong>FlatPages</strong>对象
+    from flask import Flask
+    from flask_flatpages import FlatPages</p>
+<div class="codehilite"><pre><span></span>app = Flask(__name__)#初始化Flask对象
+app.config.from_pyfile(&#39;mysettings.cfg&#39;)#引入配置文件
+pages = FlatPages(app)通过Flask对象创建Flask实例
+</pre></div>
+
+
+<p>同时你也可以稍后再通过<strong>init_app()</strong>引入Flask对象</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">pages</span> <span class="o">=</span> <span class="n">FlatPages</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">create_app</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="s1">&#39;mysettings.cfg&#39;</span><span class="p">):</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">from_pyfile</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+<span class="n">pages</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">app</span>
+</pre></div>
+</td></tr></table>
+
+<p>以下为Flask-FlatPages配置选项，它们都不是必选的。</p>
+<div class="codehilite"><pre><span></span>FLATPAGES_ROOT
+    查找page文件的目录，相对路径为应用根目录，同static/templates文件夹在一起，默认是pages
+
+FLATPAGES_EXTENSION
+    查找的文件的扩展名，FLATPAGES_ROOT下无后缀文件都会被忽略。默认为.html
+
+FLATPAGES_ENCODING
+    page文件编码，默认为utf-8
+
+FLATPAGES_HTML_RENDERER
+
+FLAT_PAGES_MARKDOWN_EXTENSIONS
+    一个列表的有着默认HTML渲染器的Markdown扩展。默认为[&#39;codehilite&#39;]
+
+FLAT_PAGES_AUTO_RELOAD
+    是否进行页面重载。默认为只在DEBUG模式下使用。详情见[Laziness and caching]()
+</pre></div>
+
+
+<h2 id="_3">使用说明</h2>
+<p>当第一次使用（详见<a href="">Laziness and chaching</a> 了解更多), 该扩展从文件系统加载所有的pages:一个<strong>Page</strong>实例是被创建在FLATPAGES_ROOT下面的后缀为FLATPAGES_EXTENSION.</p>
+<p>每一个实例都和它的路劲相关联: 通过'/'划分开的相对于pages的根目录的路径（不包含扩展).例如，一个位于C:\myapp 有着默认设置的app实例。它的绝对路径是C:\myapp\pages\lorem\ipsum.html 但是它的路径是lorem/ipsum.</p>
+<p>每一个文件都是由<a href="http://www.yaml.org/">YAML</a>映射的元数据，空白行和内容首页。</p>
+<div class="codehilite"><pre><span></span><span class="n">title</span><span class="o">:</span> <span class="n">Hello</span>   <span class="c1">//page.meta.title 或者 page.meta[&#39;title&#39;]</span>
+<span class="n">published</span><span class="o">:</span> <span class="mi">2010</span><span class="o">-</span><span class="mi">12</span><span class="o">-</span><span class="mi">22</span> <span class="c1">////page.meta.published 或者 page.meta[&#39;published&#39;]</span>
+
+<span class="n">Hello</span><span class="o">.</span> <span class="o">*</span><span class="n">World</span><span class="o">*!</span>
+
+<span class="n">Lorem</span> <span class="n">ipsum</span> <span class="n">dolor</span> <span class="n">sit</span> <span class="n">amet</span><span class="o">,...</span>
+</pre></div>
+
+
+<p>文章主体格式默认使用<a href="http://daringfireball.net/projects/markdown/">Markdown</a>， 如果使用了的话<a href="http://pygments.org/">Pygments</a>也是默认选项，但是主要还是根据FLATPAGES_HTML_RENDERER里设置的值来决定。</p>
+<p>使用Pygments,你需要单独进行样式声明。你可以使用<a href="">pygments_style_defs():</a></p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/pygments.css&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">pygments_css</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">pygments_style_defs</span><span class="p">(</span><span class="s1">&#39;tango&#39;</span><span class="p">),</span> <span class="mi">200</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;text/css&#39;</span><span class="p">}</span>
+</pre></div>
+</td></tr></table>
+
+<p>同时在模板里面：</p>
+<div class="codehilite"><pre><span></span>&lt;link rel=&quot;stylesheet&quot; href=&quot;\{\{ url_for(&#39;pygments_css&#39;) }}&quot;&gt;
+</pre></div>
+
+
+<h2 id="markdown">使用定制Markdown扩展</h2>
+<p>默认情况下，Flask-FlatPages 通过<a href="http://daringfireball.net/projects/markdown/">Markdown</a>和<a href="http://pygments.org/">Pygments</a>来渲染文章主体。这也意味着将 ['codehilite']扩展列表传给markdown.markdown函数。</p>
+<p>但某些时间你需要定制文件，比如说使用其他扩展或禁用默认方法，这些可以通过传递特殊配置参数来实现。</p>
+<div class="codehilite"><pre><span></span>FLATPAGES_MARKDOWN_EXTENSIONS = [&#39;codehilite&#39;, &#39;headerid&#39;]
+</pre></div>
+
+
+<p>或者禁用默认配置</p>
+<div class="codehilite"><pre><span></span>FLATPAGES_MARKDOWN_EXTENSIONS = []
+</pre></div>
+
+
+<h2 id="_4">偷懒和缓存</h2>
+<p><a href="https://pythonhosted.org/Flask-FlatPages/">FlatPages</a> 不会接触到文件系统直到需要的时候，但是如果它读取数据时，它会从磁盘一次性读取完毕。</p>
+<p>然后，pages 不会被再次加载 除非你明确地要求它使用<a href="">FlatPages.reload()</a>.或通过配置接受的新请求。（详见FLATPAGES_AUTO_RELOAD.)</p>
+<p>这个设计是在适配<a href="https://pythonhosted.org/Frozen-Flask/">Frozen-Flask</a>(Flask生成静态网页的工具)时使用，但是即便你不用他还是可以正常工作：你修改了代码并且已经重启了生产服务器，你只需要修改页面内容就好了。同样的，在版本控制系统下这依然有效。</p>
+<p>但是如果你有很多网页并且加载时间很长，你可以让它在初始化过程中强制加载，当第一个请求被使用。</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">pages</span> <span class="o">=</span> <span class="n">FlatPages</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+<span class="n">pages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span> <span class="c1"># Force loading now. foo.html may not even exist.</span>
+</pre></div>
+</td></tr></table>
+
+<p>每次全部都加载看起来很浪费，但是这种影响可以通过缓存来减轻：如果文件的修改时间并没有变化，它不会被再次重复加载，之前的Page实例也会被重复利用。</p>
+<p>同样地，YAML和Markdown的解析也是偷懒的和被缓存的：用不到的时候就不加载，没更改过就不会重复加载。</p>
+<h2 id="api">API</h2>
+<p>class flask_flatpages.FlatPages(app=None)</p>
+<blockquote>
+<p>一个page实例集合</p>
+<p>范例：</p>
+</blockquote>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">pages</span> <span class="o">=</span> <span class="n">FlatPages</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
+
+    <span class="o">//</span><span class="n">Articles</span> <span class="n">are</span> <span class="n">pages</span> <span class="k">with</span> <span class="n">a</span> <span class="n">publication</span> <span class="n">date</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages</span> <span class="k">if</span> <span class="s1">&#39;published&#39;</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">meta</span><span class="p">)</span>
+    <span class="o">//</span> <span class="n">Show</span> <span class="n">the</span> <span class="mi">10</span> <span class="n">most</span> <span class="n">recent</span> <span class="n">articles</span><span class="p">,</span> <span class="n">most</span> <span class="n">recent</span> <span class="n">first</span><span class="o">.</span>
+    <span class="n">latest</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">articles</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;published&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s1">&#39;articles.html&#39;</span><span class="p">,</span> <span class="n">articles</span><span class="o">=</span><span class="n">latest</span><span class="p">[:</span><span class="mi">10</span><span class="p">])</span>
+
+<span class="nd">@app.route</span><span class="p">(</span><span class="s1">&#39;/&lt;path:path&gt;/&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">page</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+
+    <span class="n">page</span> <span class="o">=</span> <span class="n">pages</span><span class="o">.</span><span class="n">get_or_404</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;template&#39;</span><span class="p">,</span> <span class="s1">&#39;flatpage.html&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="n">page</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<blockquote>
+<p><strong>__iter__()</strong>
+        对所有Page实例进行迭代</p>
+<p><strong>get(path, default=None)</strong>
+        返回路径下的Page实例，如果没有则返回默认(default)</p>
+<p><strong>get_or_404(path)</strong>
+        返回路径下的Page实例，或者raise一个Flask's的404 Error如果没有</p>
+<p><strong>init_app(app)</strong></p>
+<p><strong>reload()</strong>
+        统统忘记吧（Forget all pages）.
+        所有的Page都会被重新加载</p>
+</blockquote>
+<p>class flask_faltpages.<strong>Page</strong></p>
+<blockquote>
+<p>单一的类来储存所有必要的关于flatpage的信息</p>
+<p>主要目的是通过html_renderer函数来渲染页面内容</p>
+<p>需要先定义一个hello.html 页面</p>
+</blockquote>
+<div class="codehilite"><pre><span></span># hello.html
+title: Hello
+published: 2010-12-22
+
+Hello, *World*!
+
+Lorem ipsum dolor sit amet, …
+</pre></div>
+
+
+<p>以上为test.md </p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">page</span> <span class="o">=</span> <span class="n">pages</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">page</span><span class="o">.</span><span class="n">meta</span> <span class="c1"># PyYAML converts YYYY-MM-DD to a date object</span>
+<span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="sa">u</span><span class="s1">&#39;Hello&#39;</span><span class="p">,</span> <span class="s1">&#39;published&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2010</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">22</span><span class="p">)}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">page</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+<span class="sa">u</span><span class="s1">&#39;Hello&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">page</span><span class="o">.</span><span class="n">body</span>
+<span class="sa">u</span><span class="s1">&#39;Hello, *World*!</span><span class="se">\n\n</span><span class="s1">Lorem ipsum dolor sit amet, </span><span class="se">\u2026</span><span class="s1">&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">page</span><span class="o">.</span><span class="n">html</span>
+<span class="sa">u</span><span class="s1">&#39;&lt;p&gt;Hello, &lt;em&gt;World&lt;/em&gt;!&lt;/p&gt;</span><span class="se">\n</span><span class="s1">&lt;p&gt;Lorem ipsum dolor sit amet, </span><span class="se">\u2026</span><span class="s1">&lt;/p&gt;&#39;</span>
+</pre></div>
+</td></tr></table>
+
+<blockquote>
+<p><strong>__getitem__(name)</strong>
+        使用元数据的快捷方式</p>
+<p><strong>__html__()</strong>
+        在模板中,{{ page }}等同于{{ page.html|safe }}.</p>
+<p><strong>html</strong>
+        网页内容，被渲染器渲染
+  <strong>meta</strong>
+        一个在页头被YAML解析的元数据的词典</p>
+<p><strong>path</strong>= None
+        path就是pages实例获得的地方，在pages.get(path)</p>
+</blockquote>
+<p>flask_flatpages.pygmented_markdown(text, flatpages=None)</p>
+<ul>
+<li>将markdown 文本变成HTML </li>
+<li>使用<a href="http://freewisdom.org/projects/python-markdown/CodeHilite">CodeHilite</a>扩展当<a href="http://pygments.org/">Pygments</a>一起使用.但是如果<a href="http://pygments.org/">Pygments</a>不可以使用，就把“codehilite”从扩展列表移除。</li>
+<li>如果你需要其他的扩展，请在设置列表里面配置 FLATPAGES_MARKDOWN_EXTENSIONS.之后整个的FlatPages实例都会作为第二个参数被传递到FLATPAGES_HTML_RENDERER.</li>
+</ul>
+<p>flask_flatpages.pygments_style_defs(style='default')
+- Returns: <a href="http://freewisdom.org/projects/python-markdown/CodeHilite">CodeHilite</a>Markdown插件的CSS定义
+- 参数： style - Pygments <a href="http://pygments.org/docs/styles/">style</a> 样式
+- 只有当<a href="http://pygments.org/">Pygments</a>可用的时候</p>
+		
+	</article>
+	<div id="copyright"><a href="/copyright">&copy;著作权归作者所有</a></div>
+	<hr>
+    <div id="vc-main" data-access-token="11c8370248773a268137e6fb158a3884"></div>
+    
+    <div id="vc-feelback-main" data-access-token="bd6f14702ab835406654dbd001f2c721" data-display-type="4" ></div> 
+
+                </div>
+    
+            </div>
+            
+            <footer>
+                <ul class="share-group">
+                    <li><a href="#">Jalapeno急速运转中</a></li>
+                    <!--<li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>--> 
+                </ul>   
+                <div class="copyright">
+                    &copy ChenghaoQ;
+                </div>
+
+            </footer>
+            
+            
+            <div class="back-to-top">
+            	<span class="glyphicon glyphicon-chevron-up"></span>
+            </div>
+            <div id="closeBar">
+                <span class="glyphicon glyphicon-remove"></span>
+            </div>
+        
+        </div>
+          
+            
+        
+        
+        
+        
+        
+        
+        <div id="sidebar">
+            <div id="sidebar-menu">
+
+               	<div id="home"><a href="/"><span class="glyphicon glyphicon-home"></span></a></div>
+               	<ul>
+               	    
+<li id="catalog" class="item">
+    <span class="glyphicon glyphicon-list-alt"></span>
+
+</li>
+
+
+               	    <li id="site-view" class="item">
+                        <span class="glyphicon glyphicon-align-center"></span>
+                    
+                    </li>
+               	 </ul>
+                
+            </div>
+            <div id="sidebar-content" >
+                
+
+<div class="nav-content" id="catalog-content">
+    <div class="nav-con-close">
+        <span class='glyphicon glyphicon-chevron-right'></span>
+    </div>
+    <div class="nav-con-title">目录</div>
+    <div class="inner-content">
+        
+    </div>
+</div>
+
+                    <div class="nav-content" id="site-view-content">
+                    <div class="nav-con-close">
+                        <span class='glyphicon glyphicon-chevron-right'></span>
+                    </div>
+                
+                    <div class="inner-content">
+                        <div class="selfie"><img src='/image/theme/Selfie.JPG'</div>
+                        <div class="site-view-info">
+                         
+                            <p class="motto">你总有一个坚持下去的理由</p>
+                
+                            <h3 class="myself">老钱</h3>
+                            
+                            <ul class="posts-info">
+                            </ul>
+                            <div class="extern-links">
+                               <ul>
+                                   <li><a href="https://github.com/ChenghaoQ">Github</a></li>
+                               <li><a>Wechat</a></li>            
+                               </ul>
+     
+                            </div>
+                
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+            
+        </div>
+		<script src="/static/js/jquery.js"></script>
+        <!--<script src="/static/js/home.js"></script>
+        <script src="/static/ijs/ihome.js"></script>-->
+        <script type = "text/javascript">
+        $(document).ready(function(){
+            if($(window).width()>1024){
+                temp = 'desktop';
+                $.getScript( "/static/js/home.js" )
+            }
+            else
+            {
+                temp = 'mobile';
+                $.getScript( "/static/ijs/ihome.js" )
+            }
+            console.log('reload');
+            function refresher(){
+                if($(window).width()>1024)
+                    var status = 'desktop';
+                else
+                    var status = 'mobile';
+                if (status!= temp)
+                {
+                    location=location;//refresh page
+                    
+                    temp = status;
+                    
+                }
+                console.log(temp)
+            };
+
+            $(window).resize(refresher);
+        });
+        </script>
+
+        
+        
+
+<!--         
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+        <script>
+        (function() {
+        var v = document.createElement('script'); v.async = true;
+        v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+        })();
+        </script>  -->
+
+
+        <!-- Carnival comments -->
+        <!-- <script src="https://carnivalapp.io/sites/559/init.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", Carnival.init);
+        </script> -->
+
+
+
+    </body>
+
+
+
+
+
+</html>

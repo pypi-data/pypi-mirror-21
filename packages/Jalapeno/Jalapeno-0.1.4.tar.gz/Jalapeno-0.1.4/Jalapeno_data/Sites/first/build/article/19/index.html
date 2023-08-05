@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <title>
+使用Selenium驱动浏览器的爬虫
+|| 老钱</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel='stylesheet' href='/static/css/normalize.css'>
+		<link rel='stylesheet' href="/static/css/mono.css">
+		<link rel='stylesheet' href='/static/css/bootstrap.css'>
+		<link rel='stylesheet' media="screen and (min-width:1023px)"  href='/static/css/homepage.css'>
+		<link rel='stylesheet' media="screen and (max-width:1023px)"  href='/static/icss/ihomepage.css'>
+        
+
+<link rel='stylesheet' media="screen and (min-width:1025px)"  href='/static/css/article.css'>
+
+
+<link rel='stylesheet' media="screen and (max-width:1024px)"  href='/static/icss/iarticle.css'>
+
+
+        
+        <script src="https://carnivalapp.io/sites/559/init.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", Carnival.init);
+</script>
+        
+                 <script>
+              (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+              (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+              m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+              })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+              ga('create', 'UA-83291137-1', 'auto');
+              ga('send', 'pageview');
+
+        </script> 
+        
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+<script>
+(function() {
+var v = document.createElement('script'); v.async = true;
+v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+})();
+</script> 
+        
+
+    
+    
+    </head>
+    
+    <body>
+        <div id="wrapper">
+        <div id='main-page'>
+           <div class="mask"></div>
+            <header>
+                <nav>
+                    <div class="logo"><a href="/">老钱</a></div>
+                    <button class="menu_trigger">☰</button>
+                    <ul class="menu">
+                        
+                           
+                        <li><a href='/'>文章</a></li> 
+<!--
+                        <li><a href='#'>归档</a></li> 
+                        <li><a href='#'>关于</a></li>     
+-->
+                    </ul>
+                    
+                </nav>
+                <div class="hr"></div>
+            </header>
+            <div class='content'>
+                <div class="content_wrapper">
+                    
+    <div class="article_header">
+        <h1 class="article_title"><a>使用Selenium驱动浏览器的爬虫</a></h1>                   
+		<div class="article_info">2017-02-01 | 分类于:  <a class = 'tag' href="/tag/Python/">Python</a></div>
+	</div>
+	<article>
+        
+        
+
+<p>我们这次使用<a href="www.netadvantage.standardandpoors.com">S&amp;P Capital IQ NetAdvantage</a>来查找S&amp;P500中市值超过$50B的公司，并将表单数据爬取下来存入数据库。最后根据自己的需求找到对应的股票。</p>
+<p>为了更好地了解整个过程，建议使用python的交互式界面。</p>
+<!--More-->
+
+<h2 id="_1">使用工具</h2>
+<ul>
+<li>Selenium</li>
+<li>Chrome webdriver</li>
+<li>mysqlConnector</li>
+<li>re</li>
+</ul>
+<h2 id="selenium">使用Selenium驱动浏览器</h2>
+<p>首先我们在这里先下载Webdriver, Selenium支持很多主流浏览器，如....。我们以Chrome为例，</p>
+<p>先初始化一个浏览器实例，</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">driver</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Chrome</span><span class="p">()</span>
+</pre></div>
+</td></tr></table>
+
+<p>这时会启动一个新的Chrome浏览器界面，和我们平时的浏览器不同的是，这个新的浏览器是和我们python中的driver之间是可以通信的。当我们对浏览器（或driver实例）进行操作时，对应的driver(或浏览器)会相应改变。</p>
+<p>比如我们将网站跳转到www.Google.com：</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">driver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;http://www.google.com&quot;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table>
+
+<p>我们可以看到浏览器的第一个标签页跳转到了Google.com</p>
+<p>接着我们在浏览器中手动输入www.baidu.com并进入</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">driver</span><span class="o">.</span><span class="n">current_url</span>
+</pre></div>
+</td></tr></table>
+
+<p>就可以得到</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="s1">&#39;http://www.baidu.com/&#39;</span>
+</pre></div>
+</td></tr></table>
+
+<p>接着我们进入到NetAdvantage的主页,点击Screener并添加筛选条件，SP500中市值大于$50B的公司。大约有一百个。</p>
+<p><img alt="" src="/image/19/search.png" /></p>
+<p>好了接着我们就可以使用Python的re库来爬取我们想要的资料了</p>
+<h2 id="re">re解析网页源码</h2>
+<p>在抓取我们想要的数据之前我们需要先获得网页的源代码，我们使用driver的page_source方法获得浏览器当前页面源代码。注意和我们之前使用urllib和request库不同的是。由于我们使用浏览器进行加载，我们可以直接获得AJAX及其他各种方法加载过后的内容。为了提高效率，有些网站会有意无意地使用AJAX技术，这使我们之前的爬虫只能获得加载前的网页源码，并不能找到我们需要的数据，从而增加了我们的爬取难度。</p>
+<p>先来获取加载后的网页源码</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">source</span> <span class="o">=</span> <span class="n">driver</span><span class="o">.</span><span class="n">page_source</span>
+</pre></div>
+</td></tr></table>
+
+<p>接着我们来引入我们的re库</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="kn">import</span> <span class="nn">re</span>
+</pre></div>
+</td></tr></table>
+
+<p>来看看我们要抓的数据是什么样子的结构</p>
+<div class="codehilite"><pre><span></span><span class="nt">&lt;tr</span> <span class="na">class=</span><span class="s">&quot;trowB_na&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;td</span> <span class="na">width=</span><span class="s">&quot;20&quot;</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span><span class="nt">&gt;&lt;input</span> <span class="na">type=</span><span class="s">&quot;checkbox&quot;</span> <span class="na">name=</span><span class="s">&quot;displayRow&quot;</span> <span class="na">value=</span><span class="s">&quot;4&quot;</span>  <span class="na">onclick=</span><span class="s">&quot;Toggle(this,&#39;trowB_na&#39;)&quot;</span><span class="nt">&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>  <span class="na">href=</span><span class="s">/NASApp/NetAdvantage/showPublication.do?dataPosition=4&amp;SPID=5247</span> <span class="nt">&gt;</span>ConocoPhillips<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>COP<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>US<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>Energy<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>Oil <span class="err">&amp;</span> Gas Exploration <span class="err">&amp;</span> Production<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>48.760<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>3 Star<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>N/A<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>40.04<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>2.45<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>N/A<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+        <span class="nt">&lt;td</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span> <span class="na">align=</span><span class="s">&quot;left&quot;</span> <span class="nt">&gt;&lt;a</span>   <span class="nt">&gt;</span>35.38<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>
+<span class="nt">&lt;/tr&gt;</span>
+</pre></div>
+
+
+<p>猛的一看我们的表单这么复杂，其实很简单。我们来看看都有什么，其中tr标签代表一行，td标签代表一个单元格：</p>
+<ul>
+<li>Company Name，Ticker, </li>
+<li>Region, </li>
+<li>S&amp;P Sub-Industry,</li>
+<li>Last Closing Price,</li>
+<li>S&amp;P STARS Ranking,</li>
+<li>S&amp;P Capital IQ Quantitative Recommendation,</li>
+<li>1yr Total Return %,</li>
+<li>5yr Total Return %,</li>
+<li>P/E,</li>
+<li>LTD as % of Total Capital</li>
+</ul>
+<p>除第一行</p>
+<div class="codehilite"><pre><span></span>  <span class="nt">&lt;td</span> <span class="na">width=</span><span class="s">&quot;20&quot;</span>  <span class="na">height=</span><span class="s">&quot;17&quot;</span><span class="nt">&gt;&lt;input</span> <span class="na">type=</span><span class="s">&quot;checkbox&quot;</span> <span class="na">name=</span><span class="s">&quot;displayRow&quot;</span> <span class="na">value=</span><span class="s">&quot;4&quot;</span>  <span class="na">onclick=</span><span class="s">&quot;Toggle(this,&#39;trowB_na&#39;)&quot;</span><span class="nt">&gt;&lt;/td&gt;</span>
+</pre></div>
+
+
+<p>之外，其余的td标签下的内容都是我们需要的数据。所以我们可以把正则表达式写成</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="p">&lt;</span><span class="nt">tr</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;trow\w_na&quot;</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;/</span><span class="na">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+    <span class="p">&lt;</span><span class="nt">td.</span><span class="err">*?&lt;</span><span class="na">a</span><span class="err">.*?</span><span class="p">&gt;</span>(.+?)<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>.*?
+<span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+</pre></div>
+</td></tr></table>
+
+<p>这样我们就可以抓取(.+?)所代表的数据了，而.*?为不明确的内容被忽略掉。我们来用re.compile方法构成一个正则表达式的pattern</p>
+<div class="codehilite"><pre><span></span>&gt;&gt;&gt;regex = &#39;<span class="nt">&lt;tr</span> <span class="na">class=</span><span class="s">&quot;trow\w_na&quot;</span><span class="nt">&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;/td</span><span class="nt">&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;td.</span><span class="err">*?&lt;a.*?</span><span class="nt">&gt;</span>(.+?)<span class="nt">&lt;/a&gt;&lt;/td&gt;</span>.*?<span class="nt">&lt;/tr&gt;</span>&#39;
+
+&gt;&gt;&gt;pattern = re.compile(regex,re.S)
+</pre></div>
+
+
+<p>接着使用re.findall来使用pattern查找页面源代码source里面所有匹配的内容</p>
+<div class="codehilite"><pre><span></span>&gt;&gt;&gt;company_data_list = re.findall(pattern,source)
+</pre></div>
+
+
+<p>得到的内容如下</p>
+<div class="codehilite"><pre><span></span>&gt;&gt;&gt;company_data_list
+[(&#39;Oracle Corp&#39;, &#39;ORCL&#39;, &#39;US&#39;, &#39;Information Technology&#39;, &#39;Systems Software&#39;, &#39;40.230&#39;, &#39;5 Star&#39;, &#39;N/A&#39;, &#39;16.99&#39;, &#39;8.59&#39;, &#39;19.20&#39;), 
+(&#39;Amazon.com Inc&#39;, &#39;AMZN&#39;, &#39;US&#39;, &#39;Consumer Discretionary&#39;, &#39;Internet &amp;amp; Direct Marketing Retail&#39;, &#39;830.380&#39;, &#39;4 Star&#39;, &#39;N/A&#39;, &#39;43.27&#39;, &#39;33.73&#39;, &#39;190.00&#39;),
+...]
+</pre></div>
+
+
+<p>好了我们的爬取工作已经完成，接下来我们写入MySQL数据库</p>
+<h3 id="_2">写入数据库</h3>
+<p>首先我们可以登入我们的MySQL</p>
+<div class="codehilite"><pre><span></span>$ mysql -u <span class="o">[</span>username<span class="o">]</span> -p <span class="o">[</span>password<span class="o">]</span>
+</pre></div>
+
+
+<p>输入密码后</p>
+<div class="codehilite"><pre><span></span>Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 17
+Server version: 5.7.9 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2015, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type &#39;help;&#39; or &#39;\h&#39; for help. Type &#39;\c&#39; to clear the current input statement.
+mysql&gt;
+</pre></div>
+
+
+<p>接着我们要创建一个数据库，名字叫test,字符编码UTF-8</p>
+<div class="codehilite"><pre><span></span>mysql&gt; CREATE DATABASE test charset = &#39;utf8&#39;;
+</pre></div>
+
+
+<p>接着进入我们的数据库</p>
+<div class="codehilite"><pre><span></span>mysql&gt; USE test;
+</pre></div>
+
+
+<p>创建一张表，名字叫sp100，同时包含了表格各列的名称和数据类型，由于我们抓取的内容都是字符串，并且有的内容标示为'N/A'，我们不能使用数字格式，这里使用字符串格式；</p>
+<div class="codehilite"><pre><span></span>create table sp10(
+Company_Name varchar(50), 
+Ticker varchar(10), 
+Region varchar(10), 
+SP_Sector varchar(30), SP_Sub_Industry varchar(50), 
+Last_Closing_Price varchar(10), 
+Ranking Varchar(15), 
+Capital_IQ_RECOM VARCHAR(10), 
+Return_1yr varchar(10), 
+Return_5yr varchar(10), 
+PE varchar(30), 
+LTD varchar(30)
+);
+</pre></div>
+
+
+<p>接着我们就可以使用python继续写入内容了</p>
+<p>首先引入mysql Connector</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="kn">import</span> <span class="nn">mysql.connector</span>
+</pre></div>
+</td></tr></table>
+
+<p>接着创建一个你的数据库信息变量config</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="n">config</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;host&#39;</span><span class="p">:</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;user&#39;</span><span class="p">:</span><span class="s1">&#39;你的用户名&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;password&#39;</span><span class="p">:</span><span class="err">密码</span><span class="p">,</span>
+    <span class="s1">&#39;port&#39;</span><span class="p">:</span><span class="mi">3306</span><span class="p">,</span>
+    <span class="s1">&#39;database&#39;</span><span class="p">:</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="c1">#这是你刚刚创建的数据库test</span>
+    <span class="s1">&#39;charset&#39;</span><span class="p">:</span><span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="c1">#编码&#39;utf8&#39; </span>
+    <span class="p">}</span>
+</pre></div>
+</td></tr></table>
+
+<p>然后尝试连接数据库，出错则报错</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="k">try</span><span class="p">:</span>
+        <span class="n">cnn</span> <span class="o">=</span> <span class="n">mysql</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">mysql</span><span class="o">.</span><span class="n">connector</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;connnect failed!{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+</pre></div>
+</td></tr></table>
+
+<p>通过连接创建一个控制数据库的光标cursor,它会代替你来对数据库执行操作</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">cursor</span> <span class="o">=</span> <span class="n">cnn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+</pre></div>
+</td></tr></table>
+
+<p>然后给一个你将要执行的INSERT语句来把我们的变量插入,%s表示要插入的数据</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">insert_statement</span> <span class="o">=</span> <span class="s1">&#39;Insert sp100 (Company_Name,Ticker,Region,SP_Sector,SP_Sub_Industry,Last_Closing_Price,Ranking,Capital_IQ_RECOM,Return_1yr,Return_5yr,PE,LTD) values(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span>
+</pre></div>
+</td></tr></table>
+
+<p>使用循环语句和execute方法将我们的100条公司数据依次添加到数据库中,否则会报错</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="k">for</span> <span class="n">company</span> <span class="ow">in</span> <span class="n">company_data_list</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">insert_statement</span><span class="p">,</span><span class="n">company</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Inserting data error!{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+</pre></div>
+</td></tr></table>
+
+<p>要注意的是，执行完上面语句后我们的数据库并没有出现数据，因为我们并没有提交修改。这里使用commit方法提交</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">cnn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</pre></div>
+</td></tr></table>
+
+<p>然后关掉cursor,断开连接</p>
+<table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="codehilite"><pre><span></span><span class="o">&gt;&gt;&gt;</span><span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span><span class="n">cnn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</td></tr></table>
+
+<p>到这里我们就可以看到数据库中的内容了，回到mysql查看，</p>
+<div class="codehilite"><pre><span></span>mysql&gt; select * from sp100\G;
+*************************** 1. row ***************************
+      Company_Name: Oracle Corp
+            Ticker: ORCL
+            Region: US
+         SP_Sector: Information Technology
+   SP_Sub_Industry: Systems Software
+Last_Closing_Price: 40.230
+           Ranking: 5 Star
+  Capital_IQ_RECOM: N/A
+        Return_1yr: 16.99
+        Return_5yr: 8.59
+                PE: 19.20
+               LTD: 43.76
+*************************** 2. row ***************************
+
+...
+</pre></div>
+
+
+<p>最后我们要对这些数据进行简单的处理并按照我们想要的方法分析</p>
+<h2 id="_3">操作数据库</h2>
+<p>首先，举个例子（例子非真实情况）：</p>
+<p>假设我们要找到将各个公司的1年回报率乘以（1-长期债务率）得到公司在不负债的情况下对应的收益，然后加上它PE的二次方根。大致如下</p>
+<div class="codehilite"><pre><span></span>Unlevered 1yr return = 1 yr return* (1-LTD%)
+weighted_index = unlevered return ＋ SQRT(PE)
+</pre></div>
+
+
+<p>最后我们取前5名和后5名</p>
+<p>我们来看怎么操作，之前我们讲到我们所有的数据都是字符串，字符串并不能正确地按数字大小排列内容。所以我们要先剔除带有所需数据中带有'N/A'的公司</p>
+<div class="codehilite"><pre><span></span>mysql&gt; create table sp as  select * from sp100 where PE != &#39;N/A&#39; and Return_1yr!=&#39;N/A&#39; and LTD!=&#39;N/A&#39;;
+</pre></div>
+
+
+<p>这样一来我们就将PE,Return_1yr和LTD下带有‘N/A'的公司剔除了并放入一张新表sp中，接着我们将sp的这三列变成双精度浮点double类型</p>
+<div class="codehilite"><pre><span></span>mysql&gt; alter table sp change PE PE DOUBLE;
+mysql&gt; alter table sp change Return_1yr Return_1yr DOUBLE;
+mysql&gt; alter table sp change LTD LTD DOUBLE;
+</pre></div>
+
+
+<p>接着我们就可用通过select来查询我们需要的内容，我们要求数据库返回两列内容，一个是公司股票代码，另一个是weight.</p>
+<p>这里weight=Return_1yr *((100-LTD)/100)+SQRT(PE)，使用as将显示名称修改</p>
+<p>查询weight最高的10只股票，'order by weight desc limit 10'表示，将结果按weight降序排列，显示5条</p>
+<div class="codehilite"><pre><span></span>select ticker,Return_1yr *((100-LTD)/100)+SQRT(PE) as weight from sp order by weight desc limit 5;
+</pre></div>
+
+
+<p>结果如下</p>
+<div class="codehilite"><pre><span></span>+--------+--------------------+
+| ticker | weight             |
++--------+--------------------+
+| NVDA   |             325.56 |
+| NFLX   | 189.14999999999998 |
+| AMZN   |             121.97 |
+| PCLN   |              51.97 |
+| ADBE   |              51.89 |
++--------+--------------------+
+</pre></div>
+
+
+<p>接着是升序排列找到最低的5条</p>
+<div class="codehilite"><pre><span></span>select ticker,Return_1yr *((100-LTD)/100)+SQRT(PE) as weight from sp order by weight asc limit 5;
+</pre></div>
+
+
+<p>结果如下</p>
+<div class="codehilite"><pre><span></span>+--------+---------------------+
+| ticker | weight              |
++--------+---------------------+
+| AGN    | -14.370000000000001 |
+| GILD   |               -5.79 |
+| CVS    |               -1.08 |
+| NKE    |  3.3999999999999986 |
+| PM     |  3.6100000000000003 |
++--------+---------------------+
+</pre></div>
+
+
+<p>好了，就这样。</p>
+		
+	</article>
+	<div id="copyright"><a href="/copyright">&copy;著作权归作者所有</a></div>
+	<hr>
+    <div id="vc-main" data-access-token="11c8370248773a268137e6fb158a3884"></div>
+    
+    <div id="vc-feelback-main" data-access-token="bd6f14702ab835406654dbd001f2c721" data-display-type="4" ></div> 
+
+                </div>
+    
+            </div>
+            
+            <footer>
+                <ul class="share-group">
+                    <li><a href="#">Jalapeno急速运转中</a></li>
+                    <!--<li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>
+                    <li><a href="#">item</a></li>--> 
+                </ul>   
+                <div class="copyright">
+                    &copy ChenghaoQ;
+                </div>
+
+            </footer>
+            
+            
+            <div class="back-to-top">
+            	<span class="glyphicon glyphicon-chevron-up"></span>
+            </div>
+            <div id="closeBar">
+                <span class="glyphicon glyphicon-remove"></span>
+            </div>
+        
+        </div>
+          
+            
+        
+        
+        
+        
+        
+        
+        <div id="sidebar">
+            <div id="sidebar-menu">
+
+               	<div id="home"><a href="/"><span class="glyphicon glyphicon-home"></span></a></div>
+               	<ul>
+               	    
+<li id="catalog" class="item">
+    <span class="glyphicon glyphicon-list-alt"></span>
+
+</li>
+
+
+               	    <li id="site-view" class="item">
+                        <span class="glyphicon glyphicon-align-center"></span>
+                    
+                    </li>
+               	 </ul>
+                
+            </div>
+            <div id="sidebar-content" >
+                
+
+<div class="nav-content" id="catalog-content">
+    <div class="nav-con-close">
+        <span class='glyphicon glyphicon-chevron-right'></span>
+    </div>
+    <div class="nav-con-title">目录</div>
+    <div class="inner-content">
+        <div class="toc">
+<ul>
+<li><a href="#_1">使用工具</a></li>
+<li><a href="#selenium">使用Selenium驱动浏览器</a></li>
+<li><a href="#re">re解析网页源码</a><ul>
+<li><a href="#_2">写入数据库</a></li>
+</ul>
+</li>
+<li><a href="#_3">操作数据库</a></li>
+</ul>
+</div>
+
+    </div>
+</div>
+
+                    <div class="nav-content" id="site-view-content">
+                    <div class="nav-con-close">
+                        <span class='glyphicon glyphicon-chevron-right'></span>
+                    </div>
+                
+                    <div class="inner-content">
+                        <div class="selfie"><img src='/image/theme/Selfie.JPG'</div>
+                        <div class="site-view-info">
+                         
+                            <p class="motto">你总有一个坚持下去的理由</p>
+                
+                            <h3 class="myself">老钱</h3>
+                            
+                            <ul class="posts-info">
+                            </ul>
+                            <div class="extern-links">
+                               <ul>
+                                   <li><a href="https://github.com/ChenghaoQ">Github</a></li>
+                               <li><a>Wechat</a></li>            
+                               </ul>
+     
+                            </div>
+                
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+            
+        </div>
+		<script src="/static/js/jquery.js"></script>
+        <!--<script src="/static/js/home.js"></script>
+        <script src="/static/ijs/ihome.js"></script>-->
+        <script type = "text/javascript">
+        $(document).ready(function(){
+            if($(window).width()>1024){
+                temp = 'desktop';
+                $.getScript( "/static/js/home.js" )
+            }
+            else
+            {
+                temp = 'mobile';
+                $.getScript( "/static/ijs/ihome.js" )
+            }
+            console.log('reload');
+            function refresher(){
+                if($(window).width()>1024)
+                    var status = 'desktop';
+                else
+                    var status = 'mobile';
+                if (status!= temp)
+                {
+                    location=location;//refresh page
+                    
+                    temp = status;
+                    
+                }
+                console.log(temp)
+            };
+
+            $(window).resize(refresher);
+        });
+        </script>
+
+        
+        
+
+<!--         
+        <script type="text/javascript" src="http://assets.vicomi.com/assets/widgets_static.js"></script>
+
+
+        <script>
+        (function() {
+        var v = document.createElement('script'); v.async = true;
+        v.src = "http://assets.vicomi.com/assets/widgets_static.js";
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(v, s);
+        })();
+        </script>  -->
+
+
+        <!-- Carnival comments -->
+        <!-- <script src="https://carnivalapp.io/sites/559/init.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", Carnival.init);
+        </script> -->
+
+
+
+    </body>
+
+
+
+
+
+</html>

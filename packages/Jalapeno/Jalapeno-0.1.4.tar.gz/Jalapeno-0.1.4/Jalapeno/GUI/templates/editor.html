@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    <meta charset="UTF-8">
+    <title>Jquery Ajax Test</title>
+    <link rel='stylesheet' href='{{gui.css.bootstrap}}'>
+    
+    <link rel='stylesheet' href='{{gui.css.mono}}'>
+    <script src= '{{gui.js.jquery}}'></script>
+    <style>
+    html,body,.editor-frame .row,.boxes,.wrapper
+    {
+    	height:100%;
+
+    }
+    .navbar,.row
+    {
+    	margin:0;
+    }
+    .col-xs-6
+    {
+    	padding:0;
+    	overflow: hidden;
+    }
+
+    .buttons
+    {
+    	float:right;
+    	height:50px;
+    }
+    .buttons li
+    {
+    	height:inherit;
+    }
+    .btn
+    {
+    	border-radius: 0px;
+    	padding: 0 30px 0 30px;
+    	height:inherit;
+    }
+
+    .editor-infobox
+    {
+    	height:150px;
+    }
+    .Namebox .navbar-brand,.DocTitle .navbar-brand
+    {
+    	color:#888;
+    	font-size:12px;
+    }
+    .DocTitle .col-xs-6
+    {
+    	display:flex;
+    }
+    .DocTitle .col-xs-6 input
+    {
+    	flex:2;
+    	font-size: 16px;
+    	border: none;
+	    border-bottom: 1px dashed #888;
+	    margin-right: 10px;
+
+    }
+    .title-box
+    {
+    	border-left: 5px solid #e1e1e1;
+
+    }
+    .Namebox
+    {
+    	height:30px;
+    }
+    .Name 
+    {
+    	text-align:center;
+    	width:100%;
+    }
+    .editor-frame
+    {
+    	padding:0;
+    	margin:0;
+    	width:inherit;
+    	height: calc(100% - 152px);
+    	top:150px;
+    }
+    .editor-row
+    {
+    	margin:0;
+    }
+    .boxes
+    {
+    	border: 1px solid #e1e1e1;
+    	padding: 0;
+    }
+    #editor,#preview
+    {
+    	width:100%;
+    	height:100%;
+    	border:none;
+
+    }
+    #preview
+    {
+    	overflow:scroll;
+    	word-break:break-all;
+    	color:#555;
+    }
+    .editor-box
+    {
+    	top:0;
+    	bottom:0;
+    	left:0;
+    	right:0;
+    	margin: 0 auto;
+    	
+/*    	position:fixed;
+    	width:80%;*/
+    }
+    .codehilitetable {
+	background: #272822;
+	border-radius: 10px;
+    font-weight: 600;
+	width:100%;
+	display:block;
+	position:relative;
+	overflow:auto;
+	}
+
+	.linenos
+	{
+		padding-left:15px;
+		color:#e6d074;
+		
+	}
+	.codehilite
+	{
+	    overflow: hidden;
+	    border-radius: 10px;
+		position:relative;
+		font-weight: 600;
+	}
+	.codehilite pre
+	{
+		padding:0 15px;
+	    width:inherit;
+	}
+
+    </style>
+	
+
+
+	</head>
+	
+	
+	<body>
+	<div class = "wrapper">
+		<div class = "editor-infobox">
+			<!-- Nav Bar -->
+			<nav class="navbar navbar-default" role = "navigation">
+					<span class="navbar-brand">Jalapeno Editor</span>
+					<ul class="buttons nav navbar-nav">
+							<li><button id="editor-Open" class="btn btn-warning">Open</button></li>
+							<li><button id="editor-Save" class="btn btn-primary">Save</button></li>
+							<li><button id="editor-Finish" class="btn btn-success">Finish</button></li>
+							<li><button id="editor-Leave" class="btn btn-danger">Leave</button></li>
+					</ul>
+			
+			</nav>
+			<!-- Doc info -->
+			<div class ="DocTitle row">
+				<div class="col-xs-6">
+					<span class="title-box navbar-brand">DOCUMENT NAME</span>
+					<input id="doc-name">
+				</div>
+				<div class="col-xs-6">
+					<span class="title-box navbar-brand">TARGET FOLDER</span>
+					<input id="doc-type">
+				</div>
+			</div>
+
+			<!-- Editor and Preview -->
+
+			<div class ="Namebox row">
+				<div class="col-xs-6">
+					<span class="Name navbar-brand">MARKDOWN EDITOR</span>
+				</div>
+				<div class="col-xs-6">
+					<span class="Name navbar-brand">PREVIEW</span>
+				</div>
+			</div>
+
+
+		</div>
+		<div class="editor-frame container">
+			<div class = 'editor-row row'>
+			<div class="boxes editor-box col-xs-6">
+				<textarea id = "editor">
+					
+				</textarea>
+
+			</div>
+			<div class="boxes col-xs-6">
+
+				<article id = "preview">
+					
+				</article>
+
+			</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		
+		$("#editor-Save").click(function(){
+			var content = $('#editor').val();
+			var name = $('#doc-name').val();
+			var datas ={'data': [name,content]};
+			$.post('/touch/open',datas)
+			});
+		$("#editor-Open").click(function(){
+			var name = $('#doc-name').val();
+			var type = $('#doc-type').val();
+			var datas ={'data': [name,type]};
+			$.post('/touch/open',datas,function(data){
+				$('#editor').text(data);
+			});
+
+			});
+		$("#editor-Finish").click(function(){
+			var content = $('#editor').val();
+			var name = $('#doc-name').val();
+			var type = $('#doc-type').val();
+			var datas ={'data': [name,type,content]};
+			$.post('/touch/finish',datas)
+			});
+		$("#editor-Leave").click(function(){
+			$("#display").hide()
+			$("#display").fadeIn(500).load("/welcome");
+			
+			});
+
+	</script>
+	<script type="text/javascript">
+		/*----------------------- Tab Enable --------------------------*/
+		var textareas = document.getElementsByTagName('textarea');
+		var count = textareas.length;
+		for(var i=0;i<count;i++){
+		    textareas[i].onkeydown = function(e){
+		        if(e.keyCode==9 || e.which==9){
+		            e.preventDefault();
+		            var s = this.selectionStart;
+		            this.value = this.value.substring(0,this.selectionStart) + "\t" + this.value.substring(this.selectionEnd);
+		            this.selectionEnd = s+1; 
+		        }
+		    }
+		}
+
+	</script>
+	<script type="text/javascript">
+		
+		$('#editor')[0].addEventListener("keyup",function(){
+
+			var datas = $('#editor').val();
+			$.post('/touch/render',datas,function(data){
+				 $('#preview').html(data);
+			});
+
+
+		});
+	</script>
+	</body>
+	
+	
+	
+</html>
