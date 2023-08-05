@@ -1,0 +1,686 @@
+rdopkg(1)
+=========
+:doctype: manpage
+:toc2:
+
+
+NAME
+----
+rdopkg - RDO packaging tool
+
+
+SYNOPSIS
+--------
+
+`rdopkg` <action> <arg>...
+
+`rdopkg` `-c`
+
+`rdopkg` `-h`
+
+
+DESCRIPTION
+-----------
+**rdopkg** is a tool for automating RDO/RHOSP packaging tasks, such as
+introducing patches, updating packages to new versions and submitting
+packages to RDO.
+
+Run `rdopkg -h` to get available actions.
+
+persistence
+~~~~~~~~~~~
+
+`rdopkg` provides multi-step actions where each step is (should be) idempotent
+so if something fails along the way or human interaction is required, rdopkg
+drops to shell, let's you rectify and then continue by running
+`rdopkg --continue` (`rdopkg -c`).
+
+The state is stored in `.rdopkg.json` file in current directory. Stored action
+can be inspected (`rdopkg status`), continued (`rdopkg --continue`) or aborted
+(`rdopkg --abort`). `rdopkg` will refuse to start new multi-step action if
+state file is present.
+
+
+ACTIONS
+-------
+
+Important actions diagram
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+&nbsp;
+
+                          +---------------------+
+                         /  WHAT DO YOU NEED?  /
+                        +-----+----------+----+
+                                   |
+                                   |
+                                   |
+                            build new package
+                                   |
+                                   v
+                            +----------------+
+                           /  what change?  /
+                          +--+-----+-----+-+
+                             |     |     |
+                      +------+     |     +--------+
+                      |            |              |
+                 just update   introduce    update to new
+                   .spec       patch(es)   upstream version
+                      |            |              |
+                      |            |              |
+                      v            v              v
+                   +-----+     +-------+    +-------------+
+                   | fix |     | patch |    | new-version |
+                   +-----+     +-------+    +-------------+
+
+ACTION: fix
+~~~~~~~~~~~
+
+Make `.spec` file only changes.
+
+*Flow:*
+
+  * Bump Release, prepare a new %changelog entry header.
+  * Drop to shell, let user edit .spec file.
+  * After running `rdopkg`, ensure description was added to %changelog
+    and commit changes to new commit.
+
+*Example:*
+    
+    cd python-novaclient
+    rdopkg fix
+    vim python-novaclient.spec
+    rdopkg -c
+
+ACTION: patch
+~~~~~~~~~~~~~
+
+Introduce new patches to the package.
+
+This action works with patches branch
+(see <<patches-branch,AUTOMAGIC -> patches branch>>).
+By default, `rdopkg` resets local patches branch to remote patches branch.
+You can skip this this with `--local-patches` to directly use local patches
+branch as is.
+
+Don't forget to `git fetch` before running the action.
+
+After running `rdopkg patch`, new commit will contain the changes.
+
+You can use `-C`/`--changelog` option to select how `rdopkg` detects new/old
+patches and changelog message:
+
+  * `detect`: detect new/old patches using commit hash/subject (default)
+  * `count`: count old and new patches (doesn't work for simultaneous
+     removal & addition of patches and rewriting -patches history)
+  * `plain`: just use generic "- Update patches" message
+
+*Flow:*
+
+  * Unless `-l`/`--local-patches` was used, reset local patches branch to
+    remote patches branch.
+  * Update .spec file: bump Release, create new %changelog entry with new
+    patches' titles and create a commit.
+  * Update patches from local patches branch (`update-patches` action)
+  * Display the diff.
+
+ACTION: new-version
+~~~~~~~~~~~~~~~~~~~
+
+Update package to new upstream version.
+
+This action works with patches branch 
+(see <<patches-branch,AUTOMAGIC -> patches branch>>).
+After successful rebase, `rdopkg` will offer to push the
+rebased patches branch.
+
+Required `new-version` argument is a new version to rebase on, presumably
+a git version tag.
+
+Don't forget to `git fetch --all` before running the action.
+
+You can use the `-N`/`--new-sources` or `-n`/`--no-new-sources` options to
+control whether `new-version` will run `fedpkg new-sources`
+(`rhpkg new-sources` on RHOS). By default, `rdopkg` will automatically enable
+or disable this step based on the dist-git branch name. RHOS branches
+(`rhos-*` or `rh-*`) default to `-N`. All other branches default to `-n`.
+
+After running `rdopkg new-version`, new commit will contain the changes.
+
+To only update `.spec` without touching patches branch, `-b`/`--bump-only` can
+be used. Along with `-n`/`--no-new-sources` this enables local-only operation,
+much like `rpmdev-bumpspec`:
+
+    rdopkg -bn
+
+*Flow:*
+
+  * Show diff from previous version, especially changes to `requirements.txt`.
+  * Reset local patches branch to remote patches branch
+  * Rebase local patches branch on `$NEW_VERSION` tag.
+  * Update `.spec` file: set `Version`, `Release` and `patches_base` to
+    appropriate values and create new %changelog entry.
+  * Download source tarball.
+  * Run `fedpkg new-sources` (`rhpkg new-sources`).
+  * Update patches from local patches branch (`update-patches` action)
+  * Display the diff.
+
+*Example:*
+
+    cd python-novaclient
+    git fetch --all
+    rdopkg new-version 2.15.0
+    # rebase failed, manually fix using git
+    rdopkg -c
+    
+
+ACTION: clone
+~~~~~~~~~~~~~
+
+Clone an RDO package distgit and setup remotes.
+
+`clone` uses <<rdoinfo,rdoinfo>> metadata to clone the specified RDO package
+distgit and also setup relevant remotes to get you packaging quickly.
+
+If your github username differs from your `$USER`, use `-u`/`--review-user`.
+
+*Example:*
+
+    rdopkg clone -u github-user python-novaclient
+    cd python-novaclient
+    git remote -v
+
+
+ACTION: update-patches
+~~~~~~~~~~~~~~~~~~~~~~
+
+Update `.spec` file with patches from patches branch.
+
+This is a core low level action used by other actions such as `patch` and
+`new-version` to update dist-git patches from patches branch. 
+See <<patches-branch,AUTOMAGIC -> patches branch>> for explanation.
+
+`update-patches` is a rework of now obsolete `update-patches.sh` script with
+less restrictions and more features such as optional #patches_base, support
+for `git am %{patches}` method of applying patches and smart patches branch
+detection.
+
+*Magic #patches_ignore comment:*
+
+`update-patches` also supports filtering out patches based on matching a
+regex provided by a magic #patches_ignore comment in the spec file. This is
+useful, for example, in case the patches branch contains changes that are
+related to the CI/code review infra, that are useful to keep around but don't
+need to end up in the RPM.
+
+For example, if you add the following comments in your package's .spec file:
+
+    # patches_base=10.2.5
+    # patches_ignore=DROP-IN-RPM
+
+then rdopkg will not create .patch files for any commits that have
+"DROP-IN-RPM" in the Git commit log's subject line.
+
+Note: these lines should be directly above any Patch000X lines in your .spec
+file.
+
+*Flow:*
+
+ * Export patches from patches branch using `git format-patch`
+ * Add these patches to dist-git and edit `.spec` file to apply them
+ * Create new commit with the change (or amend previous with `-a`/`--amend`)
+ * If a "%global commit asdf1234" macro declaration is present, rewrite
+   it with the current sha1 of the patches branch. (This makes the sha1
+   value available during your package's build process. You can use this
+   to build your program so that "mycoolprogram --version" could display
+   the sha1 to users.)
+
+*Example:*
+
+    rdopkg update-patches
+
+
+ACTION: query
+~~~~~~~~~~~~~
+
+Query RDO/distro repos for available package versions.
+
+See link:rdopkg-adv-requirements.7.html[rdopkg-adv-requirements(7)] for
+complete example of `query` and other requirements management actions.
+
+This action uses `repoquery` to discover latest package versions available
+from RDO and other repos available on a supported distibution.
+
+See output of `rdopkg info` for supported releases and distros.
+
+*Query specific RELEASE/DIST:*
+
+     rdopkg query kilo/el7 openstack-nova
+
+*Query all dists of a release and show what's happening:*
+
+     rdopkg query -v kilo openstack-nova
+
+
+ACTION: reqquery
+~~~~~~~~~~~~~~~~
+
+Query RDO/distro repos for versions defined in requirements.txt.
+
+See link:rdopkg-adv-requirements.7.html[rdopkg-adv-requirements(7)] for
+complete example of `reqquery` and other requirements management actions.
+
+This action essentially runs `rdopkg query` on every module/package defined in
+`requirements.txt` and prints colorful report to quickly find unmet
+dependencies. It accepts the same RELEAESE/DIST filter as `rdopkg query`.
+
+Python module names listed in `requirements.txt` are mapped to package names
+using `rdopkg.actionmods.pymod2pkg` module.
+
+*Query `requirements.txt` from `2015.1` tag:*
+
+    rdopkg reqquery -R 2015.1 kilo/el7
+
+*Query `requirements.txt` file:*
+
+    rdopkg reqquery -r path/to/requirements.txt kilo/f21
+
+*Query `.spec` Requires (experimental):*
+
+    rdopkg reqquery -s
+
+*Verbosely dump query results to a file and view them:*
+
+    rdopkg reqquery -v -d
+    rdopkg reqquery -l
+
+
+ACTION: reqcheck
+~~~~~~~~~~~~~~~~
+
+Inspect `requirements.txt` vs `.spec` Requires.
+
+See link:rdopkg-adv-requirements.7.html[rdopkg-adv-requirements(7)] for
+complete example of `reqcheck` and other requirements management actions.
+
+This action parses current `requirements.txt` from git and checks whether
+they're met in the `.spec` file. Simple report is printed.
+
+Python module names listed in `requirements.txt` are mapped to package names
+using `rdopkg.actionmods.pymod2pkg` module.
+
+Use `--spec`/`-s` option to output Requires: suitable for pasting into .spec
+files. Version comparisons are hidden, whitespace is detected from .spec.
+
+*Example:*
+
+    rdopkg reqcheck
+    rdopkg reqcheck -s
+
+
+ACTION: reqdiff
+~~~~~~~~~~~~~~~
+
+Show pretty diff of `requirements.txt`.
+
+See link:rdopkg-adv-requirements.7.html[rdopkg-adv-requirements(7)] for
+complete example of `reqdiff` and other requirements management actions.
+
+Use this to see how requirements changed between versions.
+
+*See diff between current and latest upstream version (automagic):*
+
+    rdopkg reqdiff
+
+*See diff between current and specified version:*
+
+    rdopkg reqdiff 2015.1
+
+*See diff between two supplied versions:*
+
+    rdopkg reqdiff 2015.1 2015.2
+
+
+ACTION: kojibuild
+~~~~~~~~~~~~~~~~~
+
+Build the package in `koji`.
+
+See link:rdopkg-adv-building.7.html[rdopkg-adv-building(7)] for complete
+example of building and submitting packages for RDO.
+
+This is esentaially a wrapper over `fedpkg build` with added value of
+generating update entries for `rdopkg update`.
+
+*Flow:*
+
+ * Run equivalent of `fedpkg build` using disgusting `fedpkg` python module.
+ * Watch the build.
+
+*Example:*
+
+    rdopkg kojibuild
+
+
+ACTION: coprbuild
+~~~~~~~~~~~~~~~~~
+
+Build the package in `copr-jruzicka`.
+
+See link:rdopkg-adv-building.7.html[rdopkg-adv-building(7)] for complete
+example including instructions how to setup copr, obtain permissions, build,
+submit update, and more.
+
+**Please**, try to do `coprbuild` after successful `kojibuild` to ensure same
+SRPM for both builds. This will be automated further in the future.
+
+`-r/--release` and `-d/--dist` are autodetected from current branch if
+possible. These are used to select right copr to build in.
+
+*Flow:*
+
+ * Create the source RPM from current dist-git.
+ * Upload the source RPM to your `fedorapeople.org:~/public_html/copr`.
+   (specify Fedora user with `-u/--fuser`)
+ * Submit the source RPM to build in `jruzicka / rdo-$RELEASE-$DIST` copr.
+ * Watch the build.
+
+*Example:*
+
+    rdopkg coprbuild
+
+
+ACTION: amend
+~~~~~~~~~~~~~
+
+Amend last git commit with current dist-git changes and (re)generate the commit
+message from %changelog.
+
+This simple atomic action is equivalent to running
+
+    git commit -a --amend -m "$AUTOMAGIC_COMMIT_MESSAGE"
+
+See <<commit-message,AUTOMAGIC -> commit message>>
+for more information about the generated commit message.
+
+
+ACTION: squash
+~~~~~~~~~~~~~~
+
+Squash last git commit into previous one. Commit message of previous commit is
+used.
+
+This simple atomic action is a shortcut for
+
+    git reset --soft HEAD~
+    git commit --amend --no-edit
+
+This is useful for squashing commits created by lower level actions such as
+`update-patches`.
+
+
+ACTION: get-sources
+~~~~~~~~~~~~~~~~~~~
+
+Download package source archive.
+
+Currently, `Source0` from `.spec` file is downloaded.
+
+
+ACTION: info
+~~~~~~~~~~~~
+
+Show information about RDO packaging.
+
+Use this command to find out about:
+
+ * currently supported RDO OpenStack releses
+ * which distros are supported for each release
+ * what branch to build from
+ * what build system to build in
+ * supported packages
+ * various repositories tied to a package
+ * package maintainers
+
+This command is a human interface to <<rdoinfo,rdoinfo>>.
+
+*Releases/dists/branches overview:*
+
+    rdopkg info
+
+*Detailed information about a package:*
+
+    rdopkg info novaclient
+
+*Filter packages by maintainers:*
+
+    rdopkg info maintainers:jruzicka
+
+
+ACTION: info-tags-diff
+~~~~~~~~~~~~~~~~~~~~~~
+
+Show rdoinfo tag changes.
+
+    rdopkg info-tags-diff RDOINFODIR
+
+will show per-package new/changed tags in rdoinfo between `HEAD~..HEAD`.
+
+For an existing package, a list of changed tags is returned
+
+For a new package, full tags dict is returned.
+
+Example:
+
+    $ rdopkg info-tags-diff ~/.rdopkg/rdoinfo
+    openstack-changed ['newton-uc', 'newton']
+    openstack-new-pkg {'under-review': None}
+
+This is an interface to rdopkg.actionmods.rdoinfo:tags_diff().
+
+
+ACTION: findpkg
+~~~~~~~~~~~~~~~
+
+Find and show single best matching package in <<rdoinfo,rdoinfo>>.
+
+This command produces same output as `rdopkg info` but
+
+ * smart search is performed on package name, project name and upstream URL
+ * only a single matching package is shown
+
+Use `-s`/`--strict` to disable magic substring search and only match whole
+fields.
+
+This command is a human interface to
+`rdopkg.actionmods.rdoinfo.find_package()` helper function.
+
+*Examples of usage:*
+
+    rdopkg findpkg nova
+    rdopkg findpkg -s openstack-nova
+    rdopkg findpkg git://git.openstack.org/openstack/nova
+    rdopkg findpkg openstack/nova
+    rdopkg findpkg novacli
+
+
+ACTION: conf
+~~~~~~~~~~~~
+
+Display rdopkg's local configuration.
+
+This command prints the default configuration that ships with rdopkg out of the
+box. You can override the individual settings here by using `.py` files in the
+configuration directories.
+
+Store your per-user configuration in `~/.rdopkg/conf.d/*.py`, or store
+system-wide configuration in `/etc/rdopkg.d/*.py`.
+
+
+ACTION: tag-patches
+~~~~~~~~~~~~~~~~~~~
+
+Tag the local -patches branch with the package's Name-Version-Release.
+
+Since the -patches branch can change over time, including rebases, rewrites,
+etc, we need a mechanism to keep historical records of what the -patches branch
+looked like over time. Tagging the -patches branch for each new NVR will
+maintain Git references to each snapshot of the particular patches that went
+into each build.
+
+To look at the -patches branch for an old build, you can simply "git checkout
+name-version-release" for that build and get an exact representation of the Git
+tree for that build.
+
+If a previous tag exists with this name, rdopkg will exit with an error unless
+you use the `--force` option to overwrite the existing tag with this name.
+
+You can automatically push the new tag with the `--push` option. It's a good
+idea to create and push the tag after every successful build.
+
+
+AUTOMAGIC
+---------
+
+Instead of requiring project config files or endless lists of command line
+arguments, `rdopkg` tries to guess all the neccessary variables. 
+
+
+[[patches-branch]]
+patches branch
+~~~~~~~~~~~~~~
+
+`update-patches` is a core lower level action for updating dist-git `.spec`
+file with patches from associated patches branch. `rdopkg` tries hard to
+detect the patches branch automagically, it's usually `$BRANCH-patches` for
+`$BRANCH` dist-git but one patches branch per multiple dist-gits is also
+supported.
+
+Best illustrated by example, following are all valid patches branches for
+`rhos-5.0-rhel-7` dist-git and they're searched in that order:
+
+ * rhos-5.0-rhel-7-patches
+ * rhos-5.0-rhel-patches
+ * **rhos-5.0-patches <--- preferred for RHOSP**
+ * rhos-patches
+
+Use `rdopkg pkgenv` to check detected patches branch.
+
+You can specify remote patches branch by `-p`/`--patches-branch` action
+parameter for actions that use it, such as `patch` and `new-version`.
+
+patches base
+~~~~~~~~~~~~
+
+`rdopkg` calculates the git tag on which you are applying patches from
+the `Version` tag in your `.spec` file.  If your `.spec` file contains
+a macro named `milestone`, the value of this macro will be appended to
+the version.  That is, if your spec file has:
+
+    Version: 2014.2.3
+
+Then `rdopkg` will use `2014.2.3` as the base.  If instead your
+`.spec` file has:
+
+    %global milestone rc2
+
+    Version: 2014.2.3
+
+Then `rdopkg` will use `2014.2.3rc2` as the base.
+
+In older versions of `rodpkg`, it was was necessary to explicitly set
+the patch base using a special `patches_base` comment in your spec
+file.  This is now **optional** behavior (the patches base is
+calculated automatically), but you can use this if you need to
+override the automatic behavior.
+
+The most common use of `patches_base` is to specify number of patches
+on top of patches base (which defaults to spec Version) to skip:
+
+    # patches_base=+2
+
+You can set an arbitrary git revision as a patches base:
+
+    # patches_base=1.2.3+2
+
+You shouldn't need to modify this by hand (other than perhaps the
+number of skipped patches) as `rdopkg` manages `patches_base` as
+needed.
+
+
+[[commit-message]]
+commit message
+~~~~~~~~~~~~~~
+
+Actions modifying dist-git generate commit message from %changelog.
+
+First line of commit message is first line from latest %changelog entry.
+
+If there are multiple lines in latest %changelog entry, entire entry is
+listed in the commit message.
+
+For each "(rhbz#XYZ)" mentioned in latest %changelog entry, "Resolves:
+rhbz#XYZ" is appended to commit message as required by RHOSP workflow.
+
+If you need to (re)generate commit message after modifying %changelog, use
+**ACTION: amend**.
+
+For example following %changelog entry:
+
+    %changelog
+    * Tue Feb 11 2014 Jakub Ruzicka <jruzicka@redhat.com> 0.5.1-2
+    - Update to upstream 0.5.1
+    - Fix evil Bug of Doom (rhbz#123456)
+
+will generate following commit message:
+
+    Update to upstream 0.5.1
+
+    Resolves: rhbz#123456
+
+    Changelog:
+    - Update to upstream 0.5.1
+    - Fix evil Bug of Doom (rhbz#123456)
+
+
+[[rdoinfo]]
+rdoinfo
+~~~~~~~
+
+`rdoinfo` is a special utility repository with RDO metadata:
+
+https://github.com/redhat-openstack/rdoinfo
+
+`rdopkg` uses `rdoinfo` to
+
+ * detect release/dist from branch name
+ * check valid RDO updates
+ * query packages from RDO/distribution repos
+
+and more.
+
+You can view the `rdoinfo` metada using `rdopkg info`.
+
+`rdopkg.actionmods.rdoinfo` module provides convenient interface to `rdoinfo`
+should you want to integrate it into your codez.
+
+
+SEE ALSO
+--------
+
+link:rdopkg-adv-new-version.7.html[rdopkg-adv-new-version(7)],
+link:rdopkg-adv-building.7.html[rdopkg-adv-building(7)],
+link:rdopkg-adv-requirements.7.html[rdopkg-adv-requirements(7)]
+
+CONTACT
+-------
+
+`rdopkg` is maintained by Jakub Ruzicka <jruzicka@redhat.com>.
+
+Bugs are tracked in Red Hat Bugzilla:
+
+https://bugzilla.redhat.com/buglist.cgi?component=rdopkg
+
+To report a new bug:
+
+https://bugzilla.redhat.com/enter_bug.cgi?product=RDO&component=rdopkg
