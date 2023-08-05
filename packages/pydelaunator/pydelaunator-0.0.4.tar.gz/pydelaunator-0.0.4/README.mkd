@@ -1,0 +1,47 @@
+# PyDelaunator
+Test of implementation of a quad-edge data structure using python.
+
+This little project is here to study quad-edge structure
+for further developments of [Delaunator](https://pypi.python.org/pypi/delaunator),
+which waits since a long time.
+
+There is a small GUI (done with the awesome [pyglet](http://pyglet.org) module)
+that allow one to play with the triangulation.
+
+
+## Installation/requirements
+Installation in one command, including dependancies:
+
+    pip install pydelaunator
+
+
+## Notes
+### Goals
+This work is mainly here to prototype a better API and detect where
+and why are bugs in Delaunator.
+
+Efficiency is not a primarily goal, altough, since interfacing python with
+other languages is a fun exercise, i probably will try some optimizations related to C.
+Similarly, some algorithms ideas could be easily tested here.
+
+Therefore, PyDelaunator is also a playground for further researchs.
+
+### Computational geometry
+[Codes used there](geometry.py) are mainly constitued from online ressources (SO, wikipedia).
+They are *not* toroughly [tested](test_geometry.py), but as far as the triangulation works.
+
+Implementating them in C could probably speed them up a little,
+since in python arithmetic codes tends to be costly.
+
+### Duality Vertex/data
+Maybe not the most optimized, but a mapping object/vertex with a dict
+is certainly the less invasive for end-user, [as implemented in the Placer object](placer.py).
+
+Other ways to go:
+
+- client objects inheriting from Vertex
+- client objects keeping a reference to their vertex
+
+These two ways are probably far more efficient in case of big data.
+However, if current API *allow* these, Placer object continue to track objects using the dict mapping.
+Modification of the Placer is needed, or an alternative implementation.
