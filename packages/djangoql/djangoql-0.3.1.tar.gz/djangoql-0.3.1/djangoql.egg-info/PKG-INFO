@@ -1,0 +1,160 @@
+Metadata-Version: 1.1
+Name: djangoql
+Version: 0.3.1
+Summary: DjangoQL: query mini-language that translates to Django ORM
+Home-page: https://github.com/ivelum/djangoql/
+Author: Denis Stebunov
+Author-email: support@ivelum.com
+License: MIT License
+
+Copyright (c) 2017 ivelum
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Description: DjangoQL
+        ========
+        
+        .. image:: https://travis-ci.org/ivelum/djangoql.svg?branch=master
+                :target: https://travis-ci.org/ivelum/djangoql
+        
+        Query mini-language that translates into Django ORM. Supports logical operators,
+        parenthesis, table joins, works with any Django models. Tested vs. Python 2.7,
+        3.5 and 3.6, Django 1.8, 1.9, 1.10.
+        
+        Installation
+        ------------
+        
+        .. code:: shell
+        
+            $ pip install djangoql
+        
+        Add ``'djangoql'`` to ``INSTALLED_APPS`` in your ``settings.py``:
+        
+        .. code:: python
+        
+            INSTALLED_APPS = [
+                ...
+                'djangoql',
+                ...
+            ]
+        
+        Add it to your Django admin
+        ---------------------------
+        
+        Add ``DjangoQLSearchMixin`` to your model admin, and it will replace standard
+        Django search functionality with DjangoQL search. Example:
+        
+        .. code:: python
+        
+            from django.contrib import admin
+        
+            from djangoql.admin import DjangoQLSearchMixin
+        
+            from .models import Book
+        
+        
+            @admin.register(Book)
+            class BookAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+                pass
+        
+        Can I use it outside of Django admin?
+        -------------------------------------
+        
+        Sure. You can add DjangoQL search functionality to any Django model using
+        ``DjangoQLQuerySet``:
+        
+        .. code:: python
+        
+            from django.db import models
+        
+            from djangoql.queryset import DjangoQLQuerySet
+        
+        
+            class Book(models.Model):
+                name = models.CharField(max_length=255)
+                author = models.ForeignKey('auth.User')
+        
+                objects = DjangoQLQuerySet.as_manager()
+        
+        With the example above you can perform search like this:
+        
+        .. code:: python
+        
+            qs = Book.objects.djangoql(
+                'name ~ "war" and author.last_name = "Tolstoy"'
+            )
+        
+        It returns a normal queryset, so you can extend it and reuse if
+        necessary. The following code works fine:
+        
+        .. code:: python
+        
+            print(qs.count())
+        
+        Alternatively you can add DjangoQL search to any existing queryset,
+        even if it's not an instance of DjangoQLQuerySet:
+        
+        .. code:: python
+        
+            from django.contrib.auth.models import User
+        
+            from djangoql.queryset import apply_search
+        
+            qs = User.objects.all()
+            qs = apply_search(qs, 'groups = None')
+            print(qs.exists())
+        
+        
+        Language reference
+        ------------------
+        
+        DjangoQL looks close to Python syntax, however there're some minor
+        differences. Basically you just reference model fields like you do
+        it in Python code, apply comparison and logical operators and
+        parenthesis. DjangoQL is case-sensitive.
+        
+        - model fields: exactly as they are defined in Python code. Access
+          nested properties via ``.``, for example ``author.last_name``;
+        - strings must be double-quoted. Single quotes are not supported.
+          To escape a double quote use ``\"``;
+        - boolean and null values: ``True``, ``False``, ``None``. Please note
+          that they can be combined with equality operators only, so you can
+          write ``published = False or date_published = None``, but
+          ``published > False`` will cause an error;
+        - logical operators: ``and``, ``or``;
+        - comparison operators: ``=``, ``!=``, ``<``, ``<=``, ``>``, ``>=``
+          - work as you expect. ``~`` and ``!~`` - test that a string contains
+          or not contains a substring (translated into ``__icontains``);
+        - test a value vs. list: ``in``, ``not in``. Example:
+          ``pk in (2, 3)``.
+        
+        License
+        -------
+        
+        MIT
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
