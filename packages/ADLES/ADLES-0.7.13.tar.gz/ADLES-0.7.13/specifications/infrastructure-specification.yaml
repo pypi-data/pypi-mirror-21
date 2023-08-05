@@ -1,0 +1,27 @@
+# Specification of syntax for file used to define the infrastructure used to create environments
+# Format:           YAML 1.1 (See: http://yaml.org/spec/1.1/)
+# Author:           Christopher Goes
+# Creation Date:    Febuary 6th, 2017
+# Version:          1.0.2
+
+# *** Labels for syntactic components ***
+# Children do not have to be specified if parent is not defined
+# If no label is given, then context will determine label (Everything should be labeled eventually)
+#
+# REQUIRED      These must be defined. Not doing so is an parse-time error
+# Suggested     These should be defined. Will give a warning during parsing
+# Optional      Do not have to be specified
+# Option X      One of the options specified at that level must be defined. Not doing so is a parse-time error
+
+
+platform: "name of platform"    # REQUIRED
+server-hostname: "hostname"     # REQUIRED
+server-port: 0                  # REQUIRED   
+login-file: "filename.json"     # REQUIRED      Filename of JSON file with login information
+
+# ** VMware vSphere-specific configurations ** 
+datacenter: "name of datacenter"            # Suggested     Name of the Datacenter on which to create environment
+datastore: "name of datastore"              # Suggested     Name of Datastore on which to create environment
+template-folder: "path to template folder"  # REQUIRED      Path from server root to folder that contains VM templates
+server-root: "name of server root"          # Suggested     Name of folder that is the top-level folder (useful for large or multi-organization systems)
+vswitch: "name of default vswitch"          # Suggested     Name of vSwitch that will be used in leiu of configuration in the spec itself
