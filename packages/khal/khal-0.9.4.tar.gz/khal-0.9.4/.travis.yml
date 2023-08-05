@@ -1,0 +1,31 @@
+sudo: false
+language: python
+
+python:
+    - 3.3
+    - 3.4
+    - 3.5
+    - 3.6
+    - 3.7-dev
+
+env:
+    - BUILD=py
+    - BUILD=negtz
+
+matrix:
+    include:
+      - python: 3.6
+        env: BUILD=style
+      - python: 3.6
+        env: BUILD=docs
+
+addons:
+    apt:
+        packages:
+            - language-pack-de
+
+install:
+        - "pip install tox"
+
+script:
+    - "tox -e $BUILD"
