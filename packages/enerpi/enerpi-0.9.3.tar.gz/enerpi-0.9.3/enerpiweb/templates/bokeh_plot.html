@@ -1,0 +1,276 @@
+{% extends "layout.html" %}
+{% from 'macros/macros.html' import styles_bokeh with context %}
+{% from 'monitor_tiles.html' import monitor_tiles_styles%}
+
+{% block styles %}
+    {{ styles_bokeh(b_version) }}
+    {{ monitor_tiles_styles() }}
+    <link href="{{ url_for('static', filename='css/bootstrap-switch.min.css') }}" rel="stylesheet">
+    <style type="text/css">
+    .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-enerpi {
+        color: #fff;
+        background: #0CBB43;
+        height: 80%;
+    }
+    .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-consumption {
+        color: #fff;
+        background: #8C27D3;
+        height: 80%;
+    }
+    {% for c in columns %}
+    .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-{{ c }}_columnon {
+        color: #fff;
+        background: {{ colors_vars[c] }};
+        height: 80%;
+    }
+    {% endfor %}
+    {% for c in columns_kwh %}
+    .bootstrap-switch .bootstrap-switch-handle-on.bootstrap-switch-{{ c }}_kwh_columnon {
+        color: #fff;
+        background: {{ colors_vars_kwh[c] }};
+        height: 80%;
+    }
+    {% endfor %}
+    .bootstrap-switch .bootstrap-switch-handle-off.bootstrap-switch-columnoff {
+        color: #fff;
+        background: rgba(197, 195, 199, 0.99);
+        height: 80%;
+    }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='js/bootstrap-switch.min.js') }}"></script>
+    <script>
+    function updateBokehPlot(url_stream) {
+{#        console.log('Se procede a actualizar el plot con URL=' + url_stream);#}
+        $("#bokeh-plot-took").addClass('invisible');
+        var div_subst = '<div id="hueco-div-plot-bokeh" class="flex-img-container" style="width: 100%"><img class="hv-centered-image" ';
+        var url_wait_src = "{{ url_for("static", filename="img/icons/waiting2.svg")}}";
+        url_wait_src = url_wait_src.replace(/.svg(\?)?([0-9]*)?/i, ".svg?" + String(new Date().getTime()));
+        div_subst = div_subst + 'src="' + url_wait_src + '"></div>';
+        console.log(div_subst);
+        $('#div-plot-bokeh').html(div_subst);
+        var div_plot = $('#hueco-div-plot-bokeh');
+        var cw = div_plot.width();
+        div_plot.css({'height': cw * 5 / 9 + 'px'});
+        sse = new EventSource(url_stream);
+        sse.onmessage = function(message) {
+            if (message.data == '"CLOSE"') {
+                console.log('Cerrando EventSource (CLOSE Event)');
+                sse.close();
+            } else {
+                var data = JSON.parse(message.data);
+                if (data['success']) {
+                    if (data.hasOwnProperty('bokeh_div') && data.hasOwnProperty('took'))
+                    {
+                        $('#div-plot-bokeh').html(data['bokeh_div']);
+                        $("body").append(data['script_bokeh']);
+                        {% if config['EXTRA_INFO'] %}
+                        $("#bokeh-plot-took").html(' (Took ' + data['took'] + ' secs, df: ' + data['took_df'] +')').removeClass('invisible');
+                        {% endif %}
+                        $('#titulo-graph').removeClass('btn-outline-warning').addClass('btn-outline-success');
+                    }
+                } else {
+                    $('#titulo-graph').removeClass('btn-outline-success').addClass('btn-outline-warning');
+                    console.log(data);
+                    if (data.hasOwnProperty('error')) {
+                        $("#bokeh-plot-took").html(data['error']).removeClass('invisible').css({'background-color': 'red', 'color': 'white'});
+                    }
+                }
+            }
+        };
+    }
+    function getSelectedColumns(use_kwh_columns) {
+        var columns = '';
+        if (use_kwh_columns) {
+            {% for c in columns_kwh %}
+            if ($('#switch_column_{{ c }}_kwh').is(":checked")) {
+                columns += '{{ c }},';
+            }
+            {% endfor %}
+        } else {
+            {% for c in columns %}
+            if ($('#switch_column_{{ c }}').is(":checked")) {
+                columns += '{{ c }},';
+            }
+            {% endfor %}
+        }
+        return columns;
+    }
+    function updateRecentBokehPlot(url_query_plot) {
+        updateBokehPlot(url_query_plot + "?columns=" + getSelectedColumns(false));
+    }
+    function submitQuery() {
+        var from = $('form #selectFrom').val();
+        var to = $('form #selectTo').val();
+        var resample = $('form #resampleSelect').val();
+        var get_summary = $('form #switchSummaryData').is(":checked");
+        var url_query_plot = "{{ url_for('bokeh_buffer') }}" + "/from/" + from;
+        if (to.length > 0) {
+            url_query_plot += "/to/" + to;
+        }
+        url_query_plot += "?";
+        if (resample.length > 0) {
+            url_query_plot += "rs_data=" + resample + "&";
+        }
+        url_query_plot += "kwh=" + get_summary + "&";
+        url_query_plot += "columns=" + getSelectedColumns(get_summary);
+        updateBokehPlot(url_query_plot);
+    }
+    $(document).ready(function() {
+        var switch_select_summary = {
+            size: "mini",
+            onColor: "consumption",
+            offColor: "enerpi",
+            offText: "W",
+            onText: "kWh",
+            animate: true
+        };
+        var switch_kwh = $("#switchSummaryData");
+        switch_kwh.bootstrapSwitch(switch_select_summary);
+        {% for c in columns %}
+        var switch_column = {
+            size: "mini",
+            onColor: "{{ c }}_columnon",
+            offColor: "columnoff",
+            offText: "off",
+            onText: "{{ c.upper() }}",
+            animate: true
+        };
+        $("#switch_column_{{ c }}").bootstrapSwitch(switch_column);
+        {% endfor %}
+        {% for c in columns_kwh %}
+        var switch_column_kwh = {
+            size: "mini",
+            onColor: "{{ c }}_kwh_columnon",
+            offColor: "columnoff",
+            offText: "off",
+            onText: "{{ c.upper() }}",
+            animate: true
+        };
+        $("#switch_column_{{ c }}_kwh").bootstrapSwitch(switch_column_kwh);
+        {% endfor %}
+        updateBokehPlot("{{ url_stream_bokeh|safe }}");
+{#        switch_kwh.change(function (event) {#}
+        switch_kwh.on('switchChange.bootstrapSwitch', function (event, state) {
+            if (state) {
+                $("#selec_vars").addClass('hidden-xs-up');
+                $("#selec_vars_kwh").removeClass('hidden-xs-up');
+            } else {
+                $("#selec_vars_kwh").addClass('hidden-xs-up');
+                $("#selec_vars").removeClass('hidden-xs-up');
+            }
+            event.preventDefault();
+        });
+    });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <br>
+    <div class="container-fluid">
+        <div>
+            <h4 class="float-xs-left"><i id="titulo-graph" class="fa fa-area-chart" aria-hidden="true"></i> Visualize DATA:</h4>
+            <span id="bokeh-plot-took" class="float-xs-right invisible"></span>
+        </div>
+    </div>
+    <div id="div-plot-bokeh" class="bokeh_div_plot">
+        <div id="hueco-div-plot-bokeh" class="flex-img-container" style="width: 100%"><img class="hv-centered-image" src="{{ url_for("static", filename="img/icons/waiting2.svg")}}"></div>
+    </div>
+    <div class="container-fluid">
+        <hr>
+        <div class="row">
+            <div class="col-xs-11 col-sm-9 col-md-5 col-lg-4">
+                <small id="ResampleHelp" class="form-text text-muted">Quick graphs:</small>
+                <div class="btn-toolbar button-wrapper" role="toolbar" aria-label="Toolbar with More graphs">
+                    <div class="btn-group btn-group-sm" role="group">
+
+
+                        <button class="btn btn-secondary btn-outline-success"
+                                onclick=updateRecentBokehPlot("{{ url_for('bokeh_buffer', last_hours=3) }}")>< 3h</button>
+                        <button class="btn btn-secondary btn-outline-success"
+                                onclick=updateRecentBokehPlot("{{ url_for('bokeh_buffer', last_hours=6) }}")>< 6h</button>
+                        <button class="btn btn-secondary btn-outline-success"
+                                onclick=updateRecentBokehPlot("{{ url_for('bokeh_buffer', last_hours=12, rs_data='1min') }}")>< 12h</button>
+                        <button class="btn btn-secondary btn-outline-success"
+                                onclick=updateRecentBokehPlot("{{ url_for('bokeh_buffer', last_hours=24, rs_data='2min') }}")>< 24h</button>
+                        <button class="btn btn-secondary btn-outline-success"
+                                onclick=updateRecentBokehPlot("{{ url_for('bokeh_buffer', last_hours=48, rs_data='5min') }}")>< 48h</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-2 hidden-md-up hidden-xs-down float-sm-right">
+                <small id="ResampleHelp" class="form-text text-muted">Submit:</small>
+                <button type="button" class="btn btn-success btn-sm" onclick=submitQuery()>Query!</button>
+            </div>
+            <form>
+                <div class="col-xs-12 col-sm-7 col-md-5 col-lg-4 form-inline">
+                  <small id="ResampleHelp" class="form-text text-muted">Slice data:</small>
+                  <div class="form-group form-group-sm">
+                      <div class="input-group input-group-sm">
+                      <div class="input-group-addon">From</div>
+                      <input type="date" class="form-control form-control-sm" id="selectFrom" maxlength="10" value="{{ -7|text_date }}">
+                      <div class="input-group-addon">to</div>
+                      <input type="date" class="form-control form-control-sm" id="selectTo" maxlength="10" value="{{ 1|text_date }}">
+                    </div>
+                  </div>
+                </div>
+                <div class="col-xs-4 col-sm-3 col-md-2 col-lg-2 form-inline">
+                      <small id="ResampleHelp" class="form-text text-muted">Resampling:</small>
+                      <div class="form-group form-group-sm form-inline">
+                          <div class="input-group input-group-sm">
+                                <div class="input-group-addon">RS</div>
+                                <input type="text" class="form-control form-control-sm" id="resampleSelect" maxlength="6" value="5min">
+                          </div>
+                      </div>
+                </div>
+                <div class="col-xs-2 col-sm-2 col-md-2 col-lg-1 form-inline">
+                    <div class="form-group form-group-sm">
+                        <small id="ResampleHelp" class="form-text text-muted">Type:</small>
+                        <input type="checkbox" id="switchSummaryData" value="check_kWh" class="form-control form-control-sm">
+                    </div>
+                </div>
+                <div class="col-xs-7 col-sm-12 col-md-2 col-lg-1 hidden-sm-down float-xs-right">
+                    <small id="ResampleHelp" class="form-text text-muted">Submit:</small>
+                    <button type="button" class="btn btn-success btn-sm" onclick=submitQuery()>Query!</button>
+                </div>
+                <div class="col-xs-3 hidden-sm-up float-xs-right">
+                    <small id="ResampleHelp" class="form-text text-muted">Submit:</small>
+                    <button type="button" class="btn btn-success btn-sm" onclick=submitQuery()>Query!</button>
+                </div>
+            </form>
+        </div>
+        <div class="row">
+            <div id="selec_vars" class="col-xs-12 form-inline">
+                    <div class="form-group form-group-sm">
+                        <small id="ColumnsHelp" class="form-text text-muted">Variable selection:</small>
+                        {% for c in columns %}
+                        {% if checked[c] %}
+                            <input type="checkbox" id="switch_column_{{ c }}" checked value="check_v_{{ c }}"
+                               class="form-control form-control-sm" alt="Selección de columna '{{ c }}'">
+                        {% else %}
+                            <input type="checkbox" id="switch_column_{{ c }}" value="check_v_{{ c }}"
+                               class="form-control form-control-sm" alt="Selección de columna '{{ c }}'">
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+            </div>
+            <div id="selec_vars_kwh" class="col-xs-12 form-inline hidden-xs-up">
+                    <div class="form-group form-group-sm">
+                        <small id="ColumnsHelp" class="form-text text-muted">Variable selection:</small>
+                        {% for c in columns_kwh %}
+                        {% if checked_kwh[c] %}
+                            <input type="checkbox" id="switch_column_{{ c }}_kwh" checked value="check_v_{{ c }}_kwh"
+                               class="form-control form-control-sm" alt="Selección de columna '{{ c }}'">
+                        {% else %}
+                            <input type="checkbox" id="switch_column_{{ c }}_kwh" value="check_v_{{ c }}_kwh"
+                               class="form-control form-control-sm" alt="Selección de columna '{{ c }}'">
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+            </div>
+        </div>
+        <hr>
+    </div>
+{% endblock %}
