@@ -1,0 +1,20 @@
+sqlex
+=====
+
+sql(ite) explorer/exporter
+
+
+Examples
+--------
+
+Listing all columns in all tables::
+
+  # sqlex --tables ~/docs/sms.db | while read line; do echo "# ${line}"; sqlex --columns ~/docs/sms.db ${line}; echo; done
+
+
+----
+
+Jeff Hammel
+
+http://k0s.org/hg/sqlex
+
