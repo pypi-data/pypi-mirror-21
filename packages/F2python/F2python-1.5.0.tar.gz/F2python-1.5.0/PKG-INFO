@@ -1,0 +1,138 @@
+Metadata-Version: 1.1
+Name: F2python
+Version: 1.5.0
+Summary: The F2 DBMS written in Python. Needs ZODB and ZEO to run.
+Home-page: https://pypi.python.org/pypi/F2python/
+Author: Thibault Estier
+Author-email: thibault.estier@unil.ch
+License: UNKNOWN
+Description: ## F2 DBMS in Python
+        
+        ### version 1.5.0 - Th. Estier - 2017. 
+        
+        F2 is an object-oriented Database Management System (DBMS) specially built to support
+        schema evolution. Its main purpose is to support persistent data for which the initial
+        schema is very prone to changes. Its underlying design choices are based on reflexivity
+        (no separation between meta-levels and objects, no DDL) and transposed storage, also 
+        called _column oriented_ (F2 tables are external views).
+        
+        ### Obtaining F2
+        
+        If you can read this file, you probably already managed to obtain the distribution file,
+        or alternatively you obtained the sources from the git repository. If you downloaded an 
+        F2 distribution file, then you will have to
+        unfold it in some appropriate folder of yours, by a command similar to:
+        
+            $ tar zxvf F2-1.4.1.tar.gz
+              
+        ### Installing F2:
+        
+        The first step is to fine tune your local python installation.
+        First install ZODB and ZEO with the following command:
+        
+            $ easy_install ZODB3
+           
+        > If the **easy_install** command doesn't work for you, you have to extend your python
+        installation with the python [setuptools](https://pypi.python.org/pypi/setuptools). 
+        
+        Now type the following command:
+        
+            $ python setup.py install
+               
+        ### Testing your install:
+        
+        Type the following command:
+               
+            $ python -c 'import F2'
+               
+        If this command returns without any effect or message, then your installation is
+        a success. If it displays any form of error message including _ImportError_ then
+        something failed during the preceding steps.
+           
+        ### Testing F2 without server (DB in a simple file):
+        
+        Type the following command:
+            
+            $ python bootf2.py file:root.db
+               
+        You should normally see a succession of lines commenting the ongoing bootstrap of
+        a F2 kernel. The resulting database will be in the current directory under name 'root.db'.
+           
+        ### Testing F2 with a client/server configuration:
+         
+        1. verify that port 8080 is not already used on your machine, this is the port
+           on which your F2 server will listen to clients. If this is the case, replace '8080'
+           by some other appropriate port number in the file 'start_f2_server' (this is a
+           simple text file that you can edit by any standard editor). 
+              
+        2. create a local subdirectory called 'var' in the current directory. The
+           server will store data files, logs and other control files in it.
+              
+        3. launch your server with the following command:
+        
+            $ ./start_f2_server
+              
+        4. bootstrap the server database with the following command:
+           
+            $ python bootf2.py rpc:127.0.0.1:8080
+              
+        You will of course replace '8080' by the port number you choosed in point 1.
+        if you changed it. The **127.0.0.1** address is the standard IP address designing
+        your own machine. A client program running on another machine would use instead
+        the IP adress you have indicated to join your machine. This supposes you opened
+        the port 8080 to other machines. If this is the case, BEWARE because anyone can
+        use your F2 database while your server is running. When in doubt, ask your local
+        network administrator.
+              
+        5. To stop your F2 server use:
+           
+            $ ./stop_f2_server
+               
+        ### Continuing with your F2 DBMS in python:
+         
+        From now on, if you want you can read the documentation (in directory ./doc) to 
+        continue your discovery of F2. Fasten seat belts.
+           
+         
+        Cheers,  
+        Th. Estier - december 2016
+         
+        --------------------------------------------------------------
+        ### RELEASE NOTES:
+        ##### 1.5  big change: adaptation to python 3.
+        * tested with python 3.5,
+        * should be still backward compatible with python 2. 
+        
+        ##### 1.4  introduced possibility to prefix a class by the name of its database:
+        * f2.Person is OK if you have only one such class in your namespace,
+        * f2.HumanRessource.Person  is required if you want if you have 2
+                 classes named "Person" in two different databases.
+        * fixed bootstrap process for class Database()
+         
+        ##### 1.3  distribution includes now:
+        * new documentation written in TeX has new schema of Kernel,
+        * includes f2_rest.py : a small web publisher of a F2 content.
+         
+        ##### 1.1  essentially introduces since version 1.0:
+        * OID's are now unique to a full F2 database, and never reused. OID's creation
+                  uniqueness is garanteed even in client/server context (using ZEO), it is
+                  both thread safe and transaction compatible: even if a transaction is
+                  rollbacked, created OID's are never recycled.
+                  This has strong implications (simplifications) on restructuration mechanisms.
+                  
+        * some convenient new methods in base python classes,
+                
+        * bootstrap process is now integrated in the F2 package (instead of a
+                  separated program), this simplifies usage of F2 from inside
+                  application servers (like Radixa or Zope): a program creating a
+                  new F2 database can launch the bootstrap process "a la volée",
+                
+        * some bugs corrected,
+                
+        * documentation grew up significantly.
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Topic :: Database :: Database Engines/Servers

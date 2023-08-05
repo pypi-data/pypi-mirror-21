@@ -1,0 +1,1 @@
+This folder will contain db files of the zeo-zope instance, and associated files like logs.

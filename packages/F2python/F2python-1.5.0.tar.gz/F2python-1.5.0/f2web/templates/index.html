@@ -1,0 +1,26 @@
+$def with(db, cl, f2)
+$var title: Welcome on F2
+
+<div class="col-md-3">
+
+<h4>Databases: (pick one)</h4>
+<ul class="body">
+$for anyDb in f2.Database().name:
+    <li><a href="/?dbName=$anyDb">$anyDb</a></li>
+</ul>
+
+$if db:
+	<h4>Classes from $db.name (pick one)</h4>
+	<ul>
+	$for c in f2.CLASS(db=db):
+	  <li><a href="/?dbName=$db.name&clName=$c.className">${c.className}</a></li>
+	</ul>
+
+</div>
+
+<div class="col-md-9">	
+	$if cl:
+		$ LIMIT = 100
+		<h3>$cl.className</h3>
+		$:{f2.html_repr(cl()[:LIMIT], depth=3)}
+</div>

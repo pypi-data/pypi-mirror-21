@@ -1,0 +1,186 @@
+<dtml-var "render('std_header', PARENTS, REQUEST=REQUEST, SCRIPT_NAME=SCRIPT_NAME)">
+
+<!--
+<head>
+	<title><dtml-var "node.title"></title>
+	<link
+		rel=stylesheet
+		type="text/css"
+		href="/style.css"
+	>
+	<SCRIPT LANGUAGE="JavaScript" TYPE="text/javascript">
+	<!--
+	function goDest( thisFormSelect ){
+ 	 var thisSelection = thisFormSelect.options[thisFormSelect.selectedIndex].value;
+     var trgt = thisFormSelect.name;
+ 	 if (thisSelection != "") {
+   	 location = "?alt_view=ProcessBrowser&" + trgt + "=" + thisSelection;
+  	}
+	}
+	//-->
+	</SCRIPT>
+</head>
+
+-->
+
+
+<dtml-let proc_map_display="[]">
+  <dtml-if "REQUEST.cookies.has_key('proc_map_display')">
+    <dtml-call "proc_map_display.extend(REQUEST.cookies['proc_map_display'].split('||'))">
+  <dtml-else>
+    <dtml-call "proc_map_display.extend(['0','0'])">
+  </dtml-if>
+
+  <dtml-if "REQUEST.has_key('sysview')">
+    <dtml-call "set_list_whole(proc_map_display, [REQUEST['sysview'],'0'])">
+  <dtml-elif "REQUEST.has_key('grps')">
+    <dtml-call "set_list_whole(proc_map_display, proc_map_display[0:1]+[REQUEST['grps']])">
+  <dtml-elif "REQUEST.has_key('procs')">
+    <dtml-call "set_list_whole(proc_map_display, proc_map_display[0:2]+[REQUEST['procs']])">
+  <dtml-elif "REQUEST.has_key('outps')">
+    <dtml-call "set_list_whole(proc_map_display, proc_map_display[0:3]+[REQUEST['outps']])">
+  <dtml-elif "REQUEST.has_key('procs2')">
+    <dtml-call "set_list_whole(proc_map_display, proc_map_display[0:4]+[REQUEST['procs2']])">
+  <dtml-elif "REQUEST.has_key('outps2')">
+    <dtml-call "set_list_whole(proc_map_display, proc_map_display[0:5]+[REQUEST['outps2']])">
+  </dtml-if>
+
+<form method="GET">
+<table border="1" cellpadding="5" cellspacing="0">
+ <tr valign="top">
+   <td>
+     <select name="sysview" size="1" onChange="goDest(this.form.sysview); return false;">
+      <dtml-in "children()" prefix="k">
+         <option value="<dtml-var k_index>" 
+           <dtml-if "_.int(proc_map_display[0])==k_index">selected
+            <dtml-call "REQUEST.set('selected_type', 'view')">
+            <dtml-call "REQUEST.set('selected_id', k_item.id)">
+           </dtml-if> >
+           <dtml-var "k_item.title" size="20" etc="...">
+         </option>
+      </dtml-in>
+     </select><br>
+     <select name="grps" size="7" onChange="goDest(this.form.grps); return false;">
+      <dtml-in "children()[_.int(proc_map_display[0])].children()" prefix="k">
+        <option value="<dtml-var k_index>" 
+          <dtml-if "_.int(proc_map_display[1])==k_index">selected
+          </dtml-if> >
+          <dtml-var "k_item.get_prop('text1')" size="30" etc="...">
+        </option>
+      </dtml-in>
+     </select>
+   </td>
+     
+ <dtml-let sysview="children()[_.int(proc_map_display[0])]"
+           group="sysview.children()[_.int(proc_map_display[1])]"
+           procs_id="group.get_prop('procs', [])">
+   <td align="center" class="process">
+     Processus<br>
+     <select name="procs" size="7" onChange="goDest(this.form.procs); return false;">
+      <dtml-in "procs_id" prefix="p">
+        <option value="<dtml-var p_index>" 
+          <dtml-if "_.len(proc_map_display) > 2 and _.int(proc_map_display[2])==p_index">
+             selected
+             <dtml-call "REQUEST.set('selected_type', 'proc')">
+             <dtml-call "REQUEST.set('selected_id', p_item)">
+           </dtml-if> >
+          <dtml-var "PARENTS[1]['procs'][p_item].title" size="30" etc="...">
+        </option>
+      </dtml-in>
+     </select>    
+   </td>
+   <dtml-if "_.len(proc_map_display) > 2">
+     <td align="center" class="document">
+     Output<br>
+     <dtml-let selected_id="procs_id[_.int(proc_map_display[2])]"
+               this_proc="PARENTS[1]['procs'][selected_id]"
+               outps_id="this_proc.getOwnProp('new_outputs',[])">
+     <select name="outps" size="7" onChange="goDest(this.form.outps); return false;">
+      <dtml-in "outps_id" prefix="o">
+        <option value="<dtml-var o_index>" 
+          <dtml-if "_.len(proc_map_display) > 3 and _.int(proc_map_display[3])==o_index">
+             selected
+             <dtml-call "REQUEST.set('selected_type', 'doc')">
+             <dtml-call "REQUEST.set('selected_id', o_item)">
+          </dtml-if> >
+          <dtml-var "PARENTS[1]['docs'][o_item].title" size="30" etc="...">
+        </option>
+      </dtml-in>
+     </select>    
+     </td>
+     <dtml-if "_.len(proc_map_display) > 3">
+       <td align="center" class="process">
+        Processus<br>
+        <dtml-let selected_id="outps_id[_.int(proc_map_display[3])]"
+                  procs="PARENTS[1]['procs'].children()">
+          <select name="procs2" size="7" onChange="goDest(this.form.procs2); return false;">
+            <dtml-in "procs" prefix="p">
+              <dtml-let inps_id="p_item.getOwnProp('new_inputs',[]) + p_item.getOwnProp('new_controls',[]) + p_item.getOwnProp('new_ressources',[])">
+              <dtml-if "selected_id in inps_id">
+                <option value="<dtml-var "p_item.id">" <dtml-if "_.len(proc_map_display) > 4 and proc_map_display[4]==p_item.id">selected<dtml-call "REQUEST.set('selected_type', 'proc')"><dtml-call "REQUEST.set('selected_id', p_item.id)"></dtml-if>>
+                   <dtml-var "p_item.title" size="30" etc="...">
+                </option>
+              </dtml-if>
+              </dtml-let>
+            </dtml-in>
+          </select>
+        </dtml-let>
+       </td>
+       <dtml-if "_.len(proc_map_display) > 4">
+        <td align="center" class="document">
+         Output<br>
+         <dtml-let selected_id="proc_map_display[4]"
+                  this_proc="PARENTS[1]['procs'][selected_id]"
+                  outps2_id="this_proc.getOwnProp('new_outputs',[])">
+     <select name="outps2" size="7" onChange="goDest(this.form.outps2); return false;">
+      <dtml-in "outps2_id" prefix="o">
+        <option value="<dtml-var o_item>"
+          <dtml-if "_.len(proc_map_display) > 5 and proc_map_display[5]==o_item">
+            selected
+            <dtml-call "REQUEST.set('selected_type', 'doc')">
+            <dtml-call "REQUEST.set('selected_id', o_item)">
+          </dtml-if> >
+          <dtml-var "PARENTS[1]['docs'][o_item].title" size="30" etc="...">
+        </option>
+      </dtml-in>
+     </select>    
+         </dtml-let>
+
+        </td>
+       </dtml-if>
+     </dtml-if>
+     </dtml-let>
+   </dtml-if>
+ </dtml-let>
+</tr>
+</table>
+</form>
+
+  <dtml-call "RESPONSE.setCookie(name='proc_map_display', value='||'.join(proc_map_display), path='/')">
+
+  <dtml-if "REQUEST['selected_type'] == 'view'">
+    <dtml-let target="PARENTS[0][REQUEST['selected_id']]"
+              targetPARENTS="[target]+PARENTS">
+     <dtml-var "target.render('EHSOverviewGroup', PARENTS=targetPARENTS, REQUEST=REQUEST, SCRIPT_NAME=SCRIPT_NAME)">
+    </dtml-let>
+
+  <dtml-elif "REQUEST['selected_type'] == 'proc'">
+    <dtml-let target="PARENTS[1]['procs'][REQUEST['selected_id']]"
+              targetPARENTS="[target, PARENTS[1]['procs']]+PARENTS[1:]">
+     <dtml-var "target.render('EHSStepGuide', PARENTS=targetPARENTS, REQUEST=REQUEST, SCRIPT_NAME=SCRIPT_NAME)">
+    </dtml-let>
+
+  <dtml-elif "REQUEST['selected_type'] == 'doc'">
+    <dtml-let target="PARENTS[1]['docs'][REQUEST['selected_id']]"
+              targetPARENTS="[target, PARENTS[1]['docs']]+PARENTS[1:]">
+     <dtml-var "target.render('EHSDocument', PARENTS=targetPARENTS, REQUEST=REQUEST, SCRIPT_NAME=SCRIPT_NAME)">
+    </dtml-let>
+
+  </dtml-if>
+
+
+
+</dtml-let>
+
+
+<dtml-var "render('std_footer', PARENTS, REQUEST=REQUEST, SCRIPT_NAME=SCRIPT_NAME)">
