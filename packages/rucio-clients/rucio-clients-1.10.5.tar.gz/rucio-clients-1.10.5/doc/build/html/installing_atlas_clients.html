@@ -1,0 +1,249 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installing ATLAS Rucio Clients &mdash; Rucio 0.3.8 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.3.8',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Rucio 0.3.8 documentation" href="index.html" />
+    <link rel="next" title="Installing Rucio server" href="installing_server.html" />
+    <link rel="prev" title="Installing Rucio Clients" href="installing_clients.html" />
+ 
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-32728665-1']);
+  _gaq.push(['_trackPageview']);
+</script>
+
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installing_server.html" title="Installing Rucio server"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installing_clients.html" title="Installing Rucio Clients"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Rucio 0.3.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installing-atlas-rucio-clients">
+<h1>Installing ATLAS Rucio Clients<a class="headerlink" href="#installing-atlas-rucio-clients" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>Rucio clients runs on Python 2.6, 2.7.</p>
+<p>Platforms: Rucio should run on any Unix-like platform.</p>
+</div>
+<div class="section" id="python-dependencies">
+<h2>Python Dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Rucio clients need the following python modules:</p>
+<div class="highlight-python"><div class="highlight"><pre>argparse==1.3.0 # Command-line parsing library
+argcomplete==0.8.8 # Bash tab completion for argparse
+kerberos==1.2.2 # Kerberos high-level interface
+requests==2.7.0 # Python HTTP for Humans
+requests-kerberos==0.7.0 # A Kerberos authentication handler for python-requests
+#  TODO: requests-cache==0.4.8  # Persistent cache for requests library
+urllib3==1.10.4 # HTTP library with thread-safe connection pooling and file post support
+wsgiref==0.1.2 # WSGI (PEP 333) Reference Library
+dogpile==0.2.2 # Caching API
+dogpile.core==0.4.1 # Caching API
+dogpile.cache==0.5.6 # Caching API plugins
+nose==1.3.6 # rucio test-server
+boto==2.38.0 # S3 boto protocol
+tabulate==0.7.5 # Pretty-print tabular data
+progressbar==2.3 # Text progress bar
+</pre></div>
+</div>
+<p>All Dependencies are automatically installed with pip.</p>
+</div>
+<div class="section" id="setup-cern-afs-client-on-lxplus">
+<h2>Setup CERN AFS client on lxplus<a class="headerlink" href="#setup-cern-afs-client-on-lxplus" title="Permalink to this headline">¶</a></h2>
+<p>CERN Quickstart:</p>
+<ul>
+<li><p class="first">bash:</p>
+<div class="highlight-python"><div class="highlight"><pre>$&gt; source /afs/cern.ch/atlas/offline/external/GRID/ddm/rucio/testing/bin/activate
+</pre></div>
+</div>
+</li>
+<li><p class="first">csh:</p>
+<div class="highlight-python"><div class="highlight"><pre>$&gt; source /afs/cern.ch/atlas/offline/external/GRID/ddm/rucio/testing/bin/activate.csh
+</pre></div>
+</div>
+</li>
+</ul>
+<p>By default the RUCIO_ACCOUNT variable is set to the AFS username.</p>
+<ul>
+<li><p class="first">To test rucio:</p>
+<div class="highlight-python"><div class="highlight"><pre>$&gt; rucio ping
+$&gt; rucio whoami
+$&gt; rucio-admin account list-identities $RUCIO_ACCOUNT
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="install-via-pip">
+<h2>Install via pip<a class="headerlink" href="#install-via-pip" title="Permalink to this headline">¶</a></h2>
+<p>When <code class="docutils literal"><span class="pre">pip</span></code> is available, the distribution can be downloaded from the Rucio PyPI server and installed in one step:</p>
+<div class="highlight-python"><div class="highlight"><pre>$&gt; pip install atlas-rucio-clients
+</pre></div>
+</div>
+<p>This command will download the latest version of Rucio and install it to your system.</p>
+</div>
+<div class="section" id="upgrade-via-pip">
+<h2>Upgrade via pip<a class="headerlink" href="#upgrade-via-pip" title="Permalink to this headline">¶</a></h2>
+<p>To upgrade via pip:</p>
+<div class="highlight-python"><div class="highlight"><pre>$&gt; pip install --upgrade rucio-clients
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-via-pip-and-virtualenv">
+<h2>Install via pip and virtualenv<a class="headerlink" href="#install-via-pip-and-virtualenv" title="Permalink to this headline">¶</a></h2>
+<p>To install the Rucio clients in an isolated <code class="docutils literal"><span class="pre">virtualenv</span></code> environment:</p>
+<div class="highlight-python"><div class="highlight"><pre>$&gt; cd /tmp
+$&gt; curl -s https://raw.github.com/pypa/virtualenv/master/virtualenv.py | python2.6 - rucio # install virtual env
+$&gt; source rucio/bin/activate
+$&gt; pip install atlas-rucio-clients # install rucio-clients + atlas config
+$&gt; export RUCIO_ACCOUNT=$USER
+$&gt; source rucio/bin/activate
+$&gt; rucio ping
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-using-setup-py">
+<h2>Installing using setup.py<a class="headerlink" href="#installing-using-setup-py" title="Permalink to this headline">¶</a></h2>
+<p>Otherwise, you can install from the distribution using the <code class="docutils literal"><span class="pre">setup.py</span></code> script:</p>
+<div class="highlight-python"><div class="highlight"><pre>$&gt; python setup.py install
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div>
+   <img src="_static/rucio_logo.png" alt="Rucio logo" />
+</div>
+
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installing ATLAS Rucio Clients</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li><a class="reference internal" href="#python-dependencies">Python Dependencies</a></li>
+<li><a class="reference internal" href="#setup-cern-afs-client-on-lxplus">Setup CERN AFS client on lxplus</a></li>
+<li><a class="reference internal" href="#install-via-pip">Install via pip</a></li>
+<li><a class="reference internal" href="#upgrade-via-pip">Upgrade via pip</a></li>
+<li><a class="reference internal" href="#install-via-pip-and-virtualenv">Install via pip and virtualenv</a></li>
+<li><a class="reference internal" href="#installing-using-setup-py">Installing using setup.py</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installing_clients.html"
+                        title="previous chapter">Installing Rucio Clients</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installing_server.html"
+                        title="next chapter">Installing Rucio server</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/installing_atlas_clients.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="http-routingtable.html" title="HTTP Routing Table"
+             >routing table</a> |</li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installing_server.html" title="Installing Rucio server"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installing_clients.html" title="Installing Rucio Clients"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Rucio 0.3.8 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, CERN.
+    </div>
+<div class="footer">
+<script type="text/javascript">
+  (function() {
+    var ga = document.createElement('script');
+    ga.src = ('https:' == document.location.protocol ?
+              'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.setAttribute('async', 'true');
+    document.documentElement.firstChild.appendChild(ga);
+  })();
+</script>
+</div>
+
+  </body>
+</html>
