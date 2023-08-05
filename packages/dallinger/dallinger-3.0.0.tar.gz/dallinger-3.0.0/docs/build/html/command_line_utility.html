@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Command-Line Utility &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Viewing the PostgreSQL Database" href="postico_and_postgres.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="command-line-utility">
+<h1>Command-Line Utility<a class="headerlink" href="#command-line-utility" title="Permalink to this headline">¶</a></h1>
+<p>Dallinger is executed from the command line within the experiment directory with the following commands:</p>
+<div class="section" id="verify">
+<span id="dallinger-verify"></span><h2>verify<a class="headerlink" href="#verify" title="Permalink to this headline">¶</a></h2>
+<p>Verify that a directory is a Dallinger-compatible app.</p>
+</div>
+<div class="section" id="debug">
+<h2>debug<a class="headerlink" href="#debug" title="Permalink to this headline">¶</a></h2>
+<p>Run the experiment locally. An optional <code class="docutils literal"><span class="pre">--verbose</span></code> flag prints more detailed
+logs to the command line.</p>
+</div>
+<div class="section" id="sandbox">
+<h2>sandbox<a class="headerlink" href="#sandbox" title="Permalink to this headline">¶</a></h2>
+<p>Runs the experiment on MTurk&#8217;s sandbox using Heroku as a server. An optional
+<code class="docutils literal"><span class="pre">--verbose</span></code> flag prints more detailed logs to the command line.</p>
+</div>
+<div class="section" id="deploy">
+<h2>deploy<a class="headerlink" href="#deploy" title="Permalink to this headline">¶</a></h2>
+<p>Runs the experiment live on MTurk using Heroku as a server. An optional
+<code class="docutils literal"><span class="pre">--verbose</span></code> flag prints more detailed logs to the command line.</p>
+</div>
+<div class="section" id="logs">
+<h2>logs<a class="headerlink" href="#logs" title="Permalink to this headline">¶</a></h2>
+<p>Open the app&#8217;s logs in Papertrail. A required <code class="docutils literal"><span class="pre">--app</span> <span class="pre">&lt;app&gt;</span></code> flag specifies
+the experiment by its id.</p>
+</div>
+<div class="section" id="summary">
+<h2>summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>Return a summary of an experiment. A required <code class="docutils literal"><span class="pre">--app</span> <span class="pre">&lt;app&gt;</span></code> flag specifies
+the experiment by its id.</p>
+</div>
+<div class="section" id="export">
+<h2>export<a class="headerlink" href="#export" title="Permalink to this headline">¶</a></h2>
+<p>Download the database and partial server logs to a zipped folder within
+the data directory of the experimental folder. Databases are stored in
+CSV format. A required <code class="docutils literal"><span class="pre">--app</span> <span class="pre">&lt;app&gt;</span></code> flag specifies
+the experiment by its id.</p>
+</div>
+<div class="section" id="id1">
+<h2>summary<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Print a summary of the participant table to the command line. A required
+<code class="docutils literal"><span class="pre">--app</span> <span class="pre">&lt;app&gt;</span></code> flag specifies the experiment by its id.</p>
+</div>
+<div class="section" id="qualify">
+<h2>qualify<a class="headerlink" href="#qualify" title="Permalink to this headline">¶</a></h2>
+<p>Assign qualification to a worker. Requires a qualification id
+<code class="docutils literal"><span class="pre">qualification_id</span></code>, value <code class="docutils literal"><span class="pre">value</span></code>, and worker id <code class="docutils literal"><span class="pre">worker_id</span></code>. This is
+useful when compensating workers if something goes wrong with the experiment.</p>
+</div>
+<div class="section" id="hibernate">
+<h2>hibernate<a class="headerlink" href="#hibernate" title="Permalink to this headline">¶</a></h2>
+<p>Temporarily scales down the specified app to save money. All dynos are
+removed and so are many of the add-ons. Hibernating apps are
+non-functional. It is likely that the app will not be entirely free
+while hibernating. To restore the app use <code class="docutils literal"><span class="pre">awaken</span></code>. A required
+<code class="docutils literal"><span class="pre">--app</span> <span class="pre">&lt;app&gt;</span></code> flag specifies the experiment by its id.</p>
+</div>
+<div class="section" id="awaken">
+<h2>awaken<a class="headerlink" href="#awaken" title="Permalink to this headline">¶</a></h2>
+<p>Restore a hibernating app. A required <code class="docutils literal"><span class="pre">--app</span> <span class="pre">&lt;app&gt;</span></code> flag specifies the
+experiment by its id.</p>
+</div>
+<div class="section" id="destroy">
+<h2>destroy<a class="headerlink" href="#destroy" title="Permalink to this headline">¶</a></h2>
+<p>Tear down an experiment server. A required <code class="docutils literal"><span class="pre">--app</span> <span class="pre">&lt;app&gt;</span></code> flag specifies
+the experiment by its id.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="postico_and_postgres.html" title="previous chapter">Viewing the PostgreSQL Database</a></li>
+      <li>Next: <a href="configuration.html" title="next chapter">Configuration</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

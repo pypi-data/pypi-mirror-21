@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Web API &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Communicating With the Server" href="communicating_with_the_server.html" />
+    <link rel="prev" title="The Experiment Class" href="the_experiment_class.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="web-api">
+<h1>Web API<a class="headerlink" href="#web-api" title="Permalink to this headline">¶</a></h1>
+<p>The Dallinger API allows the experiment frontend to communicate with the
+backend. Many of these routes correspond to specific functions of
+Dallinger&#8217;s <a class="reference internal" href="classes.html#classes"><span class="std std-ref">classes</span></a>, particularly
+<a class="reference internal" href="classes.html#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">dallinger.models.Node</span></code></a>. For example,
+nodes have a <code class="docutils literal"><span class="pre">connect</span></code> method that creates new vectors between nodes
+and there is a corresponding <code class="docutils literal"><span class="pre">connect/</span></code> route that allows the frontend
+to call this method.</p>
+<div class="section" id="miscellaneous-routes">
+<h2>Miscellaneous routes<a class="headerlink" href="#miscellaneous-routes" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">ad_address</span><span class="o">/&lt;</span><span class="n">mode</span><span class="o">&gt;/&lt;</span><span class="n">hit_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Used to get the address of the experiment on the gunicorn server and to return
+participants to Mechanical Turk upon completion of the experiment. This route
+is pinged automatically by the function <code class="docutils literal"><span class="pre">submitAssignment</span></code> in dallinger.js.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/&lt;</span><span class="n">directory</span><span class="o">&gt;/&lt;</span><span class="n">page</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Returns the html page with the name <code class="docutils literal"><span class="pre">&lt;page&gt;</span></code> from the directory called
+<code class="docutils literal"><span class="pre">&lt;directory&gt;</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">summary</span>
+</pre></div>
+</div>
+<p>Returns a summary of the statuses of Participants.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/&lt;</span><span class="n">page</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Returns the html page with the name <code class="docutils literal"><span class="pre">&lt;page&gt;</span></code>.</p>
+</div>
+<div class="section" id="experiment-routes">
+<h2>Experiment routes<a class="headerlink" href="#experiment-routes" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">experiment</span><span class="o">/&lt;</span><span class="nb">property</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Returns the value of the requested property as a JSON <code class="docutils literal"><span class="pre">&lt;property&gt;</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">info</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/&lt;</span><span class="n">info_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Returns a JSON description of the requested info as <code class="docutils literal"><span class="pre">info</span></code>.
+<code class="docutils literal"><span class="pre">node_id</span></code> must be specified to ensure the requesting node has access
+to the requested info. Calls experiment method
+`info_get_request(node, info).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">info</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Create an info with its origin set to the specified node. <em>contents</em>
+must be passed as data. <code class="docutils literal"><span class="pre">info_type</span></code> can be passed as data and will
+cause the info to be of the specified type. Also calls experiment method
+<code class="docutils literal"><span class="pre">info_post_request(node,</span> <span class="pre">info)</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">launch</span>
+</pre></div>
+</div>
+<p>Initializes the experiment and opens recruitment. This route is
+automatically pinged by Dallinger.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">network</span><span class="o">/&lt;</span><span class="n">network_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Returns a JSON description of the requested network as <code class="docutils literal"><span class="pre">network</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">connect</span><span class="o">/&lt;</span><span class="n">other_node_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Create vector(s) between the <code class="docutils literal"><span class="pre">node</span></code> and <code class="docutils literal"><span class="pre">other_node</span></code> by calling
+<code class="docutils literal"><span class="pre">node.connect(whom=other_node)</span></code>. Direction can be passed as data and
+will be forwarded as an argument. Calls experiment method
+<code class="docutils literal"><span class="pre">vector_post_request(node,</span> <span class="pre">vectors)</span></code>. Returns a list of JSON
+descriptions of the created vectors as <code class="docutils literal"><span class="pre">vectors</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">infos</span>
+</pre></div>
+</div>
+<p>Returns a list of JSON descriptions of the infos created by the node as
+<code class="docutils literal"><span class="pre">infos</span></code>. Infos are identified by calling <code class="docutils literal"><span class="pre">node.infos()</span></code>.
+<code class="docutils literal"><span class="pre">info_type</span></code> can be passed as data and will be forwarded as an
+argument. Requesting node and the list of infos are also passed to
+experiment method <code class="docutils literal"><span class="pre">info_get_request(node,</span> <span class="pre">infos)</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">neighbors</span>
+</pre></div>
+</div>
+<p>Returns a list of JSON descriptions of the node&#8217;s neighbors as
+<code class="docutils literal"><span class="pre">nodes</span></code>. Neighbors are identified by calling <code class="docutils literal"><span class="pre">node.neighbors()</span></code>.
+<code class="docutils literal"><span class="pre">node_type</span></code> and <code class="docutils literal"><span class="pre">connection</span></code> can be passed as data and will be
+forwarded as arguments. Requesting node and list of neighbors are also
+passed to experiment method <code class="docutils literal"><span class="pre">node_get_request(node,</span> <span class="pre">nodes)</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">received_infos</span>
+</pre></div>
+</div>
+<p>Returns a list of JSON descriptions of the infos sent to the node as
+<code class="docutils literal"><span class="pre">infos</span></code>. Infos are identified by calling <code class="docutils literal"><span class="pre">node.received_infos()</span></code>.
+<code class="docutils literal"><span class="pre">info_type</span></code> can be passed as data and will be forwarded as an
+argument. Requesting node and the list of infos are also passed to
+experiment method <code class="docutils literal"><span class="pre">info_get_request(node,</span> <span class="pre">infos)</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="nb">int</span><span class="p">:</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">transformations</span>
+</pre></div>
+</div>
+<p>Returns a list of JSON descriptions of all the transformations of a node
+identified using <code class="docutils literal"><span class="pre">node.transformations()</span></code>. The node id must be
+specified in the url. You can also pass <code class="docutils literal"><span class="pre">transformation_type</span></code> as data
+and it will be forwarded to <code class="docutils literal"><span class="pre">node.transformations()</span></code> as the argument
+<code class="docutils literal"><span class="pre">type</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">transmissions</span>
+</pre></div>
+</div>
+<p>Returns a list of JSON descriptions of the transmissions sent to/from
+the node as <code class="docutils literal"><span class="pre">transmissions</span></code>. Transmissions are identified by calling
+<code class="docutils literal"><span class="pre">node.transmissions()</span></code>. <code class="docutils literal"><span class="pre">direction</span></code> and <code class="docutils literal"><span class="pre">status</span></code> can be passed as
+data and will be forwarded as arguments. Requesting node and the list of
+transmissions are also passed to experiment method
+<code class="docutils literal"><span class="pre">transmission_get_request(node,</span> <span class="pre">transmissions)</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">transmit</span>
+</pre></div>
+</div>
+<p>Transmit to another node by calling <code class="docutils literal"><span class="pre">node.transmit()</span></code>. The sender&#8217;s
+node id must be specified in the url. As with <code class="docutils literal"><span class="pre">node.transmit()</span></code> the
+key parameters are <code class="docutils literal"><span class="pre">what</span></code> and <code class="docutils literal"><span class="pre">to_whom</span></code> and they should be passed
+as data. However, the values these accept are more limited than for
+the backend due to the necessity of serialization.</p>
+<p>If <code class="docutils literal"><span class="pre">what</span></code> and <code class="docutils literal"><span class="pre">to_whom</span></code> are not specified they will default to
+<code class="docutils literal"><span class="pre">None</span></code>. Alternatively you can pass an int (e.g. &#8216;5&#8217;) or a class name
+(e.g. <code class="docutils literal"><span class="pre">Info</span></code> or <code class="docutils literal"><span class="pre">Agent</span></code>). Passing an int will get that info/node,
+passing a class name will pass the class. Note that if the class you
+are specifying is a custom class it will need to be added to the
+dictionary of known_classes in your experiment code.</p>
+<p>You may also pass the values property1, property2, property3,
+property4 and property5. If passed this will fill in the relevant
+values of the transmissions created with the values you specified.</p>
+<p>The transmitting node and a list of created transmissions are sent to
+experiment method <code class="docutils literal"><span class="pre">transmission_post_request(node,</span> <span class="pre">transmissions)</span></code>.
+This route returns a list of JSON descriptions of the created
+transmissions as <code class="docutils literal"><span class="pre">transmissions</span></code>. For example, to transmit all infos
+of type Meme to the node with id 10:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">reqwest</span><span class="p">({</span>
+    <span class="n">url</span><span class="p">:</span> <span class="s2">&quot;/node/&quot;</span> <span class="o">+</span> <span class="n">my_node_id</span> <span class="o">+</span> <span class="s2">&quot;/transmit&quot;</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">what</span><span class="p">:</span> <span class="s2">&quot;Meme&quot;</span><span class="p">,</span>
+        <span class="n">to_whom</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">});</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">node_id</span><span class="o">&gt;/</span><span class="n">vectors</span>
+</pre></div>
+</div>
+<p>Returns a list of JSON descriptions of vectors connected to the node as
+<code class="docutils literal"><span class="pre">vectors</span></code>. Vectors are identified by calling <code class="docutils literal"><span class="pre">node.vectors()</span></code>.
+<code class="docutils literal"><span class="pre">direction</span></code> and <code class="docutils literal"><span class="pre">failed</span></code> can be passed as data and will be forwarded
+as arguments. Requesting node and list of vectors are also passed to
+experiment method <code class="docutils literal"><span class="pre">vector_get_request(node,</span> <span class="pre">vectors)</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">node</span><span class="o">/&lt;</span><span class="n">participant_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Create a node for the specified participant. The route calls the
+following experiment methods:
+<code class="docutils literal"><span class="pre">get_network_for_participant(participant)</span></code>,
+<code class="docutils literal"><span class="pre">create_node(network,</span> <span class="pre">participant)</span></code>,
+<code class="docutils literal"><span class="pre">add_node_to_network(node,</span> <span class="pre">network)</span></code>, and
+<code class="docutils literal"><span class="pre">node_post_request(participant,</span> <span class="pre">node)</span></code>. Returns a JSON description of
+the created node as <code class="docutils literal"><span class="pre">node</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">notifications</span>
+<span class="n">GET</span> <span class="o">/</span><span class="n">notifications</span>
+</pre></div>
+</div>
+<p>This is the route to which notifications from AWS are sent. It is also
+possible to send your own notifications to this route, thereby
+simulating notifications from AWS. Necessary arguments are
+<code class="docutils literal"><span class="pre">Event.1.EventType</span></code>, which can be <code class="docutils literal"><span class="pre">AssignmentAccepted</span></code>,
+<code class="docutils literal"><span class="pre">AssignmentAbandoned</span></code>, <code class="docutils literal"><span class="pre">AssignmentReturned</span></code> or
+<code class="docutils literal"><span class="pre">AssignmentSubmitted</span></code>, and <code class="docutils literal"><span class="pre">Event.1.AssignmentId</span></code>, which is the id
+of the relevant assignment. In addition, Dallinger uses a custom event
+type of <code class="docutils literal"><span class="pre">NotificationMissing</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">participant</span><span class="o">/&lt;</span><span class="n">participant_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Returns a JSON description of the requested participant as
+<code class="docutils literal"><span class="pre">participant</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">participant</span><span class="o">/&lt;</span><span class="n">worker_id</span><span class="o">&gt;/&lt;</span><span class="n">hit_id</span><span class="o">&gt;/&lt;</span><span class="n">assignment_id</span><span class="o">&gt;/&lt;</span><span class="n">mode</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Create a participant. Returns a JSON description of the participant as
+<code class="docutils literal"><span class="pre">participant</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">question</span><span class="o">/&lt;</span><span class="n">participant_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Create a question. <code class="docutils literal"><span class="pre">question</span></code>, <code class="docutils literal"><span class="pre">response</span></code> and <code class="docutils literal"><span class="pre">question_id</span></code> should
+be passed as data. Does not return anything.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">transformation</span><span class="o">/&lt;</span><span class="nb">int</span><span class="p">:</span><span class="n">node_id</span><span class="o">&gt;/&lt;</span><span class="nb">int</span><span class="p">:</span><span class="n">info_in_id</span><span class="o">&gt;/&lt;</span><span class="nb">int</span><span class="p">:</span><span class="n">info_out_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Create a transformation from <code class="docutils literal"><span class="pre">info_in</span></code> to <code class="docutils literal"><span class="pre">info_out</span></code> at the
+specified node. <code class="docutils literal"><span class="pre">transformation_type</span></code> can be passed as data and the
+transformation will be of that class if it is a known class. Returns a
+JSON description of the created transformation.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="the_experiment_class.html" title="previous chapter">The Experiment Class</a></li>
+      <li>Next: <a href="communicating_with_the_server.html" title="next chapter">Communicating With the Server</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

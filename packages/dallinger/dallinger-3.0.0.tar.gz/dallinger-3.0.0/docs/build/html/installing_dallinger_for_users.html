@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installing Dallinger with Anaconda" href="dallinger_with_anaconda.html" />
+    <link rel="prev" title="Dallinger" href="index.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>If you would like to contribute to Dallinger, please follow these
+<a class="reference internal" href="developing_dallinger_setup_guide.html"><span class="doc">alternative install
+instructions</span></a>.</p>
+<div class="section" id="install-python">
+<h2>Install Python<a class="headerlink" href="#install-python" title="Permalink to this headline">¶</a></h2>
+<p>Dallinger is written in the language Python. For it to work, you will need
+to have Python 2.7 installed. You can check what version of Python you
+have by running:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">--</span><span class="n">version</span>
+</pre></div>
+</div>
+<p>If you do not have Python 2.7 installed, you can install it from the
+<a class="reference external" href="https://www.python.org/downloads/">Python website</a>.</p>
+</div>
+<div class="section" id="install-postgres">
+<h2>Install Postgres<a class="headerlink" href="#install-postgres" title="Permalink to this headline">¶</a></h2>
+<p>Dallinger uses Postgres to create local databases. On OS X, install
+Postgres from <a class="reference external" href="http://postgresapp.com">postgresapp.com</a>. This will
+require downloading a zip file, unzipping the file and installing the
+unzipped application.</p>
+<p>You will then need to add Postgres to your PATH environmental variable.
+If you use the default location for installing applications on OS X
+(namely <code class="docutils literal"><span class="pre">/Applications</span></code>), you can adjust your path by running the
+following command:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">PATH</span><span class="o">=</span><span class="s2">&quot;/Applications/Postgres.app/Contents/Versions/9.3/bin:$PATH&quot;</span>
+</pre></div>
+</div>
+<p>NB: If you have installed a more recent version of Postgres (e.g., the
+<a class="reference external" href="https://github.com/PostgresApp/PostgresApp/releases/tag/9.4rc1">the upcoming version
+9.4</a>),
+you may need to alter that command slightly to accommodate the more
+recent version number. To double check which version to include, then
+run:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ls</span> <span class="o">/</span><span class="n">Applications</span><span class="o">/</span><span class="n">Postgres</span><span class="o">.</span><span class="n">app</span><span class="o">/</span><span class="n">Contents</span><span class="o">/</span><span class="n">Versions</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>Whatever number that returns is the version number that you should place
+in the <code class="docutils literal"><span class="pre">export</span></code> command above. If it does not return a number, you
+have not installed Postgres correctly in your <code class="docutils literal"><span class="pre">/Applications</span></code> folder
+or something else is horribly wrong.</p>
+</div>
+<div class="section" id="create-the-database">
+<h2>Create the Database<a class="headerlink" href="#create-the-database" title="Permalink to this headline">¶</a></h2>
+<p>After installing Postgres, you will need to create a database for your
+experiments to use. Run the following command from the command line:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">psql</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;create database dallinger;&#39;</span> <span class="o">-</span><span class="n">U</span> <span class="n">postgres</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-dallinger">
+<h2>Install Dallinger<a class="headerlink" href="#install-dallinger" title="Permalink to this headline">¶</a></h2>
+<p>Install Dallinger from the terminal by running</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">dallinger</span><span class="p">[</span><span class="n">data</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Test that your installation works by running:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dallinger</span> <span class="o">--</span><span class="n">version</span>
+</pre></div>
+</div>
+<p>If you use Anaconda, installing Dallinger probably failed. The problem is
+that you need to install bindings for the <code class="docutils literal"><span class="pre">psycopg2</span></code> package (it helps
+Python play nicely with Postgres) and you must use conda for conda to
+know where to look for the links. You do this with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">psycopg2</span>
+</pre></div>
+</div>
+<p>Then, try the above installation commands. They should work now, meaning
+you can move on.</p>
+<p>Next, you&#8217;ll need <a class="reference internal" href="aws_etc_keys.html"><span class="doc">access keys for AWS, Heroku,
+etc.</span></a>.</p>
+</div>
+<div class="section" id="install-heroku">
+<h2>Install Heroku<a class="headerlink" href="#install-heroku" title="Permalink to this headline">¶</a></h2>
+<p>To run experiments locally or on the internet, you will need the Heroku Command
+Line Interface installed, version 3.28.0 or better. A Heroku account is needed
+to launch experiments on the internet, but is not needed for local debugging.</p>
+<p>To check which version of the Heroku CLI you have installed, run:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">heroku</span> <span class="o">--</span><span class="n">version</span>
+</pre></div>
+</div>
+<p>The Heroku CLI is available for download from
+<a class="reference external" href="https://devcenter.heroku.com/articles/heroku-cli">heroku.com</a>.</p>
+</div>
+<div class="section" id="install-redis">
+<h2>Install Redis<a class="headerlink" href="#install-redis" title="Permalink to this headline">¶</a></h2>
+<p>Debugging experiments requires you to have Redis installed and the Redis
+server running. You can find installation instructions at
+<a class="reference external" href="https://redis.io/topics/quickstart">redis.com</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Dallinger</a></li>
+      <li>Next: <a href="dallinger_with_anaconda.html" title="next chapter">Installing Dallinger with Anaconda</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

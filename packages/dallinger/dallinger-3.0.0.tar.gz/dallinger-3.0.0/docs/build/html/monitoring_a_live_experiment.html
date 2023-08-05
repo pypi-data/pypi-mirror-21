@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Monitoring a Live Experiment &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Viewing the PostgreSQL Database" href="postico_and_postgres.html" />
+    <link rel="prev" title="Learning to Use Dallinger" href="learning_to_use_dallinger.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="monitoring-a-live-experiment">
+<h1>Monitoring a Live Experiment<a class="headerlink" href="#monitoring-a-live-experiment" title="Permalink to this headline">¶</a></h1>
+<p>There are a number of ways that you can monitor a live experiment:</p>
+<div class="section" id="command-line-tools">
+<h2>Command line tools<a class="headerlink" href="#command-line-tools" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">dallinger</span> <span class="pre">summary</span> <span class="pre">--app</span> <span class="pre">{#id}</span></code>, where <code class="docutils literal"><span class="pre">{#id}</span></code> is the id (<code class="docutils literal"><span class="pre">w...</span></code>) of
+the application.</p>
+<p>This will print a summary showing the number of participants with each
+status code, as well as the overall yield:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">status</span>  <span class="o">|</span> <span class="n">count</span>
+<span class="o">----------------</span>
+<span class="mi">1</span>   <span class="o">|</span> <span class="mi">26</span>
+<span class="mi">101</span> <span class="o">|</span> <span class="mi">80</span>
+<span class="mi">103</span> <span class="o">|</span> <span class="mi">43</span>
+<span class="mi">104</span> <span class="o">|</span> <span class="mi">2</span>
+
+<span class="n">Yield</span><span class="p">:</span> <span class="mf">64.00</span><span class="o">%</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="papertrail">
+<h2>Papertrail<a class="headerlink" href="#papertrail" title="Permalink to this headline">¶</a></h2>
+<p>You can use Papertrail to view and search the live logs of your
+experiment. You can access the logs either through the Heroku
+dashboard&#8217;s Resources panel
+(<a class="reference external" href="https://dashboard.heroku.com/apps">https://dashboard.heroku.com/apps</a>/{#id}/resources), where {#id} is the
+id of your experiment, or directly through Papertrail.com
+(<a class="reference external" href="https://papertrailapp.com/systems">https://papertrailapp.com/systems</a>/{#id}/events).</p>
+<div class="section" id="setting-up-alerts">
+<h3>Setting up alerts<a class="headerlink" href="#setting-up-alerts" title="Permalink to this headline">¶</a></h3>
+<p>You can set up Papertrail to send error notifications to Slack or
+another communications platform.</p>
+<ol class="arabic simple" start="0">
+<li>Take a deep breath.</li>
+<li>Open the Papertrail logs.</li>
+<li>Search for the term <code class="docutils literal"><span class="pre">error</span></code>.</li>
+<li>To the right of the search bar, you will see a button titled &#8220;+ Save
+Search&#8221;. Click it. Name the search &#8220;Errors&#8221;. Then click &#8220;Save &amp;
+Setup an Alert&#8221;, which is to the right of &#8220;Save Search&#8221;.</li>
+<li>You will be directed to a page with a list of services that you can
+use to set up an alert.</li>
+<li>Click, e.g., Slack.</li>
+<li>Choose the desired frequency of alert. We recommend the minimum, 1
+minute.</li>
+<li>Under the heading &#8220;Slack details&#8221;, open (<em>in a new tab or window</em>)
+the link <a class="reference external" href="link%20https://slack.com/services/new/papertrail">new Papertrail
+integration</a>.</li>
+<li>This will bring you to a Slack page where you will choose a channel
+to post to. You may need to log in.</li>
+<li>Select the desired channel.</li>
+<li>Click &#8220;Add Papertrail Integration&#8221;.</li>
+<li>You will be brought to a page with more information about the
+integration.</li>
+<li>Scroll down to Step 3 to get the Webhook URL. It should look
+something like
+<code class="docutils literal"><span class="pre">https://hooks.slack.com/services/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</span></code>.</li>
+<li>Copy this link to your clipboard.</li>
+<li>Change anything else you want and then scroll to the bottom and
+click &#8220;Save integration&#8221;.</li>
+<li>Go back to Papertrail page that you left in Step 7.</li>
+<li>Paste the copied URL into the input text box labeled &#8220;Integration&#8217;s
+Webhook URL&#8221; under the &#8220;Slack Details&#8221; heading.</li>
+<li>Click &#8220;Create Alert&#8221; on the same page.</li>
+<li>Victory.</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="learning_to_use_dallinger.html" title="previous chapter">Learning to Use Dallinger</a></li>
+      <li>Next: <a href="postico_and_postgres.html" title="next chapter">Viewing the PostgreSQL Database</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

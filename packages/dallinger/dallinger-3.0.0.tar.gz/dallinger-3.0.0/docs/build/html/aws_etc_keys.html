@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Setting Up AWS, Mechanical Turk, and Heroku &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Demoing Dallinger" href="demoing_dallinger.html" />
+    <link rel="prev" title="Installing Dallinger with Anaconda" href="dallinger_with_anaconda.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="setting-up-aws-mechanical-turk-and-heroku">
+<h1>Setting Up AWS, Mechanical Turk, and Heroku<a class="headerlink" href="#setting-up-aws-mechanical-turk-and-heroku" title="Permalink to this headline">¶</a></h1>
+<p>Before you can use Dallinger, you will need accounts with Amazon Web
+Services, Amazon Mechanical Turk, and Heroku. You will then need to
+create a configuration file and set up your environment so that
+Dallinger can access your accounts.</p>
+<div class="section" id="create-the-configuration-file">
+<h2>Create the configuration file<a class="headerlink" href="#create-the-configuration-file" title="Permalink to this headline">¶</a></h2>
+<p>The first step is to create the Dallinger configuration file in your home
+directory. You can do this using the Dallinger command-line utility
+through</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">dallinger</span> <span class="n">setup</span>
+</pre></div>
+</div>
+<p>which will prepopulate a hidden file <code class="docutils literal"><span class="pre">.dallingerconfig</span></code> in your home
+directory. Alternatively, you can create this file yourself and fill it
+in like so:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[AWS Access]
+aws_access_key_id = ???
+aws_secret_access_key = ???
+aws_region = us-east-1
+
+[Email Access]
+dallinger_email_address = ???
+dallinger_email_password = ???
+</pre></div>
+</div>
+<p>In the next steps, we&#8217;ll fill in your config file with keys.</p>
+</div>
+<div class="section" id="amazon-web-services-api-keys">
+<h2>Amazon Web Services API Keys<a class="headerlink" href="#amazon-web-services-api-keys" title="Permalink to this headline">¶</a></h2>
+<p>You can get API keys for Amazon Web Services by <a class="reference external" href="http://docs.aws.amazon.com/general/latest/gr/managing-aws-access-keys.html">following these
+instructions</a>.</p>
+<p>Then fill in the following lines of <code class="docutils literal"><span class="pre">.dallingerconfig</span></code>, replacing
+<code class="docutils literal"><span class="pre">???</span></code> with your keys:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[AWS Access]
+aws_access_key_id = ???
+aws_secret_access_key = ???
+</pre></div>
+</div>
+<p><strong>N.B.</strong> One feature of AWS API keys is that they are only displayed
+once, and though they can be regenerated, doing so will render invalid
+previously generated keys. If you are running experiments using a
+laboratory account (or any other kind of group-owned account),
+regenerating keys will stop other users who have previously generated
+keys from being able to use the AWS account. Unless you are sure that
+you will not be interrupting others&#8217; workflows, it is advised that you
+do <strong>not</strong> generate new API keys. If you are not the primary user of the
+account, see if you can obtain these keys from others who have
+successfully used AWS.</p>
+</div>
+<div class="section" id="amazon-mechanical-turk">
+<h2>Amazon Mechanical Turk<a class="headerlink" href="#amazon-mechanical-turk" title="Permalink to this headline">¶</a></h2>
+<p>It&#8217;s worth signing up for Amazon Mechanical Turk (perhaps using your AWS
+account from above), both as a
+<a class="reference external" href="https://requester.mturk.com/mturk/beginsignin">requester</a> and as a
+<a class="reference external" href="https://www.mturk.com/mturk/beginsignin">worker</a>. You&#8217;ll use this to
+test and monitor experiments. You should also sign in to each sandbox,
+<a class="reference external" href="https://requester.mturk.com/begin_signin">requester</a> and
+<a class="reference external" href="https://workersandbox.mturk.com/mturk/welcome">worker</a> using the
+same account. Store this account and password somewhere, but you don&#8217;t
+need to tell it to Dallinger.</p>
+</div>
+<div class="section" id="heroku">
+<h2>Heroku<a class="headerlink" href="#heroku" title="Permalink to this headline">¶</a></h2>
+<p>Next, sign up for <a class="reference external" href="https://www.heroku.com/">Heroku</a> and install the
+<a class="reference external" href="https://toolbelt.heroku.com/">Heroku toolbelt</a>.</p>
+<p>You should see an interface that looks something like the following:</p>
+<div class="figure" id="id1">
+<img alt="This is the interface with the Heroku app" src="http://note.io/11c7tkL" />
+<p class="caption"><span class="caption-text">This is the interface with the Heroku app</span></p>
+</div>
+<p>Then, log in from the command line:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">heroku</span> <span class="n">login</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="open-science-framework-optional">
+<h2>Open Science Framework (optional)<a class="headerlink" href="#open-science-framework-optional" title="Permalink to this headline">¶</a></h2>
+<p>There is an optional integration that uses the <a class="reference external" href="https://osf.io/">Open Science Framework</a> (OSF) to register experiments. First, create an account
+on the OSF. Next create a new OSF personal access token on the <a class="reference external" href="https://osf.io/settings/tokens/">OSF settings
+page</a>.</p>
+<p>Finally, fill in the appropriate section of <code class="docutils literal"><span class="pre">.dallingerconfig</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[OSF]
+osf_access_token = ???
+</pre></div>
+</div>
+</div>
+<div class="section" id="done">
+<h2>Done?<a class="headerlink" href="#done" title="Permalink to this headline">¶</a></h2>
+<p>Done. You&#8217;re now all set up with the tools you need to work with
+Dallinger.</p>
+<p>Next, we&#8217;ll <a class="reference internal" href="demoing_dallinger.html"><span class="doc">test Dallinger to make sure it&#8217;s working on your
+system</span></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="dallinger_with_anaconda.html" title="previous chapter">Installing Dallinger with Anaconda</a></li>
+      <li>Next: <a href="demoing_dallinger.html" title="next chapter">Demoing Dallinger</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

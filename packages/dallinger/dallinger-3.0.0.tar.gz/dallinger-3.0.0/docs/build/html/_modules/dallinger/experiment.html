@@ -1,0 +1,558 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>dallinger.experiment &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for dallinger.experiment</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;The base experiment class.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">import</span> <span class="nn">imp</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">and_</span>
+
+<span class="kn">from</span> <span class="nn">dallinger.config</span> <span class="k">import</span> <span class="n">get_config</span><span class="p">,</span> <span class="n">LOCAL_CONFIG</span>
+<span class="kn">from</span> <span class="nn">dallinger.data</span> <span class="k">import</span> <span class="n">Data</span>
+<span class="kn">from</span> <span class="nn">dallinger.models</span> <span class="k">import</span> <span class="n">Network</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">Info</span><span class="p">,</span> <span class="n">Transformation</span><span class="p">,</span> <span class="n">Participant</span>
+<span class="kn">from</span> <span class="nn">dallinger.heroku</span> <span class="k">import</span> <span class="n">app_name</span>
+<span class="kn">from</span> <span class="nn">dallinger.information</span> <span class="k">import</span> <span class="n">Gene</span><span class="p">,</span> <span class="n">Meme</span><span class="p">,</span> <span class="n">State</span>
+<span class="kn">from</span> <span class="nn">dallinger.nodes</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">Source</span><span class="p">,</span> <span class="n">Environment</span>
+<span class="kn">from</span> <span class="nn">dallinger.transformations</span> <span class="k">import</span> <span class="n">Compression</span><span class="p">,</span> <span class="n">Response</span>
+<span class="kn">from</span> <span class="nn">dallinger.transformations</span> <span class="k">import</span> <span class="n">Mutation</span><span class="p">,</span> <span class="n">Replication</span>
+<span class="kn">from</span> <span class="nn">dallinger.networks</span> <span class="k">import</span> <span class="n">Empty</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">get_config</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">exp_class_working_dir</span><span class="p">(</span><span class="n">meth</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">meth</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">new_meth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">orig_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+            <span class="n">new_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span><span class="p">]</span><span class="o">.</span><span class="vm">__file__</span>
+            <span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">new_path</span><span class="p">)</span>
+            <span class="c1"># Override configs</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">load_from_file</span><span class="p">(</span><span class="n">LOCAL_CONFIG</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">meth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">orig_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_meth</span>
+
+
+<div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment">[docs]</a><span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Define the structure of an experiment.&quot;&quot;&quot;</span>
+    <span class="n">app_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">exp_config</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Experiment.__init__"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create the experiment class. Sets the default value of attributes.&quot;&quot;&quot;</span>
+
+        <span class="c1">#: Boolean, determines whether the experiment logs output when</span>
+        <span class="c1">#: running. Default is True.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1">#: String, the name of the experiment. Default is &quot;Experiment</span>
+        <span class="c1">#: title&quot;.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task</span> <span class="o">=</span> <span class="s2">&quot;Experiment title&quot;</span>
+
+        <span class="c1">#: session, the experiment&#39;s connection to the database.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">session</span>
+
+        <span class="c1">#: int, the number of practice networks (see</span>
+        <span class="c1">#: :attr:`~dallinger.models.Network.role`). Default is 0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">practice_repeats</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1">#: int, the number of non practice networks (see</span>
+        <span class="c1">#: :attr:`~dallinger.models.Network.role`). Default is 0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">experiment_repeats</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1">#: int, the number of participants</span>
+        <span class="c1">#: requested when the experiment first starts. Default is 1.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_recruitment_size</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1">#: dictionary, the classes Dallinger can make in response</span>
+        <span class="c1">#: to front-end requests. Experiments can add new classes to this</span>
+        <span class="c1">#: dictionary.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">known_classes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Agent&quot;</span><span class="p">:</span> <span class="n">Agent</span><span class="p">,</span>
+            <span class="s2">&quot;Compression&quot;</span><span class="p">:</span> <span class="n">Compression</span><span class="p">,</span>
+            <span class="s2">&quot;Environment&quot;</span><span class="p">:</span> <span class="n">Environment</span><span class="p">,</span>
+            <span class="s2">&quot;Gene&quot;</span><span class="p">:</span> <span class="n">Gene</span><span class="p">,</span>
+            <span class="s2">&quot;Info&quot;</span><span class="p">:</span> <span class="n">Info</span><span class="p">,</span>
+            <span class="s2">&quot;Meme&quot;</span><span class="p">:</span> <span class="n">Meme</span><span class="p">,</span>
+            <span class="s2">&quot;Mutation&quot;</span><span class="p">:</span> <span class="n">Mutation</span><span class="p">,</span>
+            <span class="s2">&quot;Node&quot;</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span>
+            <span class="s2">&quot;Replication&quot;</span><span class="p">:</span> <span class="n">Replication</span><span class="p">,</span>
+            <span class="s2">&quot;Response&quot;</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span>
+            <span class="s2">&quot;Source&quot;</span><span class="p">:</span> <span class="n">Source</span><span class="p">,</span>
+            <span class="s2">&quot;State&quot;</span><span class="p">:</span> <span class="n">State</span><span class="p">,</span>
+            <span class="s2">&quot;Transformation&quot;</span><span class="p">:</span> <span class="n">Transformation</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">recruiter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recruiter, the Dallinger class that recruits participants.</span>
+<span class="sd">        Default is HotAirRecruiter in debug mode and MTurkRecruiter in other modes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">dallinger.recruiters</span> <span class="k">import</span> <span class="n">HotAirRecruiter</span>
+        <span class="kn">from</span> <span class="nn">dallinger.recruiters</span> <span class="k">import</span> <span class="n">MTurkRecruiter</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">debug_mode</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mode&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;debug&#39;</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+            <span class="c1"># Config not yet loaded</span>
+            <span class="n">debug_mode</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">debug_mode</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">HotAirRecruiter</span>
+        <span class="k">return</span> <span class="n">MTurkRecruiter</span><span class="o">.</span><span class="n">from_current_config</span>
+
+<div class="viewcode-block" id="Experiment.setup"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create the networks if they don&#39;t already exist.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">practice_repeats</span><span class="p">):</span>
+                <span class="n">network</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_network</span><span class="p">()</span>
+                <span class="n">network</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;practice&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">experiment_repeats</span><span class="p">):</span>
+                <span class="n">network</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_network</span><span class="p">()</span>
+                <span class="n">network</span><span class="o">.</span><span class="n">role</span> <span class="o">=</span> <span class="s2">&quot;experiment&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">network</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Experiment.create_network"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.create_network">[docs]</a>    <span class="k">def</span> <span class="nf">create_network</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a new network.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Empty</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Experiment.networks"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.networks">[docs]</a>    <span class="k">def</span> <span class="nf">networks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">role</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All the networks in the experiment.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">full</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;full must be boolean or all, it cannot be </span><span class="si">{}</span><span class="s2">&quot;</span>
+                             <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">full</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">full</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Network</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Network</span>\
+                    <span class="o">.</span><span class="n">query</span>\
+                    <span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">role</span><span class="o">=</span><span class="n">role</span><span class="p">)</span>\
+                    <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">role</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Network</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span>\
+                    <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Network</span>\
+                    <span class="o">.</span><span class="n">query</span>\
+                    <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span><span class="n">Network</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">role</span><span class="p">,</span> <span class="n">Network</span><span class="o">.</span><span class="n">full</span> <span class="o">==</span> <span class="n">full</span><span class="p">))</span>\
+                    <span class="o">.</span><span class="n">all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Experiment.get_network_for_participant"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.get_network_for_participant">[docs]</a>    <span class="k">def</span> <span class="nf">get_network_for_participant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find a network for a participant.</span>
+
+<span class="sd">        If no networks are available, None will be returned. By default</span>
+<span class="sd">        participants can participate only once in each network and participants</span>
+<span class="sd">        first complete networks with `role=&quot;practice&quot;` before doing all other</span>
+<span class="sd">        networks in a random order.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">participant</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">networks_with_space</span> <span class="o">=</span> <span class="n">Network</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">networks_participated_in</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">network_id</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span>
+            <span class="n">Node</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">with_entities</span><span class="p">(</span><span class="n">Node</span><span class="o">.</span><span class="n">network_id</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">participant_id</span><span class="o">=</span><span class="n">participant</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">]</span>
+
+        <span class="n">legal_networks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">net</span> <span class="k">for</span> <span class="n">net</span> <span class="ow">in</span> <span class="n">networks_with_space</span>
+            <span class="k">if</span> <span class="n">net</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">networks_participated_in</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">legal_networks</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;No networks available, returning None&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> networks out of </span><span class="si">{}</span><span class="s2"> available&quot;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">legal_networks</span><span class="p">),</span>
+                         <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">practice_repeats</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_repeats</span><span class="p">)),</span>
+                 <span class="n">key</span><span class="p">)</span>
+
+        <span class="n">legal_practice_networks</span> <span class="o">=</span> <span class="p">[</span><span class="n">net</span> <span class="k">for</span> <span class="n">net</span> <span class="ow">in</span> <span class="n">legal_networks</span>
+                                   <span class="k">if</span> <span class="n">net</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="s2">&quot;practice&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">legal_practice_networks</span><span class="p">:</span>
+            <span class="n">chosen_network</span> <span class="o">=</span> <span class="n">legal_practice_networks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Practice networks available.&quot;</span>
+                     <span class="s2">&quot;Assigning participant to practice network </span><span class="si">{}</span><span class="s2">.&quot;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chosen_network</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chosen_network</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">legal_networks</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;No practice networks available.&quot;</span>
+                     <span class="s2">&quot;Assigning participant to experiment network </span><span class="si">{}</span><span class="s2">&quot;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">chosen_network</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">chosen_network</span></div>
+
+<div class="viewcode-block" id="Experiment.create_node"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.create_node">[docs]</a>    <span class="k">def</span> <span class="nf">create_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">,</span> <span class="n">network</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a node for a participant.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Node</span><span class="p">(</span><span class="n">network</span><span class="o">=</span><span class="n">network</span><span class="p">,</span> <span class="n">participant</span><span class="o">=</span><span class="n">participant</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.add_node_to_network"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.add_node_to_network">[docs]</a>    <span class="k">def</span> <span class="nf">add_node_to_network</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">network</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a node to a network.</span>
+
+<span class="sd">        This passes `node` to :func:`~dallinger.models.Network.add_node()`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">network</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.data_check"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.data_check">[docs]</a>    <span class="k">def</span> <span class="nf">data_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check that the data are acceptable.</span>
+
+<span class="sd">        Return a boolean value indicating whether the `participant`&#39;s data is</span>
+<span class="sd">        acceptable. This is meant to check for missing or invalid data. This</span>
+<span class="sd">        check will be run once the `participant` completes the experiment. By</span>
+<span class="sd">        default performs no checks and returns True. See also,</span>
+<span class="sd">        :func:`~dallinger.experiments.Experiment.attention_check`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Experiment.bonus"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.bonus">[docs]</a>    <span class="k">def</span> <span class="nf">bonus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The bonus to be awarded to the given participant.</span>
+
+<span class="sd">        Return the value of the bonus to be paid to `participant`. By default</span>
+<span class="sd">        returns 0.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Experiment.bonus_reason"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.bonus_reason">[docs]</a>    <span class="k">def</span> <span class="nf">bonus_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The reason offered to the participant for giving the bonus.</span>
+
+<span class="sd">        Return a string that will be included in an email sent to the</span>
+<span class="sd">        `participant` receiving a bonus. By default it is &quot;Thank you for</span>
+<span class="sd">        participating! Here is your bonus.&quot;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;Thank for participating! Here is your bonus.&quot;</span></div>
+
+<div class="viewcode-block" id="Experiment.attention_check"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.attention_check">[docs]</a>    <span class="k">def</span> <span class="nf">attention_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if participant performed adequately.</span>
+
+<span class="sd">        Return a boolean value indicating whether the `participant`&#39;s data is</span>
+<span class="sd">        acceptable. This is mean to check the participant&#39;s data to determine</span>
+<span class="sd">        that they paid attention. This check will run once the *participant*</span>
+<span class="sd">        completes the experiment. By default performs no checks and returns</span>
+<span class="sd">        True. See also :func:`~dallinger.experiments.Experiment.data_check`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Experiment.submission_successful"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.submission_successful">[docs]</a>    <span class="k">def</span> <span class="nf">submission_successful</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a participant submits successfully.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.recruit"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.recruit">[docs]</a>    <span class="k">def</span> <span class="nf">recruit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recruit participants to the experiment as needed.</span>
+
+<span class="sd">        This method runs whenever a participant successfully completes the</span>
+<span class="sd">        experiment (participants who fail to finish successfully are</span>
+<span class="sd">        automatically replaced). By default it recruits 1 participant at a time</span>
+<span class="sd">        until all networks are full.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">networks</span><span class="p">(</span><span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;All networks full: closing recruitment&quot;</span><span class="p">,</span> <span class="s2">&quot;-----&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">recruiter</span><span class="p">()</span><span class="o">.</span><span class="n">close_recruitment</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Experiment.log"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;?????&quot;</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print a string to the logs.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">force</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt;&gt;&gt;&gt; </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">text</span><span class="p">))</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Experiment.log_summary"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.log_summary">[docs]</a>    <span class="k">def</span> <span class="nf">log_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Log a summary of all the participants&#39; status codes.&quot;&quot;&quot;</span>
+        <span class="n">participants</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">query</span>\
+            <span class="o">.</span><span class="n">with_entities</span><span class="p">(</span><span class="n">Participant</span><span class="o">.</span><span class="n">status</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">status</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">participants</span><span class="p">])</span>
+        <span class="n">sorted_counts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Status summary: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">sorted_counts</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">sorted_counts</span></div>
+
+<div class="viewcode-block" id="Experiment.save"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">objects</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add all the objects to the session and commit them.</span>
+
+<span class="sd">        This only needs to be done for networks and participants.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">objects</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add_all</span><span class="p">(</span><span class="n">objects</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Experiment.node_post_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.node_post_request">[docs]</a>    <span class="k">def</span> <span class="nf">node_post_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to make a node is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.node_get_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.node_get_request">[docs]</a>    <span class="k">def</span> <span class="nf">node_get_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to get nodes is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.vector_post_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.vector_post_request">[docs]</a>    <span class="k">def</span> <span class="nf">vector_post_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to connect is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.vector_get_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.vector_get_request">[docs]</a>    <span class="k">def</span> <span class="nf">vector_get_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to get vectors is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.info_post_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.info_post_request">[docs]</a>    <span class="k">def</span> <span class="nf">info_post_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">info</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to create an info is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.info_get_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.info_get_request">[docs]</a>    <span class="k">def</span> <span class="nf">info_get_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">infos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to get infos is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.transmission_post_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.transmission_post_request">[docs]</a>    <span class="k">def</span> <span class="nf">transmission_post_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">transmissions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to transmit is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.transmission_get_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.transmission_get_request">[docs]</a>    <span class="k">def</span> <span class="nf">transmission_get_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">transmissions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to get transmissions is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.transformation_post_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.transformation_post_request">[docs]</a>    <span class="k">def</span> <span class="nf">transformation_post_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">transformation</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to transform an info is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.transformation_get_request"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.transformation_get_request">[docs]</a>    <span class="k">def</span> <span class="nf">transformation_get_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">transformations</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run when a request to get transformations is complete.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Experiment.fail_participant"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.fail_participant">[docs]</a>    <span class="k">def</span> <span class="nf">fail_participant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fail all the nodes of a participant.&quot;&quot;&quot;</span>
+        <span class="n">participant_nodes</span> <span class="o">=</span> <span class="n">Node</span><span class="o">.</span><span class="n">query</span>\
+            <span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">participant_id</span><span class="o">=</span><span class="n">participant</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">failed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>\
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">participant_nodes</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">fail</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Experiment.data_check_failed"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.data_check_failed">[docs]</a>    <span class="k">def</span> <span class="nf">data_check_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;What to do if a participant fails the data check.</span>
+
+<span class="sd">        Runs when `participant` has failed</span>
+<span class="sd">        :func:`~dallinger.experiments.Experiment.data_check`. By default calls</span>
+<span class="sd">        :func:`~dallinger.experiments.Experiment.fail_participant`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_participant</span><span class="p">(</span><span class="n">participant</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.attention_check_failed"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.attention_check_failed">[docs]</a>    <span class="k">def</span> <span class="nf">attention_check_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;What to do if a participant fails the attention check.</span>
+
+<span class="sd">        Runs when `participant` has failed the</span>
+<span class="sd">        :func:`~dallinger.experiments.Experiment.attention_check`. By default calls</span>
+<span class="sd">        :func:`~dallinger.experiments.Experiment.fail_participant`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_participant</span><span class="p">(</span><span class="n">participant</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.assignment_abandoned"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.assignment_abandoned">[docs]</a>    <span class="k">def</span> <span class="nf">assignment_abandoned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;What to do if a participant abandons the hit.</span>
+
+<span class="sd">        This runs when a notification from AWS is received indicating that</span>
+<span class="sd">        `participant` has run out of time. Calls</span>
+<span class="sd">        :func:`~dallinger.experiments.Experiment.fail_participant`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_participant</span><span class="p">(</span><span class="n">participant</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.assignment_returned"><a class="viewcode-back" href="../../the_experiment_class.html#dallinger.experiments.Experiment.assignment_returned">[docs]</a>    <span class="k">def</span> <span class="nf">assignment_returned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;What to do if a participant returns the hit.</span>
+
+<span class="sd">        This runs when a notification from AWS is received indicating that</span>
+<span class="sd">        `participant` has returned the experiment assignment. Calls</span>
+<span class="sd">        :func:`~dallinger.experiments.Experiment.fail_participant`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_participant</span><span class="p">(</span><span class="n">participant</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">assignment_reassigned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">participant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;What to do if the assignment assigned to a participant is</span>
+<span class="sd">        reassigned to another participant while the first participant</span>
+<span class="sd">        is still working.</span>
+
+<span class="sd">        This runs when a participant is created with the same assignment_id</span>
+<span class="sd">        as another participant if the earlier participant still has the status</span>
+<span class="sd">        &quot;working&quot;. Calls :func:`~dallinger.experiments.Experiment.fail_participant`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fail_participant</span><span class="p">(</span><span class="n">participant</span><span class="p">)</span>
+
+    <span class="nd">@exp_class_working_dir</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exp_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">app_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deploy and run an experiment.</span>
+
+<span class="sd">        The exp_config object is either a dictionary or a</span>
+<span class="sd">        ``localconfig.LocalConfig`` object with parameters</span>
+<span class="sd">        specific to the experiment run grouped by section.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">dallinger</span> <span class="k">as</span> <span class="nn">dlgr</span>
+
+        <span class="k">if</span> <span class="n">app_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">app_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">app_id</span> <span class="o">=</span> <span class="n">app_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_config</span> <span class="o">=</span> <span class="n">exp_config</span> <span class="ow">or</span> <span class="n">kwargs</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_config</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="sa">u</span><span class="s2">&quot;debug&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dlgr</span><span class="o">.</span><span class="n">command_line</span><span class="o">.</span><span class="n">deploy_sandbox_shared_setup</span><span class="p">(</span>
+                <span class="n">app</span><span class="o">=</span><span class="n">app_id</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="n">exp_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_config</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finish_experiment</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_finish_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Waiting for experiment to complete.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">experiment_completed</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">retrieve_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_experiment</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp_config</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">experiment_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks the current state of the experiment to see whether it has</span>
+<span class="sd">        completed&quot;&quot;&quot;</span>
+        <span class="n">status_url</span> <span class="o">=</span> <span class="s1">&#39;https://</span><span class="si">{}</span><span class="s1">.herokuapp.com/summary&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">app_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status_url</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s1">&#39;Error fetching experiment status.&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Current application state: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;completed&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">retrieve_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieves and saves data from a running experiment&quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">dallinger</span> <span class="k">as</span> <span class="nn">dlgr</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">dlgr</span><span class="o">.</span><span class="n">command_line</span><span class="o">.</span><span class="n">export_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Data exported to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">end_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Terminates a running experiment&quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">dallinger</span> <span class="k">as</span> <span class="nn">dlgr</span>
+        <span class="n">dlgr</span><span class="o">.</span><span class="n">command_line</span><span class="o">.</span><span class="n">destroy_server</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">app_id</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">load</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Load the active experiment.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">())</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">exp</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">load_source</span><span class="p">(</span><span class="s1">&#39;dallinger_experiment&#39;</span><span class="p">,</span> <span class="s2">&quot;dallinger_experiment.py&quot;</span><span class="p">)</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">)</span>
+        <span class="n">exps</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">classes</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="s2">&quot;Experiment&quot;</span><span class="p">)]</span>
+        <span class="n">this_experiment</span> <span class="o">=</span> <span class="n">exps</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="s1">&#39;dallinger_experiment&#39;</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="p">[</span><span class="n">this_experiment</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">this_experiment</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Could not import experiment.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="../../_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

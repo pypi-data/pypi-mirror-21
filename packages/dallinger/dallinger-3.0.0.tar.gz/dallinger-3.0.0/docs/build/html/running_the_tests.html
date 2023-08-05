@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Running the tests &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Required Experimental Files" href="required_experimental_files.html" />
+    <link rel="prev" title="Developer Installation" href="developing_dallinger_setup_guide.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="running-the-tests">
+<h1>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h1>
+<p>If you push a commit to a branch in the Dallinger organization on GitHub,
+or open a pull request from your own fork, Dallinger&#8217;s automated code tests
+will be run on <a class="reference external" href="https://travis-ci.org/">Travis</a>.</p>
+<p>Current build status: <a class="reference external" href="https://travis-ci.org/Dallinger/Dallinger"><img alt="status" src="https://travis-ci.org/Dallinger/Dallinger.svg?branch=master" /></a></p>
+<p>The tests include:</p>
+<ul class="simple">
+<li>Making sure that a source distribution of the Python package can be created.</li>
+<li>Running <a class="reference external" href="https://flake8.readthedocs.io">flake8</a> to make sure Python code
+conforms to the <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">PEP 8</a> style guide.</li>
+<li>Running the tests for the Python code using <a class="reference external" href="http://doc.pytest.org/">pytest</a>
+and making sure they pass in Python 2.7.</li>
+<li>Making sure that <a class="reference external" href="https://coverage.readthedocs.io/">code coverage</a>
+for the Python code is above the desired threshold.</li>
+<li>Making sure the docs build without error.</li>
+</ul>
+<div class="section" id="amazon-mechanical-turk-integration-tests">
+<h2>Amazon Mechanical Turk Integration Tests<a class="headerlink" href="#amazon-mechanical-turk-integration-tests" title="Permalink to this headline">¶</a></h2>
+<p>You can also run all these tests locally, with some additional requirements:</p>
+<ul class="simple">
+<li>The Amazon Web Services credentials set in .dallingerconfig must correspond
+to a valid MTurk Sandbox
+<a class="reference external" href="https://requester.mturk.com/mturk/beginsignin">Requester</a> account.</li>
+<li>Some tests require access to an MTurk Sandbox
+<a class="reference external" href="https://workersandbox.mturk.com/mturk/welcome">Worker</a> account, so you
+should create this account (probably using the same AWS account as above).</li>
+<li>The Worker ID from the Worker account (visible on the
+<a class="reference external" href="https://workersandbox.mturk.com/mturk/dashboard">dashboard</a>) needs to be
+set in <code class="docutils literal"><span class="pre">tests/config.py</span></code>, which should be created by making a copy of
+<code class="docutils literal"><span class="pre">tests/config.py.in</span></code> before setting the value. <code class="docutils literal"><span class="pre">tests/config.py</span></code> is
+excluded from version control, so your Id will not be pushed to a remote
+repository.</li>
+</ul>
+</div>
+<div class="section" id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p>You can run all tests locally, simply by running:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">tox</span>
+</pre></div>
+</div>
+<p>To run just the Python tests:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pytest</span>
+</pre></div>
+</div>
+<p>To run the Python tests excluding those that interact with Amazon Mechanical
+Turk, run:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pytest</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;not mturk&quot;</span>
+</pre></div>
+</div>
+<p>To run all tests except those that require a MTurk Worker ID, run:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pytest</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;not mturkworker&quot;</span>
+</pre></div>
+</div>
+<p>To build documentation:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">tox</span> <span class="o">-</span><span class="n">e</span> <span class="n">docs</span>
+</pre></div>
+</div>
+<p>To run flake8:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">flake8</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="developing_dallinger_setup_guide.html" title="previous chapter">Developer Installation</a></li>
+      <li>Next: <a href="required_experimental_files.html" title="next chapter">Required Experimental Files</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

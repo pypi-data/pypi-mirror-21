@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Configuration &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Python module" href="python_module.html" />
+    <link rel="prev" title="Command-Line Utility" href="command_line_utility.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<p>The Dallinger <code class="docutils literal"><span class="pre">configuration</span></code> module provides tools for reading and writing
+configuration parameters that control the behavior of an experiment. To use the
+configuration, first import the module and get the configuration object:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dallinger</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">dallinger</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can then get and set parameters:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;duration&quot;</span><span class="p">)</span>
+<span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;duration&quot;</span><span class="p">,</span> <span class="mf">0.50</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When retrieving a configuration parameter, Dallinger will look for the parameter
+first among environment variables, then in a <code class="docutils literal"><span class="pre">config.txt</span></code> in the experiment
+directory, and then in the <code class="docutils literal"><span class="pre">.dallingerconfig</span></code> file, using whichever value
+is found first. If the parameter is not found, Dallinger will use the default.</p>
+<div class="section" id="built-in-configuration">
+<h2>Built-in configuration<a class="headerlink" href="#built-in-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Built-in configuration parameters include:</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">mode</span></code></dt>
+<dd>Run the experiment in this mode. Options include <code class="docutils literal"><span class="pre">debug</span></code> (local testing),
+<code class="docutils literal"><span class="pre">sandbox</span></code> (MTurk sandbox), and <code class="docutils literal"><span class="pre">live</span></code> (MTurk).</dd>
+<dt><code class="docutils literal"><span class="pre">title</span></code></dt>
+<dd>Title of the HIT on Amazon Mechanical Turk.</dd>
+<dt><code class="docutils literal"><span class="pre">description</span></code></dt>
+<dd>Description of the HIT on Amazon Mechanical Turk.</dd>
+<dt><code class="docutils literal"><span class="pre">keywords</span></code></dt>
+<dd>Comma-separated list of keywords to use on Amazon Mechanical Turk.</dd>
+<dt><code class="docutils literal"><span class="pre">lifetime</span></code></dt>
+<dd>How long in hours that your HIT remains visible to workers.</dd>
+<dt><code class="docutils literal"><span class="pre">duration</span></code></dt>
+<dd>How long in hours participants have until the HIT will time out.</dd>
+<dt><code class="docutils literal"><span class="pre">us_only</span></code></dt>
+<dd>A boolean that control whether this HIT is available only to MTurk workers
+in the U.S.</dd>
+<dt><code class="docutils literal"><span class="pre">base_payment</span></code></dt>
+<dd>Base payment in U.S. dollars.</dd>
+<dt><code class="docutils literal"><span class="pre">approve_requirement</span></code></dt>
+<dd>The percentage of past MTurk HITs that must have been approved for a worker
+to qualify to participate in your experiment. 1-100.</dd>
+<dt><code class="docutils literal"><span class="pre">contact_email_on_error</span></code> <em>unicode</em></dt>
+<dd>Email address displayed when there is an error.</dd>
+<dt><code class="docutils literal"><span class="pre">auto_recruit</span></code></dt>
+<dd>Whether recruitment should be automatic.</dd>
+<dt><code class="docutils literal"><span class="pre">group</span></code></dt>
+<dd>A string. <em>Unicode string</em>.</dd>
+<dt><code class="docutils literal"><span class="pre">loglevel</span></code></dt>
+<dd>A number between 0 and 4 that controls the verbosity of logs, from <code class="docutils literal"><span class="pre">debug</span></code>
+to <code class="docutils literal"><span class="pre">critical</span></code>.</dd>
+<dt><code class="docutils literal"><span class="pre">organization_name</span></code> [string]</dt>
+<dd>Identifies your institution, business, or organization.</dd>
+<dt><code class="docutils literal"><span class="pre">browser_exclude_rule</span></code> [comma separated string]</dt>
+<dd>A set of rules you can apply to prevent participants with unsupported web
+browsers from participating in your experiment.</dd>
+<dt><code class="docutils literal"><span class="pre">database_url</span></code></dt>
+<dd>URI of the Postgres database.</dd>
+<dt><code class="docutils literal"><span class="pre">database_size</span></code></dt>
+<dd>Size of the database on Heroku. See <a class="reference external" href="https://devcenter.heroku.com/articles/heroku-postgres-plans">Heroku Postgres plans</a>.</dd>
+<dt><code class="docutils literal"><span class="pre">dyno_type</span></code></dt>
+<dd>Heroku dyno type to use. See <a class="reference external" href="https://devcenter.heroku.com/articles/dyno-types">Heroku dynos types</a>.</dd>
+<dt><code class="docutils literal"><span class="pre">num_dynos_web</span></code></dt>
+<dd>Number of Heroku dynos to use for processing incoming HTTP requests. It is
+recommended that you use at least two.</dd>
+<dt><code class="docutils literal"><span class="pre">num_dynos_worker</span></code></dt>
+<dd>Number of Heroku dynos to use for performing other computations.</dd>
+<dt><code class="docutils literal"><span class="pre">host</span></code></dt>
+<dd>IP address of the host.</dd>
+<dt><code class="docutils literal"><span class="pre">port</span></code></dt>
+<dd>Port of the host.</dd>
+<dt><code class="docutils literal"><span class="pre">notification_url</span></code></dt>
+<dd>URL where notifications are sent. This should not be set manually.</dd>
+<dt><code class="docutils literal"><span class="pre">clock_on</span></code></dt>
+<dd>If the clock process is on, it will perform a series of checks that ensure
+the integrity of the database.</dd>
+<dt><code class="docutils literal"><span class="pre">logfile</span></code></dt>
+<dd>Where to write logs.</dd>
+<dt><code class="docutils literal"><span class="pre">aws_access_key_id</span></code></dt>
+<dd>AWS access key ID.</dd>
+<dt><code class="docutils literal"><span class="pre">aws_secret_access_key</span></code></dt>
+<dd>AWS access key secret.</dd>
+<dt><code class="docutils literal"><span class="pre">aws_region</span></code></dt>
+<dd>AWS region to use. Defaults to <code class="docutils literal"><span class="pre">us-east-1</span></code>.</dd>
+<dt><code class="docutils literal"><span class="pre">dallinger_email_address</span></code></dt>
+<dd>A Gmail address for use by Dallinger to send status emails.</dd>
+<dt><code class="docutils literal"><span class="pre">dallinger_email_password</span></code></dt>
+<dd>Password for the aforementioned Gmail address.</dd>
+<dt><code class="docutils literal"><span class="pre">heroku_team</span></code></dt>
+<dd>The name of the Heroku team to which all applications will be assigned.
+This is useful for centralized billing. Note, however, that it will prevent
+you from using free-tier dynos.</dd>
+<dt><code class="docutils literal"><span class="pre">whimsical</span></code></dt>
+<dd>What&#8217;s life without whimsy?</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="command_line_utility.html" title="previous chapter">Command-Line Utility</a></li>
+      <li>Next: <a href="python_module.html" title="next chapter">Python module</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

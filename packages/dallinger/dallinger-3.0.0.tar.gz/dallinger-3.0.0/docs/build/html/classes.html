@@ -1,0 +1,1344 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Database API &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Experiment Class" href="the_experiment_class.html" />
+    <link rel="prev" title="Required Experimental Files" href="required_experimental_files.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="database-api">
+<h1>Database API<a class="headerlink" href="#database-api" title="Permalink to this headline">¶</a></h1>
+<p id="classes">The classes involved in a Dallinger experiment are:
+<a class="reference internal" href="#dallinger.models.Network" title="dallinger.models.Network"><code class="xref py py-class docutils literal"><span class="pre">Network</span></code></a>, <a class="reference internal" href="#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>,
+<a class="reference internal" href="#dallinger.models.Vector" title="dallinger.models.Vector"><code class="xref py py-class docutils literal"><span class="pre">Vector</span></code></a>, <a class="reference internal" href="#dallinger.models.Info" title="dallinger.models.Info"><code class="xref py py-class docutils literal"><span class="pre">Info</span></code></a>,
+<a class="reference internal" href="#dallinger.models.Transmission" title="dallinger.models.Transmission"><code class="xref py py-class docutils literal"><span class="pre">Transmission</span></code></a>,
+<a class="reference internal" href="#dallinger.models.Transformation" title="dallinger.models.Transformation"><code class="xref py py-class docutils literal"><span class="pre">Transformation</span></code></a>,
+<a class="reference internal" href="#dallinger.models.Participant" title="dallinger.models.Participant"><code class="xref py py-class docutils literal"><span class="pre">Participant</span></code></a>, and
+<a class="reference internal" href="#dallinger.models.Question" title="dallinger.models.Question"><code class="xref py py-class docutils literal"><span class="pre">Question</span></code></a>. The code for all these classes can
+be seen in <code class="docutils literal"><span class="pre">models.py</span></code>. Each class has a corresponding table in the
+database, with each instance stored as a row in the table. Accordingly,
+each class is defined, in part, by the columns that constitute the table
+it is stored in. In addition, the classes have relationships to other
+objects and a number of functions.</p>
+<p>The classes have relationships to each other as shown in the diagram
+below. Be careful to note which way the arrows point. A <a class="reference internal" href="#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a> is a
+point in a <a class="reference internal" href="#dallinger.models.Network" title="dallinger.models.Network"><code class="xref py py-class docutils literal"><span class="pre">Network</span></code></a> that might be associated with a <a class="reference internal" href="#dallinger.models.Participant" title="dallinger.models.Participant"><code class="xref py py-class docutils literal"><span class="pre">Participant</span></code></a>.
+A <a class="reference internal" href="#dallinger.models.Vector" title="dallinger.models.Vector"><code class="xref py py-class docutils literal"><span class="pre">Vector</span></code></a> is a directional connection between a <a class="reference internal" href="#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a> and another
+<a class="reference internal" href="#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>. An <a class="reference internal" href="#dallinger.models.Info" title="dallinger.models.Info"><code class="xref py py-class docutils literal"><span class="pre">Info</span></code></a> is information created by a <a class="reference internal" href="#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>. A
+<a class="reference internal" href="#dallinger.models.Transmission" title="dallinger.models.Transmission"><code class="xref py py-class docutils literal"><span class="pre">Transmission</span></code></a> is an instance of an <a class="reference internal" href="#dallinger.models.Info" title="dallinger.models.Info"><code class="xref py py-class docutils literal"><span class="pre">Info</span></code></a> being sent along a
+<a class="reference internal" href="#dallinger.models.Vector" title="dallinger.models.Vector"><code class="xref py py-class docutils literal"><span class="pre">Vector</span></code></a>. A <a class="reference internal" href="#dallinger.models.Transformation" title="dallinger.models.Transformation"><code class="xref py py-class docutils literal"><span class="pre">Transformation</span></code></a> is a relationship between an <a class="reference internal" href="#dallinger.models.Info" title="dallinger.models.Info"><code class="xref py py-class docutils literal"><span class="pre">Info</span></code></a>
+and another <a class="reference internal" href="#dallinger.models.Info" title="dallinger.models.Info"><code class="xref py py-class docutils literal"><span class="pre">Info</span></code></a>. A <a class="reference internal" href="#dallinger.models.Question" title="dallinger.models.Question"><code class="xref py py-class docutils literal"><span class="pre">Question</span></code></a> is a survey response created by a
+<a class="reference internal" href="#dallinger.models.Participant" title="dallinger.models.Participant"><code class="xref py py-class docutils literal"><span class="pre">Participant</span></code></a>.</p>
+<div class="figure">
+<img alt="" src="_images/class_chart.jpg" />
+</div>
+<div class="section" id="sharedmixin">
+<h2>SharedMixin<a class="headerlink" href="#sharedmixin" title="Permalink to this headline">¶</a></h2>
+<p>All Dallinger classes inherit from a <code class="docutils literal"><span class="pre">SharedMixin</span></code> which provides multiple
+columns that are common across tables:</p>
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.id">
+<code class="descclassname">SharedMixin.</code><code class="descname">id</code><a class="headerlink" href="#dallinger.models.SharedMixin.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>a unique number for every entry. 1, 2, 3 and so on...</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.creation_time">
+<code class="descclassname">SharedMixin.</code><code class="descname">creation_time</code><a class="headerlink" href="#dallinger.models.SharedMixin.creation_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>the time at which the Network was created.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.property1">
+<code class="descclassname">SharedMixin.</code><code class="descname">property1</code><a class="headerlink" href="#dallinger.models.SharedMixin.property1" title="Permalink to this definition">¶</a></dt>
+<dd><p>a generic column that can be used to store experiment-specific details in
+String form.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.property2">
+<code class="descclassname">SharedMixin.</code><code class="descname">property2</code><a class="headerlink" href="#dallinger.models.SharedMixin.property2" title="Permalink to this definition">¶</a></dt>
+<dd><p>a generic column that can be used to store experiment-specific details in
+String form.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.property3">
+<code class="descclassname">SharedMixin.</code><code class="descname">property3</code><a class="headerlink" href="#dallinger.models.SharedMixin.property3" title="Permalink to this definition">¶</a></dt>
+<dd><p>a generic column that can be used to store experiment-specific details in
+String form.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.property4">
+<code class="descclassname">SharedMixin.</code><code class="descname">property4</code><a class="headerlink" href="#dallinger.models.SharedMixin.property4" title="Permalink to this definition">¶</a></dt>
+<dd><p>a generic column that can be used to store experiment-specific details in
+String form.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.property5">
+<code class="descclassname">SharedMixin.</code><code class="descname">property5</code><a class="headerlink" href="#dallinger.models.SharedMixin.property5" title="Permalink to this definition">¶</a></dt>
+<dd><p>a generic column that can be used to store experiment-specific details in
+String form.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.failed">
+<code class="descclassname">SharedMixin.</code><code class="descname">failed</code><a class="headerlink" href="#dallinger.models.SharedMixin.failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>boolean indicating whether the Network has failed which
+prompts Dallinger to ignore it unless specified otherwise. Objects are
+usually failed to indicate something has gone wrong.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.SharedMixin.time_of_death">
+<code class="descclassname">SharedMixin.</code><code class="descname">time_of_death</code><a class="headerlink" href="#dallinger.models.SharedMixin.time_of_death" title="Permalink to this definition">¶</a></dt>
+<dd><p>the time at which failing occurred</p>
+</dd></dl>
+
+</div>
+<div class="section" id="network">
+<h2>Network<a class="headerlink" href="#network" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#dallinger.models.Network" title="dallinger.models.Network"><code class="xref py py-class docutils literal"><span class="pre">Network</span></code></a> object can be imagined as a set of other objects with
+some functions that perform operations over those objects. The objects
+that <a class="reference internal" href="#dallinger.models.Network" title="dallinger.models.Network"><code class="xref py py-class docutils literal"><span class="pre">Network</span></code></a>&#8216;s have direct access to are all the <a class="reference internal" href="#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>&#8216;s in the
+network, the <a class="reference internal" href="#dallinger.models.Vector" title="dallinger.models.Vector"><code class="xref py py-class docutils literal"><span class="pre">Vector</span></code></a>&#8216;s between those Nodes, Infos created by those
+Nodes, Transmissions sent along the Vectors by those Nodes and
+Transformations of those Infos. Participants and Questions do not exist
+within Networks. An experiment may involve multiple Networks,
+Transmissions can only occur within networks, not between them.</p>
+<dl class="class">
+<dt id="dallinger.models.Network">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Network</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains and manages a set of Nodes and Vectors etc.</p>
+</dd></dl>
+
+<div class="section" id="columns">
+<h3>Columns<a class="headerlink" href="#columns" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Network.type">
+<code class="descclassname">Network.</code><code class="descname">type</code><a class="headerlink" href="#dallinger.models.Network.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>A String giving the name of the class. Defaults to
+&#8220;network&#8221;. This allows subclassing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Network.max_size">
+<code class="descclassname">Network.</code><code class="descname">max_size</code><a class="headerlink" href="#dallinger.models.Network.max_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>How big the network can get, this number is used by the full()
+method to decide whether the network is full</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Network.full">
+<code class="descclassname">Network.</code><code class="descname">full</code><a class="headerlink" href="#dallinger.models.Network.full" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the network is currently full</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Network.role">
+<code class="descclassname">Network.</code><code class="descname">role</code><a class="headerlink" href="#dallinger.models.Network.role" title="Permalink to this definition">¶</a></dt>
+<dd><p>The role of the network. By default dallinger initializes all
+networks as either &#8220;practice&#8221; or &#8220;experiment&#8221;</p>
+</dd></dl>
+
+</div>
+<div class="section" id="relationships">
+<h3>Relationships<a class="headerlink" href="#relationships" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Network.all_nodes">
+<code class="descclassname">dallinger.models.Network.</code><code class="descname">all_nodes</code><a class="headerlink" href="#dallinger.models.Network.all_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the Nodes in the network.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Network.all_vectors">
+<code class="descclassname">dallinger.models.Network.</code><code class="descname">all_vectors</code><a class="headerlink" href="#dallinger.models.Network.all_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the vectors in the network.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Network.all_infos">
+<code class="descclassname">dallinger.models.Network.</code><code class="descname">all_infos</code><a class="headerlink" href="#dallinger.models.Network.all_infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the infos in the network.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Network.networks_transmissions">
+<code class="descclassname">dallinger.models.Network.</code><code class="descname">networks_transmissions</code><a class="headerlink" href="#dallinger.models.Network.networks_transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the transmissions int he network.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Network.networks_transformations">
+<code class="descclassname">dallinger.models.Network.</code><code class="descname">networks_transformations</code><a class="headerlink" href="#dallinger.models.Network.networks_transformations" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the transformations in the network.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Network.__repr__">
+<code class="descclassname">Network.</code><code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The string representation of a network.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.__json__">
+<code class="descclassname">Network.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return json description of a participant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.calculate_full">
+<code class="descclassname">Network.</code><code class="descname">calculate_full</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.calculate_full"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.calculate_full" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set whether the network is full.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.fail">
+<code class="descclassname">Network.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail an entire network.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.infos">
+<code class="descclassname">Network.</code><code class="descname">infos</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.infos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get infos in the network.</p>
+<p>type specifies the type of info (defaults to Info). failed { False,
+True, &#8220;all&#8221; } specifies the failed state of the infos. To get infos
+from a specific node, see the infos() method in class
+<a class="reference internal" href="#dallinger.models.Node" title="dallinger.models.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.latest_transmission_recipient">
+<code class="descclassname">Network.</code><code class="descname">latest_transmission_recipient</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.latest_transmission_recipient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.latest_transmission_recipient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the node that most recently received a transmission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.nodes">
+<code class="descclassname">Network.</code><code class="descname">nodes</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em>, <em>participant_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get nodes in the network.</p>
+<p>type specifies the type of Node. Failed can be &#8220;all&#8221;, False
+(default) or True. If a participant_id is passed only
+nodes with that participant_id will be returned.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.print_verbose">
+<code class="descclassname">Network.</code><code class="descname">print_verbose</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.print_verbose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.print_verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a verbose representation of a network.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.size">
+<code class="descclassname">Network.</code><code class="descname">size</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>How many nodes in a network.</p>
+<p>type specifies the class of node, failed
+can be True/False/all.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.transformations">
+<code class="descclassname">Network.</code><code class="descname">transformations</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.transformations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.transformations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transformations in the network.</p>
+<p>type specifies the type of transformation (default = Transformation).
+failed = { False, True, &#8220;all&#8221; }</p>
+<p>To get transformations from a specific node,
+see Node.transformations().</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.transmissions">
+<code class="descclassname">Network.</code><code class="descname">transmissions</code><span class="sig-paren">(</span><em>status='all'</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.transmissions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transmissions in the network.</p>
+<p>status { &#8220;all&#8221;, &#8220;received&#8221;, &#8220;pending&#8221; }
+failed { False, True, &#8220;all&#8221; }
+To get transmissions from a specific vector, see the
+transmissions() method in class Vector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Network.vectors">
+<code class="descclassname">Network.</code><code class="descname">vectors</code><span class="sig-paren">(</span><em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Network.vectors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Network.vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get vectors in the network.</p>
+<p>failed = { False, True, &#8220;all&#8221; }
+To get the vectors to/from to a specific node, see Node.vectors().</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="node">
+<h2>Node<a class="headerlink" href="#node" title="Permalink to this headline">¶</a></h2>
+<p>Each Node represents a single point in a single network. A Node must be
+within a Network and may also be associated with a Participant.</p>
+<dl class="class">
+<dt id="dallinger.models.Node">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>network</em>, <em>participant=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>A point in a network.</p>
+</dd></dl>
+
+<div class="section" id="id1">
+<h3>Columns<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Node.type">
+<code class="descclassname">Node.</code><code class="descname">type</code><a class="headerlink" href="#dallinger.models.Node.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>A String giving the name of the class. Defaults to
+<code class="docutils literal"><span class="pre">node</span></code>. This allows subclassing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.network_id">
+<code class="descclassname">Node.</code><code class="descname">network_id</code><a class="headerlink" href="#dallinger.models.Node.network_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the network that this node is a part of</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.participant_id">
+<code class="descclassname">Node.</code><code class="descname">participant_id</code><a class="headerlink" href="#dallinger.models.Node.participant_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the participant whose node this is</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id2">
+<h3>Relationships<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Node.network">
+<code class="descclassname">Node.</code><code class="descname">network</code><a class="headerlink" href="#dallinger.models.Node.network" title="Permalink to this definition">¶</a></dt>
+<dd><p>the network the node is in</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.participant">
+<code class="descclassname">Node.</code><code class="descname">participant</code><a class="headerlink" href="#dallinger.models.Node.participant" title="Permalink to this definition">¶</a></dt>
+<dd><p>the participant the node is associated with</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.all_outgoing_vectors">
+<code class="descclassname">dallinger.models.Node.</code><code class="descname">all_outgoing_vectors</code><a class="headerlink" href="#dallinger.models.Node.all_outgoing_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the vectors going out from this Node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.all_incoming_vectors">
+<code class="descclassname">dallinger.models.Node.</code><code class="descname">all_incoming_vectors</code><a class="headerlink" href="#dallinger.models.Node.all_incoming_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the vectors coming in to this Node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.all_infos">
+<code class="descclassname">dallinger.models.Node.</code><code class="descname">all_infos</code><a class="headerlink" href="#dallinger.models.Node.all_infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Infos created by this Node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.all_outgoing_transmissions">
+<code class="descclassname">dallinger.models.Node.</code><code class="descname">all_outgoing_transmissions</code><a class="headerlink" href="#dallinger.models.Node.all_outgoing_transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Transmissions sent from this Node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.all_incoming_transmissions">
+<code class="descclassname">dallinger.models.Node.</code><code class="descname">all_incoming_transmissions</code><a class="headerlink" href="#dallinger.models.Node.all_incoming_transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Transmissions sent to this Node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Node.transformations_here">
+<code class="descclassname">dallinger.models.Node.</code><code class="descname">transformations_here</code><a class="headerlink" href="#dallinger.models.Node.transformations_here" title="Permalink to this definition">¶</a></dt>
+<dd><p>All transformations that took place at this Node.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id3">
+<h3>Methods<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Node.__repr__">
+<code class="descclassname">Node.</code><code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The string representation of a node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.__json__">
+<code class="descclassname">Node.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The json of a node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node._to_whom">
+<code class="descclassname">Node.</code><code class="descname">_to_whom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node._to_whom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node._to_whom" title="Permalink to this definition">¶</a></dt>
+<dd><p>To whom to transmit if to_whom is not specified.</p>
+<p>Return the default value of <code class="docutils literal"><span class="pre">to_whom</span></code> for
+<a class="reference internal" href="#dallinger.models.Node.transmit" title="dallinger.models.Node.transmit"><code class="xref py py-func docutils literal"><span class="pre">transmit()</span></code></a>. Should not return None or a list
+containing None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node._what">
+<code class="descclassname">Node.</code><code class="descname">_what</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node._what"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node._what" title="Permalink to this definition">¶</a></dt>
+<dd><p>What to transmit if what is not specified.</p>
+<p>Return the default value of <code class="docutils literal"><span class="pre">what</span></code> for
+<a class="reference internal" href="#dallinger.models.Node.transmit" title="dallinger.models.Node.transmit"><code class="xref py py-func docutils literal"><span class="pre">transmit()</span></code></a>. Should not return None or a list
+containing None.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.connect">
+<code class="descclassname">Node.</code><code class="descname">connect</code><span class="sig-paren">(</span><em>whom</em>, <em>direction='to'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a vector from self to/from whom.</p>
+<p>Return a list of newly created vector between the node and whom.
+<code class="docutils literal"><span class="pre">whom</span></code> can be a specific node or a (nested) list of nodes. Nodes can
+only connect with nodes in the same network. In addition nodes cannot
+connect with themselves or with Sources. <code class="docutils literal"><span class="pre">direction</span></code> specifies the
+direction of the connection it can be &#8220;to&#8221; (node -&gt; whom), &#8220;from&#8221; (whom
+-&gt; node) or both (node &lt;-&gt; whom). The default is &#8220;to&#8221;.</p>
+<p>Whom may be a (nested) list of nodes.</p>
+<dl class="docutils">
+<dt>Will raise an error if:</dt>
+<dd><ol class="first last arabic simple">
+<li>whom is not a node or list of nodes</li>
+<li>whom is/contains a source if direction is to or both</li>
+<li>whom is/contains self</li>
+<li>whom is/contains a node in a different network</li>
+</ol>
+</dd>
+</dl>
+<p>If self is already connected to/from whom a Warning
+is raised and nothing happens.</p>
+<p>This method returns a list of the vectors created
+(even if there is only one).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.fail">
+<code class="descclassname">Node.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail a node, setting its status to &#8220;failed&#8221;.</p>
+<p>Also fails all vectors that connect to or from the node.
+You cannot fail a node that has already failed, but you
+can fail a dead node.</p>
+<p>Set node.failed to True and <code class="xref py py-attr docutils literal"><span class="pre">time_of_death</span></code>
+to now. Instruct all not-failed vectors connected to this node, infos
+made by this node, transmissions to or from this node and
+transformations made by this node to fail.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.is_connected">
+<code class="descclassname">Node.</code><code class="descname">is_connected</code><span class="sig-paren">(</span><em>whom</em>, <em>direction='to'</em>, <em>failed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.is_connected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.is_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether this node is connected [to/from] whom.</p>
+<p>whom can be a list of nodes or a single node.
+direction can be &#8220;to&#8221; (default), &#8220;from&#8221;, &#8220;both&#8221; or &#8220;either&#8221;.</p>
+<p>If whom is a single node this method returns a boolean,
+otherwise it returns a list of booleans</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.infos">
+<code class="descclassname">Node.</code><code class="descname">infos</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.infos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get infos that originate from this node.</p>
+<p>Type must be a subclass of <a class="reference internal" href="#dallinger.models.Info" title="dallinger.models.Info"><code class="xref py py-class docutils literal"><span class="pre">Info</span></code></a>, the default is
+<code class="docutils literal"><span class="pre">Info</span></code>. Failed can be True, False or &#8220;all&#8221;.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.mutate">
+<code class="descclassname">Node.</code><code class="descname">mutate</code><span class="sig-paren">(</span><em>info_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.mutate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.mutate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replicate an info + mutation.</p>
+<p>To mutate an info, that info must have a method called
+<code class="docutils literal"><span class="pre">_mutated_contents</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.neighbors">
+<code class="descclassname">Node.</code><code class="descname">neighbors</code><span class="sig-paren">(</span><em>type=None</em>, <em>direction='to'</em>, <em>failed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.neighbors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a node&#8217;s neighbors - nodes that are directly connected to it.</p>
+<p>Type specifies the class of neighbour and must be a subclass of
+Node (default is Node).
+Connection is the direction of the connections and can be &#8220;to&#8221;
+(default), &#8220;from&#8221;, &#8220;either&#8221;, or &#8220;both&#8221;.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.receive">
+<code class="descclassname">Node.</code><code class="descname">receive</code><span class="sig-paren">(</span><em>what=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.receive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.receive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receive some transmissions.</p>
+<p>Received transmissions are marked as received, then their infos are
+passed to update().</p>
+<p>&#8220;what&#8221; can be:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>None (the default) in which case all pending transmissions are
+received.</li>
+<li>a specific transmission.</li>
+</ol>
+</div></blockquote>
+<p>Will raise an error if the node is told to receive a transmission it has
+not been sent.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.received_infos">
+<code class="descclassname">Node.</code><code class="descname">received_infos</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.received_infos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.received_infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get infos that have been sent to this node.</p>
+<p>Type must be a subclass of info, the default is Info.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.replicate">
+<code class="descclassname">Node.</code><code class="descname">replicate</code><span class="sig-paren">(</span><em>info_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.replicate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.replicate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replicate an info.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.transformations">
+<code class="descclassname">Node.</code><code class="descname">transformations</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.transformations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.transformations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Transformations done by this Node.</p>
+<p>type must be a type of Transformation (defaults to Transformation)
+Failed can be True, False or &#8220;all&#8221;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.transmissions">
+<code class="descclassname">Node.</code><code class="descname">transmissions</code><span class="sig-paren">(</span><em>direction='outgoing'</em>, <em>status='all'</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.transmissions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transmissions sent to or from this node.</p>
+<p>Direction can be &#8220;all&#8221;, &#8220;incoming&#8221; or &#8220;outgoing&#8221; (default).
+Status can be &#8220;all&#8221; (default), &#8220;pending&#8221;, or &#8220;received&#8221;.
+failed can be True, False or &#8220;all&#8221;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.transmit">
+<code class="descclassname">Node.</code><code class="descname">transmit</code><span class="sig-paren">(</span><em>what=None</em>, <em>to_whom=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.transmit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.transmit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transmit one or more infos from one node to another.</p>
+<dl class="docutils">
+<dt>&#8220;what&#8221; dictates which infos are sent, it can be:</dt>
+<dd><ol class="first last arabic simple">
+<li>None (in which case the node&#8217;s _what method is called).</li>
+<li>an Info (in which case the node transmits the info)</li>
+<li>a subclass of Info (in which case the node transmits all
+its infos of that type)</li>
+<li>a list of any combination of the above</li>
+</ol>
+</dd>
+<dt>&#8220;to_whom&#8221; dictates which node(s) the infos are sent to, it can be:</dt>
+<dd><ol class="first last arabic simple">
+<li>None (in which case the node&#8217;s _to_whom method is called)</li>
+<li>a Node (in which case the node transmits to that node)</li>
+<li>a subclass of Node (in which case the node transmits to all
+nodes of that type it is connected to)</li>
+<li>a list of any combination of the above</li>
+</ol>
+</dd>
+<dt>Will additionally raise an error if:</dt>
+<dd><ol class="first last arabic simple">
+<li>_what() or _to_whom() returns None or a list containing None.</li>
+<li>what is/contains an info that does not originate from the
+transmitting node</li>
+<li>to_whom is/contains a node that the transmitting node does not
+have a not-failed connection with.</li>
+</ol>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.update">
+<code class="descclassname">Node.</code><code class="descname">update</code><span class="sig-paren">(</span><em>infos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process received infos.</p>
+<p>Update controls the default behavior of a node when it receives infos.
+By default it does nothing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Node.vectors">
+<code class="descclassname">Node.</code><code class="descname">vectors</code><span class="sig-paren">(</span><em>direction='all'</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Node.vectors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Node.vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get vectors that connect at this node.</p>
+<p>Direction can be &#8220;incoming&#8221;, &#8220;outgoing&#8221; or &#8220;all&#8221; (default).
+Failed can be True, False or all</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="vector">
+<h2>Vector<a class="headerlink" href="#vector" title="Permalink to this headline">¶</a></h2>
+<p>A vector is a directional link between two nodes. Nodes connected by a
+vector can send Transmissions to each other, but because Vectors have a
+direction, two Vectors are needed for bi-directional Transmissions.</p>
+<dl class="class">
+<dt id="dallinger.models.Vector">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Vector</code><span class="sig-paren">(</span><em>origin</em>, <em>destination</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>A directed path that links two Nodes.</p>
+<p>Nodes can only send each other information if they are linked by a Vector.</p>
+</dd></dl>
+
+<div class="section" id="id4">
+<h3>Columns<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Vector.origin_id">
+<code class="descclassname">Vector.</code><code class="descname">origin_id</code><a class="headerlink" href="#dallinger.models.Vector.origin_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the Node at which the vector originates</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Vector.destination_id">
+<code class="descclassname">Vector.</code><code class="descname">destination_id</code><a class="headerlink" href="#dallinger.models.Vector.destination_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the Node at which the vector terminates.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Vector.network_id">
+<code class="descclassname">Vector.</code><code class="descname">network_id</code><a class="headerlink" href="#dallinger.models.Vector.network_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the network the vector is in.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id5">
+<h3>Relationships<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Vector.origin">
+<code class="descclassname">Vector.</code><code class="descname">origin</code><a class="headerlink" href="#dallinger.models.Vector.origin" title="Permalink to this definition">¶</a></dt>
+<dd><p>the Node at which the vector originates.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Vector.destination">
+<code class="descclassname">Vector.</code><code class="descname">destination</code><a class="headerlink" href="#dallinger.models.Vector.destination" title="Permalink to this definition">¶</a></dt>
+<dd><p>the Node at which the vector terminates.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Vector.network">
+<code class="descclassname">Vector.</code><code class="descname">network</code><a class="headerlink" href="#dallinger.models.Vector.network" title="Permalink to this definition">¶</a></dt>
+<dd><p>the network the vector is in.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Vector.all_transmissions">
+<code class="descclassname">dallinger.models.Vector.</code><code class="descname">all_transmissions</code><a class="headerlink" href="#dallinger.models.Vector.all_transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Transmissions sent along the Vector.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id6">
+<h3>Methods<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Vector.__repr__">
+<code class="descclassname">Vector.</code><code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Vector.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Vector.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The string representation of a vector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Vector.__json__">
+<code class="descclassname">Vector.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Vector.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Vector.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The json representation of a vector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Vector.fail">
+<code class="descclassname">Vector.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Vector.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Vector.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail a vector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Vector.transmissions">
+<code class="descclassname">Vector.</code><code class="descname">transmissions</code><span class="sig-paren">(</span><em>status='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Vector.transmissions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Vector.transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transmissions sent along this Vector.</p>
+<p>Status can be &#8220;all&#8221; (the default), &#8220;pending&#8221;, or &#8220;received&#8221;.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="info">
+<h2>Info<a class="headerlink" href="#info" title="Permalink to this headline">¶</a></h2>
+<p>An Info is a piece of information created by a Node. It can be sent
+along Vectors as part of a Transmission.</p>
+<dl class="class">
+<dt id="dallinger.models.Info">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Info</code><span class="sig-paren">(</span><em>origin</em>, <em>contents=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Info" title="Permalink to this definition">¶</a></dt>
+<dd><p>A unit of information.</p>
+</dd></dl>
+
+<div class="section" id="id7">
+<h3>Columns<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Info.id">
+<code class="descclassname">Info.</code><code class="descname">id</code><a class="headerlink" href="#dallinger.models.Info.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.creation_time">
+<code class="descclassname">Info.</code><code class="descname">creation_time</code><a class="headerlink" href="#dallinger.models.Info.creation_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.property1">
+<code class="descclassname">Info.</code><code class="descname">property1</code><a class="headerlink" href="#dallinger.models.Info.property1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.property2">
+<code class="descclassname">Info.</code><code class="descname">property2</code><a class="headerlink" href="#dallinger.models.Info.property2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.property3">
+<code class="descclassname">Info.</code><code class="descname">property3</code><a class="headerlink" href="#dallinger.models.Info.property3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.property4">
+<code class="descclassname">Info.</code><code class="descname">property4</code><a class="headerlink" href="#dallinger.models.Info.property4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.property5">
+<code class="descclassname">Info.</code><code class="descname">property5</code><a class="headerlink" href="#dallinger.models.Info.property5" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.failed">
+<code class="descclassname">Info.</code><code class="descname">failed</code><a class="headerlink" href="#dallinger.models.Info.failed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.time_of_death">
+<code class="descclassname">Info.</code><code class="descname">time_of_death</code><a class="headerlink" href="#dallinger.models.Info.time_of_death" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.type">
+<code class="descclassname">Info.</code><code class="descname">type</code><a class="headerlink" href="#dallinger.models.Info.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>a String giving the name of the class. Defaults to &#8220;info&#8221;.
+This allows subclassing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.origin_id">
+<code class="descclassname">Info.</code><code class="descname">origin_id</code><a class="headerlink" href="#dallinger.models.Info.origin_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the Node that created the info</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.network_id">
+<code class="descclassname">Info.</code><code class="descname">network_id</code><a class="headerlink" href="#dallinger.models.Info.network_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the network the info is in</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.contents">
+<code class="descclassname">Info.</code><code class="descname">contents</code><a class="headerlink" href="#dallinger.models.Info.contents" title="Permalink to this definition">¶</a></dt>
+<dd><p>the contents of the info. Must be stored as a String.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id8">
+<h3>Relationships<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Info.origin">
+<code class="descclassname">Info.</code><code class="descname">origin</code><a class="headerlink" href="#dallinger.models.Info.origin" title="Permalink to this definition">¶</a></dt>
+<dd><p>the Node that created the info.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.network">
+<code class="descclassname">Info.</code><code class="descname">network</code><a class="headerlink" href="#dallinger.models.Info.network" title="Permalink to this definition">¶</a></dt>
+<dd><p>the network the info is in</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.all_transmissions">
+<code class="descclassname">dallinger.models.Info.</code><code class="descname">all_transmissions</code><a class="headerlink" href="#dallinger.models.Info.all_transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Transmissions of this Info.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.transformation_applied_to">
+<code class="descclassname">dallinger.models.Info.</code><code class="descname">transformation_applied_to</code><a class="headerlink" href="#dallinger.models.Info.transformation_applied_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Transformations of which this info is the <code class="docutils literal"><span class="pre">info_in</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Info.transformation_whence">
+<code class="descclassname">dallinger.models.Info.</code><code class="descname">transformation_whence</code><a class="headerlink" href="#dallinger.models.Info.transformation_whence" title="Permalink to this definition">¶</a></dt>
+<dd><p>All Transformations of which this info is the <code class="docutils literal"><span class="pre">info_out</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="id9">
+<h3>Methods<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Info.__repr__">
+<code class="descclassname">Info.</code><code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Info.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Info.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The string representation of an info.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Info.__json__">
+<code class="descclassname">Info.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Info.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Info.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The json representation of an info.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Info._mutated_contents">
+<code class="descclassname">Info.</code><code class="descname">_mutated_contents</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Info._mutated_contents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Info._mutated_contents" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mutated contents of an info.</p>
+<p>When an info is asked to mutate, this method will be executed
+in order to determine the contents of the new info created.</p>
+<p>The base class function raises an error and so must be overwritten
+to be used.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Info.fail">
+<code class="descclassname">Info.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Info.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Info.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail an info.</p>
+<p>Set info.failed to True and <a class="reference internal" href="#dallinger.models.Info.time_of_death" title="dallinger.models.Info.time_of_death"><code class="xref py py-attr docutils literal"><span class="pre">time_of_death</span></code></a>
+to now. Instruct all transmissions and transformations involving this
+info to fail.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Info.transformations">
+<code class="descclassname">Info.</code><code class="descname">transformations</code><span class="sig-paren">(</span><em>relationship='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Info.transformations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Info.transformations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all the transformations of this info.</p>
+<p>Return a list of transformations involving this info. <code class="docutils literal"><span class="pre">relationship</span></code>
+can be &#8220;parent&#8221; (in which case only transformations where the info is
+the <code class="docutils literal"><span class="pre">info_in</span></code> are returned), &#8220;child&#8221; (in which case only
+transformations where the info is the <code class="docutils literal"><span class="pre">info_out</span></code> are returned) or
+<code class="docutils literal"><span class="pre">all</span></code> (in which case any transformations where the info is the
+<code class="docutils literal"><span class="pre">info_out</span></code> or the <code class="docutils literal"><span class="pre">info_in</span></code> are returned). The default is <code class="docutils literal"><span class="pre">all</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Info.transmissions">
+<code class="descclassname">Info.</code><code class="descname">transmissions</code><span class="sig-paren">(</span><em>status='all'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Info.transmissions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Info.transmissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all the transmissions of this info.</p>
+<p>status can be all/pending/received.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="transmission">
+<h2>Transmission<a class="headerlink" href="#transmission" title="Permalink to this headline">¶</a></h2>
+<p>A transmission represents an instance of an Info being sent along a
+Vector. Transmissions are not necessarily received when they are sent
+(like an email) and must also be received by the Node they are sent to.</p>
+<dl class="class">
+<dt id="dallinger.models.Transmission">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Transmission</code><span class="sig-paren">(</span><em>vector</em>, <em>info</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>An instance of an Info being sent along a Vector.</p>
+</dd></dl>
+
+<div class="section" id="id10">
+<h3>Columns<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.origin_id">
+<code class="descclassname">Transmission.</code><code class="descname">origin_id</code><a class="headerlink" href="#dallinger.models.Transmission.origin_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the Node that sent the transmission</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.destination_id">
+<code class="descclassname">Transmission.</code><code class="descname">destination_id</code><a class="headerlink" href="#dallinger.models.Transmission.destination_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the Node that the transmission was sent to</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.vector_id">
+<code class="descclassname">Transmission.</code><code class="descname">vector_id</code><a class="headerlink" href="#dallinger.models.Transmission.vector_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the vector the info was sent along</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.network_id">
+<code class="descclassname">Transmission.</code><code class="descname">network_id</code><a class="headerlink" href="#dallinger.models.Transmission.network_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the network the transmission is in</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.info_id">
+<code class="descclassname">Transmission.</code><code class="descname">info_id</code><a class="headerlink" href="#dallinger.models.Transmission.info_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the info that was transmitted</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.receive_time">
+<code class="descclassname">Transmission.</code><code class="descname">receive_time</code><a class="headerlink" href="#dallinger.models.Transmission.receive_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>the time at which the transmission was received</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.status">
+<code class="descclassname">Transmission.</code><code class="descname">status</code><a class="headerlink" href="#dallinger.models.Transmission.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>the status of the transmission, can be &#8220;pending&#8221;, which means the
+transmission has been sent, but not received; or &#8220;received&#8221;, which means
+the transmission has been sent and received</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id11">
+<h3>Relationships<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.origin">
+<code class="descclassname">Transmission.</code><code class="descname">origin</code><a class="headerlink" href="#dallinger.models.Transmission.origin" title="Permalink to this definition">¶</a></dt>
+<dd><p>the Node that sent the transmission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.destination">
+<code class="descclassname">Transmission.</code><code class="descname">destination</code><a class="headerlink" href="#dallinger.models.Transmission.destination" title="Permalink to this definition">¶</a></dt>
+<dd><p>the Node that the transmission was sent to.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.vector">
+<code class="descclassname">Transmission.</code><code class="descname">vector</code><a class="headerlink" href="#dallinger.models.Transmission.vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>the vector the info was sent along.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.network">
+<code class="descclassname">Transmission.</code><code class="descname">network</code><a class="headerlink" href="#dallinger.models.Transmission.network" title="Permalink to this definition">¶</a></dt>
+<dd><p>the network the transmission is in.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transmission.info">
+<code class="descclassname">Transmission.</code><code class="descname">info</code><a class="headerlink" href="#dallinger.models.Transmission.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>the info that was transmitted.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id12">
+<h3>Methods<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Transmission.__repr__">
+<code class="descclassname">Transmission.</code><code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transmission.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transmission.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The string representation of a transmission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Transmission.__json__">
+<code class="descclassname">Transmission.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transmission.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transmission.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The json representation of a transmissions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Transmission.fail">
+<code class="descclassname">Transmission.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transmission.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transmission.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail a transmission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Transmission.mark_received">
+<code class="descclassname">Transmission.</code><code class="descname">mark_received</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transmission.mark_received"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transmission.mark_received" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark a transmission as having been received.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="transformation">
+<h2>Transformation<a class="headerlink" href="#transformation" title="Permalink to this headline">¶</a></h2>
+<p>A Transformation is a relationship between two Infos. It is similar to
+how a Vector indicates a relationship between two Nodes, but whereas a
+Vector allows Nodes to Transmit to each other, Transformations don&#8217;t
+allow Infos to do anything new. Instead they are a form of book-keeping
+allowing you to keep track of relationships between various Infos.</p>
+<dl class="class">
+<dt id="dallinger.models.Transformation">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Transformation</code><span class="sig-paren">(</span><em>info_in</em>, <em>info_out</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>An instance of one info being transformed into another.</p>
+</dd></dl>
+
+<div class="section" id="id13">
+<h3>Columns<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.type">
+<code class="descclassname">Transformation.</code><code class="descname">type</code><a class="headerlink" href="#dallinger.models.Transformation.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>a String giving the name of the class. Defaults to
+&#8220;transformation&#8221;. This allows subclassing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.node_id">
+<code class="descclassname">Transformation.</code><code class="descname">node_id</code><a class="headerlink" href="#dallinger.models.Transformation.node_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the Node that did the transformation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.network_id">
+<code class="descclassname">Transformation.</code><code class="descname">network_id</code><a class="headerlink" href="#dallinger.models.Transformation.network_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the network the transformation is in.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.info_in_id">
+<code class="descclassname">Transformation.</code><code class="descname">info_in_id</code><a class="headerlink" href="#dallinger.models.Transformation.info_in_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the info that was transformed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.info_out_id">
+<code class="descclassname">Transformation.</code><code class="descname">info_out_id</code><a class="headerlink" href="#dallinger.models.Transformation.info_out_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the id of the info produced by the transformation.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id14">
+<h3>Relationships<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.node">
+<code class="descclassname">Transformation.</code><code class="descname">node</code><a class="headerlink" href="#dallinger.models.Transformation.node" title="Permalink to this definition">¶</a></dt>
+<dd><p>the Node that did the transformation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.network">
+<code class="descclassname">Transformation.</code><code class="descname">network</code><a class="headerlink" href="#dallinger.models.Transformation.network" title="Permalink to this definition">¶</a></dt>
+<dd><p>the network the transmission is in.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.info_in">
+<code class="descclassname">Transformation.</code><code class="descname">info_in</code><a class="headerlink" href="#dallinger.models.Transformation.info_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>the info that was transformed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Transformation.info_out">
+<code class="descclassname">Transformation.</code><code class="descname">info_out</code><a class="headerlink" href="#dallinger.models.Transformation.info_out" title="Permalink to this definition">¶</a></dt>
+<dd><p>the info produced by the transformation.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id15">
+<h3>Methods<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Transformation.__repr__">
+<code class="descclassname">Transformation.</code><code class="descname">__repr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transformation.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transformation.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The string representation of a transformation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Transformation.__json__">
+<code class="descclassname">Transformation.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transformation.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transformation.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The json representation of a transformation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Transformation.fail">
+<code class="descclassname">Transformation.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Transformation.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Transformation.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail a transformation.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="participant">
+<h2>Participant<a class="headerlink" href="#participant" title="Permalink to this headline">¶</a></h2>
+<p>The Participant object corresponds to a real world participant. Each
+person who takes part will have a corresponding entry in the Participant
+table. Participants can be associated with Nodes and Questions.</p>
+<dl class="class">
+<dt id="dallinger.models.Participant">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Participant</code><span class="sig-paren">(</span><em>worker_id</em>, <em>assignment_id</em>, <em>hit_id</em>, <em>mode</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Participant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Participant" title="Permalink to this definition">¶</a></dt>
+<dd><p>An ex silico participant.</p>
+</dd></dl>
+
+<div class="section" id="id16">
+<h3>Columns<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Participant.type">
+<code class="descclassname">Participant.</code><code class="descname">type</code><a class="headerlink" href="#dallinger.models.Participant.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>a String giving the name of the class. Defaults to
+&#8220;participant&#8221;. This allows subclassing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.worker_id">
+<code class="descclassname">Participant.</code><code class="descname">worker_id</code><a class="headerlink" href="#dallinger.models.Participant.worker_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>A String, the worker id of the participant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.assignment_id">
+<code class="descclassname">Participant.</code><code class="descname">assignment_id</code><a class="headerlink" href="#dallinger.models.Participant.assignment_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>A String, the assignment id of the participant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.unique_id">
+<code class="descclassname">Participant.</code><code class="descname">unique_id</code><a class="headerlink" href="#dallinger.models.Participant.unique_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>A String, a concatenation of <a class="reference internal" href="#dallinger.models.Participant.worker_id" title="dallinger.models.Participant.worker_id"><code class="xref py py-attr docutils literal"><span class="pre">worker_id</span></code></a>
+and <a class="reference internal" href="#dallinger.models.Participant.assignment_id" title="dallinger.models.Participant.assignment_id"><code class="xref py py-attr docutils literal"><span class="pre">assignment_id</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.hit_id">
+<code class="descclassname">Participant.</code><code class="descname">hit_id</code><a class="headerlink" href="#dallinger.models.Participant.hit_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>A String, the id of the hit the participant is working on</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.mode">
+<code class="descclassname">Participant.</code><code class="descname">mode</code><a class="headerlink" href="#dallinger.models.Participant.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>A String, the mode in which Dallinger is running</em> &#8211; live,
+sandbox or debug.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.end_time">
+<code class="descclassname">Participant.</code><code class="descname">end_time</code><a class="headerlink" href="#dallinger.models.Participant.end_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time at which the participant finished.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.base_pay">
+<code class="descclassname">Participant.</code><code class="descname">base_pay</code><a class="headerlink" href="#dallinger.models.Participant.base_pay" title="Permalink to this definition">¶</a></dt>
+<dd><p>The amount the participant was paid for finishing the
+experiment.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.bonus">
+<code class="descclassname">Participant.</code><code class="descname">bonus</code><a class="headerlink" href="#dallinger.models.Participant.bonus" title="Permalink to this definition">¶</a></dt>
+<dd><p>the amount the participant was paid as a bonus.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.status">
+<code class="descclassname">Participant.</code><code class="descname">status</code><a class="headerlink" href="#dallinger.models.Participant.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>String representing the current status of the participant, can be</em> &#8211;</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">working</span></code> - participant is working</li>
+<li><code class="docutils literal"><span class="pre">submitted</span></code> - participant has submitted their work</li>
+<li><code class="docutils literal"><span class="pre">approved</span></code> - their work has been approved and they have been paid</li>
+<li><code class="docutils literal"><span class="pre">rejected</span></code> - their work has been rejected</li>
+<li><code class="docutils literal"><span class="pre">returned</span></code> - they returned the hit before finishing</li>
+<li><code class="docutils literal"><span class="pre">abandoned</span></code> - they ran out of time</li>
+<li><code class="docutils literal"><span class="pre">did_not_attend</span></code> - the participant finished, but failed the
+attention check</li>
+<li><code class="docutils literal"><span class="pre">bad_data</span></code> - the participant finished, but their data was
+malformed</li>
+<li><code class="docutils literal"><span class="pre">missing_notification</span></code> - this indicates that Dallinger has
+inferred that a Mechanical Turk notification corresponding to this
+participant failed to arrive. This is an uncommon, but potentially
+serious issue.</li>
+</ul>
+</dd></dl>
+
+</div>
+<div class="section" id="id17">
+<h3>Relationships<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Participant.all_questions">
+<code class="descclassname">dallinger.models.Participant.</code><code class="descname">all_questions</code><a class="headerlink" href="#dallinger.models.Participant.all_questions" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the questions associated with this participant.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Participant.all_nodes">
+<code class="descclassname">dallinger.models.Participant.</code><code class="descname">all_nodes</code><a class="headerlink" href="#dallinger.models.Participant.all_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>All the Nodes associated with this participant.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id18">
+<h3>Methods<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Participant.__json__">
+<code class="descclassname">Participant.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Participant.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Participant.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return json description of a participant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Participant.fail">
+<code class="descclassname">Participant.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Participant.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Participant.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail a participant.</p>
+<p>Set <a class="reference internal" href="#dallinger.models.SharedMixin.failed" title="dallinger.models.SharedMixin.failed"><code class="xref py py-attr docutils literal"><span class="pre">failed</span></code></a> to <code class="docutils literal"><span class="pre">True</span></code> and
+<a class="reference internal" href="#dallinger.models.SharedMixin.time_of_death" title="dallinger.models.SharedMixin.time_of_death"><code class="xref py py-attr docutils literal"><span class="pre">time_of_death</span></code></a> to now. Instruct all
+not-failed nodes associated with the participant to fail.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Participant.infos">
+<code class="descclassname">Participant.</code><code class="descname">infos</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Participant.infos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Participant.infos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all infos created by the participants nodes.</p>
+<p>Return a list of infos produced by nodes associated with the
+participant. If specified, <code class="docutils literal"><span class="pre">type</span></code> filters by class. By default, failed
+infos are excluded, to include only failed nodes use <code class="docutils literal"><span class="pre">failed=True</span></code>,
+for all nodes use <code class="docutils literal"><span class="pre">failed=all</span></code>. Note that failed filters the infos,
+not the nodes - infos from all nodes (whether failed or not) can be
+returned.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Participant.nodes">
+<code class="descclassname">Participant.</code><code class="descname">nodes</code><span class="sig-paren">(</span><em>type=None</em>, <em>failed=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Participant.nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Participant.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get nodes associated with this participant.</p>
+<p>Return a list of nodes associated with the participant. If specified,
+<code class="docutils literal"><span class="pre">type</span></code> filters by class. By default failed nodes are excluded, to
+include only failed nodes use <code class="docutils literal"><span class="pre">failed=True</span></code>, for all nodes use
+<code class="docutils literal"><span class="pre">failed=all</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Participant.questions">
+<code class="descclassname">Participant.</code><code class="descname">questions</code><span class="sig-paren">(</span><em>type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Participant.questions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Participant.questions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get questions associated with this participant.</p>
+<p>Return a list of questions associated with the participant. If
+specified, <code class="docutils literal"><span class="pre">type</span></code> filters by class.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="question">
+<h2>Question<a class="headerlink" href="#question" title="Permalink to this headline">¶</a></h2>
+<p>A Question is a way to store information associated with a Participant
+as opposed to a Node (Infos are made by Nodes, not Participants).
+Questions are generally useful for storing responses debriefing
+questions etc.</p>
+<dl class="class">
+<dt id="dallinger.models.Question">
+<em class="property">class </em><code class="descclassname">dallinger.models.</code><code class="descname">Question</code><span class="sig-paren">(</span><em>participant</em>, <em>question</em>, <em>response</em>, <em>number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Question"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Question" title="Permalink to this definition">¶</a></dt>
+<dd><p>Responses of a participant to debriefing questions.</p>
+</dd></dl>
+
+<div class="section" id="id19">
+<h3>Columns<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Question.type">
+<code class="descclassname">Question.</code><code class="descname">type</code><a class="headerlink" href="#dallinger.models.Question.type" title="Permalink to this definition">¶</a></dt>
+<dd><p>a String giving the name of the class. Defaults to
+&#8220;question&#8221;. This allows subclassing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Question.participant_id">
+<code class="descclassname">Question.</code><code class="descname">participant_id</code><a class="headerlink" href="#dallinger.models.Question.participant_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the participant who made the response</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Question.number">
+<code class="descclassname">Question.</code><code class="descname">number</code><a class="headerlink" href="#dallinger.models.Question.number" title="Permalink to this definition">¶</a></dt>
+<dd><p>A number identifying the question. e.g., each participant might complete
+three questions numbered 1, 2, and 3.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Question.question">
+<code class="descclassname">Question.</code><code class="descname">question</code><a class="headerlink" href="#dallinger.models.Question.question" title="Permalink to this definition">¶</a></dt>
+<dd><p>the text of the question</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="dallinger.models.Question.response">
+<code class="descclassname">Question.</code><code class="descname">response</code><a class="headerlink" href="#dallinger.models.Question.response" title="Permalink to this definition">¶</a></dt>
+<dd><p>the participant&#8217;s response. Stored as a string.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id20">
+<h3>Relationships<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<dl class="attribute">
+<dt id="dallinger.models.Question.participant">
+<code class="descclassname">Question.</code><code class="descname">participant</code><a class="headerlink" href="#dallinger.models.Question.participant" title="Permalink to this definition">¶</a></dt>
+<dd><p>the participant who answered the question</p>
+</dd></dl>
+
+</div>
+<div class="section" id="id21">
+<h3>Methods<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<dl class="method">
+<dt id="dallinger.models.Question.__json__">
+<code class="descclassname">Question.</code><code class="descname">__json__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Question.__json__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Question.__json__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return json description of a question.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dallinger.models.Question.fail">
+<code class="descclassname">Question.</code><code class="descname">fail</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dallinger/models.html#Question.fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dallinger.models.Question.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail a question.</p>
+<p>Set <a class="reference internal" href="#dallinger.models.SharedMixin.failed" title="dallinger.models.SharedMixin.failed"><code class="xref py py-attr docutils literal"><span class="pre">failed</span></code></a> to True and
+<a class="reference internal" href="#dallinger.models.SharedMixin.time_of_death" title="dallinger.models.SharedMixin.time_of_death"><code class="xref py py-attr docutils literal"><span class="pre">time_of_death</span></code></a> to now.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="required_experimental_files.html" title="previous chapter">Required Experimental Files</a></li>
+      <li>Next: <a href="the_experiment_class.html" title="next chapter">The Experiment Class</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

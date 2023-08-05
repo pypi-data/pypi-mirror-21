@@ -1,0 +1,124 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Python module &#8212; Dallinger 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Registration on the OSF" href="registration_on_OSF.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" />
+ <script type="text/javascript">
+   (function (w,i,d,g,e,t,s) {w[d] = w[d]||[];t= i.createElement(g);
+     t.async=1;t.src=e;s=i.getElementsByTagName(g)[0];s.parentNode.insertBefore(t, s);
+   })(window, document, '_gscq','script','//widgets.getsitecontrol.com/58185/script.js');
+  </script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="python-module">
+<h1>Python module<a class="headerlink" href="#python-module" title="Permalink to this headline">¶</a></h1>
+<p>Dallinger experiments can be run through a high-level Python API.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dallinger</span>
+
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">dallinger</span><span class="o">.</span><span class="n">experiments</span><span class="o">.</span><span class="n">Bartlett1932</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">experiment</span><span class="o">.</span><span class="n">run</span><span class="p">({</span>
+    <span class="n">mode</span><span class="o">=</span><span class="n">live</span><span class="p">,</span>
+    <span class="n">base_payment</span><span class="o">=</span><span class="mf">1.00</span><span class="p">,</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+<p>All parameters in <code class="docutils literal"><span class="pre">config.txt</span></code> and <code class="docutils literal"><span class="pre">.dallingerconfig</span></code> can be specified
+in the configuration dictionary passed to the <code class="docutils literal"><span class="pre">run</span></code> function. The return
+value is an object that allows you to access all the Dallinger data tables
+in a variety of useful formats. Here are all the tables:</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>data.infos
+data.networks
+data.nodes
+data.notifications
+data.participants
+data.questions
+data.transformations
+data.transmissions
+data.vectors</dd>
+</dl>
+<p>For each of these tables, e.g. <code class="docutils literal"><span class="pre">networks</span></code>, you can access it in a variety of
+formats, including:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">csv</span>    <span class="c1"># Comma-separated value</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">dict</span>   <span class="c1"># Python dictionary</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">df</span>     <span class="c1"># pandas DataFrame</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">html</span>   <span class="c1"># HTML table</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">latex</span>  <span class="c1"># LaTeX table</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">list</span>   <span class="c1"># Python list</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">ods</span>    <span class="c1"># OpenDocument Spreadsheet</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">tsv</span>    <span class="c1"># Tab-separated values</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">xls</span>    <span class="c1"># Legacy Excel spreadsheet</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">xlsx</span>   <span class="c1"># Modern Excel spreadsheet</span>
+<span class="n">data</span><span class="o">.</span><span class="n">networks</span><span class="o">.</span><span class="n">yaml</span>   <span class="c1"># YAML</span>
+</pre></div>
+</div>
+<p>Note that, at the moment, only the Bartlett1932 demo can be run in this way.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="configuration.html" title="previous chapter">Configuration</a></li>
+      <li>Next: <a href="registration_on_OSF.html" title="next chapter">Registration on the OSF</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      
+      
+    </div>
+
+    
+    <a href="https://github.com/Dallinger/Dallinger" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="_static/corner.jpg" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
