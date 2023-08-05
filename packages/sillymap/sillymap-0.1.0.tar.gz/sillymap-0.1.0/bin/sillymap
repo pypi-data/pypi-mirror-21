@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+"""Sillymap is a silly mapper"""
+
+import sillymap
+from sillymap.index import index_main
+from sillymap.mapper import mapper_main
+import argparse
+
+def main(args):
+    pass
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparser = parser.add_subparsers(help="Choose which action to take")
+
+    index_parser = subparser.add_parser('index', help="This should index your input fasta")
+    index_parser.add_argument("reference")
+    index_parser.set_defaults(func=index_main)
+
+    map_parser = subparser.add_parser('map', help="This should map your sequences against an index")
+    map_parser.add_argument("reference")
+    map_parser.add_argument("reads")
+    map_parser.set_defaults(func=mapper_main)
+
+    args = parser.parse_args()
+    args.func(args)
