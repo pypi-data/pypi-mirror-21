@@ -1,0 +1,674 @@
+==============
+timezonefinder
+==============
+
+.. image:: https://img.shields.io/travis/MrMinimal64/timezonefinder.svg?branch=master
+    :target: https://travis-ci.org/MrMinimal64/timezonefinder
+
+.. image:: https://img.shields.io/pypi/wheel/timezonefinder.svg
+    :target: https://pypi.python.org/pypi/timezonefinder
+
+.. image:: https://img.shields.io/pypi/v/timezonefinder.svg
+    :target: https://pypi.python.org/pypi/timezonefinder
+
+
+This is a fast and lightweight python project for looking up the corresponding
+timezone for a given lat/lng on earth entirely offline.
+
+Check out the faster and lighter version `timezonefinderL <https://github.com/MrMinimal64/timezonefinderL>`__
+and its demo and API at: `timezonefinderL GUI <http://timezonefinder.michelfe.it/gui>`__
+
+The underlying timezone data is based on work done by `Eric
+Muller <http://efele.net/maps/tz/world/>`__. Current TZ version: 2016d (since 1.5.8)
+
+Also see:
+`GitHub <https://github.com/MrMinimal64/timezonefinder>`__
+`PyPI <https://pypi.python.org/pypi/timezonefinder/>`__
+`conda-forge feedstock <https://github.com/conda-forge/timezonefinder-feedstock>`__
+`timezone_finder (ruby port) <https://github.com/gunyarakun/timezone_finder>`__
+
+
+This project is derived from and has been successfully tested against
+`pytzwhere <https://pypi.python.org/pypi/tzwhere>`__
+(`github <https://github.com/pegler/pytzwhere>`__), but aims at providing
+improved performance and usability.
+
+``pytzwhere`` is parsing a 76MB .csv file (floats stored as strings!) completely into memory and computing shortcuts from this data on every startup.
+This is time, memory and CPU consuming. Additionaly calculating with floats is slow, keeping those 4M+ floats in the RAM all the time is unnecessary and the precision of floats is not even needed in this case (s. detailed comparison and speed tests below).
+
+Dependencies
+============
+
+(``python``)
+``numpy``
+
+**Optional:**
+
+``Numba`` (https://github.com/numba/numba) and its Requirement `llvmlite <http://llvmlite.pydata.org/en/latest/install/index.html>`_
+
+
+This is only for precompiling the time critical algorithms. When you only look up a
+few points once in a while, the compilation time is probably outweighing
+the benefits. When using ``certain_timezone_at()`` and especially
+``closest_timezone_at()`` however, I highly recommend using ``numba``!
+
+Installation
+============
+
+
+Installation with conda: see instructions at `conda-forge feedstock<https://github.com/conda-forge/timezonefinder-feedstock>`__
+
+
+Installation with pip:
+(install the dependencies)
+then in the command line:
+
+::
+
+    pip install timezonefinder
+
+
+
+
+
+Usage
+=====
+
+Basics:
+-------
+
+in Python:
+
+::
+
+    from timezonefinder import TimezoneFinder
+
+    tf = TimezoneFinder()
+
+
+for testing if numba is being used:
+(if the import of the optimized algorithms worked)
+
+::
+
+    TimezoneFinder.using_numba()   # this is a static method returning True or False
+
+
+**timezone_at():**
+
+This is the default function to check which timezone a point lies within (similar to tzwheres ``tzNameAt()``).
+If no timezone has been found, ``None`` is being returned.
+
+**PLEASE NOTE:** This approach is optimized for speed and the common case to only query points within a timezone.
+The last possible timezone in proximity is always returned (without checking if the point is really included).
+So results might be misleading for points outside of any timezone.
+
+
+::
+
+    longitude = 13.358
+    latitude = 52.5061
+    tf.timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Berlin'
+
+
+**certain_timezone_at():**
+
+This function is for making sure a point is really inside a timezone. It is slower, because all polygons (with shortcuts in that area)
+are checked until one polygon is matched.
+
+::
+
+    tf.certain_timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Berlin'
+
+
+**closest_timezone_at():**
+
+Only use this when the point is not inside a polygon, because the approach otherwise makes no sense.
+This returns the closest timezone of all polygons within +-1 degree lng and +-1 degree lat (or None).
+
+::
+
+    longitude = 12.773955
+    latitude = 55.578595
+    tf.closest_timezone_at(lng=longitude, lat=latitude) # returns 'Europe/Copenhagen'
+
+Other options:
+To increase search radius even more, use the ``delta_degree``-option:
+
+::
+
+    tf.closest_timezone_at(lng=longitude, lat=latitude, delta_degree=3)
+
+
+This checks all the polygons within +-3 degree lng and +-3 degree lat.
+I recommend only slowly increasing the search radius, since computation time increases quite quickly
+(with the amount of polygons which need to be evaluated). When you want to use this feature a lot,
+consider using ``Numba`` to save computing time.
+
+
+Also keep in mind that x degrees lat are not the same distance apart than x degree lng (earth is a sphere)!
+As a consequence getting a result does NOT mean that there is no closer timezone! It might just not be within the area being queried.
+
+With ``exact_computation=True`` the distance to every polygon edge is computed (way more complicated), instead of just evaluating the distances to all the vertices.
+This only makes a real difference when polygons are very close.
+
+
+With ``return_distances=True`` the output looks like this:
+
+( 'tz_name_of_the_closest_polygon',[ distances to every polygon in km], [tz_names of every polygon])
+
+Note that some polygons might not be tested (for example when a zone is found to be the closest already).
+To prevent this use ``force_evaluation=True``.
+
+::
+
+    longitude = 42.1052479
+    latitude = -16.622686
+    tf.closest_timezone_at(lng=longitude, lat=latitude, delta_degree=2,
+                                        exact_computation=True, return_distances=True, force_evaluation=True)
+    '''
+    returns ('uninhabited',
+    [80.66907784731714, 217.10924866254518, 293.5467252349301, 304.5274937839159, 238.18462606485667, 267.918674688949, 207.43831938964408, 209.6790144988553, 228.42135641542546],
+    ['uninhabited', 'Indian/Antananarivo', 'Indian/Antananarivo', 'Indian/Antananarivo', 'Africa/Maputo', 'Africa/Maputo', 'Africa/Maputo', 'Africa/Maputo', 'Africa/Maputo'])
+    '''
+
+
+
+**get_geometry:**
+
+
+for querying timezones for their geometric shape use ``get_geometry()``.
+output format: ``[ [polygon1, hole1,...), [polygon2, ...], ...]``
+and each polygon and hole is itself formated like: ``([longitudes], [latitudes])``
+or ``[(lng1,lat1), (lng2,lat2),...]`` if ``coords_as_pairs=True``.
+
+::
+
+    tf.get_geometry(tz_name='Africa/Addis_Ababa', coords_as_pairs=True)
+
+    tf.get_geometry(tz_id=400, use_id=True)
+
+
+
+
+Further application:
+--------------------
+
+**To maximize the chances of getting a result in a** ``Django`` **view it might look like:**
+
+::
+
+    def find_timezone(request, lat, lng):
+        lat = float(lat)
+        lng = float(lng)
+
+        try:
+            timezone_name = tf.timezone_at(lng=lng, lat=lat)
+            if timezone_name is None:
+                timezone_name = tf.closest_timezone_at(lng=lng, lat=lat)
+                # maybe even increase the search radius when it is still None
+
+        except ValueError:
+            # the coordinates were out of bounds
+            # {handle error}
+
+        # ... do something with timezone_name ...
+
+**To get an aware datetime object from the timezone name:**
+
+::
+
+    # first pip install pytz
+    from pytz import timezone, utc
+    from pytz.exceptions import UnknownTimeZoneError
+
+    # tzinfo has to be None (means naive)
+    naive_datetime = YOUR_NAIVE_DATETIME
+
+    try:
+        tz = timezone(timezone_name)
+        aware_datetime = naive_datetime.replace(tzinfo=tz)
+        aware_datetime_in_utc = aware_datetime.astimezone(utc)
+
+        naive_datetime_as_utc_converted_to_tz = tz.localize(naive_datetime)
+
+    except UnknownTimeZoneError:
+        # ... handle the error ...
+
+also see the `pytz Doc <http://pytz.sourceforge.net/>`__.
+
+**parsing the tz_world data:**
+
+Included with this package comes a ``file_converter.py`` which purpose it is to parse the newest tz_world data (in .json) into the needed binary files.
+Make sure you installed the GDAL framework (that's for converting .shp shapefiles into .json)
+Change to the directory of the timezonefinder package (location of ``file_converter.py``) in your terminal and then:
+
+::
+
+    wget http://efele.net/maps/tz/world/tz_world.zip
+    # on mac: curl "http://efele.net/maps/tz/world/tz_world.zip" -o "tz_world.zip"
+    unzip tz_world
+    ogr2ogr -f GeoJSON -t_srs crs:84 tz_world.json ./world/tz_world.shp
+    rm ./world/ -r
+    rm tz_world.zip
+
+
+There should be a tz_world.json (of approx. 100MB) in the folder together with the ``file_converter.py`` now.
+Then run the converter by:
+
+::
+
+    python file_converter.py
+
+
+This converts the .json into the needed ``.bin`` (overwriting the old version!) and also updates the ``timezone_names.py``.
+
+**Please note:** Neither tests nor the file\_converter.py are optimized or
+really beautiful. Sorry for that. If you have any questions, s. section 'Contact' below.
+
+
+**Calling timezonefinder from the command line:**
+
+With -v you get verbose output, without it only the timezone name is printed.
+Internally this is calling the function timezone_at(). Please note that this is slow.
+
+::
+
+    python timezonefinder.py lng lat [-v]
+
+
+
+
+
+Known Issues
+============
+
+I ran tests for approx. 5M points and the only differences (in comparison to tzwhere) are due to the outdated
+data being used by tzwhere.
+
+
+Contact
+=======
+
+This is the first public python project I did, so most certainly there is stuff I missed,
+things I could have optimized even further etc. That's why I would be really glad to get some feedback on my code.
+
+
+If you notice that the tz data is outdated, encounter any bugs, have
+suggestions, criticism, etc. feel free to **open an Issue**, **add a Pull Requests** on Git or ...
+
+contact me: *[python] {at} [michelfe] {dot} [it]*
+
+
+Credits
+=======
+
+Thanks to:
+
+`Adam <https://github.com/adamchainz>`__ for adding organisational features to the project and for helping me with publishing and testing routines.
+
+`cstich <https://github.com/cstich>`__ for the little conversion script (.shp to .json).
+
+`snowman2 <https://github.com/snowman2>`__ for creating the conda-forge recipe.
+
+`synapticarbors <https://github.com/synapticarbors>`__ for fixing Numba import with py27.
+
+License
+=======
+
+``timezonefinder`` is distributed under the terms of the MIT license
+(see LICENSE.txt).
+
+
+Comparison to pytzwhere
+=======================
+
+In comparison most notably initialisation time and memory usage are
+significantly reduced, while the algorithms yield the same results and are as fast or even faster
+(depending on the dependencies used, s. test results below). pytzwhere is using up to 450MB!!! of RAM while in use (with shapely and numpy active) and this package uses at most 16,4MB (= encountered memory consumption of the python process).
+In some cases ``pytzwhere`` even does not find anything and ``timezonefinder`` does, for example
+when only one timezone is close to the point.
+
+**Similarities:**
+
+-  results
+
+-  data being used
+
+
+**Differences:**
+
+-  highly decreased memory usage
+
+-  highly reduced start up time
+
+-  usage of 32bit int (instead of 64+bit float) reduces computing time and memory consumption
+
+-  the precision of 32bit int is still high enough (according to my calculations worst resolution is 1cm at the equator -> far more precise than the discrete polygons)
+
+-  the data is stored in memory friendly binary files (approx. 18MB in total)
+
+-  data is only being read on demand (not kept in memory)
+
+-  precomputed shortcuts are included to quickly look up which polygons have to be checked
+
+-  introduced proximity algorithm ``closest_timezone_at()``
+
+-  function ``get_geometry()`` enables querying timezones for their geometric shape (= multipolygon with holes)
+
+-  further speedup possible by the use of ``numba`` (code precompilation)
+
+
+
+
+
+test results\*:
+===============
+
+::
+
+
+    test correctness:
+
+    results timezone_at()
+    LOCATION             | EXPECTED             | COMPUTED             | ==
+    ====================================================================
+    Arlington, TN        | America/Chicago      | America/Chicago      | OK
+    Memphis, TN          | America/Chicago      | America/Chicago      | OK
+    Anchorage, AK        | America/Anchorage    | America/Anchorage    | OK
+    Eugene, OR           | America/Los_Angeles  | America/Los_Angeles  | OK
+    Albany, NY           | America/New_York     | America/New_York     | OK
+    Moscow               | Europe/Moscow        | Europe/Moscow        | OK
+    Los Angeles          | America/Los_Angeles  | America/Los_Angeles  | OK
+    Moscow               | Europe/Moscow        | Europe/Moscow        | OK
+    Aspen, Colorado      | America/Denver       | America/Denver       | OK
+    Kiev                 | Europe/Kiev          | Europe/Kiev          | OK
+    Jogupalya            | Asia/Kolkata         | Asia/Kolkata         | OK
+    Washington DC        | America/New_York     | America/New_York     | OK
+    St Petersburg        | Europe/Moscow        | Europe/Moscow        | OK
+    Blagoveshchensk      | Asia/Yakutsk         | Asia/Yakutsk         | OK
+    Boston               | America/New_York     | America/New_York     | OK
+    Chicago              | America/Chicago      | America/Chicago      | OK
+    Orlando              | America/New_York     | America/New_York     | OK
+    Seattle              | America/Los_Angeles  | America/Los_Angeles  | OK
+    London               | Europe/London        | Europe/London        | OK
+    Church Crookham      | Europe/London        | Europe/London        | OK
+    Fleet                | Europe/London        | Europe/London        | OK
+    Paris                | Europe/Paris         | Europe/Paris         | OK
+    Macau                | Asia/Macau           | Asia/Macau           | OK
+    Russia               | Asia/Yekaterinburg   | Asia/Yekaterinburg   | OK
+    Salo                 | Europe/Helsinki      | Europe/Helsinki      | OK
+    Staffordshire        | Europe/London        | Europe/London        | OK
+    Muara                | Asia/Brunei          | Asia/Brunei          | OK
+    Puerto Montt seaport | America/Santiago     | America/Santiago     | OK
+    Akrotiri seaport     | Asia/Nicosia         | Asia/Nicosia         | OK
+    Inchon seaport       | Asia/Seoul           | Asia/Seoul           | OK
+    Nakhodka seaport     | Asia/Vladivostok     | Asia/Vladivostok     | OK
+    Truro                | Europe/London        | Europe/London        | OK
+    Aserbaid. Enklave    | Asia/Baku            | Asia/Baku            | OK
+    Tajikistani Enklave  | Asia/Dushanbe        | Asia/Dushanbe        | OK
+    Busingen Ger         | Europe/Busingen      | Europe/Busingen      | OK
+    Genf                 | Europe/Zurich        | Europe/Zurich        | OK
+    Lesotho              | Africa/Maseru        | Africa/Maseru        | OK
+    usbekish enclave     | Asia/Tashkent        | Asia/Tashkent        | OK
+    usbekish enclave     | Asia/Tashkent        | Asia/Tashkent        | OK
+    Arizona Desert 1     | America/Denver       | America/Denver       | OK
+    Arizona Desert 2     | America/Phoenix      | America/Phoenix      | OK
+    Arizona Desert 3     | America/Phoenix      | America/Phoenix      | OK
+    Far off Cornwall     | None                 | None                 | OK
+
+    certain_timezone_at():
+    LOCATION             | EXPECTED             | COMPUTED             | Status
+    ====================================================================
+    Arlington, TN        | America/Chicago      | America/Chicago      | OK
+    Memphis, TN          | America/Chicago      | America/Chicago      | OK
+    Anchorage, AK        | America/Anchorage    | America/Anchorage    | OK
+    Eugene, OR           | America/Los_Angeles  | America/Los_Angeles  | OK
+    Albany, NY           | America/New_York     | America/New_York     | OK
+    Moscow               | Europe/Moscow        | Europe/Moscow        | OK
+    Los Angeles          | America/Los_Angeles  | America/Los_Angeles  | OK
+    Moscow               | Europe/Moscow        | Europe/Moscow        | OK
+    Aspen, Colorado      | America/Denver       | America/Denver       | OK
+    Kiev                 | Europe/Kiev          | Europe/Kiev          | OK
+    Jogupalya            | Asia/Kolkata         | Asia/Kolkata         | OK
+    Washington DC        | America/New_York     | America/New_York     | OK
+    St Petersburg        | Europe/Moscow        | Europe/Moscow        | OK
+    Blagoveshchensk      | Asia/Yakutsk         | Asia/Yakutsk         | OK
+    Boston               | America/New_York     | America/New_York     | OK
+    Chicago              | America/Chicago      | America/Chicago      | OK
+    Orlando              | America/New_York     | America/New_York     | OK
+    Seattle              | America/Los_Angeles  | America/Los_Angeles  | OK
+    London               | Europe/London        | Europe/London        | OK
+    Church Crookham      | Europe/London        | Europe/London        | OK
+    Fleet                | Europe/London        | Europe/London        | OK
+    Paris                | Europe/Paris         | Europe/Paris         | OK
+    Macau                | Asia/Macau           | Asia/Macau           | OK
+    Russia               | Asia/Yekaterinburg   | Asia/Yekaterinburg   | OK
+    Salo                 | Europe/Helsinki      | Europe/Helsinki      | OK
+    Staffordshire        | Europe/London        | Europe/London        | OK
+    Muara                | Asia/Brunei          | Asia/Brunei          | OK
+    Puerto Montt seaport | America/Santiago     | America/Santiago     | OK
+    Akrotiri seaport     | Asia/Nicosia         | Asia/Nicosia         | OK
+    Inchon seaport       | Asia/Seoul           | Asia/Seoul           | OK
+    Nakhodka seaport     | Asia/Vladivostok     | Asia/Vladivostok     | OK
+    Truro                | Europe/London        | Europe/London        | OK
+    Aserbaid. Enklave    | Asia/Baku            | Asia/Baku            | OK
+    Tajikistani Enklave  | Asia/Dushanbe        | Asia/Dushanbe        | OK
+    Busingen Ger         | Europe/Busingen      | Europe/Busingen      | OK
+    Genf                 | Europe/Zurich        | Europe/Zurich        | OK
+    Lesotho              | Africa/Maseru        | Africa/Maseru        | OK
+    usbekish enclave     | Asia/Tashkent        | Asia/Tashkent        | OK
+    usbekish enclave     | Asia/Tashkent        | Asia/Tashkent        | OK
+    Arizona Desert 1     | America/Denver       | America/Denver       | OK
+    Arizona Desert 2     | America/Phoenix      | America/Phoenix      | OK
+    Arizona Desert 3     | America/Phoenix      | America/Phoenix      | OK
+    Far off Cornwall     | None                 | None                 | OK
+
+    closest_timezone_at():
+    LOCATION             | EXPECTED             | COMPUTED             | Status
+    ====================================================================
+    Arlington, TN        | America/Chicago      | America/Chicago      | OK
+    Memphis, TN          | America/Chicago      | America/Chicago      | OK
+    Anchorage, AK        | America/Anchorage    | America/Anchorage    | OK
+    Shore Lake Michigan  | America/New_York     | America/New_York     | OK
+    English Channel1     | Europe/London        | Europe/London        | OK
+    English Channel2     | Europe/Paris         | Europe/Paris         | OK
+    Oresund Bridge1      | Europe/Stockholm     | Europe/Stockholm     | OK
+    Oresund Bridge2      | Europe/Copenhagen    | Europe/Copenhagen    | OK
+
+
+    Speed Tests:
+    _________________________
+    shapely: OFF (tzwhere)
+    Numba: OFF (timezonefinder)
+
+    TIMES for  1000 realistic points
+    tzwhere: 0:00:05.695566
+    timezonefinder: 0:00:00.061465
+    91.66 times faster
+
+
+    TIMES for  1000 random points
+    tzwhere: 0:00:09.393471
+    timezonefinder: 0:00:00.539358
+    16.42 times faster
+
+    Startup times:
+    tzwhere: 0:00:07.875212
+    timezonefinder: 0:00:00.000688
+    11445.53 times faster
+
+    _________________________
+    shapely: ON (tzwhere)
+    Numba: OFF (timezonefinder)
+
+
+    TIMES for  1000 realistic points
+    tzwhere: 0:00:00.037330
+    timezonefinder: 0:00:00.063962
+    0.71 times slower
+
+
+    TIMES for  1000 random points
+    tzwhere: 0:00:00.168119
+    timezonefinder: 0:00:00.747488
+    3.45 times slower
+    _________________________
+    shapely: OFF (tzwhere)
+    Numba: ON (timezonefinder)
+
+
+    TIMES for  1000 realistic points
+    tzwhere: 0:00:05.429352
+    timezonefinder: 0:00:00.041846
+    128.75 times faster
+
+
+    TIMES for  1000 random points
+    tzwhere: 0:00:09.134222
+    timezonefinder: 0:00:00.071625
+    126.53 times faster
+
+    _________________________
+    shapely: ON (tzwhere)
+    Numba: ON (timezonefinder)
+
+
+    TIMES for  10000 realistic points
+    tzwhere: 0:00:00.393869
+    timezonefinder: 0:00:00.503049
+    0.28 times slower
+
+
+    TIMES for  10000 random points
+    tzwhere: 0:00:00.755606
+    timezonefinder: 0:00:00.691981
+    0.09 times faster
+
+
+    Startup times:
+    tzwhere: 0:00:38.335302
+    timezonefinder: 0:00:00.000143
+    268079.03 times faster
+
+
+    \* System: MacBookPro 2,4GHz i5 (2014) 4GB RAM pytzwhere with numpy active
+
+    \*\*mismatch: pytzwhere finds something and then timezonefinder finds
+    something else
+
+    \*\*\*realistic queries: just points within a timezone (= pytzwhere
+    yields result)
+
+    \*\*\*\*random queries: random points on earth
+
+
+Changelog
+=========
+
+2.0.1 (2017-04-08)
+------------------
+
+* added missing package data entries (2.0.0 didn't include all necessary .bin files)
+
+
+2.0.0 (2017-04-07)
+------------------
+
+* ATTENTION: major change!: there is a second version of timezonefinder now: `timezonefinderL <https://github.com/MrMinimal64/timezonefinderL>`__. There the data has been simplified
+    for increasing speed reducing data size. Around 56% of the coordinates of the timezone polygons have been deleted there. Around 60% of the polygons (mostly small islands) have been included in the simplified polygons.
+    For any coordinate on landmass the results should stay the same, but accuracy at the shorelines is lost.
+    This eradicates the usefulness of closest_timezone_at() and certain_timezone_at() but the main use case for this package (= determining the timezone of a point on landmass) is improved.
+    In this repo timezonefinder will still be maintained with the detailed (unsimplified) data.
+* file_converter.py has been complemented and modified to perform those simplifications
+* introduction of new function get_geometry() for querying timezones for their geometric shape
+* added shortcuts_unique_id.bin for instantly returning an id if the shortcut corresponding to the coords only contains polygons of one zone
+* data is now stored in separate binaries for ease of debugging and readability
+* polygons are stored sorted after their timezone id and size
+* timezonefinder can now be called directly as a script (experimental with reduced functionality, cf. readme)
+* optimisations on point in polygon algorithm
+* small simplifications in the helper functions
+* clarification of the readme
+* clarification of the comments in the code
+* referenced the new conda-feedstock in the readme
+* referenced the new timezonefinder API/GUI
+
+
+
+1.5.7 (2016-07-21)
+------------------
+
+
+* ATTENTION: API BREAK: all functions are now keyword-args only (to prevent lng lat mix-up errors)
+* fixed a little bug with too many arguments in a @jit function
+* clarified usage of the package in the readme
+* prepared the usage of the ahead of time compilation functionality of Numba. It is not enabled yet.
+* sorting the order of polygons to check in the order of how often their zones appear, gives a speed bonus (for closest_timezone_at)
+
+
+1.5.6 (2016-06-16)
+------------------
+
+* using little endian encoding now
+* introduced test for checking the proper functionality of the helper functions
+* wrote tests for proximity algorithms
+* improved proximity algorithms: introduced exact_computation, return_distances and force_evaluation functionality (s. Readme or documentation for more info)
+
+1.5.5 (2016-06-03)
+------------------
+
+* using the newest version (2016d, May 2016) of the `tz world data`_
+* holes in the polygons which are stored in the tz_world data are now correctly stored and handled
+* rewrote the file_converter for storing the holes at the end of the timezone_data.bin
+* added specific test cases for hole handling
+* made some optimizations in the algorithms
+
+1.5.4 (2016-04-26)
+------------------
+
+* using the newest version (2016b) of the `tz world data`_
+* rewrote the file_converter for parsing a .json created from the tz_worlds .shp
+* had to temporarily fix one polygon manually which had the invalid TZID: 'America/Monterey' (should be 'America/Monterrey')
+* had to make tests less strict because tzwhere still used the old data at the time and some results were simply different now
+
+
+1.5.3 (2016-04-23)
+------------------
+
+* using 32-bit ints for storing the polygons now (instead of 64-bit): I calculated that the minimum accuracy (at the equator) is 1cm with the encoding being used. Tests passed.
+* Benefits: 18MB file instead of 35MB, another 10-30% speed boost (depending on your hardware)
+
+
+1.5.2 (2016-04-20)
+------------------
+
+* added python 2.7.6 support: replaced strings in unpack (unsupported by python 2.7.6 or earlier) with byte strings
+* timezone names are now loaded from a separate file for better modularity
+
+
+1.5.1 (2016-04-18)
+------------------
+
+* added python 2.7.8+ support:
+    Therefore I had to change the tests a little bit (some operations were not supported). This only affects output.
+    I also had to replace one part of the algorithms to prevent overflow in Python 2.7
+
+
+1.5.0 (2016-04-12)
+------------------
+
+* automatically using optimized algorithms now (when numba is installed)
+* added TimezoneFinder.using_numba() function to check if the import worked
+
+
+1.4.0 (2016-04-07)
+------------------
+
+* Added the ``file_converter.py`` to the repository: It converts the .csv from pytzwhere to another ``.csv`` and this one into the used ``.bin``.
+    Especially the shortcut computation and the boundary storage in there save a lot of reading and computation time, when deciding which timezone the coordinates are in.
+    It will help to keep the package up to date, even when the timezone data should change in the future.
+
+
+    .. _tz world data: <http://efele.net/maps/tz/world/>
+
+
