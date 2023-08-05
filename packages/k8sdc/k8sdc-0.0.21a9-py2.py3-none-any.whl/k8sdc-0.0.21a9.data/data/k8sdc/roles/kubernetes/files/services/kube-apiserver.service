@@ -1,0 +1,30 @@
+[Unit]
+Description=Kubernetes API Server
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config/config
+EnvironmentFile=-/etc/kubernetes/config/kube-apiserver
+User=kube
+ExecStart=/usr/bin/kube-apiserver \
+	    $KUBE_LOGTOSTDERR \
+	    $KUBE_LOG_LEVEL \
+	    $KUBE_ALLOW_PRIV \
+	    $KUBE_INSECURE_API_ADDRESS \
+	    $KUBE_SECURE_API_PORT \
+	    $KUBE_ETCD_SERVERS \
+	    $KUBE_SERVICE_ADDRESSES \
+	    $KUBE_ADMISSION_CONTROL \
+	    $KUBE_CLUSTER_ADVERTISE \
+	    $KUBE_TLS_CERT \
+	    $KUBE_PRIVATE_KEY \
+	    $KUBE_CLIENT_CA \
+	    $KUBE_TOKEN_AUTH \
+	    $KUBE_BASIC_AUTH \
+	    $KUBE_SERVICE_ACCOUNT_KEY \
+	    $KUBE_API_ARGS
+Restart=always
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
