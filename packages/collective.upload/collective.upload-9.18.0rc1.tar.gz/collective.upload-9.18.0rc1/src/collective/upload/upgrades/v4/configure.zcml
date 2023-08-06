@@ -1,0 +1,33 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    i18n_domain="collective.upload">
+
+  <genericsetup:upgradeSteps
+      source="3"
+      destination="4"
+      profile="collective.upload:default">
+
+    <genericsetup:upgradeDepends
+        title="Add Show widget field to registry"
+        description="Reload registration of configlet registry to add new field."
+        import_steps="plone.app.registry"
+        run_deps="false"
+        />
+
+    <genericsetup:upgradeStep
+        title="Cook CSS resources"
+        description="There were changes in the CSS files, so we need to cook the resources."
+        handler="..cook_css_resources"
+        />
+
+    <genericsetup:upgradeStep
+        title="Cook JS resources"
+        description="There were changes in the JS files, so we need to cook the resources."
+        handler="..cook_javascript_resources"
+        />
+
+  </genericsetup:upgradeSteps>
+
+</configure>
