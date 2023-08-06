@@ -1,0 +1,331 @@
+#!/usr/bin/env python
+
+import os
+import shutil
+import sys
+from optparse import OptionParser, SUPPRESS_HELP
+from os.path import isfile, join, isdir, exists, dirname, islink
+
+import ngs_utils.reference_data as ref
+from ngs_utils import logger
+from ngs_utils.bed_utils import verify_bed
+from ngs_utils.bam_utils import verify_bam
+from ngs_utils.file_utils import adjust_path, safe_mkdir, verify_file, remove_quotes, file_exists, which
+from ngs_utils.logger import critical, err, info, warn, debug
+from ngs_utils.proc_args import read_samples, find_bams, find_fastq_pairs, set_up_dirs
+from ngs_utils.parallel import ParallelCfg
+
+import targqc
+from targqc import config
+from targqc import Sample
+
+
+options = [
+    (['--test'], dict(
+        dest='test',
+        help='Quick test of correct installation.'
+    )),
+    (['--bed', '--capture', '--amplicons'], dict(
+        dest='bed',
+        help='BED file with regions to analyse. If not specified, CDS across full genome will be analysed',
+    )),
+    (['-o', '--output-dir'], dict(
+        dest='output_dir',
+        metavar='DIR',
+        help='Output directory (or directory name in case of bcbio final dir)',
+        default=os.getcwd(),
+     )),
+    (['-g', '--genome'], dict(
+        dest='genome',
+        help='Genome build (hg19 or hg38), used to pick genome annotation BED file if not specified, or path to .fa bwa prefix ',
+        default=config.genome,
+    )),
+    (['--bwa' '--bwa-prefix'], dict(
+        dest='bwa_prefix',
+        help='Path to BWA index prefix to align if input is FastQ',
+     )),
+    (['--fai'], dict(
+        dest='fai',
+        help='Path to fai fasta index - sort BAM and BED files, and to get chromosome lengths for proper padding BED files; optional'
+     )),
+    (['--padding'], dict(
+        dest='padding',
+        type='int',
+        help='integer indicating the number of bases to extend each target region up and down-stream. '
+             'Default is ' + str(config.padding),
+        default=config.padding
+     )),
+    (['-T', '--depth-threshold'], dict(
+        dest='depth_thresholds',
+        type='int',
+        default=config.depth_thresholds,
+        action='append',
+     )),
+    (['--downsample-pairs-num', '--downsample-to'], dict(
+        dest='downsample_pairs_num',
+        type='int',
+        help=('If input is FastQ, select N random read pairs from each input set '
+              '(instead of default fraction ' + str(config.downsample_fraction) + '). ')
+     )),
+    (['--downsample-fraction', '--downsample'], dict(
+        dest='downsample_fraction',
+        type='int',
+        help=('If input is FastQ, select K% random read pairs from each input set. ' +
+              'Default is ' + str(config.downsample_fraction) + '%. ' +
+              'To turn off (align all reads), set --downsample 1'),
+        default=config.downsample_fraction,
+     )),
+    (['-t', '--nt', '--threads'], dict(
+        dest='threads',
+        type='int',
+        help='Number of threads',
+        default=config.threads
+     )),
+    (['--reuse'], dict(
+        dest='reuse_intermediate',
+        help='reuse intermediate non-empty files in the work dir from previous run',
+        action='store_true',
+        default=config.reuse_intermediate
+     )),
+    (['-s', '--scheduler'], dict(
+        dest='scheduler',
+        choices=["lsf", "sge", "torque", "slurm", "pbspro"],
+        help="Scheduler to use for ipython parallel"
+     )),
+    (['-q', '--queue'], dict(
+        dest='queue',
+        help="Scheduler queue to run jobs on, for ipython parallel"
+     )),
+    (['-r', '--resources'], dict(
+        dest='resources',
+        help=("Cluster specific resources specifications. "
+          "Can be specified multiple times.\n"
+          "Supports SGE, Torque, LSF and SLURM "
+          "parameters."),
+        default=[],
+        action="append")),
+    (['--reannotate'], dict(
+        dest='reannotate',
+        help='Re-annotate BED file with gene names, even if it\'s 4 columns or more',
+        action='store_true',
+        default=False,
+     )),
+
+    ##############
+    ## Extended: #
+    (['--bam'], dict(dest='bam', help=SUPPRESS_HELP,)),  # help='path to the BAM file to analyse',)),
+    (['-1'], dict(dest='l_fpath', help=SUPPRESS_HELP,)),  # help='fastq left reads, optional instead of BAM')),
+    (['-2'], dict(dest='r_fpath', help=SUPPRESS_HELP,)),  # help='fastq right reads, optional instead of BAM')),
+    (['--sample', '--name'], dict(dest='sample', help=SUPPRESS_HELP,)),  # help='Sample name (default is part of name of the first parameter prior to the first - or .',)),
+    (['-e', '--extended'], dict(
+        dest='extended',
+        action='store_true',
+        default=False,
+        help=SUPPRESS_HELP,  # 'extended - flagged regions and missed variants',
+     )),
+    (['--no-dedup'], dict(
+        dest='no_dedup',
+        action='store_true',
+        default=not config.dedup,
+        help=SUPPRESS_HELP,
+     )),
+    (['--debug'], dict(
+        dest='debug',
+        action='store_true',
+        default=config.is_debug,
+        help=SUPPRESS_HELP,
+     )),
+    (['--local'], dict(
+        dest='local',
+        action='store_true',
+        default=False,
+        help=SUPPRESS_HELP,
+     )),
+    (['--keep-work-dir'], dict(
+        dest='keep_work_dir',
+        action='store_true',
+        default=False,
+        help=SUPPRESS_HELP,  # keep work directory
+     )),
+    (['--work-dir'], dict(dest='work_dir', metavar='DIR', help=SUPPRESS_HELP)),
+    (['--log-dir'], dict(dest='log_dir', metavar='DIR', help=SUPPRESS_HELP)),
+    (['--project-name'], dict(dest='project_name', help=SUPPRESS_HELP)),
+    (['--email'], dict(dest='email', help=SUPPRESS_HELP)),
+]
+
+
+def _prep_samples(fastqs_by_sample, bam_by_sample, output_dir, work_dir):
+    samples = []
+    for sname, (l, r) in fastqs_by_sample.items():
+        s = Sample(sname, join(output_dir, sname), join(work_dir, sname))
+        s.l_fpath = l
+        s.r_fpath = r
+        samples.append(s)
+    for sname, bam_fpath in bam_by_sample.items():
+        s = Sample(sname, join(output_dir, sname),
+                   work_dir=join(work_dir, sname), bam=bam_fpath)
+        samples.append(s)
+    samples.sort(key=lambda _s: _s.key_to_sort())
+    for s in samples:
+        safe_mkdir(s.work_dir)
+        safe_mkdir(s.dirpath)
+    return samples
+
+
+# def _prep_beds(prep_bed, work_dir, target_bed):
+#     target = None
+#
+#     if prep_bed:
+#         info()
+#         debug('*' * 70)
+#         info('Preparing input BED file: sort, clean, cut, annotate')
+#         cfg.features_bed_fpath, target_bed, seq2c_bed = prepare_beds(
+#             work_dir, cfg.fai_fpath, cfg.features_bed_fpath, target_bed, cfg.cds_bed_fpath, reuse=cfg.reuse_intermediate)
+#
+#         if target_bed:
+#             target, cfg.features_bed_fpath = extract_gene_names_and_filter_exons(
+#                 work_dir, target_bed, cfg.features_bed_fpath, reuse=cfg.reuse_intermediate)
+#     else:
+#         info('The BED file is ready, skipping preparing.')
+#         if target_bed:
+#             target, _, _ = extract_gene_names_and_filter_exons(
+#                 work_dir, target_bed, cfg.features_bed_fpath, reuse=cfg.reuse_intermediate)
+#     info('*' * 70)
+#     return target
+
+
+def main():
+    parser = OptionParser(description=targqc.get_description(), version=targqc.get_version())
+    parser.set_usage('Usage: %prog *.bam -o targqc_stats [--bed target.bed ...]')
+    for args, kwargs in options:
+        parser.add_option(*args, **kwargs)
+    opts, args = parser.parse_args()
+    if not args:
+        parser.error(msg='Specify at least one BAM file or a FastQ pair.')
+
+    if opts.work_dir:
+        opts.debug = True
+    logger.init(opts.debug)
+
+    output_dir, work_dir, log_dir = set_up_dirs(
+            targqc.targqc_name, opts.output_dir, opts.work_dir,
+            opts.log_dir)
+
+    tag = ('targqc_' + opts.project_name) if opts.project_name else 'targqc'
+    parallel_cfg = ParallelCfg(opts.scheduler, opts.queue, opts.resources,
+                               opts.threads, tag, opts.local)
+    padding = opts.padding
+    depth_threshs = opts.depth_thresholds
+    debug('Depth thresholds: ' + str(depth_threshs))
+    genome = opts.genome
+    dedup = not opts.no_dedup
+    reannotate = opts.reannotate
+
+    if opts.downsample_pairs_num == 'off':
+        downsample_to = 1.0
+    elif opts.downsample_pairs_num is not None:
+        downsample_to = int(opts.downsample_pairs_num)
+    else:
+        downsample_to = float(opts.downsample_fraction)
+
+    fai_fpath = bwa_prefix = None
+    if genome.endswith('.fa') or genome.endswith('.fasta'):
+        bwa_prefix = adjust_path(opts.genome)
+        fai_fpath = opts.genome + '.fai'
+    if opts.bwa_prefix:
+        bwa_prefix = adjust_path(opts.bwa_prefix)
+    if opts.fai:
+        fai_fpath = opts.fai
+    if fai_fpath:
+        verify_file(fai_fpath, is_critical=True, description='Fasta index (.fai) file')
+    else:
+        fai_fpath = ref.get_fai(genome)
+    
+    bam_by_sample, fastqs_by_sample, target_bed_fpath = get_inputs(opts, args)
+
+    samples = _prep_samples(fastqs_by_sample, bam_by_sample, output_dir, work_dir)
+    info()
+
+    targqc.start_targqc(work_dir, output_dir, samples, target_bed_fpath, parallel_cfg, bwa_prefix,
+                        fai_fpath=fai_fpath,
+                        genome=genome,
+                        depth_threshs=depth_threshs,
+                        downsample_to=downsample_to,
+                        padding=padding,
+                        dedup=dedup,
+                        reannotate=reannotate)
+
+    # info()
+    # info('Summarizing: running MultiQC')
+    # cmd = 'multiqc ' + output_dir + ('' if cfg.reuse_intermediate else ' --force') + ' -v ' + ' '.join(s.dirpath for s in samples)
+    # run(cmd)
+
+    if not check_results(output_dir, samples):
+        critical('Error: expected results not found in the output dir ' + output_dir)
+
+    # removing only automatically created work_dir, unless debug, and unless --reuse
+    if all([not logger.is_debug,
+            not opts.keep_work_dir,       # option set to explicitly keep work dir
+            not opts.reuse_intermediate,  # reusing previous work_dir, and want to keep the dir being reused
+            not opts.work_dir,            # removing only automatically created work dir
+            work_dir, isdir(work_dir),    # work dir exists
+            ]):
+
+        try:
+            shutil.rmtree(work_dir)
+        except OSError as e:
+            err('Cannot remove work directory ' + work_dir + ': ' + str(e))
+        latest_symlink = join(dirname(work_dir), 'latest')
+        if islink(latest_symlink):
+            try:
+                os.remove(latest_symlink)
+            except OSError as e:
+                err('Cannot remove "latest" work directory symlink ' + latest_symlink + ': ' + str(e))
+
+
+def check_results(output_dir, samples):
+    for fname in ['regions.tsv', 'summary.html', 'summary.tsv']:
+        if not verify_file(join(output_dir, fname)):
+            return False
+    for s in samples:
+        for fpath in [s.targqc_txt_fpath,
+                      s.targqc_html_fpath,
+                      s.targqc_json_fpath,
+                      s.targqc_region_tsv]:
+            if not verify_file(fpath):
+                return False
+    return True
+
+
+def get_inputs(opts, args):
+    bam_by_sample = dict()
+    fastqs_by_sample = dict()
+
+    if opts.bam or opts.l_fpath:
+        if opts.sample_name:
+            sample_name = remove_quotes(opts.sample_name)
+            if opts.bam:
+                bam_by_sample[sample_name] = verify_bam(opts.bam, is_critical=True)
+            elif opts.l_fpath:
+                l_fpath = verify_bam(opts.l_fpath, is_critical=True)
+                r_fpath = verify_bam(opts.l_fpath)
+                fastqs_by_sample[sample_name] = l_fpath, r_fpath
+        else:
+            if opts.bam:
+                bam_by_sample = find_bams(opts.bam)
+            elif opts.l_fpath:
+                fastqs_by_sample = find_fastq_pairs([opts.l_fpath, opts.r_fpath])
+    else:
+        fastqs_by_sample, bam_by_sample = read_samples(args)
+
+    bed_fpath = None
+    if opts.bed:
+        bed_fpath = verify_bed(opts.bed, is_critical=True)
+
+    return bam_by_sample, fastqs_by_sample, bed_fpath
+
+
+if __name__ == '__main__':
+    main()
+
+
