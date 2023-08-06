@@ -1,0 +1,29 @@
+# You should not use special characture in the value keys
+prefix:
+  values:
+    messageId: (\d+)
+    host: ([^ ]+)
+    date: (\w+ \d\d)
+    time: (\d\d:\d\d:\d\d\.\d\d\d \w\w\w)
+    processName: (\w+)
+    processId: (\d+)
+    tag: ([\w-]+)
+  line: '{messageId}: {host}:{date} {time}: {processName}[{processId}]: %{tag}'
+
+messages:
+  # 'error' should be unique and vendor agnostic. Currently we are using the JUNOS syslog message name as the canonical name.
+  # This may change if we are able to find a more well defined naming system.
+  - error: BGP_PREFIX_THRESH_EXCEEDED
+    tag: ROUTING-BGP-5-MAXPFX
+    values:
+      peer: (\d+\.\d+\.\d+\.\d+)
+      current: (\d+)
+      limit: (\d+)
+    replace: {}
+    line: 'No. of IPv4 Unicast prefixes received from {peer} has reached {current}, max {limit}'
+    model: openconfig_bgp
+    mapping:
+      variables:
+        limit: bgp//neighbors//neighbor//{peer}//afi_safis//afi_safi//inet//ipv4_unicast//prefix_limit//state//max_prefixes
+        current: bgp//neighbors//neighbor//{peer}//afi_safis//afi_safi//inet//state//prefixes//received
+      static: {}
