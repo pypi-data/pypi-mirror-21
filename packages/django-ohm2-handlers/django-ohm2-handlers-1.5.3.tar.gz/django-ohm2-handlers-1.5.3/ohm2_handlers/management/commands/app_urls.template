@@ -1,0 +1,19 @@
+from django.conf.urls import url
+from django.views.generic.base import RedirectView
+from . import views
+from . import apis
+
+app_name = "{1}"
+
+API_PREFIX = r'^{1}/api/v(?P<version>[^/]+)'
+
+urlpatterns = [
+	url(r'{1}/$', views.index, name = 'index'),		
+]
+
+
+urlpatterns += [
+	url(API_PREFIX + r'/$', apis.index, name = 'api_index'),		
+]
+
+
