@@ -1,0 +1,77 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Friskby Controlpanel</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pure-base-min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pure-forms-min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pure-buttons-min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/pure-tables-min.css') }}">
+
+    <style type="text/css">
+</style>
+</head>
+
+<body>
+    <header>
+        <div class="header-meat">
+            <div class="logo">
+                <a href="{{ url_for('dashboard') }}">
+                    <img src="{{ url_for('static', filename='img/friskby-logo.png') }}">
+                </a>
+            </div>
+        </div>
+
+        <div class="status-area">
+
+            <p class="device-id">
+            Device:
+            {% if device_id %}
+                <b>{{ device_id }}</b>
+            {% else %}
+                Not registered
+            {% endif %}
+            </p>
+
+            <ul class="statuses">
+                <li class="{% if not sampler_status or sampler_status == 'failed' %}not-{% endif %}ok">
+                    <a href="{{ url_for('status', service_name='sampler')}}">
+                        Sampler <span>{{ sampler_status or "N/A" }}</span>
+                    </a>
+                </li>
+                <li class="{% if not submitter_status or submitter_status == 'failed' %}not-{% endif %}ok">
+                    <a href="{{ url_for('status', service_name='submitter')}}">
+                        Submitter <span>{{ submitter_status or "N/A" }}</span>
+                    </a>
+                </li>
+                <li class="{% if not friskby_status or friskby_status == 'failed' %}not-{% endif %}ok">
+                    <a href="{{ url_for('status', service_name='friskby')}}">
+                        Friskby <span>{{ friskby_status or "N/A" }}</span>
+                    </a>
+                </li>
+                <li class="{% if not friskby_controlpanel_status or friskby_controlpanel_status == 'failed' %}not-{% endif %}ok">
+                    <a href="{{ url_for('status', service_name='friskby_controlpanel')}}">
+                        Friskby Controlpanel <span>{{ friskby_controlpanel_status or "N/A" }}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+    </header>
+
+    <div class="panel">{% block body %}{% endblock %}</div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+            <li><p>{{ message }}</p></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+</body>
+</html>
