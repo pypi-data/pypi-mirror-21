@@ -1,0 +1,56 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="hedgehog-property-editor-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+        @apply(--layout-vertical);
+      }
+
+        </style>
+        <div class="layout horizontal">
+            <paper-input type="text" name="[[property.name]]" label="[[property.display_name]]"
+                         title="[[property.description]]" class="flex">
+            </paper-input>
+            <paper-icon-button icon="shared-icons:info"
+                               alt="favourite this!" on-tap="togglePropertyInfo"></paper-icon-button>
+
+        </div>
+        <iron-collapse id="propertyHelp">
+            <div>[[property.description]]</div>
+        </iron-collapse>
+    </template>
+
+    <script>
+    Polymer({
+      is: 'hedgehog-property-editor-view',
+      properties: {
+        property: {
+            type: Object,
+            notify: true
+        }
+      },
+      togglePropertyInfo: function() {
+        this.$.propertyHelp.toggle();
+      }
+    });
+
+    </script>
+</dom-module>
