@@ -1,0 +1,34 @@
+version: 1
+formatters:
+  simple:
+    format: '%(asctime)s %(module)s %(levelno)s %(levelname)s %(message)s'
+  custom:
+    format: '{{ custom_format }}'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: '{{ formatter }}'
+    stream: ext://sys.stdout
+  filePPG:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: '{{ formatter }}'
+    filename: '{{ ppg_path }}'
+  fileSys:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: '{{ formatter }}'
+    filename: /var/log/syslog
+loggers:
+  PPG:
+    level: DEBUG
+    handlers: [filePPG,fileSys]
+    propagate: 0
+  tornado:
+    level: DEBUG
+    handlers: [filePPG, fileSys]
+    propagate: 0
+root:
+  level: DEBUG
+  handlers: [filePPG,fileSys]
