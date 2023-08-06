@@ -1,0 +1,73 @@
+{% extends "djmicrosip_mail\base.html" %}
+{% block title %}Mail Masivo{% endblock %}
+
+<!-- CSS Code -->
+{% block style_css %}
+{{ block.super }}
+{% endblock %}
+
+<!-- JavaScript Code -->
+{% block js_code %}
+{{ block.super }}
+<script>
+	$("#id_mensaje").jqte();
+</script>
+{% endblock %}
+
+{% block breadcrumb %}{{ block.super }} 
+
+<li class='active'> Mensaje a Todos los Clientes</li> {% endblock %}
+{% block content %}
+
+{% if not mensaje == '' %}
+<div class="alert alert-{% if estatus == 'ok' %}success{% else %}danger{% endif %} fade in">
+	<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+	<strong>{{ mensaje }}</strong>
+	<a href="/mail/personalizados/todos"> Enviar Otro </a>
+</div>
+{% else %}
+<div >
+	<h3><b>Envío de Mensaje a Todos los Clientes </b></h3>
+</div>
+<p class="text-info col-md-6 col-xs-12 cl-sm-12">El mensaje que escribas en la caja de texto se enviará a todos los clientes de Microsip que tengan <u>correo electrónico valido</u></p>
+<div align ="center">
+	<form method="POST" action="" class="form-inline" enctype='multipart/form-data'>{% csrf_token %}
+		
+		
+		<br style="clear:both">
+		<br style="clear:both">
+		<div class="row">{{ form.asunto }}</div>
+
+		<div class="row">
+			{{form.mensaje}}
+		</div>
+		<br><br>
+		<div class="row">Imagen (JPG): {{form.imagen}}</div>
+		<br><br>
+		<div class="row">Archivo (PDF): {{form.archivo}}</div>
+		<br style="clear:both">
+		<br style="clear:both">
+
+		<a href="#" class="btn btn-default" data-toggle="modal" data-target=".bs-example-modal-sm">
+			<i class="glyphicon glyphicon-send"></i> 
+  		Enviar
+		</a>
+		<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-sm">
+		    <div class="modal-content">
+		      <div class="modal-header">
+          		<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+          		<h4 class="modal-title" id="mySmallModalLabel">Seguro que quieres enviar los mensajes?</h4>
+        	  </div>
+        	  <div class="modal-body">
+        	  	<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+				<button type="submit" id="btn-enviar" class="btn btn-default" onclick="this.form.submit();$(this).text('Enviando...');this.disabled=true;" >Si, estoy seguro</button>
+        	  </div>
+		    </div>
+		  </div>
+		</div>
+		
+	</form>
+</div>
+{% endif %}
+{% endblock %}
