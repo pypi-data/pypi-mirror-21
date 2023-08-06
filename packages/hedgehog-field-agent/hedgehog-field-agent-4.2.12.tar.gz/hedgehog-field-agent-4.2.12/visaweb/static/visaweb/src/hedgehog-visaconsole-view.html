@@ -1,0 +1,214 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="hedgehog-app.html"></head><body><div hidden="" by-vulcanize=""><script>Polymer.IronCheckedElementBehaviorImpl={properties:{checked:{type:Boolean,value:!1,reflectToAttribute:!0,notify:!0,observer:"_checkedChanged"},toggles:{type:Boolean,value:!0,reflectToAttribute:!0},value:{type:String,value:"on",observer:"_valueChanged"}},observers:["_requiredChanged(required)"],created:function(){this._hasIronCheckedElementBehavior=!0},_getValidity:function(e){return this.disabled||!this.required||this.checked},_requiredChanged:function(){this.required?this.setAttribute("aria-required","true"):this.removeAttribute("aria-required")},_checkedChanged:function(){this.active=this.checked,this.fire("iron-change")},_valueChanged:function(){void 0!==this.value&&null!==this.value||(this.value="on")}},Polymer.IronCheckedElementBehavior=[Polymer.IronFormElementBehavior,Polymer.IronValidatableBehavior,Polymer.IronCheckedElementBehaviorImpl];</script><script>Polymer.PaperCheckedElementBehaviorImpl={_checkedChanged:function(){Polymer.IronCheckedElementBehaviorImpl._checkedChanged.call(this),this.hasRipple()&&(this.checked?this._ripple.setAttribute("checked",""):this._ripple.removeAttribute("checked"))},_buttonStateChanged:function(){Polymer.PaperRippleBehavior._buttonStateChanged.call(this),this.disabled||this.isAttached&&(this.checked=this.active)}},Polymer.PaperCheckedElementBehavior=[Polymer.PaperInkyFocusBehavior,Polymer.IronCheckedElementBehavior,Polymer.PaperCheckedElementBehaviorImpl];</script><dom-module id="paper-radio-button" assetpath="../bower_components/paper-radio-button/">
+  <template strip-whitespace="">
+    <style>
+      :host {
+        display: inline-block;
+        line-height: 0;
+        white-space: nowrap;
+        cursor: pointer;
+        @apply(--paper-font-common-base);
+        --calculated-paper-radio-button-size: var(--paper-radio-button-size, 16px);
+        /* -1px is a sentinel for the default and is replace in `attached`. */
+        --calculated-paper-radio-button-ink-size: var(--paper-radio-button-ink-size, -1px);
+      }
+
+      :host(:focus) {
+        outline: none;
+      }
+
+      #radioContainer {
+        @apply(--layout-inline);
+        @apply(--layout-center-center);
+        position: relative;
+        width: var(--calculated-paper-radio-button-size);
+        height: var(--calculated-paper-radio-button-size);
+        vertical-align: middle;
+        
+        @apply(--paper-radio-button-radio-container);
+      }
+
+      #ink {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        right: auto;
+        width: var(--calculated-paper-radio-button-ink-size);
+        height: var(--calculated-paper-radio-button-ink-size);
+        color: var(--paper-radio-button-unchecked-ink-color, --primary-text-color);
+        opacity: 0.6;
+        pointer-events: none;
+        -webkit-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+      }
+
+      #ink[checked] {
+        color: var(--paper-radio-button-checked-ink-color, --primary-color);
+      }
+
+      #offRadio, #onRadio {
+        position: absolute;
+        box-sizing: border-box;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+      }
+
+      #offRadio {
+        border: 2px solid var(--paper-radio-button-unchecked-color, --primary-text-color);
+        background-color: var(--paper-radio-button-unchecked-background-color, transparent);
+        transition: border-color 0.28s;
+      }
+
+      #onRadio {
+        background-color: var(--paper-radio-button-checked-color, --primary-color);
+        -webkit-transform: scale(0);
+        transform: scale(0);
+        transition: -webkit-transform ease 0.28s;
+        transition: transform ease 0.28s;
+        will-change: transform;
+      }
+
+      :host([checked]) #offRadio {
+        border-color: var(--paper-radio-button-checked-color, --primary-color);
+      }
+
+      :host([checked]) #onRadio {
+        -webkit-transform: scale(0.5);
+        transform: scale(0.5);
+      }
+
+      #radioLabel {
+        line-height: normal;
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: var(--paper-radio-button-label-spacing, 10px);
+        white-space: normal;
+        color: var(--paper-radio-button-label-color, --primary-text-color);
+      }
+
+      :host-context([dir="rtl"]) #radioLabel {
+        margin-left: 0;
+        margin-right: var(--paper-radio-button-label-spacing, 10px);
+      }
+
+      #radioLabel[hidden] {
+        display: none;
+      }
+
+      /* disabled state */
+
+      :host([disabled]) #offRadio {
+        border-color: var(--paper-radio-button-unchecked-color, --primary-text-color);
+        opacity: 0.5;
+      }
+
+      :host([disabled][checked]) #onRadio {
+        background-color: var(--paper-radio-button-unchecked-color, --primary-text-color);
+        opacity: 0.5;
+      }
+
+      :host([disabled]) #radioLabel {
+        /* slightly darker than the button, so that it's readable */
+        opacity: 0.65;
+      }
+    </style>
+
+    <div id="radioContainer">
+      <div id="offRadio"></div>
+      <div id="onRadio"></div>
+    </div>
+
+    <div id="radioLabel"><content></content></div>
+  </template>
+
+  <script>Polymer({is:"paper-radio-button",behaviors:[Polymer.PaperCheckedElementBehavior],hostAttributes:{role:"radio","aria-checked":!1,tabindex:0},properties:{ariaActiveAttribute:{type:String,value:"aria-checked"}},ready:function(){this._rippleContainer=this.$.radioContainer},attached:function(){if("-1px"===this.getComputedStyleValue("--calculated-paper-radio-button-ink-size").trim()){var t=parseFloat(this.getComputedStyleValue("--calculated-paper-radio-button-size").trim()),e=Math.floor(3*t);e%2!=t%2&&e++,this.customStyle["--paper-radio-button-ink-size"]=e+"px",this.updateStyles()}}});</script>
+</dom-module>
+<script>Polymer.IronMenubarBehaviorImpl={hostAttributes:{role:"menubar"},keyBindings:{left:"_onLeftKey",right:"_onRightKey"},_onUpKey:function(e){this.focusedItem.click(),e.detail.keyboardEvent.preventDefault()},_onDownKey:function(e){this.focusedItem.click(),e.detail.keyboardEvent.preventDefault()},get _isRTL(){return"rtl"===window.getComputedStyle(this).direction},_onLeftKey:function(e){this._isRTL?this._focusNext():this._focusPrevious(),e.detail.keyboardEvent.preventDefault()},_onRightKey:function(e){this._isRTL?this._focusPrevious():this._focusNext(),e.detail.keyboardEvent.preventDefault()},_onKeydown:function(e){this.keyboardEventMatchesKeys(e,"up down left right esc")||this._focusWithKeyboardEvent(e)}},Polymer.IronMenubarBehavior=[Polymer.IronMenuBehavior,Polymer.IronMenubarBehaviorImpl];</script><dom-module id="paper-radio-group" assetpath="../bower_components/paper-radio-group/">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+      }
+
+      :host ::content > * {
+        padding: var(--paper-radio-group-item-padding, 12px);
+      }
+    </style>
+
+    <content id="items" select="*"></content>
+  </template>
+</dom-module>
+
+<script>Polymer({is:"paper-radio-group",behaviors:[Polymer.IronMenubarBehavior],hostAttributes:{role:"radiogroup",tabindex:0},properties:{attrForSelected:{type:String,value:"name"},selectedAttribute:{type:String,value:"checked"},selectable:{type:String,value:"paper-radio-button"},allowEmptySelection:{type:Boolean,value:!1}},select:function(e){var t=this._valueToItem(e);if(!t||!t.hasAttribute("disabled")){if(this.selected){var i=this._valueToItem(this.selected);if(this.selected==e){if(!this.allowEmptySelection)return void(i&&(i.checked=!0));e=""}i&&(i.checked=!1)}Polymer.IronSelectableBehavior.select.apply(this,[e]),this.fire("paper-radio-group-changed")}},_activateFocusedItem:function(){this._itemActivate(this._valueForItem(this.focusedItem),this.focusedItem)},_onUpKey:function(e){this._focusPrevious(),e.preventDefault(),this._activateFocusedItem()},_onDownKey:function(e){this._focusNext(),e.preventDefault(),this._activateFocusedItem()},_onLeftKey:function(e){Polymer.IronMenubarBehaviorImpl._onLeftKey.apply(this,arguments),this._activateFocusedItem()},_onRightKey:function(e){Polymer.IronMenubarBehaviorImpl._onRightKey.apply(this,arguments),this._activateFocusedItem()}});</script>
+</div><dom-module id="hedgehog-visaconsole-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+
+
+
+
+
+
+        </style>
+
+        <app-route route="{{route}}" pattern="/:id" data="{{routeData}}"></app-route>
+        <iron-ajax url="/visaweb/assets/[[routeData.id]]" auto="" last-response="{{asset}}"></iron-ajax>
+        <paper-card style="width: 100%">
+            <div class="card-content">
+                <div class="circle">3</div>
+                <h1>[[asset.alias]] VISA konzol</h1>
+
+                <p>Kapcsolódva a <b>[[asset.address]]</b> erőforráshoz.</p>
+
+                <paper-radio-group selected="{{commandMode}}">
+                    <paper-radio-button name="read">Olvasás</paper-radio-button>
+                    <paper-radio-button name="write">Írás</paper-radio-button>
+                    <paper-radio-button name="query">Lekérdezés</paper-radio-button>
+                </paper-radio-group>
+
+
+                <form id="currentCommandForm" is="iron-form" method="post" action$="/visaweb/visa/[[commandMode]]" content-type="application/json">
+                    <input type="hidden" name="alias" value="[[asset.alias]]">
+                    <paper-input name="command" label="Parancs" type="text" placeholder="?IDN">
+                        <span prefix="" style="margin-right: 8px">[[commandMode]]</span>
+                    </paper-input>
+
+                </form>
+
+                <p>Ea duis bonorum nec, falli paulo aliquid ei eum.Has at minim mucius aliquam, est id tempor
+                    laoreet.Pro saepe pertinax ei, ad pri animal labores suscipiantur.</p>
+            </div>
+            <div class="card-actions">
+                <paper-button raised="" on-tap="onSubmitVisa">Küldés</paper-button>
+                <paper-button raised="" on-tap="onSaveCommand">Mentés</paper-button>
+                <a href="#/devicedetails-view/[[routeData.id]]" tabindex="-1">
+                    <paper-button>Részletek</paper-button>
+                </a>
+
+            </div>
+        </paper-card>
+        <hr>
+        <paper-card style="width: 100%" heading="Kimenet">
+            <div class="card-actions">
+                <paper-button raised="" on-tap="onClearConsole">Ürítés</paper-button>
+            </div>
+            <div class="card-content">
+                <template is="dom-repeat" items="{{outputData}}">
+                    <p>&gt;&gt; [[timestamp]] {{item.message}}</p>
+                </template>
+            </div>
+
+        </paper-card>
+    </template>
+
+    <script>Polymer({is:"hedgehog-visaconsole-view",properties:{commandMode:{type:String,notify:!0,value:"query"},outputData:{type:Array,notify:!0,value:function(){return[]}}},observers:["entriesAddedOrRemoved(outputData.splices)"],listeners:{"iron-form-response":"onSubmitVisaResponse","iron-form-error":"onSubmitVisaError"},entriesAddedOrRemoved:function(e){e&&e.indexSplices.forEach(function(e){e.removed.forEach(function(e){});for(var t=0;t<e.addedCount;t++){var o=e.index+t;e.object[o]}},this)},onClearConsole:function(e,t){this.set("outputData",[])},onSaveCommand:function(){this.$.currentCommandForm.serialize()},onSubmitVisa:function(e,t){this.$.currentCommandForm.submit(),this.push("outputData",{timestamp:new Date,message:this.commandMode+" "+this.$.currentCommandForm.serialize().command})},onSubmitVisaResponse:function(e,t){this.push("outputData",{timestamp:new Date,message:t.response})},onSubmitVisaError:function(e,t){this.push("outputData",{timestamp:new Date,level:"warning",message:t.error})}});</script>
+</dom-module>
+</body></html>
