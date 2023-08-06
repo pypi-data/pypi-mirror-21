@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import os
+import time
+
+from slack_tunes.updater import check_song
+
+
+def main():
+    SLACK_API_TOKENS = filter(None, os.getenv('SLACK_API_TOKEN', '').split(','))
+
+    if len(SLACK_API_TOKENS) == 0:
+        print('Missing SLACK_API_TOKEN environment variable')
+        return
+
+    if len(SLACK_API_TOKENS) > 1:
+        print('Notifying {0} slacks'.format(len(SLACK_API_TOKENS)))
+
+    current_status = None
+    first_run = True
+    while True:
+        current_status = check_song(current_status, first_run, SLACK_API_TOKENS)
+        first_run = False
+        time.sleep(10)
+
+
+if __name__ == '__main__':
+    main()
