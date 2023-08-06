@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SimpleTable: simple wrapper around the Table object &mdash; PyTables 3.4.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyTables 3.4.0 documentation" href="../index.html"/>
+        <link rel="up" title="PyTables Cookbook" href="index.html"/>
+        <link rel="next" title="In-memory HDF5 files" href="inmemory_hdf5_files.html"/>
+        <link rel="prev" title="Using your own custom data types" href="custom_data_types.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/logo-pytables-small.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.4.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usersguide/index.html">User’s Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Cookbook</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#contents">Contents</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="hints_for_sql_users.html">Hints for SQL users</a></li>
+<li class="toctree-l3"><a class="reference internal" href="py2exe_howto.html">PyTables &amp; py2exe Howto (by Tommy Edvardsen)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="no_root_install.html">How to install PyTables when you&#8217;re not root (by Koen van de Sande)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tailoring_atexit_hooks.html">Tailoring <cite>atexit</cite> hooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="custom_data_types.html">Using your own custom data types</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">SimpleTable: simple wrapper around the Table object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="inmemory_hdf5_files.html">In-memory HDF5 files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="threading.html">Threading</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other_material.html">Other Material</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../MIGRATING_TO_3.x.html">Migrating from 2.x to 3.x</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../downloads.html">Downloads</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html">Release Notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../project_pointers.html">Project pointers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dev_team.html">Development Team</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyTables</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">PyTables Cookbook</a> &raquo;</li>
+        
+      <li>SimpleTable: simple wrapper around the Table object</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/cookbook/simple_table.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="simpletable-simple-wrapper-around-the-table-object">
+<h1>SimpleTable: simple wrapper around the Table object<a class="headerlink" href="#simpletable-simple-wrapper-around-the-table-object" title="Permalink to this headline">¶</a></h1>
+<p>Here it is yet another example on how to inherit from the <a class="reference internal" href="../usersguide/libref/structured_storage.html#tables.Table" title="tables.Table"><code class="xref py py-class docutils literal"><span class="pre">tables.Table</span></code></a>
+object so as to build an easy-to-use Table object.
+Thanks to Brent Pedersen for this one (taken from
+<a class="reference external" href="https://pypi.python.org/pypi/simpletable">https://pypi.python.org/pypi/simpletable</a>).</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">SimpleTable: simple wrapper around pytables hdf5</span>
+<span class="sd">------------------------------------------------------------------------------</span>
+
+<span class="sd">Example Usage::</span>
+
+<span class="sd">  &gt;&gt;&gt; from simpletable import SimpleTable</span>
+<span class="sd">  &gt;&gt;&gt; import tables</span>
+
+<span class="sd">  # define the table as a subclass of simple table.</span>
+<span class="sd">  &gt;&gt;&gt; class ATable(SimpleTable):</span>
+<span class="sd">  ...     x = tables.Float32Col()</span>
+<span class="sd">  ...     y = tables.Float32Col()</span>
+<span class="sd">  ...     name = tables.StringCol(16)</span>
+
+<span class="sd">  # instantiate with: args: filename, tablename</span>
+<span class="sd">  &gt;&gt;&gt; tbl = ATable(&#39;test_docs.h5&#39;, &#39;atable1&#39;)</span>
+
+<span class="sd">  # insert as with pytables:</span>
+<span class="sd">  &gt;&gt;&gt; row = tbl.row</span>
+<span class="sd">  &gt;&gt;&gt; for i in range(50):</span>
+<span class="sd">  ...    row[&#39;x&#39;], row[&#39;y&#39;] = i, i * 10</span>
+<span class="sd">  ...    row[&#39;name&#39;] = &quot;name_%i&quot; % i</span>
+<span class="sd">  ...    row.append()</span>
+<span class="sd">  &gt;&gt;&gt; tbl.flush()</span>
+
+<span class="sd">  # there is also insert_many() method() with takes an iterable</span>
+<span class="sd">  # of dicts with keys matching the colunns (x, y, name) in this</span>
+<span class="sd">  # case.</span>
+
+<span class="sd">  # query the data (query() alias of tables&#39; readWhere()</span>
+<span class="sd">  &gt;&gt;&gt; tbl.query(&#39;(x &gt; 4) &amp; (y &lt; 70)&#39;) #doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">  array([(&#39;name_5&#39;, 5.0, 50.0), (&#39;name_6&#39;, 6.0, 60.0)],</span>
+<span class="sd">        dtype=[(&#39;name&#39;, &#39;|S16&#39;), (&#39;x&#39;, &#39;&lt;f4&#39;), (&#39;y&#39;, &#39;&lt;f4&#39;)])</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tables</span>
+<span class="n">_filter</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">Filters</span><span class="p">(</span><span class="n">complib</span><span class="o">=</span><span class="s2">&quot;lzo&quot;</span><span class="p">,</span> <span class="n">complevel</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">SimpleTable</span><span class="p">(</span><span class="n">tables</span><span class="o">.</span><span class="n">Table</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">group_name</span><span class="o">=</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">_filter</span><span class="p">,</span>
+                 <span class="n">expectedrows</span><span class="o">=</span><span class="mi">512000</span><span class="p">):</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">openFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uservars</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">group_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">group_name</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span>
+        <span class="n">parentNode</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">_getOrCreatePath</span><span class="p">(</span><span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">group_name</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">parentNode</span><span class="p">:</span> <span class="c1"># existing table</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">description</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># pull the description from the attrs</span>
+            <span class="n">description</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_description</span><span class="p">())</span>
+
+        <span class="n">tables</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parentNode</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span>
+                       <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+                       <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+                       <span class="n">expectedrows</span><span class="o">=</span><span class="n">expectedrows</span><span class="p">,</span>
+                       <span class="n">_log</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_c_classId</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="k">def</span> <span class="nf">_get_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># pull the description from the attrs</span>
+        <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">attr_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">tables</span><span class="o">.</span><span class="n">Atom</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">attr</span>
+
+    <span class="k">def</span> <span class="nf">insert_many</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_generator</span><span class="p">,</span> <span class="n">attr</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">row</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">colnames</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_generator</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                    <span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_generator</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                    <span class="n">row</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">readWhere</span>
+
+<span class="c1"># convience sublcass that i use a lot.</span>
+<span class="k">class</span> <span class="nc">BlastTable</span><span class="p">(</span><span class="n">SimpleTable</span><span class="p">):</span>
+      <span class="n">query</span>      <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">StringCol</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+      <span class="n">subject</span>    <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">StringCol</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+      <span class="n">pctid</span>      <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">()</span>
+      <span class="n">hitlen</span>     <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">UInt16Col</span><span class="p">()</span>
+      <span class="n">nmismatch</span>  <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">UInt16Col</span><span class="p">()</span>
+      <span class="n">ngaps</span>      <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">UInt16Col</span><span class="p">()</span>
+
+      <span class="n">qstart</span>     <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">UInt32Col</span><span class="p">()</span>
+      <span class="n">qstop</span>      <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">UInt32Col</span><span class="p">()</span>
+      <span class="n">sstart</span>     <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">UInt32Col</span><span class="p">()</span>
+      <span class="n">sstop</span>      <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">UInt32Col</span><span class="p">()</span>
+
+      <span class="n">evalue</span>     <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float64Col</span><span class="p">()</span>
+      <span class="n">score</span>      <span class="o">=</span> <span class="n">tables</span><span class="o">.</span><span class="n">Float32Col</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="s1">&#39;test_docs.h5&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="inmemory_hdf5_files.html" class="btn btn-neutral float-right" title="In-memory HDF5 files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="custom_data_types.html" class="btn btn-neutral" title="Using your own custom data types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2011-2016, PyTables maintainers.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'3.4.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
