@@ -1,0 +1,188 @@
+---
+# Configure Kubernetes nodes
+- name: node | Create directories
+  file:
+    path:  "{{ item }}"
+    state: directory
+    owner: kube
+    group: kube
+    mode:  0770
+  with_items:
+    - /var/run/kubernetes/
+    - /var/lib/kubelet/
+    - /etc/kubernetes/certs/
+    - /etc/kubernetes/tokens/
+    - /etc/kubernetes/config/
+    - /etc/kubernetes/kubeconfig/
+
+
+# Kubernetes node binaries
+- block:
+
+  - name: node | Stop node services
+    service:
+      name:  "{{ item }}"
+      state: stopped
+    ignore_errors: true
+    with_items:
+      - kubelet
+      - kube-proxy
+
+  - name: node | Fetch Kubernetes binaries from fileserver
+    command: >
+        scp -o StrictHostKeyChecking=no
+            -i /home/{{ admin_user }}/.ssh/{{ private_key | basename }}
+            {{ admin_user }}@{{ fileserver }}:/{{ download_dir }}/kubernetes_binaries_{{ kubernetes_version }}/{{ item }}
+            /usr/bin/{{ item }}
+    notify:
+      - Restart node daemons
+    with_items:
+      - kubelet
+      - kube-proxy
+
+  - name: node | Configure node binary permissions
+    file:
+      path:  /usr/bin/{{ item }}
+      state: file
+      mode:  0750
+      owner: kube
+      group: kube
+    with_items:
+      - kubelet
+      - kube-proxy
+
+  tags:
+    - k8s_binaries
+    - k8s_node_binaries
+
+
+# Kubernetes node config
+- name: node | Copy node config file
+  template:
+    src:   config/config.j2
+    dest:  /etc/kubernetes/config/config
+    mode:  0640
+    owner: kube
+    group: kube
+  notify:
+    - Reload Systemd
+    - Restart node daemons
+  tags: k8s_node_config
+
+
+# Kubernetes kubelet
+- block:
+
+  - name: node | Copy kubelet service file
+    template:
+      src:  services/kubelet.service.j2
+      dest: /usr/lib/systemd/system/kubelet.service
+    notify:
+      - Reload Systemd
+      - Restart kubelet
+
+  - name: node | Enable kubelet service
+    service:
+      name:    kubelet
+      enabled: yes
+
+  tags: k8s_kubelet
+
+
+# Kubernetes kube-proxy
+- block:
+
+  - name: node | Copy kube-proxy service file
+    copy:
+      src:  services/kube-proxy.service
+      dest: /usr/lib/systemd/system/kube-proxy.service
+    notify:
+      - Reload Systemd
+      - Restart kube-proxy
+
+  - name: node | Copy kube-proxy config file
+    template:
+      src:   config/kube-proxy.j2
+      dest:  /etc/kubernetes/config/kube-proxy
+      mode:  0640
+      owner: kube
+      group: kube
+    notify: Restart kube-proxy
+
+  - name: node | Enable kube-proxy service
+    service:
+      name:    kube-proxy
+      enabled: yes
+
+  tags:
+    - k8s_kube_proxy
+
+
+# Kubernetes node security
+- block:
+
+  # Certificates
+  - block:
+
+    # k8sdc CA
+    - name: node | Get k8sdc-ca certificate
+      slurp:
+        src: /etc/k8sdc-ca/k8sdc-ca.crt
+      delegate_to: "{{ groups['k8sdc-ca'][0] }}"
+      register: k8sdc_ca_cert
+
+    - name: node | Create k8sdc-ca certificate
+      copy:
+        dest: /etc/kubernetes/certs/k8sdc-ca.crt
+        content: "{{ k8sdc_ca_cert.content | b64decode }}"
+        mode:  0440
+        owner: kube
+        group: kube
+
+    tags: 
+      - k8s_node_certs
+      - k8s_certs
+
+  # Tokens
+  - block:
+
+    - name: node | Create kubelet kubeconfig file
+      template: 
+        src:   kubeconfig/kubelet.kubeconfig.j2
+        dest:  /etc/kubernetes/kubeconfig/kubelet.kubeconfig
+        mode:  0440
+        owner: kube
+        group: kube     
+      notify:  Restart kubelet
+      when:    node_token_values is defined
+
+    - name: node | Create kube-proxy kubeconfig file
+      template: 
+        src:   kubeconfig/kube-proxy.kubeconfig.j2
+        dest:  /etc/kubernetes/kubeconfig/kube-proxy.kubeconfig
+        mode:  0440
+        owner: kube
+        group: kube     
+      notify:  Restart kube-proxy
+      when:    node_token_values is defined
+
+    tags: k8s_tokens
+
+  tags:
+    - k8sdc_security 
+    - k8s_security
+
+
+# # Kubernetes node firewalld
+# - name: Configure firewalld
+#   firewalld: 
+#     port:      "{{ item }}/tcp"
+#     permanent: yes 
+#     state:     enabled
+#     immediate: yes
+#   with_items:
+#     - 2379
+#     - 2380
+#   when: use_firewalld
+
+
