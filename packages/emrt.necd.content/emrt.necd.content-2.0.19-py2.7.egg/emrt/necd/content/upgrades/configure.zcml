@@ -1,0 +1,171 @@
+<configure
+  xmlns="http://namespaces.zope.org/zope"
+  xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+  i18n_domain="emrt.necd.content">
+
+  <genericsetup:upgradeSteps
+    source="2.0"
+    destination="2.0.3"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeDepends
+      title="Update NFR codes."
+      description="Will overwrite existing NFR code data!"
+      import_steps="plone.app.registry"
+      />
+
+    <genericsetup:upgradeDepends
+      title="Reimport types to fix NECDFile."
+      description="Renamed ESDRTFile.xml to NECDFile.xml in types. Reimport it's definition."
+      import_steps="typeinfo"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.3"
+    destination="2.0.4"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeDepends
+      title="Update roles."
+      description="NECDReviewer renamed to SectorExpert."
+      import_steps="rolemap sharing workflow update-workflow-rolemap"
+      />
+
+    <genericsetup:upgradeDepends
+      title="Update LDAP group to role mapping."
+      description="Grant LeadReviewer the LeadReviewer role."
+      import_steps="emrt.necd.content.ldaproles"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.4"
+    destination="2.0.5"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeStep
+      title="Reindex sent_to_mse and sent_to_msc"
+      description="Fixing indexers to correctly check the review state."
+      handler="emrt.necd.content.upgrades.evolve205.run"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.5"
+    destination="2.0.6"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeStep
+      title="Fix local NECDReviewer roles"
+      description="Reassign locally assigned NECDReviewer roles to SectorExpert. This should have been done in 2.0.4"
+      handler="emrt.necd.content.upgrades.evolve206.run"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.6"
+    destination="2.0.7"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeStep
+      title="Assign MSExpert role to country groups in ReviewFolders."
+      description="#82444 - extranet-necd-review-countries-msexpert-es sees nothing in the My view tab. Add users that are part of the country mse groups as MSExpert in the tool."
+      handler="emrt.necd.content.upgrades.evolve207.run"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.7"
+    destination="2.0.10"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeStep
+      title="Delete vocabularies."
+      description="Changed pollutant and fuel vocabularies. Will be reimported in next step."
+      handler="emrt.necd.content.upgrades.evolve2010.run"
+      />
+
+    <genericsetup:upgradeDepends
+      title="Reimport missing vocabularies."
+      description="Pollutant and fuel list."
+      import_steps="emrt.necd.content.setup.vocabularies"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.10"
+    destination="2.0.12"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeDepends
+      title="Import jsregistry."
+      description="[refs #83488] Remove jquery superlink. Not needed since clickableRow does the same thing."
+      import_steps="jsregistry"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.12"
+    destination="2.0.14"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeDepends
+      title="Import workflows"
+      description="[refs #83333] View permission for 'conclusions' workflow step."
+      import_steps="workflow"
+      />
+
+    <genericsetup:upgradeDepends
+      title="Update workflows role mapping"
+      import_steps="emrt.necd.content.setup.workflow_rolemap"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.14"
+    destination="2.0.15"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeDepends
+      title="Import catalog"
+      description="[refs #83915] New index and column added: observation_questions_workflow."
+      import_steps="catalog"
+      />
+
+    <genericsetup:upgradeStep
+      title="Reindex observations"
+      description="Reindex observation_status, observation_questions_workflow indexes and overview_status column."
+      handler="emrt.necd.content.upgrades.evolve2015.run"
+      />
+
+  </genericsetup:upgradeSteps>
+
+  <genericsetup:upgradeSteps
+    source="2.0.15"
+    destination="2.0.16"
+    profile="emrt.necd.content:default">
+
+    <genericsetup:upgradeDepends
+      title="Import catalog"
+      description="[refs #84510] New parameter_value catalog column."
+      import_steps="catalog"
+      />
+
+    <genericsetup:upgradeStep
+      title="Reindex observations"
+      description="Reindex observations for new column."
+      handler="emrt.necd.content.upgrades.evolve2016.run"
+      />
+
+  </genericsetup:upgradeSteps>
+
+</configure>
