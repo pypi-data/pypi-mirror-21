@@ -1,0 +1,90 @@
+
+<html>
+<body>
+
+<%python>
+
+customers = []
+
+customers.append({
+	"CUSTOMER_ID":		1024,
+	"CUSTOMER_NAME":	"Joe Bloggs",
+	"CUSTOMER_ADDR_1":	"175 Bailey Place",
+	"CUSTOMER_ADDR_2":	"Timahoe",
+	"CUSTOMER_ADDR_3":	"Co. Donegal",
+	"CUSTOMER_EMAIL":	"joe.bloggs@yahoo.com"
+})
+
+
+customers.append({
+	"CUSTOMER_ID":		1026,
+	"CUSTOMER_NAME":	"Francis McCarthy",
+	"CUSTOMER_ADDR_1":	"7 Fiachra Place",
+	"CUSTOMER_ADDR_2":	"Jamestown",
+	"CUSTOMER_ADDR_3":	"Co. Cork",
+	"CUSTOMER_EMAIL":	"francis.mccarthy@hushmail.com"
+})
+
+customers.append({
+	"CUSTOMER_ID":		1027,
+	"CUSTOMER_NAME":	"Henry Pierce",
+	"CUSTOMER_ADDR_1":	"Rosemout",
+	"CUSTOMER_ADDR_2":	"Ennis Road",
+	"CUSTOMER_ADDR_3":	"Co. Galway",
+	"CUSTOMER_EMAIL":	"henry.pierce@ireland.com"
+})
+
+customers.append({
+	"CUSTOMER_ID":		1025,
+	"CUSTOMER_NAME":	"Mary Riley",
+	"CUSTOMER_ADDR_1":	"32 Main Street",
+	"CUSTOMER_ADDR_2":	"Ballyshore",
+	"CUSTOMER_ADDR_3":	"Co. Wexford",
+	"CUSTOMER_EMAIL":	"mary.riley@hotmail.com"
+})
+
+customers.append({
+	"CUSTOMER_ID":		1025,
+	"CUSTOMER_NAME":	"Richard Smith",
+	"CUSTOMER_ADDR_1":	"2 Seafield Drive",
+	"CUSTOMER_ADDR_2":	"Glenore",
+	"CUSTOMER_ADDR_3":	"Co. Wicklow",
+	"CUSTOMER_EMAIL":	"richard.smith@mail.com"
+})
+
+</%python>
+
+<a name="top">
+<h1>Customer List</h1>
+
+There are ${len(customers)} customer(s) in the database.
+
+
+<p>
+% for c in customers:
+<a href=#${c["CUSTOMER_ID"]}>${c["CUSTOMER_NAME"]}</a><br>
+%
+
+% for c in customers: 
+<a name=${c["CUSTOMER_ID"]}>
+<h3>Customer Details: ${c["CUSTOMER_NAME"]}</h3>
+
+	<table border="1" cellpadding="4" width="50%">
+	% keys = c.keys()
+	% keys.sort()
+	% for f in keys:
+	<tr><td>${ f }</td>
+		% if f == "CUSTOMER_EMAIL":
+		<td><a href=mailto:${ c[f] }>${ c[f] }</a></td>
+		% else:
+		<td>${ c[f] }</td>
+		%
+	</tr>
+	%
+	</table>
+	<p>
+	<a href="#top">top</a>
+%
+
+</body>
+</html>

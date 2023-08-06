@@ -1,0 +1,39 @@
+
+
+			PTML Classes 0.1
+
+
+TemplateParser
+==============
+
+The TemplateParser parses a PTML document and generates Python
+code to be executed at some later time.
+
+The constructor takes two arguments, the input file (PTML syntax)
+and the output file (Python syntax).  The generated code expects
+to be able to write using a file object called stdout.  There is
+a single method, parse() which performs the transformation.
+
+Example:
+
+	from sys import stdin, stdout
+	from ptml.TemplateParser import TemplateParser
+
+	tp = TemplateParser(stdin, stdout)
+
+	print "from sys import stdout"
+	tp.parse()
+
+AutoParser
+==========
+
+The AutoParser handles requests for documents by automatically
+transforming and executing the corresponding PTML.  It stores the
+transformed PTML (i.e., Python code) in a cache directory and can
+use file modification times or CRC checksums to detect when the
+PTML document has changed and needs to be re-transformed.
+
+See contrib/ptmlcgi.py for an example use of AutoParser
+
+
+- niall smart <niall@pobox.com>

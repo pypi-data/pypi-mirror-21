@@ -1,0 +1,82 @@
+<%python>
+
+import os
+import client
+
+from random import randint
+from os.path import basename, isfile
+from glob import glob
+from time import sleep
+
+hits = 100
+threads = 2
+logfile = "benchmark.html"
+
+
+stdout = open(logfile, "w")
+
+for file in glob("cache/*"):
+	os.remove(file)
+
+files = map(basename, glob("htdocs/*"))
+files.sort()
+
+</%python>
+
+<html>
+<style>
+
+body, p, td, th {
+	background:	white;
+	font-family:	verdana, lucidatypewriter;
+}
+
+tr.italic td {
+	font-weight:	normal;
+	font-style:	italic;
+}
+
+tr.bold td {
+	font-weight:	bold;
+}
+
+
+</style>
+<body>
+
+<h1>Benchmark Results</h1>
+
+% for file in files:
+
+	<table border="1">
+	<tr class="bold"><td colspan="7" align="left">${file}</td></tr>
+	<tr class="italic">
+		<td>Comparison</td>
+		<td>Compiled</td>
+		<td>Total Hits</td>
+		<td>Total Bytes</td>
+		<td>Bytes/Hit</td>
+		<td>Hits/Second</td>
+		<td>Bytes/Second</td>
+	</tr>
+
+	% for mode in ["always", "mtime", "crc"]:
+	%	port = randint(30000, 65000)
+	%	os.system("./httpd.py %(mode)s pyc %(port)s %(hits)s 2>&1 &" % vars())
+	%	sleep(0.5)
+	%	(bytes, duration) = client.benchmark(port, hits, threads, file)
+
+		<tr>
+		<td>${ mode }</td>
+		<td>pyc</td>
+		<td>${ hits }</td>
+		<td>${ bytes }</td>
+		<td>${ "%.2f" % (bytes / hits) }</td>
+		<td>${ "%.2f" % (hits / duration) }</td>
+		<td>${ "%.2f" % (bytes / duration) }</td>
+		</tr>
+
+	%
+	</table>
+	<p>
+%

@@ -1,0 +1,146 @@
+
+			PTML Syntax 0.1
+
+
+Introduction
+============
+
+The following is a brief and incomplete synopsis of the syntax used
+by PTML.  You can find examples of PTML syntax in files in the
+testsuite directory.
+
+
+Expressions
+===========
+
+The value of a Python expression can be inserted by enclosing the 
+expression in braces prefixed with a dollar sign.  For example:
+
+	${ 2 ** 24 + 2 }
+	${ sys.copyright }
+	${ i % 2 and "red" or "green" }
+
+Note: see the FAQ for techniques for emulating the C ?:
+ternary operator, the above example does not work in all cases.
+
+
+Simple Statements
+=================
+
+There are three ways a simple statement (i.e., a non-compound
+statement) can be inserted:
+
+1. Use a %-line
+
+A single statement can be inserted by prefixing the statement with
+a % character and optional whitespace.  For example:
+
+	% i = 2
+	% print "the variable i = %s" % i
+
+Note that:
+
+	<td>% print i
+	<td>
+
+is not treated as a %-line as non-whitespace characters appear
+before the percentage character.
+
+
+2. Use %{} to bracket the statement
+
+A single statement can be inserted by enclosing the statement in
+braces prefixed with a percentage sign.  There may be more than
+one statement per line, and non-whitespace characters before and
+after the statement(s).  For example:
+
+% l = ["foo", "bar", "baz"]
+list ${l} reversed %{ l.reverse() } ${l} and sorted %{ l.sort() } ${l}
+
+
+3. Use a <%python> block
+
+A block of Python code can be inserted by enclosing it between
+<%python> and </%python> tags.  The tags must appear on a single
+line with optional leading and trailing whitespace.
+
+The indentation level in the block cannot go below the indentation
+level of the first non-blank line.  For example, this:
+
+<%python>
+
+	if x > 2:
+		print "x is greater than 2"
+	else:
+		print "x is less than or equal to 2"
+
+print "tests over!"
+</%python>
+
+is illegal because the last statement is indented before the first
+line of the block.
+
+
+Compound Statements
+===================
+
+You can use compound statements in a %-line and %{} bracket.  PTML
+keeps track of what it thinks the current indentation level should
+be and inserts tabs before your statements.  Any indentation after
+then % or { character is stripped.
+
+You can begin a new indentation block by using a statement that
+ends with a ':' character and terminate it using a blank %-line or
+%{} bracket.  For example:
+
+	% for i in range(0, 10):
+	<tr><td>${i}</td><td>
+		%{ if i > 5: }
+		is greater than 5
+		%{ else: }
+		is less than or equal to 5
+		%{}
+	</td></tr>
+	%
+
+An indentation level begun by a compound statement in a %-line can
+be terminated by an empty %{} bracket, and vice versa.  The
+indentation of the % signs in the above example is immaterial to
+PTML and only serves to help the human reader.
+
+Note that PTML recognises when a compound statement has been started
+and does not indent remaining clauses of that statement, as in the
+case of the "else:" above.
+
+If you place the clause and suite of a compound statement on the
+same line as in:
+
+	% if spam > eggs: print "Obligatory Monty Python reference"
+
+then PTML does not start a new indentation level or even recognise
+that a new compound statement has been started.  This means that:
+
+	% if x > y: print "foo"
+	% else: print "bar"
+
+will generate valid Python code, however:
+
+	% if x > y: print "foo"
+	% else:
+	"bar"
+	%
+
+will not.
+	
+
+Miscellaneous
+=============
+
+Text enclosed between <%text> and </%text> tags is not interpreted
+by PTML; it is passed through literally.  As per the other tags,
+they must appear on a line of their own with optional leading and
+trailing whitespace.
+
+
+- niall smart <niall@pobox.com>
+
