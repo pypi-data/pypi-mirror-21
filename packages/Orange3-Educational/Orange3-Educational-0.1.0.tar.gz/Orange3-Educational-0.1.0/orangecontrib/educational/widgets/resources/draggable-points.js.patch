@@ -1,0 +1,19 @@
+diff --git a/orangecontrib/educational/widgets/resources/draggable-points.js b/orangecontrib/educational/widgets/resources/draggable-points.js
+index 4f078b9..29b4753 100644
+--- a/orangecontrib/educational/widgets/resources/draggable-points.js
++++ b/orangecontrib/educational/widgets/resources/draggable-points.js
+@@ -103,6 +103,14 @@
+          * Handler for mousedown
+          */
+         function mouseDown(e) {
++            // If already dragging (happens when a centroid is CLICKED),
++            // consider this second click as a drop.
++            // The reason this wasn't proposed upstream is that I failed to
++            // reproduce it in a MWE and couldn't bother investigating it further.
++            if (dragPoint) {
++                return drop(e);
++            }
++
+             var options,
+                 originalEvent = e.originalEvent || e,
+                 hoverPoint,
