@@ -1,0 +1,24 @@
+language: python
+
+python:
+  - 2.7
+  - pypy
+  - 3.3
+  - 3.4
+  - 3.5
+  - 3.6
+  - pypy3
+
+matrix:
+  allow_failures:
+    python: pypy3
+
+install:
+  - pip install -r requirements-dev.txt
+  - pip install coveralls
+  - pip install -e .
+
+script: py.test --flake8 --cov
+
+after_success:
+  coveralls
