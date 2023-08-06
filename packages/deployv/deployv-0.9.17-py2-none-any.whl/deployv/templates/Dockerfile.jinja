@@ -1,0 +1,26 @@
+FROM {{ base_image_name }}
+MAINTAINER Tulio Ruiz <truiz@vauxoo.com>
+
+RUN apt-get update \
+    && apt-get install -y python-software-properties \
+        software-properties-common openssh-server lua50 liblua50-dev liblualib50-dev \
+        ghostscript graphviz \
+    && pip install gitpython \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY files/dev_services.conf /etc/supervisor/conf.d/dev_services.conf
+COPY files/supervisord_service.conf /etc/supervisor/supervisord.conf
+
+RUN mkdir -p /root/.ssh \
+    && touch /root/.ssh/authorized_keys \
+    && mkdir -p /var/run/sshd
+RUN chown odoo:odoo -R /home/odoo
+USER odoo
+
+RUN curl http://j.mp/spf13-vim3 -L -o - | sh \
+    && sed -i 's/ set mouse\=a/\"set mouse\=a/g' ${HOME}/.vimrc \
+    && echo 'let &colorcolumn=join(range(80,999),",")' >> ${HOME}/.vimrc
+
+USER root
+EXPOSE 22 5432
+CMD ["/entry_point.py"]
