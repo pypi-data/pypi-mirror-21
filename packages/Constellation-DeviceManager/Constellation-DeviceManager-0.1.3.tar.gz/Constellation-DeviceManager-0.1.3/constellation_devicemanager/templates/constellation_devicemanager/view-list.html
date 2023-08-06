@@ -1,0 +1,89 @@
+{% extends "constellation_base/base.html" %}
+
+{% block title %}Device Manager | View List{% endblock %}
+{% block heading %}Device manager | View List{% endblock %}
+
+{% block js %}
+<div id="message-toast" class="mdl-js-snackbar mdl-snackbar">
+    <div class="mdl-snackbar__text"></div>
+    <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{{ block.super }}
+{% load static %}
+<script src="{% static 'constellation_devicemanager/js/view-list.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script>
+    var url_api_v1_device_add = "{% url 'constellation_devicemanager:api_v1_device_add' %}"
+    var url_api_v1_device_delete = "{% url 'constellation_devicemanager:api_v1_device_delete' '00:00:00:00:00:00' %}"
+    var url_api_v1_device_show_user = "{% url 'constellation_devicemanager:api_v1_device_show_user' 0 %}"
+    var username = "{{ username }}"
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="listCard" class="mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    {% verbatim %}
+    <script id="handlebars-devices" type="text/x-handlebars-template">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Devices</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <div class="mdl-list">
+            {{#if devices}}
+            {{#each devices}}
+                <div class="mdl-list__item">
+                    <span class="mdl-list__item-primary-content">
+                        {{name}} ({{MAC}})
+                    </span>
+                    <span class="mdl-list__item-secondary-content">
+                        <span class="mdl-list__item-secondary-action">
+                          <a href="#" onclick="deleteDevice('{{MAC}}')"><i class="material-icons">close</i></a>
+                        </span>
+                    </span>
+                </div>
+            {{/each}}
+            {{else}}
+                No devices yet -- add one below!
+            {{/if}}
+            </div>
+        </div>
+    </script>
+    {% endverbatim %}
+</div>
+<div id="formCard" class="form-card mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">New Device</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        <form method="post" action="{% url 'constellation_devicemanager:api_v1_device_add' %}" id="newDeviceForm" class="mdl-cell--2-offset-desktop mdl-cell--8-col">
+            {% csrf_token %}
+            {% if request.user.is_staff %}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+                {{ form.owner }}
+                <label class="mdl-textfield__label" for="{{ form.owner.id_for_label }}">Owner</label>
+            </div>
+            {% else %}
+                {{ form.owner.as_hidden }}
+            {% endif %}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+                {{ form.MAC }}
+                <label class="mdl-textfield__label" for="{{ form.MAC.id_for_label }}">MAC Address</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+                {{ form.name }}
+                <label class="mdl-textfield__label" for="{{ form.name.id_for_label }}">Device Friendly Name</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+                {{ form.hostname }}
+                <label class="mdl-textfield__label" for="{{ form.name.id_for_label }}">Device Hostname</label>
+            </div>
+            <div class="mdl-card__actions">
+              <div class="mdl-layout-spacer"></div>
+              <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--primary">
+                Add Device <i class="material-icons right">done</i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endblock %}
