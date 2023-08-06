@@ -1,0 +1,46 @@
+{% extends "texsitecleanblog/base.html" %}
+
+{% load bootstrap_ui_tags %}
+{% load i18n %}
+{% load wagtailcore_tags %}
+
+{% block clean-blog-body-content %}
+    {% for block in page.body %}
+        {% if block.block_type == "intro" %}
+            {% include_block block %}
+        {% endif %}
+    {% endfor %}
+
+    {% container %}
+        {% row %}
+            <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                {% for article in articles %}
+                    <div class="post-preview">
+                        <a href="{{ article.url }}">
+                            <h2 class="post-title">
+                                {{ article.title }}
+                            </h2>
+                            <h3 class="post-subtitle">
+                                {% for block in article.specific.body %}
+                                    {% if block.block_type == "intro" %}
+                                        {{ block.value.slogan }}
+                                    {% endif %}
+                                {% endfor %}
+                            </h3>
+                        </a>
+                        <p class="post-meta">{% include "texsitecleanblog/includes/author.html" with author=page.owner published_at=page.first_published_at only %}</p>
+                    </div>
+                    {% if articles.has_other_pages or not forloop.last %}
+                        <hr>
+                    {% endif %}
+                {% empty %}
+                    <p>{% trans "No entries found" %}</p>
+                {% endfor %}
+
+                {% if articles.has_other_pages %}
+                    {% include "texsitecleanblog/includes/paginator.html" with items=articles only %}
+                {% endif %}
+            </div>
+        {% endrow %}
+    {% endcontainer %}
+{% endblock %}
