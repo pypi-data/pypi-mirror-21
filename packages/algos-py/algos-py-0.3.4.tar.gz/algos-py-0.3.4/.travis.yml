@@ -1,0 +1,24 @@
+language:
+  - python
+
+dist:
+  - trusty
+
+python:
+  - 3.6.0
+
+# matrix:
+#   include:
+#     - os: osx
+#       language: generic
+#       python:
+#       osx_image: xcode 8.2
+
+install:
+  - pip3 install coala coala-bears coveralls
+
+script:
+  - coala --ci && nosetests --with-coverage --cover-package=src
+
+after_success:
+  - coveralls
