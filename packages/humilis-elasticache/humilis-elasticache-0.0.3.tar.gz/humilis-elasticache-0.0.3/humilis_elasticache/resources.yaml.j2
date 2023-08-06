@@ -1,0 +1,20 @@
+---
+resources:
+    CacheCluster:
+        Type: "AWS::ElastiCache::CacheCluster"
+        Properties:
+            AZMode: {{az_mode}}
+            CacheNodeType: {{cache_node_type}}
+            Engine: {{engine}}
+            NumCacheNodes: {{num_cache_nodes}}
+            VpcSecurityGroupIds: {{vpc_security_group_ids}}
+            CacheSubnetGroupName:
+                Ref: SubnetGroup
+    SubnetGroup:
+        Type: "AWS::ElastiCache::SubnetGroup"
+        Properties:
+            CacheSubnetGroupName: {{_layer.name}}
+            Description:
+                Elasticache ({{_env.name}}:{{_layer.name}}:{{_env.stage}})
+            SubnetIds:
+                {{subnet_ids}}

@@ -1,0 +1,29 @@
+---
+outputs:
+    CacheClusterName:
+        Description:
+            Physical ID of cache cluster.
+        Value:
+            Ref: CacheCluster
+    CacheClusterAddress:
+        Description:
+            The DNS address of the cache cluster endpoint.
+        Value:
+            "Fn::GetAtt":
+                - CacheCluster
+                {% if engine=='memcached' %}
+                - ConfigurationEndpoint.Address
+                {% elif engine=='redis' %}
+                - RedisEndpoint.Address
+                {% endif %}
+    CacheClusterPort:
+        Description:
+            The port of the cache cluster endpoint.
+        Value:
+            "Fn::GetAtt":
+                - CacheCluster
+                {% if engine=='memcached' %}
+                - ConfigurationEndpoint.Port
+                {% elif engine=='redis' %}
+                - RedisEndpoint.Port
+                {% endif %}
