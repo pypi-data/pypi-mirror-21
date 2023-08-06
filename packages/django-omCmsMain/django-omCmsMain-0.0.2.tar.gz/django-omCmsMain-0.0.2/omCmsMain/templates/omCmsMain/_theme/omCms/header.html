@@ -1,0 +1,79 @@
+{% if siteInfoData.displayNavBar %}
+    <!--nav class="navbar navbar-default" style="margin:10px;">
+        <div class="container-fluid">
+            <div class="navbar-header">
+              <a class="navbar-brand" href="#">{{siteInfoData.siteName}}</a>
+            </div>
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">{{siteInfoData.siteHomeLabel}}</a></li>
+                    {% for item in itemList %} 
+                        <li><a href="#{{item.itemCategory}}">{{item.itemCategory}}</a></li>
+                    {% endfor %}
+            </ul>
+        </div>
+    </nav>
+
+<hr /-->
+    <!-- ====================================================
+    header section -->
+    <header class="top-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-xs-5 header-logo">
+                    <br>                        
+
+                            {% if siteInfoData.displayLogo %}
+                                <br>
+                                <a href="a#">
+                                    <img  {% if siteInfoData.siteLogoWidth %} width={{siteInfoData.siteLogoWidth}}{% endif %} 
+                                          {% if siteInfoData.siteLogoHeight %} height={{siteInfoData.siteLogoHeight}}{% endif %} 
+                                          src="{{siteInfoData.siteLogo.url}}" 
+                                          alt="{{siteInfoData.siteHomeLabel}}" 
+                                          class="img-responsive logo" 
+                                          />
+                                </a>
+                            {% endif %}        
+                </div>
+
+                <div class="col-md-7">
+                    <nav class="navbar navbar-default">
+                      <div class="container-fluid nav-bar">
+                        <!-- Brand and toggle get grouped for better mobile display -->
+                        <div class="navbar-header">
+
+                          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                          </button>
+                        </div>
+
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                          
+                          <ul class="nav navbar-nav navbar-right">
+                            <li class=""><a href="#">{% if siteInfoData.siteHomeLabel %}{{siteInfoData.siteHomeLabel}}{% else %} Home {% endif %}</a></li>
+                            {% for item in itemList %} 
+                                <li><a href="#{{item.itemCategory}}">
+                                        {%if item.itemDescription %}
+                                            {{item.itemDescription}}
+                                        {% else %}
+                                            {{item.itemCategory}}
+                                        {% endif %}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                          </ul>
+                        </div><!-- /navbar-collapse -->
+                      </div><!-- / .container-fluid -->
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header> <!-- end of header area -->
+
+<hr />
+
+
+{% endif %}

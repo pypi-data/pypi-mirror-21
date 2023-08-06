@@ -1,0 +1,35 @@
+{% extends "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/base.html" %}
+
+{% load includeif_template_exists %}
+
+{% block head-title %}
+    {{siteInfoData.siteName}}
+{% endblock %}
+
+{% block body-header %}
+    {% include "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/header.html" %}
+{% endblock %}
+
+{% block body-main %}
+    <div class="mdl-layout__content">
+            <!-- Check if exist specific template for this detauil category -->
+            {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/sectionLayouts/"|add:category|add:"_detail.html" as nameTemplate %}
+                {% if nameTemplate|template_exists %}
+                    {% include nameTemplate %}
+                {% else %}
+                    {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/sectionLayouts/"|add:"default_detail.html" as nameTemplate %}
+                        {% if nameTemplate|template_exists %}
+                            {% include nameTemplate %}
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+            {% endwith %}
+    </div>
+
+{% endblock %}
+
+{% block body-footer %}
+    {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/footer.html" as footerTemplate %}
+        {% include footerTemplate %}
+    {% endwith %}
+{% endblock %}
