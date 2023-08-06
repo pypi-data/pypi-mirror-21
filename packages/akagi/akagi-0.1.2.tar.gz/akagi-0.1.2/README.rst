@@ -1,0 +1,85 @@
+==========
+akagi
+==========
+
+.. image:: https://img.shields.io/pypi/v/akagi.svg
+  :target: https://pypi.python.org/pypi/akagi
+
+.. image:: https://img.shields.io/travis/ayemos/akagi.svg
+  :target: https://travis-ci.org/ayemos/akagi
+
+.. image:: https://readthedocs.org/projects/akagi/badge/?version=latest
+  :target: https://akagi.readthedocs.io/en/latest/?badge=latest
+
+.. image:: https://pyup.io/repos/github/ayemos/akagi/shield.svg
+  :target: https://pyup.io/repos/github/ayemos/akagi/
+
+
+###########
+akagi
+###########
+
+* Free software: MIT license
+
+---------
+Features
+---------
+
+akagi supports *iter* and *save* interface for various datasources such as Amazon Redshift, Amazon S3 (more in future).
+
+-------------
+Installation
+-------------
+
+Install via pip::
+
+  pip install akagi
+
+or from source::
+
+  $ git clone https://github.com/ayemos/akagi akagi
+  $ cd akagi
+  $ python setup.py install
+
+--------
+Example
+--------
+
+++++++++++++++++++
+RedshiftDatasource
+++++++++++++++++++
+
+.. code:: python
+
+  ds = RedshiftDatasource.for_query(
+          'log-redshift-unload.ap-northeast-1', # S3 Bucket for intermediate storage
+          'select * from (select user_id, path from logs.imp limit 10000)', # Your Query here
+          'logs', # schema
+          'imp' # table (Those two are used to generate unique prefix for S3 object (e.g. logs/imp/20170312_081527)
+          )
+
+  ds.save('./akagi_test') # save results to local
+
+  for d in ds:
+      print(d) # iterate on result
+
+++++++++++++
+S3Datasource
+++++++++++++
+
+
+.. code:: python
+
+  ds = S3Datasource.for_prefix(
+          'image-data.ap-northeast-1',
+          'data/image_net/zebra',
+          FileFormat.BINARY
+          )
+
+
+--------
+Credits
+--------
+
+This package was created with `Cookiecutter <https://github.com/audreyr/cookiecutter>`_ and the
+`audreyr/cookiecutter-pypackage <https://github.com/audreyr/cookiecutter-pypackage>`_ project template.
