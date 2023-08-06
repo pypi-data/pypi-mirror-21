@@ -1,0 +1,159 @@
+Metadata-Version: 1.1
+Name: markdownmail
+Version: 0.5.0
+Summary: E-mail with text and html content provided with markdown
+Home-page: http://hg.markdownmail.yaal.fr
+Author: Yaal Team
+Author-email: contact@yaal.fr
+License: MIT
+Description: MarkdownMail
+        ============
+        
+        Purpose
+        -------
+        
+        Send e-mails with generated html content.
+        
+        The content has to be written in Markdown syntax. The text part of the e-mail
+        will be filled verbatim; the html part will be a converted HTML from the
+        Markdown content.
+        
+        
+        .. image:: https://www.yaal.fr/media/softwares/markdownmail-screenshot.png
+            :alt: E-mail rendering for the user (HTML part)
+        
+        
+        Install
+        -------
+        
+        ``$ pip install markdownmail``
+        
+        
+        Basic Usage
+        -----------
+        
+        .. code:: python
+        
+            import markdownmail
+        
+            CONTENT = u"""
+            SPAMS AND EGGS
+            ==============
+        
+            This is a demo with a list:
+        
+            1. Spam
+            2. Second spam
+            3. ...and eggs
+            """
+        
+            email = markdownmail.MarkdownMail(
+                from_addr=u'alice@example.org',
+                to_addr=u'bob@example.org',
+                subject=u'MarkdownMail demo',
+                content=CONTENT
+            )
+        
+            email.send('localhost')
+        
+        
+        Content must be unicode.
+        
+        
+        More infos
+        ----------
+        
+        Additional informations are addable:
+        
+        .. code:: python
+        
+            email = markdownmail.MarkdownMail(
+                from_addr=(u'alice@example.org', u'Alice'),
+                to_addr=(u'bob@example.org', u'Bob'),
+                subject=u'MarkdownMail demo',
+                content=CONTENT
+            )
+        
+        
+        The ``from_addr`` and ``to_addr`` parameters are the same as `Enveloppe <http://pypi.python.org/pypi/Envelopes>`_ library. 
+        
+        
+        Style
+        -----
+        
+        A default CSS is automatically added to the e-mail. It includes a font sans serif and minor improvements.
+        
+        To override the default CSS, pass a string including the style to the ``css`` optional parameter of ``MardownMail``:
+        
+        .. code:: python
+        
+            import markdownmail
+        
+            email = markdownmail.MarkdownMail(
+                from_addr=u'alice@example.org',
+                to_addr=u'bob@example.org',
+                subject=u'MarkdownMail demo',
+                content="CONTENT",
+                css="font-family:monospace; color:green;"
+            )
+        
+        
+        Run tests
+        ---------
+        
+        Tox is automatically installed in virtualenvs before executing the tests.
+        Execute them with:
+        
+        ``$ python setup.py test``
+        
+        
+        Disable sending e-mails in your tests
+        -------------------------------------
+        
+        The e-mail is not send if the parameter passed to ``send()`` method is an instance of ``NullServer``.
+        
+        .. code:: python
+        
+            email = markdownmail.MarkdownMail(
+                #params
+            )
+        
+            email.send(markdownmail.NullServer())
+        
+        
+        Assert about e-mails in your tests
+        ----------------------------------
+        
+        Subclassing ``NullServer`` allows to provide a custom behaviour in the ``check()``
+        method:
+        
+        .. code:: python
+        
+            class MyServer(markdownmail.NullServer):
+                def check(self, email):
+                    assert u'bob@example.org' == email.to_addr[0]
+        
+            email.send(MyServer())
+        
+        
+        
+        Useful links
+        ------------
+        
+        Envelopes library: https://pypi.python.org/pypi/Envelopes/0.4
+        (MardownMail is a wrapper around Envelopes library.)
+        
+        Markdown syntax: https://daringfireball.net/projects/markdown/syntax
+        
+        
+        
+Keywords: mail markdown yaal
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
