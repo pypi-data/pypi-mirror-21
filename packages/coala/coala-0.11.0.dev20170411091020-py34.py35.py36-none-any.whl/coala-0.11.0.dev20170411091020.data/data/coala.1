@@ -1,0 +1,172 @@
+.TH coala 1 2017\-04\-11
+.SH NAME
+coala
+.SH SYNOPSIS
+ \fBcoala\fR [-h] [-v] [-C] [--ci] [--json] [--format [STR]] [-c FILE] [-F] [-I]
+      [-s [FILE]] [--disable-caching] [--flush-cache] [--no-autoapply-warn]
+      [-b NAME [NAME ...]] [-f FILE [FILE ...]] [-i FILE [FILE ...]]
+      [--limit-files FILE [FILE ...]] [-d DIR [DIR ...]] [-V] [-L ENUM]
+      [-m ENUM] [-N] [-B] [-l LANG [LANG ...]] [-p LANG [LANG ...]] [-D]
+      [--show-details] [--log-json] [-o FILE] [-r [RELPATH]]
+      [-S SETTING [SETTING ...]] [-a] [-j JOBS] [-n]
+      [TARGETS [TARGETS ...]]
+
+
+.SH DESCRIPTION
+.. image:: https://cloud.githubusercontent.com/assets/5716520/24838296/a9cf5f04\-1d45\-11e7\-855c\-47b816ce1e09.png
+.br
+    :target: https://coala.io/
+.br
+
+.br
+coala.io: Linting and fixing code for all languages
+.br
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.br
+
+.br
+coala provides a unified command\-line interface for linting and fixing all
+.br
+your code, regardless of the programming languages you use.
+.br
+
+.br
+Please visit `coala.io <https://coala.io>`__ for an introduction to coala, to
+.br
+see the supported rules and checks or to contribute!
+.br
+
+.br
+|Linux Build Status| |Windows Build status| |Scrutinizer Code Quality|
+.br
+|codecov.io| |Documentation Status| |Gitmate| |AGPL| |Chat|
+.br
+
+.br
+.. image:: https://cloud.githubusercontent.com/assets/5716520/24838493/1c5ee0e6\-1d49\-11e7\-9b2b\-85f0c6bc2c60.png
+.br
+   :alt: Awards \- Yegor256 2016 Winner
+.br
+
+.br
+.. |Chat| image:: https://badges.gitter.im/coala/coala.svg
+.br
+    :target: https://coala.io/chat
+.br
+.. |Linux Build Status| image:: https://img.shields.io/circleci/project/coala/coala/master.svg?label=linux%20build
+.br
+   :target: https://circleci.com/gh/coala/coala
+.br
+.. |Windows Build status| image:: https://img.shields.io/appveyor/ci/coala/coala/master.svg?label=windows%20build
+.br
+   :target: https://ci.appveyor.com/project/coala/coala/branch/master
+.br
+.. |Scrutinizer Code Quality| image:: https://img.shields.io/scrutinizer/g/coala\-analyzer/coala.svg?label=scrutinizer%20quality
+.br
+   :target: https://scrutinizer\-ci.com/g/coala\-analyzer/coala/?branch=master
+.br
+.. |codecov.io| image:: https://img.shields.io/codecov/c/github/coala/coala/master.svg?label=branch%20coverage
+.br
+   :target: https://codecov.io/github/coala/coala?branch=master
+.br
+.. |Documentation Status| image:: https://readthedocs.org/projects/coala/badge/?version=latest
+.br
+   :target: http://docs.coala.io/
+.br
+.. |AGPL| image:: https://img.shields.io/github/license/coala/coala.svg
+.br
+   :target: https://www.gnu.org/licenses/agpl\-3.0.html
+.br
+.. |Gitmate| image:: https://img.shields.io/badge/Gitmate\-0%20issues\-brightgreen.svg
+.br
+   :target: http://gitmate.io/
+.br
+
+.SH OPTIONS
+  TARGETS               sections to be executed exclusively
+
+  \fB-h\fR, \fB--help\fR
+                        show this help message and exit
+  \fB-v\fR, \fB--version\fR
+                        show program's version number and exit
+
+  \fB-C\fR, \fB--non-interactive\fR
+                        run coala in non interactive mode
+  \fB--ci\fR            continuous integration run, alias for `--non-
+                        interactive`
+  \fB--json\fR          mode in which coala will display output as json
+  \fB--format\fR [STR]  output results with a custom format string, e.g.
+                        "Message: {message}"; possible placeholders: id,
+                        origin, file, line, end_line, column, end_column,
+                        severity, severity_str, message, message_base,
+                        message_arguments, affected_code, source_lines
+
+  \fB-c\fR FILE, \fB--config\fR FILE
+                        configuration file to be used, defaults to .coafile
+  \fB-F\fR, \fB--find-config\fR
+                        find .coafile in ancestors of the working directory
+  \fB-I\fR, \fB--no-config\fR
+                        run without using any config file
+  \fB-s\fR [FILE], \fB--save\fR [FILE]
+                        save used arguments to a config file to a .coafile,
+                        the given path, or at the value of -c
+  \fB--disable-caching\fR
+                        run on all files even if unchanged
+  \fB--flush-cache\fR   rebuild the file cache
+  \fB--no-autoapply-warn\fR
+                        turn off warning about patches not being auto
+                        applicable
+
+  \fB-b\fR NAME [NAME ...], \fB--bears\fR NAME [NAME ...]
+                        names of bears to use
+  \fB-f\fR FILE [FILE ...], \fB--files\fR FILE [FILE ...]
+                        files that should be checked
+  \fB-i\fR FILE [FILE ...], \fB--ignore\fR FILE [FILE ...]
+                        files that should be ignored
+  \fB--limit-files\fR FILE [FILE ...]
+                        filter the `--files` argument's matches further
+  \fB-d\fR DIR [DIR ...], \fB--bear-dirs\fR DIR [DIR ...]
+                        additional directories which may contain bears
+
+  \fB-V\fR, \fB--verbose\fR
+                        alias for `-L DEBUG`
+  \fB-L\fR ENUM, \fB--log-level\fR ENUM
+                        set log output level to DEBUG/INFO/WARNING/ERROR,
+                        defaults to INFO
+  \fB-m\fR ENUM, \fB--min-severity\fR ENUM
+                        set minimal result severity to INFO/NORMAL/MAJOR
+  \fB-N\fR, \fB--no-color\fR
+                        display output without coloring (excluding logs)
+  \fB-B\fR, \fB--show-bears\fR
+                        list all bears
+  \fB-l\fR LANG [LANG ...], \fB--filter-by-language\fR LANG [LANG ...]
+                        filters `--show-bears` by the given languages
+  \fB-p\fR LANG [LANG ...], \fB--show-capabilities\fR LANG [LANG ...]
+                        show what coala can fix and detect for the given
+                        languages
+  \fB-D\fR, \fB--show-description\fR
+                        show bear descriptions for `--show-bears`
+  \fB--show-details\fR  show bear details for `--show-bears`
+  \fB--log-json\fR      output logs as json along with results (must be called
+                        with --json)
+  \fB-o\fR FILE, \fB--output\fR FILE
+                        write results to the given file (must be called with
+                        --json)
+  \fB-r\fR [\fIRELPATH\fR], \fB--relpath\fR [\fIRELPATH\fR]
+                        return relative paths for files (must be called with
+                        --json)
+
+  \fB-S\fR SETTING [SETTING ...], \fB--settings\fR SETTING [SETTING ...]
+                        arbitrary settings in the form of section.key=value
+  \fB-a\fR, \fB--apply-patches\fR
+                        apply all patches automatically if possible
+  \fB-j\fR \fIJOBS\fR, \fB--jobs\fR \fIJOBS\fR
+                        number of jobs to use in parallel
+  \fB-n\fR, \fB--no-orig\fR
+                        don't create .orig backup files before patching
+.SH LICENSE
+ AGPL-3.0
+.SH MAINTAINER(S)
+ Lasse Schuirmann, Fabian Neuschmidt, Mischa Krüger
+.SH SEE ALSO
+ Online documentation: http://coala.io/
