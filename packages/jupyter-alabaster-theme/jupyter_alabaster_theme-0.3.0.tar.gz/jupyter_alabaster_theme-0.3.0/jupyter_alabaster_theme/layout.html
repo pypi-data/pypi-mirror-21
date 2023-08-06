@@ -1,0 +1,46 @@
+{%- extends "alabaster/layout.html" %}
+{% set extra_scripts = ["_static/js/bootstrap.min.js", "_static/js/scroll.js", "_static/js/mobile-nav.js"] %}
+{% set script_files = script_files + extra_scripts %}
+
+{# Disable base theme's top+bottom related navs; we have our own in sidebar #}
+{%- block relbar1 %}{% endblock %}
+{%- block relbar2 %}{% endblock %}
+
+{% set bs_span_prefix = "col-md-" %}
+{%- set render_sidebar = (not embedded) and (not theme_nosidebar|tobool) and sidebars %}
+{%- set bs_content_width = render_sidebar and "9" or "12"%}
+
+{%- macro bsidebar() %}
+    {%- if render_sidebar %}
+      <div class="col-sm-4 {{ bs_span_prefix }}3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+          {%- for sidebartemplate in sidebars %}
+            {%- include sidebartemplate %}
+          {%- endfor %}
+        </div>
+      </div>
+    {%- endif %}
+{%- endmacro %}
+
+{# Nav should appear before content, not after #}
+{% block content %}
+  {% include "navbar.html" %}
+  <div class="container">
+    <div class = "docs-mobile-nav">
+      {% include "mobile_sidebar.html" %}
+    </div>
+    <div class="row">
+      <div class="docs-desktop-nav">
+        {%- block sidebar1 %}{{ bsidebar() }}{% endblock %}
+      </div>
+      <div class="col-sm-8 {{ bs_span_prefix }}{{ bs_content_width }} content">
+        {% block body %}{% endblock %}
+      </div>
+      {% block sidebar2 %} {# possible location for sidebar #} {% endblock %}
+    </div>
+  </div>
+{% endblock %}
+
+{%- block footer %}
+  {% include "footer.html" %}
+{%- endblock %}
