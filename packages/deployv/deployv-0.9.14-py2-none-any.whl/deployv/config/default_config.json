@@ -1,0 +1,49 @@
+{
+    "container_config":{
+        "apt_install":[],
+        "domain":"localhost",
+        "env_vars":{
+            "odoo_config_file":"/home/odoo/.openerp_serverrc",
+            "odoo_home":"/home/odoo",
+            "odoo_user":"odoo",
+            "workers": 3
+        },
+        "image_name":"vauxoo/odoo-80-image",
+        "build_image": false,
+        "mem_limit":"768m",
+        "pip_install":[],
+        "ports":{
+            "8069":null,
+            "8072":null
+        },
+        "postgres_container":false,
+        "remove_previous":true,
+        "volumes":{
+            "filestore":"/home/odoo/.local/share/Odoo",
+            "logs":"/var/log/supervisor",
+            "ssh":"/home/odoo/.ssh",
+            "tmp":"/tmp"
+        },
+        "working_folder":"/home/dockeradmin/shared_volumes"
+    },
+    "instance":{
+        "action_type":"replace",
+        "config":{
+            "admin_passwd":"",
+            "admin":"",
+            "db_host":"172.17.0.1",
+            "db_name":"{{ instance.task_id }}_{{ instance.customer_id }}",
+            "db_password":"postgres",
+            "db_user":"postgres",
+            "dbfilter":"{{ instance.task_id }}_{{ instance.customer_id }}",
+            "list_db": false
+        },
+        "install_module":null,
+        "repositories":[
+        ],
+        "ssh_key": null,
+        "instance_type": "develop",
+        "task_id":"default_task",
+        "update_module":"all"
+    }
+}
