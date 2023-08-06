@@ -1,0 +1,37 @@
+{% extends "texsitecleanblog/base.html" %}
+
+{% load bootstrap_ui_tags %}
+{% load i18n %}
+{% load wagtailcore_tags %}
+
+{% block clean-blog-body-content %}
+    {{ block.super }}
+
+    {% for block in page.body %}
+        {% if forloop.first and block.block_type == "intro" %}
+           {% include_block block %}
+        {% endif %}
+    {% endfor %}
+
+    <article>
+        {% container %}
+            {% row %}
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+
+                    {% for block in page.body %}
+                        {% if block.block_type != "intro" %}
+                           {% include_block block %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page.get_parent.url or page.next_sibling or page.previous_sibling %}
+                        <hr>
+
+                        {% include "texsitecleanblog/includes/navigator.html" with backlink=page.get_parent.url backtitle=page.get_parent.title nextlink=page.next_sibling.url nexttitle=page.next_sibling.title previouslink=page.previous_sibling.url previoustitle=page.previous_sibling.title only %}
+                    {% endif %}
+
+                </div>
+            {% endrow %}
+        {% endcontainer %}
+    </article>
+{% endblock %}
