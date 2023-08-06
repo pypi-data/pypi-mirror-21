@@ -1,0 +1,36 @@
+{% load i18n staticfiles arctic_tags %}
+
+<ul class="side-menu" id="side-menu">
+    {% for key, value in menu.items %}
+        {% if value.submenu %}
+            <li class="has-sub sub--collapsed">
+                    <a {% if value.active %}class="active" {% endif %} href="{% url value.url %}">
+                        <i class="fa {{ value.icon }}"></i>
+                        <span>{% trans key %}</span>
+                        {% if not value.active %}
+                            <i class="fa fa-angle-left right"></i>
+                        {% else %}
+                            <i class="fa fa-angle-down right"></i>
+                        {% endif %}
+                    </a>
+                <ul {% if value.active %}class="active" {% endif %}>
+                    {% for sub_key, sub_value in value.submenu.items %}
+                        <li id="menu-{{ sub_value.url|slugify }}">
+                            <a {% if sub_value.active %}class="active" {% endif %} href="{% url sub_value.url %}">
+                                <i class="fa {{ sub_value.icon|default_if_none:'' }}"></i>
+                                {% trans sub_key %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% elif value.url %}
+            <li id="menu-{{ value.url|slugify }}">
+                <a {% if value.active %} class="active"{% endif %} href="{% url value.url %}">
+                    <i class="fa {{ value.icon }}"></i>
+                    <span>{% trans key %}</span>
+                </a>
+            </li>
+        {% endif %}
+    {% endfor %}
+</ul>
