@@ -1,0 +1,198 @@
+Metadata-Version: 1.1
+Name: devpi-server
+Version: 4.3.0
+Summary: devpi-server: reliable private and pypi.python.org caching server
+Home-page: http://doc.devpi.net
+Author: Holger Krekel, Florian Schulze
+Author-email: holger@merlinux.eu
+License: MIT
+Description: devpi-server: pypi server for caching and private indexes
+        =============================================================================
+        
+        * `issue tracker <https://github.com/devpi/devpi/issues>`_, `repo
+          <https://github.com/devpi/devpi>`_
+        
+        * IRC: #devpi on freenode, `mailing list
+          <https://mail.python.org/mm3/mailman3/lists/devpi-dev.python.org/>`_ 
+        
+        * compatibility: {win,unix}-py{27,34,35,36,py}
+        
+        consistent robust pypi-cache
+        ----------------------------------------
+        
+        You can point ``pip or easy_install`` to the ``root/pypi/+simple/``
+        index, serving as a self-updating transparent cache for pypi-hosted
+        **and** external packages.  Cache-invalidation uses the latest and
+        greatest PyPI protocols.  The cache index continues to serve when
+        offline and will resume cache-updates once network is available.
+        
+        user specific indexes
+        ---------------------
+        
+        Each user (which can represent a person or a project, team) can have
+        multiple indexes and upload packages and docs via standard ``setup.py``
+        invocations command.  Users and indexes can be manipulated through a
+        RESTful HTTP API.
+        
+        index inheritance
+        --------------------------
+        
+        Each index can be configured to merge in other indexes so that it serves
+        both its uploads and all releases from other index(es).  For example, an
+        index using ``root/pypi`` as a parent is a good place to test out a
+        release candidate before you push it to PyPI.
+        
+        good defaults and easy deployment
+        ---------------------------------------
+        
+        Get started easily and create a permanent devpi-server deployment
+        including pre-configured templates for ``nginx`` and cron. 
+        
+        separate tool for Packaging/Testing activities
+        -------------------------------------------------------
+        
+        The complimentary `devpi-client <http://pypi.python.org/devpi-client>`_ tool
+        helps to manage users, indexes, logins and typical setup.py-based upload and
+        installation workflows.
+        
+        See http://doc.devpi.net for getting started and documentation.
+        
+        
+        
+        Changelog
+        =========
+        
+        4.3.0 (2017-04-23)
+        ------------------
+        
+        - allow upload of documentation without first registering the project or
+          uploading releases.
+        
+        - add a new command line option ``--replica-max-retries``
+        
+          Under certain network conditions, it's possible for a connection from devpi
+          to replicas (such as pypi) to be dropped, resulting in a 502 bad gateway
+          being returned from devpi. When replica-max-retries is set to a number > 0,
+          devpi will attempt to retry connections until the retry limit is reached.
+        
+        - fix ``--import`` after ``--init`` option was added.
+        
+        - fix import when the export contains a bases cycle.
+        
+        - fix issue350: use absolute path to devpi-server when starting
+          background process.
+        
+        - fix issue392: setting user password from command line when password hash
+          wasn't migrated yet failed.
+        
+        - fix #381: indicate acceptable exit status for systemd.
+        
+        - remove broken ``--bypass-cdn`` option.
+        
+        
+        4.2.1 (2016-12-22)
+        ------------------
+        
+        - the new ``--init`` option now exits after done, so it can be used in
+          automation scripts. When using with ``--start`` it still starts the
+          background server immediately.
+        
+        
+        4.2.0 (2016-12-14)
+        ------------------
+        
+        SECURITY NOTE:
+        
+        Before devpi-server 4.2.0 passwords were hashed with a very weak algorithm.
+        It's strongly recommended to change any passwords created before 4.2.0
+        after upgrading! The password salt and hashes are exposed via the /+changelog
+        URL used for replication. If you use replication you should use client
+        side certificates or https with basic authentication to secure /+changelog.
+        
+        UPGRADE NOTE:
+        
+        Starting with devpi-server 4.2.0 the replication protocol is disabled by
+        default to prevent accidental information leaks, like password hashes. To
+        enable the replication protocol, you have to use ``--role master`` when
+        starting the master devpi-server instance.
+        
+        - fix issue378: the replication protocol is now disabled by default.
+        
+        - fix push to PyPI by skipping failing "register" step and adding additional
+          fields in POST data on "file_upload".
+        
+        - fix issue372: correctly set isolation_level for sqlite3 connections. This
+          also fixes Python 3.6 compatibility.
+        
+        - fix issue334: The event handler for the simple page cache failed when an
+          index was deleted and a new replica tried to run the event hooks.
+        
+        - fix issue314: Fetch external file on replica from original source if master
+          is down.
+        
+        - fix issue363: Replace weak password hashing with argon2 using passlib.
+          Existing logins will be migrated on login.
+        
+        - fix issue377: Add new ``--init`` option required to initialize a server
+          directory. This prevents accidental use of wrong or empty ``--serverdir``.
+        
+        - fix issue285: require waitress >= 1.0.1 to enable IPv6 support.
+        
+        
+        4.1.1 (2016-10-14)
+        ------------------
+        
+        - when a project has no releases (only setup.py register ran) and it isn't
+          whitelisted, then upstream releases will now be blocked as expected.
+        
+        - Adjust event processing status messages and the times when they are shown:
+          After 5 minutes of no event processing there will be a warning.
+          After 30 minutes this will turn into a fatal status.
+          After 1 hour of not being in sync there will be a warning.
+          After 6 hours of desync the status turns fatal.
+        
+        - handle sqlite3.NotSupportedError when the installed sqlite doesn't support
+          URI filenames at all.
+        
+        
+        4.1.0 (2016-07-15)
+        ------------------
+        
+        - Try opening read only transactions in SQLite read only mode for better
+          concurrency/locking behaviour. This is officially supported with Python 3.4,
+          but many systems allow it implicitly in older Python versions.
+        
+        - fix issue353: If an index inherits from a mirror with an empty cache and the
+          mirror is returning errors, there would be an error returned by devpi. Now
+          this situation is treated like the mirror has no releases and just the
+          releases from the index are returned.
+        
+        - fix issue352: When there was an issue during commit or rollback, the thread
+          local info got into an inconsistent state. This caused an AttributeError
+          whenever that thread was used. Eventually this could exhaust all worker
+          threads and make devpi unresponsive.
+        
+        - fix issue354: allow more general agent versions, such as 'Python-urllib/3.5'
+          to appear before the installer user agent string so redirects for setuptools
+          versions which had that work.
+        
+        - fix issue214: change the order in which indices are searched to fix the
+          mirror whitelisting and also make sure that packages, if available,
+          are always installed from internal indices instead of root/pypi.
+        
+        
+Keywords: pypi realtime cache server
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
