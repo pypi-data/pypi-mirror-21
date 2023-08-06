@@ -1,0 +1,99 @@
+# Rumba: A framework to install, bootstrap a RINA network
+
+Rumba is part of ARCFIRE 2020, Work Package 3. It is a framework in
+Python which allows user to write a Python script to define a RINA
+network. The physical graph needed for this RINA network is then
+calculated and realised on one of the supported testbeds. Next, one of
+the supported RINA prototypes is installed. After installation, the
+network is bootstrapped. For an example of such a Python script, have
+a look at the examples/ folder.
+
+## Workflow, both external and internal:
+
+  1. User defines the network graph, creating instances of model.Node
+    and model.DIF classes
+
+  2. User creates an instance of a Testbed class
+
+  3. User creates an instance of prototype.Experiment class, passing
+     the testbed instance and a list of Node instances
+
+    1. At the end of the base Experiment constructor, the
+       generate function is called to generate information about
+       per-node IPCPs, registrations and enrollment, ready to be
+       used by the plugins
+
+  4. User calls run() on the prototype.Experiment instance:
+
+    1. run() calls Testbed.swap_in(), passing the Experiment, and
+       filling in the missing information
+
+    2. run() calls a prototype-specific setup function, to create the
+       required IPCPs, perform registrations, enrollments, etc.
+
+    3. Perform tests (TODO)
+
+    4. run() calls Testbed.swap_out()
+
+## Installation
+
+   Rumba can be found on the
+   [PyPi](https://pypi.python.org/pypi/Rumba) and can thus be
+   installed through pip, by using `pip install rumba`. However, to
+   install the latest version, after cloning the repository, a user
+   can also issue `python setup.py install`.
+
+## Supported prototypes
+
+ * [IRATI](https://github.com/IRATI/stack) is an open source
+   implementation of the RINA architecture targeted at the OS/Linux
+   system, initially developed by the FP7-IRATI project.
+
+ * [rlite](https://github.com/vmaffione/rlite) is a lightweight Free
+   and Open Source implementation of the Recursive InterNetwork
+   Architecture (RINA) for GNU/Linux operating systems.
+
+ * Ouroboros is a user-space implementation of RINA with a focus on
+   portability. It is written in C89 and works on any POSIX.1-2008
+   enabled system.
+
+## Supported testbeds
+
+ * [QEMU](http://wiki.qemu-project.org/Main_Page) is a generic and
+   open source machine emulator and virtualizer.
+
+ * [Emulab](https://www.emulab.net/) is a network testbed, giving
+   researchers a wide range of environments in which to develop,
+   debug, and evaluate their systems.
+
+ * [jFed](http://jfed.iminds.be/) is a Java-based framework for
+   testbed federation.
+
+   In order to use the jFed testbed, a user first needs to download
+   his/her key from
+   [https://authority.ilabt.iminds.be/](https://authority.ilabt.iminds.be/)
+   After logging in, click on *Download your certificate*. Save the
+   contents in a file (for example cert.pem). A jFed testbed instance
+   is defined as follows:
+
+       tb = jfed.Testbed(exp_name = "rochefort10",
+                         username = "ricksanchez",
+                         cert_file = "/home/morty/cert.pem")
+
+   Here the experiment name is rochefort10, the user's name is
+   ricksanchez, and the certificate can be found in
+   /home/morty/cert.pem. Please use an absolute path for cert_file for
+   now.
+
+   Before running the experiment it is wise to use an SSH agent to
+   avoid having to enter the passphrase for every login to a node by
+   the framework if you are not on an IPv6 enabled network. (Apart
+   from asking for the passphrase to login to the nodes, the framework
+   will always ask for the passphrase since it is needed by the jFed
+   CLI as well.) In order to start an SSH agent and to add the
+   certificate, simply perform the following commands:
+
+       eval `ssh-agent`
+       ssh-add /home/morty/cert.pem
+
+
