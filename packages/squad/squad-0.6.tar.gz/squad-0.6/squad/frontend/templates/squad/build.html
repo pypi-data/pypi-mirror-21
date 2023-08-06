@@ -1,0 +1,66 @@
+{% extends "squad/base.html" %}
+{% load squad %}
+
+{% block content %}
+  {% include "squad/project-nav.html" %}
+  <h2>Build <u>{{build.name}}</u></h2>
+
+  <table class='table table-hover table-condensed'>
+    {% for test_run in build.test_runs.all %}
+    <tr class='warning'>
+      <th colspan='4'>
+        <h3>
+          <a href="{% project_url test_run %}">Test run #{{test_run.job_id}}</a>
+          <small>
+            Environment: <em>{{test_run.environment.slug}}</em>
+
+            {% if test_run.job_status %}
+            Status: {{test_run.job_status}}
+            {% endif %}
+
+            <div class='pull-right'>
+              {% if test_run.resubmit_url %}
+              <a href="{{test_run.resubmit_url}}" class='btn btn-info '><span class='fa fa-recycle'></span> resubmit</a>
+              {% endif %}
+              {% if test_run.job_url %}
+              <a href="{{test_run.job_url}}" class='btn btn-info '><span class='fa fa-info-circle'></span> origin</a>
+              {% endif %}
+            </div>
+
+          </small>
+        </h3>
+      </th>
+    </tr>
+    <tr>
+      <th>Suite</th>
+      <th>Metrics summary</th>
+      <th>Tests passed</th>
+      <th>Tests failed</th>
+    </tr>
+    {% for status in test_run.status.by_suite.all %}
+    {% if status %}
+    <tr>
+      <td>{{status.suite.slug}}</td>
+      <td>{{status.metrics_summary}}</td>
+      <td>{{status.tests_pass}}</td>
+      <td>{{status.tests_fail}}</td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+    {% if test_run.status.by_suite.count > 1 %}
+    {% with overall_status=test_run.status.overall.first %}
+    <tr>
+      <th>Overall summary</th>
+      <th>{{overall_status.metrics_summary}}</th>
+      <th>{{overall_status.tests_pass}}</th>
+      <th>{{overall_status.tests_fail}}</th>
+    </tr>
+    {% endwith %}
+    {% endif %}
+    <tr>
+      <td colspan='4'>&nbsp;</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+{% endblock %}
