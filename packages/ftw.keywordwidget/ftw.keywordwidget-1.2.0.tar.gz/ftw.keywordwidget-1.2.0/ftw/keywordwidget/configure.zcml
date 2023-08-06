@@ -1,0 +1,86 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:theme="http://namespaces.zope.org/ftw.theming"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    xmlns:upgrade-step="http://namespaces.zope.org/ftw.upgrade"
+    i18n_domain="ftw.keywordwidget">
+
+    <five:registerPackage package="." initialize=".initialize" />
+
+    <i18n:registerTranslations directory="locales" />
+
+    <include package="plone.app.vocabularies" />
+
+    <include file="permission.zcml" />
+    <include file="lawgiver.zcml" zcml:condition="installed ftw.lawgiver" />
+    <include file="widget.zcml" />
+
+    <browser:resourceDirectory name="ftw.keywordwidget" directory="resources" />
+
+    <configure zcml:condition="installed ftw.theming">
+        <include package="ftw.theming" file="meta.zcml" />
+
+        <theme:resources profile="ftw.keywordwidget:default" slot="addon">
+            <theme:scss file="resources/scss/ftwkeywordwidget.scss" />
+        </theme:resources>
+
+    </configure>
+
+    <genericsetup:registerProfile
+        name="default"
+        title="ftw.keywordwidget default"
+        directory="profiles/default"
+        provides="Products.GenericSetup.interfaces.EXTENSION"
+        />
+
+    <genericsetup:registerProfile
+        name="select2js"
+        title="ftw.keywordwidget Install select2 jquery plugin"
+        directory="profiles/select2js"
+        provides="Products.GenericSetup.interfaces.EXTENSION"
+        />
+
+    <genericsetup:registerProfile
+        name="uninstall"
+        title="ftw.keywordwidget : uninstall"
+        directory="profiles/uninstall"
+        provides="Products.GenericSetup.interfaces.EXTENSION"
+        for="Products.CMFPlone.interfaces.IMigratingPloneSiteRoot"
+        />
+
+    <plone:behavior
+        title="Categorization with keywordwidget"
+        description="Adds keywords/tags/subjects"
+        provides=".behavior.IKeywordCategorization"
+        factory=".behavior.Categorization"
+        for="plone.dexterity.interfaces.IDexterityContent"
+        />
+
+    <plone:behavior
+        title="Test behavior for keywordwidget Use-Cases"
+        description="Some demo Use-Cases"
+        provides=".behavior.IKeywordUseCases"
+        for="plone.dexterity.interfaces.IDexterityContent"
+        />
+
+    <utility
+        component=".vocabularies.UnicodeKeywordsVocabularyFactory"
+        name="ftw.keywordwidget.UnicodeKeywordVocabulary"
+        />
+
+    <include package="ftw.upgrade" file="meta.zcml" />
+    <upgrade-step:directory
+        profile="ftw.keywordwidget:default"
+        directory="./upgrades/default"
+        />
+    <upgrade-step:directory
+        profile="ftw.keywordwidget:select2js"
+        directory="./upgrades/select2js"
+        />
+
+</configure>
