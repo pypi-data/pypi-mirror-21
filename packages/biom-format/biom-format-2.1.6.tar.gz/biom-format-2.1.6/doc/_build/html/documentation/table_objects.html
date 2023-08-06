@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BIOM Table (biom.table) &mdash; biom-format.org</title>
+    
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.1.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <link rel="top" title="biom-format.org" href="../index.html" />
+    <link rel="up" title="BIOM Documentation" href="index.html" />
+    <link rel="next" title="biom.table.Table" href="generated/biom.table.Table.html" />
+    <link rel="prev" title="biom.load_table" href="generated/biom.load_table.html" /> 
+  </head>
+  <body>
+  
+  <a href="https://github.com/biocore/biom-format"><img
+    style="position: absolute; top: 0; right: 0; border: 0;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png"
+    alt="Fork me on GitHub"></a>
+
+      <div class="header"><h1 class="heading"><a href="../index.html">
+          <span>biom-format.org</span></a></h1>
+        <h2 class="heading"><span>BIOM Table (biom.table)</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="generated/biom.load_table.html">biom.load_table</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="generated/biom.table.Table.html">biom.table.Table</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <span class="target" id="module-biom.table"></span><div class="section" id="biom-table-biom-table">
+<h1>BIOM Table (<a class="reference internal" href="#module-biom.table" title="biom.table"><tt class="xref py py-mod docutils literal"><span class="pre">biom.table</span></tt></a>)<a class="headerlink" href="#biom-table-biom-table" title="Permalink to this headline">¶</a></h1>
+<p>The biom-format project provides rich <tt class="docutils literal"><span class="pre">Table</span></tt> objects to support use of the
+BIOM file format. The objects encapsulate matrix data (such as OTU counts) and
+abstract the interaction away from the programmer.</p>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/biom.table.Table.html#biom.table.Table" title="biom.table.Table"><tt class="xref py py-obj docutils literal"><span class="pre">Table</span></tt></a>(data,&nbsp;observation_ids,&nbsp;sample_ids[,&nbsp;...])</td>
+<td>The (canonically pronounced &#8216;teh&#8217;) Table.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>First, lets create a toy table to play around with. For this example, we&#8217;re
+going to construct a 10x4 <cite>Table</cite>, or one that has 10 observations and 4
+samples. Each observation and sample will be given an arbitrary but unique
+name. We&#8217;ll also add on some metadata.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">biom.table</span> <span class="kn">import</span> <span class="n">Table</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;S</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">observ_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;O</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_metadata</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">observ_metadata</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Firmicutes&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Firmicutes&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Proteobacteria&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Proteobacteria&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Proteobacteria&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Bacteroidetes&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Bacteroidetes&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Firmicutes&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Firmicutes&#39;</span><span class="p">]},</span>
+<span class="gp">... </span>                   <span class="p">{</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Bacteria&#39;</span><span class="p">,</span> <span class="s1">&#39;Firmicutes&#39;</span><span class="p">]}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">observ_ids</span><span class="p">,</span> <span class="n">sample_ids</span><span class="p">,</span> <span class="n">observ_metadata</span><span class="p">,</span>
+<span class="gp">... </span>              <span class="n">sample_metadata</span><span class="p">,</span> <span class="n">table_id</span><span class="o">=</span><span class="s1">&#39;Example Table&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now that we have a table, let&#8217;s explore it at a high level first.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">table</span>
+<span class="go">10 x 4 &lt;class &#39;biom.table.Table&#39;&gt; with 39 nonzero entries (97% dense)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">table</span> 
+<span class="go"># Constructed from biom file</span>
+<span class="go">#OTU ID S0  S1  S2  S3</span>
+<span class="go">O0  0.0 1.0 2.0 3.0</span>
+<span class="go">O1  4.0 5.0 6.0 7.0</span>
+<span class="go">O2  8.0 9.0 10.0    11.0</span>
+<span class="go">O3  12.0    13.0    14.0    15.0</span>
+<span class="go">O4  16.0    17.0    18.0    19.0</span>
+<span class="go">O5  20.0    21.0    22.0    23.0</span>
+<span class="go">O6  24.0    25.0    26.0    27.0</span>
+<span class="go">O7  28.0    29.0    30.0    31.0</span>
+<span class="go">O8  32.0    33.0    34.0    35.0</span>
+<span class="go">O9  36.0    37.0    38.0    39.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">table</span><span class="o">.</span><span class="n">ids</span><span class="p">()</span> 
+<span class="go">[&#39;S0&#39; &#39;S1&#39; &#39;S2&#39; &#39;S3&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">table</span><span class="o">.</span><span class="n">ids</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;observation&#39;</span><span class="p">)</span> 
+<span class="go">[&#39;O0&#39; &#39;O1&#39; &#39;O2&#39; &#39;O3&#39; &#39;O4&#39; &#39;O5&#39; &#39;O6&#39; &#39;O7&#39; &#39;O8&#39; &#39;O9&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">table</span><span class="o">.</span><span class="n">nnz</span>  <span class="c1"># number of nonzero entries</span>
+<span class="go">39</span>
+</pre></div>
+</div>
+<p>While it&#8217;s fun to just poke at the table, let&#8217;s dig deeper. First, we&#8217;re going
+to convert <cite>table</cite> into relative abundances (within each sample), and then
+filter <cite>table</cite> to just the samples associated with environment &#8216;A&#8217;. The
+filtering gets fancy: we can pass in an arbitrary function to determine what
+samples we want to keep. This function must accept a sparse vector of values,
+the corresponding ID and the corresponding metadata, and should return <tt class="docutils literal"><span class="pre">True</span></tt>
+or <tt class="docutils literal"><span class="pre">False</span></tt>, where <tt class="docutils literal"><span class="pre">True</span></tt> indicates that the vector should be retained.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">normed</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;sample&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filter_f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">values</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="n">md</span><span class="p">[</span><span class="s1">&#39;environment&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;A&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env_a</span> <span class="o">=</span> <span class="n">normed</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">filter_f</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;sample&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">env_a</span> 
+<span class="go"># Constructed from biom file</span>
+<span class="go">#OTU ID S0  S2</span>
+<span class="go">O0  0.0 0.01</span>
+<span class="go">O1  0.0222222222222 0.03</span>
+<span class="go">O2  0.0444444444444 0.05</span>
+<span class="go">O3  0.0666666666667 0.07</span>
+<span class="go">O4  0.0888888888889 0.09</span>
+<span class="go">O5  0.111111111111  0.11</span>
+<span class="go">O6  0.133333333333  0.13</span>
+<span class="go">O7  0.155555555556  0.15</span>
+<span class="go">O8  0.177777777778  0.17</span>
+<span class="go">O9  0.2 0.19</span>
+</pre></div>
+</div>
+<p>But, what if we wanted individual tables per environment? While we could just
+perform some fancy iteration, we can instead just rely on <cite>Table.partition</cite> for
+these operations. <cite>partition</cite>, like <cite>filter</cite>, accepts a function. However, the
+<cite>partition</cite> method only passes the corresponding ID and metadata to the
+function. The function should return what partition the data are a part of.
+Within this example, we&#8217;re also going to sum up our tables over the partitioned
+samples. Please note that we&#8217;re using the original table (ie, not normalized)
+here.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">part_f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="n">md</span><span class="p">[</span><span class="s1">&#39;environment&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">env_tables</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">part_f</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;sample&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">partition</span><span class="p">,</span> <span class="n">env_table</span> <span class="ow">in</span> <span class="n">env_tables</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="n">partition</span><span class="p">,</span> <span class="n">env_table</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s1">&#39;sample&#39;</span><span class="p">)</span>
+<span class="go">A [ 180.  200.]</span>
+<span class="go">B [ 190.  210.]</span>
+</pre></div>
+</div>
+<p>For this last example, and to highlight a bit more functionality, we&#8217;re going
+to first transform the table such that all multiples of three will be retained,
+while all non-multiples of three will get set to zero. Following this, we&#8217;ll
+then collpase the table by taxonomy, and then convert the table into
+presence/absence data.</p>
+<p>First, let&#8217;s setup the transform. We&#8217;re going to define a function that takes
+the modulus of every value in the vector, and see if it is equal to zero. If it
+is equal to zero, we&#8217;ll keep the value, otherwise we&#8217;ll set the value to zero.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">transform_f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">v</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mult_of_three</span> <span class="o">=</span> <span class="n">tform</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">transform_f</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mult_of_three</span> 
+<span class="go"># Constructed from biom file</span>
+<span class="go">#OTU ID S0  S1  S2  S3</span>
+<span class="go">O0  0.0 0.0 0.0 3.0</span>
+<span class="go">O1  0.0 0.0 6.0 0.0</span>
+<span class="go">O2  0.0 9.0 0.0 0.0</span>
+<span class="go">O3  12.0    0.0 0.0 15.0</span>
+<span class="go">O4  0.0 0.0 18.0    0.0</span>
+<span class="go">O5  0.0 21.0    0.0 0.0</span>
+<span class="go">O6  24.0    0.0 0.0 27.0</span>
+<span class="go">O7  0.0 0.0 30.0    0.0</span>
+<span class="go">O8  0.0 33.0    0.0 0.0</span>
+<span class="go">O9  36.0    0.0 0.0 39.0</span>
+</pre></div>
+</div>
+<p>Next, we&#8217;re going to collapse the table over the phylum level taxon. To do
+this, we&#8217;re going to define a helper variable for the index position of the
+phylum (see the construction of the table above). Next, we&#8217;re going to pass
+this to <cite>Table.collapse</cite>, and since we want to collapse over the observations,
+we&#8217;ll need to specify &#8216;observation&#8217; as the axis.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">phylum_idx</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collapse_f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">id_</span><span class="p">,</span> <span class="n">md</span><span class="p">:</span> <span class="s1">&#39;; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s1">&#39;taxonomy&#39;</span><span class="p">][:</span><span class="n">phylum_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">collapsed</span> <span class="o">=</span> <span class="n">mult_of_three</span><span class="o">.</span><span class="n">collapse</span><span class="p">(</span><span class="n">collapse_f</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;observation&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">collapsed</span> 
+<span class="go"># Constructed from biom file</span>
+<span class="go">#OTU ID S0  S1  S2  S3</span>
+<span class="go">Bacteria; Firmicutes  7.2 6.6 7.2 8.4</span>
+<span class="go">Bacteria; Bacteroidetes   12.0    10.5    0.0 13.5</span>
+<span class="go">Bacteria; Proteobacteria  4.0 3.0 6.0 5.0</span>
+</pre></div>
+</div>
+<p>Finally, let&#8217;s convert the table to presence/absence data.</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pa</span> <span class="o">=</span> <span class="n">collapsed</span><span class="o">.</span><span class="n">pa</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">pa</span> 
+<span class="go"># Constructed from biom file</span>
+<span class="go">#OTU ID S0  S1  S2  S3</span>
+<span class="go">Bacteria; Firmicutes  1.0 1.0 1.0 1.0</span>
+<span class="go">Bacteria; Bacteroidetes   1.0 1.0 0.0 1.0</span>
+<span class="go">Bacteria; Proteobacteria  1.0 1.0 1.0 1.0</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="generated/biom.load_table.html">biom.load_table</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="../index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="generated/biom.table.Table.html">biom.table.Table</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+
+    <div class="footer">
+        &copy; Copyright 2011-2017 The BIOM Format Development Team.
+      Last updated on Apr 28, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-6636235-6']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>
