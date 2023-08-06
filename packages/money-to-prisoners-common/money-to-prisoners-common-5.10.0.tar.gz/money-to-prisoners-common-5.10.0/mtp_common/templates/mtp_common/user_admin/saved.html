@@ -1,0 +1,23 @@
+{% extends 'mtp_common/user_admin/base.html' %}
+{% load i18n %}
+
+{% block admin_content %}
+  <div class="govuk-box-highlight">
+    <h1 class="bold-large">
+      {% if create %}
+        {% blocktrans trimmed with username=user.username %}
+          User account ‘{{ username }}’ created
+        {% endblocktrans %}
+      {% else %}
+        {% blocktrans trimmed with username=user.username %}
+          User account ‘{{ username }}’ edited
+        {% endblocktrans %}
+      {% endif %}
+    </h1>
+  </div>
+
+  {% include 'mtp_common/user_admin/user-description.html' with user=user only %}
+
+  <p><a href="{% url "edit-user" username=user.username %}">{% trans 'Edit this user account' %}</a></p>
+  <p><a class="link-back" href="{% url "list-users" %}">{% trans 'Return to user management' %}</a></p>
+{% endblock %}

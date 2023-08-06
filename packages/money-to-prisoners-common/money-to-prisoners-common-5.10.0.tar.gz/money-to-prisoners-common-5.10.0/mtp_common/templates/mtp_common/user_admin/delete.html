@@ -1,0 +1,25 @@
+{% extends 'mtp_common/user_admin/base.html' %}
+{% load i18n %}
+{% load mtp_common %}
+
+{% block admin_header %}
+  <header>
+    {% language_switch %}
+    <h1 class="heading-xlarge">
+      {% blocktrans trimmed with username=user.username %}
+        Disable user account ‘{{ username }}’
+      {% endblocktrans %}
+    </h1>
+  </header>
+{% endblock %}
+
+{% block admin_content %}
+  <p>{% trans 'When you disable a user account, that user will be unable to log in.' %}</p>
+  {% include 'mtp_common/user_admin/user-description.html' with user=user only %}
+
+  <form method="post" action=".">
+    {% csrf_token %}
+    <button type="submit" name="submit" value="submit" class="button">{% trans 'Disable user account' %}</button>
+    <a class="cancel" href="{% url 'list-users' %}">{% trans 'Cancel' %}</a>
+  </form>
+{% endblock %}
