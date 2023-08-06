@@ -1,0 +1,79 @@
+<div>
+    <h2>Station controller</h2>
+<table>
+<tr>
+    <td>Hostname</td>
+    <td> {{ hostname }} </td>
+</tr>
+    <tr>
+    <td>Network interfaces</td>
+    <td>
+        {% if network_interfaces %}
+            <ul>
+            {% for network_interface in network_interfaces %}
+                <li>
+                    <label> {{ network_interface.name }} </label>
+                    <table>
+                        <tr>
+                            <th>Peer</th>
+                            <th>Address</th>
+                            <th>Broadcast</th>
+                            <th>Netmask</th>
+                        </tr>
+                        <tr>
+                            <td>{{ network_interface.details.17.0.peer}}</td>
+                            <td>{{ network_interface.details.17.0.addr }}</td>
+                            <td>{{ network_interface.details.17.0.broadcast }}</td>
+                            <td>{{ network_interface.details.17.0.netmask }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ network_interface.details.2.0.peer}}</td>
+                            <td>{{ network_interface.details.2.0.addr }}</td>
+                            <td>{{ network_interface.details.2.0.broadcast }}</td>
+                            <td>{{ network_interface.details.2.0.netmask }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ network_interface.details.10.0.peer}}</td>
+                            <td>{{ network_interface.details.10.0.addr }}</td>
+                            <td>{{ network_interface.details.10.0.broadcast }}</td>
+                            <td>{{ network_interface.details.10.0.netmask }}</td>
+                        </tr>
+                    </table>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No network interfaces are available.</p>
+        {% endif %}
+    </td>
+</tr>
+</table>
+
+<h2>Devices</h2>
+{% if device_list %}
+    <ul>
+    {% for device in device_list %}
+        <li><a href="/visaweb/{{ device.alias }}/">{{ device.alias }} <span>(Listening on {{ device.address }} )</span></a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No devices are available.</p>
+{% endif %}
+<h2>VISA connections</h2>
+{% if visa_connections %}
+    <ul>
+    {% for connection in visa_connections %}
+        <li>
+            <form action="{% url 'visaweb:attach' %}" method="post">
+                {% csrf_token %}
+                <input type="text" name="alias" />
+                <input type="text" name="address" value="{{ connection }}" />
+                <input type="submit" value="Attach" />
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No VISA connections are available.</p>
+{% endif %}
+</div>
