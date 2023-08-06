@@ -1,0 +1,295 @@
+ACS-CLI
+=======
+
+What is it?
+-----------
+
+A command line tool for accessing Alfresco Content Services repository
+servers through the public REST APIs.
+
+The motivation for building this tool is two-fold: firstly as an
+interesting way for me to learn python; and secondly it's the tool I
+always wish existed. The code probably isn't very *pythonic* or well
+organised, but hopefully this will get better :-)
+
+Installation
+------------
+
+Use (python3) pip to install:
+
+::
+
+    pip3 install acs-cli
+
+To try this out in docker with a self-destructing temporary container:
+
+::
+
+    mward@holly:~$ docker run -it --rm ubuntu:16.04
+    root@f957e9b7154f:/# apt update && apt install -y python3 python3-pip
+    root@f957e9b7154f:/# pip3 install acs-cli
+
+
+Warning
+-------
+
+This is a proof of concept and must be considered *alpha* quality
+software at best.
+
+Getting help
+------------
+
+You can ask for help at the program, API/command or subcommand levels, for example:
+
+::
+
+    # Get help on the program:
+    $ acs --help
+
+    # Get help on using the sites API:
+    $ acs sites --help
+
+    # Get help on using list-sites:
+    $ acs sites list-sites --help
+
+    # Get help on using the login command:
+    $ acs login --help
+
+Shell tab completion
+--------------------
+
+Tab completion can be enabled by adding the following to your ``.bashrc``:
+
+::
+
+    eval "$(register-python-argcomplete acs)"
+
+Example usage
+-------------
+
+Without any arguments, you may log in to http://localhost:8080/alfresco
+using the username 'admin' and will be prompted for a password.
+
+::
+
+    mward@holly:~$ acs login
+    Logging in admin to http://localhost:8080/alfresco
+    Password:
+    mward@holly:acs-cli$
+
+Use the ``--username`` or ``--password`` options to log in with
+different credentials:
+
+::
+
+    mward@holly:~$ acs login --username=asmith --password=ban4n4@!
+
+Once logged in, APIs may be exercised by using the general format:
+
+::
+
+    acs api-collection api-command [options...] <arguments...>
+
+Here we see site creation:
+
+::
+
+    mward@holly:~$ acs sites create-site --id accounting --title 'Accounting Collaboration' --description 'Site for collaboration relating to the accounting process' --visibility PRIVATE
+    {
+        "entry": {
+            "id": "accounting",
+            "guid": "ee6d721d-e3b0-4299-a51f-afd4b59bfece",
+            "visibility": "PRIVATE",
+            "preset": "site-dashboard",
+            "description": "Site for collaboration relating to the accounting process",
+            "title": "Accounting Collaboration",
+            "role": "SiteManager"
+        }
+    }
+
+...and here we see the people API being used to create a person entity:
+
+::
+
+    mward@holly:~$ acs people create-person --id bsmith --first-name Brian --email brian.smith@example.com --password password --json-data '{ "lastName":"Smith", "properties":{"papi:jabber":"myjabber@jabber.example.com"} }'
+    {
+        "entry": {
+            "id": "bsmith",
+            "company": {},
+            "lastName": "Smith",
+            "aspectNames": [
+                "papi:comms"
+            ],
+            "firstName": "Brian",
+            "properties": {
+                "papi:jabber": "myjabber@jabber.example.com"
+            },
+            "enabled": true,
+            "email": "brian.smith@example.com",
+            "emailNotificationsEnabled": true
+        }
+    }
+
+Note: the custom property ``papi:jabber`` has previously been enabled in this example, by installing a custom dynamic model into the repository server.
+The custom model's properties/aspects are not normally available.
+
+The ``--json-data`` property can carry an arbitrary JSON payload to be sent to the REST API endpoint. You can mix and match this with
+the convenient named arguments (e.g. ``--email``), however if a key is supplied in both methods then an error will be raised.
+
+All API operations accept the ``--query`` option to specify a JMESPath
+expression. Here for example, we choose to only display the ``id`` and
+``email`` fields of the returned ``entry`` object:
+
+::
+
+    mward@holly:~$ acs people get-person --person-id=jbloggs --query 'entry.[id,email]'
+    [
+        "jbloggs",
+        "jbloggs@example.com"
+    ]
+
+And here, we use the ``--query`` option to view ``id``, ``firstName``
+and ``email`` of *each* entry in the list of people:
+
+::
+
+    mward@holly:~$ acs people list-people --query='list.entries[].entry.[id,firstName,email]'
+    [
+        [
+            "admin",
+            "Administrator",
+            "admin@alfresco.com"
+        ],
+        [
+            "guest",
+            "Guest",
+            null
+        ],
+        [
+            "jbloggs",
+            "Joe",
+            "jbloggs@example.com"
+        ]
+    ]
+
+Any *list* operation that may be paged can be used with the
+``--max-items`` and ``--skip-count`` options, used here to show two
+results after skipping the first 4. This may be thought of as showing
+the *third* page of results.
+
+::
+
+    mward@holly:~$ acs people list-people --query='list.entries[].entry.[firstName]' --max-items=2 --skip-count=4
+    [
+        [
+            "Joe10"
+        ],
+        [
+            "Joe11"
+        ]
+    ]
+
+The ``sites list-sites`` API command may be used to list "sites".
+This is a paged API and here we use it without the
+``--max-items`` and ``--skip-count`` options which default to 10 and 0
+respectively:
+
+::
+
+    mward@holly:~$ acs sites list-sites --query='list.entries[].entry'
+    [
+        {
+            "title": "accounts",
+            "role": "SiteManager",
+            "guid": "80dbd63c-3dbf-4005-bd16-e324fa8b4517",
+            "id": "accounts",
+            "visibility": "PUBLIC",
+            "preset": "site-dashboard"
+        },
+        {
+            "title": "Sample: Web Site Design Project",
+            "guid": "b4cff62a-664d-4d45-9302-98723eac1319",
+            "id": "swsdp",
+            "visibility": "PUBLIC",
+            "description": "This is a Sample Alfresco Team site.",
+            "preset": "site-dashboard"
+        }
+    ]
+
+In this example, we create a folder within the "My Files" folder for jbloggs:
+
+::
+
+    mward@holly:~$ acs nodes create-node --node-id=-my- --node-type=cm:folder --name=my_notes --json-data '{"properties":{"cm:title":"My daily notes"}}'
+    {
+        "entry": {
+            "createdByUser": {
+                "displayName": "Joe Bloggs",
+                "id": "jbloggs"
+            },
+            "modifiedAt": "2017-04-07T13:36:55.848+0000",
+            "id": "190a4896-1492-4142-9cd3-7f80d8012514",
+            "createdAt": "2017-04-07T13:36:55.848+0000",
+            "modifiedByUser": {
+                "displayName": "Joe Bloggs",
+                "id": "jbloggs"
+            },
+            "properties": {
+                "cm:title": "My daily notes"
+            },
+            "name": "my_notes",
+            "aspectNames": [
+                "cm:titled",
+                "cm:auditable"
+            ],
+            "isFile": false,
+            "isFolder": true,
+            "parentId": "29dd6a63-da4c-4f96-8edb-ad9808fa198b",
+            "nodeType": "cm:folder"
+        }
+    }
+
+The alias ``-my-`` is used for the node where the child folder will be created.
+
+The common server-side filtering and projection API parameters are supported, using similarly named command line
+options such as ``--include``, ``--fields`` and ``--where``.
+For example, we can use the where clause to view site membership of PRIVATE sites, and restrict
+the returned fields to ``role`` and ``id``:
+
+::
+
+    mward@holly:~$ acs sites list-site-memberships --person-id admin --where="(visibility='PUBLIC')" --fields=id,role
+    {
+        "list": {
+            "pagination": {
+                "count": 19,
+                "totalItems": 19,
+                "hasMoreItems": false,
+                "maxItems": 100,
+                "skipCount": 0
+            },
+            "entries": [
+                {
+                    "entry": {
+                        "role": "SiteManager",
+                        "id": "swsdp"
+                    }
+                },
+                {
+                    "entry": {
+                        "role": "SiteManager",
+                        "id": "site-e26b050b"
+                    }
+                },
+                {
+                    "entry": {
+            ...
+
+You may ask what the difference between these and the ``--query`` options are. The ``--query`` option provides support
+for post-response filtering and manipulation through the JMESPath query language. JMESPath is a very powerful yet
+simple way to manipulate the response object but since it is performed as a post-response processing stage, may affect
+paging (e.g. the paging details may say that there are more results than are present in the final results). Also by
+using the server-side functionality of ``include``, ``fields`` and ``where``, you may conserve bandwidth by reducing the
+number of results transmitted "over the wire".
+
+
