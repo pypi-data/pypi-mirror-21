@@ -1,0 +1,451 @@
+swagger: "2.0"
+
+info:
+  title: Lizzy
+  description: REST Service to deploy AWS CF templates using Senza
+  version: "2.0"
+
+basePath: /api
+
+schemes:
+ - https
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+securityDefinitions:
+  oauth:
+    type: oauth2
+    flow: password
+    tokenUrl: "{{token_url}}"
+    scopes:
+        "{{deployer_scope}}": Can deploy and change stacks
+
+security:
+  - oauth: []
+
+paths:
+  /stacks:
+    get:
+      summary: List all stacks
+      description: |
+        Lists all stacks created by lizzy.
+      operationId: lizzy.api.all_stacks
+      security:
+        - oauth:
+            - "{{deployer_scope}}"
+      parameters:
+        - name: references
+          in: query
+          collectionFormat: csv
+          type: array
+          items:
+            type: string
+          required: false
+        - name: region
+          in: query
+          type: string
+          pattern: "\\w{2}-\\w+-[0-9]"
+          description: Region of stacks for listing
+          required: false
+      responses:
+        200:
+          description: List of stacks
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/stack'
+        401:
+          description: |
+            Stacks were not retrieved because the access token was not provided or was not valid for this operation
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+    post:
+      summary: Create new stack
+      description: |
+        Adds a new stack to be created by lizzy and returns the information needed to keep track of deployment
+      operationId: lizzy.api.create_stack
+      responses:
+        201:
+          description: |
+            Stack to be created. The CloudFormation Stack creation can still fail later.
+          schema:
+            $ref: '#/definitions/stack'
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+            X-Lizzy-Output:
+              description: Senza Output
+              type: string
+        400:
+          description: Stack was not created because request was invalid or because the deployment failed.
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+        401:
+          description: |
+            Stack was not created because the access token was not provided or was not valid for this operation
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+      security:
+        - oauth:
+            - "{{deployer_scope}}"
+      parameters:
+        - name: new_stack
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/new_stack'
+  /stacks/{stack-id}:
+    get:
+      summary: Retrieves a lizzy stack
+      description: Retrieves a lizzy stack by stack id
+      operationId: lizzy.api.get_stack
+      security:
+        - oauth:
+            - "{{deployer_scope}}"
+      parameters:
+        - name: stack-id
+          in: path
+          description: Stack Id
+          required: true
+          type: string
+        - name: region
+          in: query
+          type: string
+          pattern: "\\w{2}-\\w+-[0-9]"
+          description: Region of stack for listing traffic
+          required: false
+      responses:
+        200:
+          description: Stack information
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/stack'
+        401:
+          description: |
+            Stack was not retrieved because the access token was not provided or was not valid for this operation
+          schema:
+            $ref: '#/definitions/problem'
+        404:
+          description: |
+            Stack was not found.
+          schema:
+            $ref: '#/definitions/problem'
+    delete:
+      summary: Delete a lizzy stack
+      description: Marks the stack identified by stack id for deletion.
+      operationId: lizzy.api.delete_stack
+      responses:
+        204:
+          description: Stack was/will be deleted
+        401:
+          description: |
+            Stack was not deleted because the access token was not provided or was not valid for this operation
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+        500:
+          description: |
+            Stack was not deleted because of a senza error
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+            X-Lizzy-Output:
+              description: Senza Output
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+      security:
+        - oauth:
+            - "{{deployer_scope}}"
+      parameters:
+        - name: stack-id
+          in: path
+          description: Stack id
+          required: true
+          type: string
+        - name: delete_options
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/delete_options'
+    patch:
+      summary: Update stack
+      description: Update stack. Currently the only parameters that can be changed are the instance traffic and Taupage image.
+      operationId: lizzy.api.patch_stack
+      responses:
+        202:
+          description: Changed stack
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            type: object
+            $ref: '#/definitions/stack'
+        401:
+          description: |
+            Stack will not be updated because the access token was not provided or was not valid for this operation
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+        404:
+          description: |
+            Stack was not found.
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+      security:
+        - oauth:
+            - "{{deployer_scope}}"
+      parameters:
+        - name: stack-id
+          in: path
+          description: Stack id
+          required: true
+          type: string
+        - name: stack_patch
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/stack_patch'
+
+  /stacks/{stack-id}/traffic:
+    get:
+      summary: Retrieves a lizzy stack traffic information
+      description: Retrieves a lizzy stack traffic by stack id
+      operationId: lizzy.api.get_stack_traffic
+      security:
+        - oauth:
+            - "{{deployer_scope}}"
+      parameters:
+        - name: stack-id
+          in: path
+          description: Stack Id
+          required: true
+          type: string
+        - name: region
+          in: query
+          type: string
+          pattern: "\\w{2}-\\w+-[0-9]"
+          description: Region of stack for listing traffic
+          required: false
+      responses:
+        200:
+          description: Stack traffic information
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            type: object
+            properties:
+              weight:
+                type: integer
+                minimum: 0
+                maximum: 100
+        404:
+          description: |
+            Stack was not found.
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            $ref: '#/definitions/problem'
+
+  /status:
+    get:
+      summary: Retrieves the application status
+      description: Retrieves how the lizzy instance is configured and if it is health
+      operationId: lizzy.api.get_app_status
+      security:
+        - oauth:
+            - "{{deployer_scope}}"
+      responses:
+        200:
+          description: Status information
+          headers:
+            X-Lizzy-Version:
+              description: Lizzy Version
+              type: string
+          schema:
+            type: object
+            properties:
+              version:
+                type: string
+                description: Lizzy version running
+              status:
+                type: string
+              config:
+                type: object
+                properties:
+                  allowed_users:
+                    type: string
+                  allowed_user_pattern:
+                    type: string
+                  deployer_scope:
+                    type: string
+                  log_level:
+                    type: string
+                  log_format:
+                    type: string
+                  region:
+                    type: string
+                  token_url:
+                    type: string
+                  token_info_url:
+                    type: string
+        401:
+          description: |
+            Status was not retrieved because the access token was not provided or was not valid for this operation
+          schema:
+            $ref: '#/definitions/problem'
+
+definitions:
+  new_stack:
+    type: object
+    properties:
+      stack_version:
+        type: string
+        description: Version of the application to use for stack name
+      parameters:
+        type: array
+        description: List of parameters to pass to senza
+        items:
+          type: string
+      senza_yaml:
+        type: string
+        description: YAML to provide to senza
+      disable_rollback:
+        type: boolean
+        description: No-op mode, return what would be created
+      region:
+        type: string
+        description: AWS region ID
+        pattern: "\\w{2}-\\w+-[0-9]"
+      dry_run:
+        type: boolean
+        description: Disable stack rollback on error
+      tags:
+        type: array
+        description: Tags to associate with the stack
+        items:
+          type: string
+    required:
+      - senza_yaml
+      - stack_version
+  stack:
+    type: object
+    properties:
+      creation_time:
+        type: string
+        format: dateTime
+        example: 2015-07-08T12:53:58+0000
+        description: Date and time of stack creation on lizzy in ISO 8601 format
+      description:
+        type: string
+        description: Stack description including used arguments
+      stack_name:
+        type: string
+        description: Cloud formation stack name prefix
+      version:
+        type: string
+        description: Cloud formation stack version
+      status:
+        type: string
+        description: Status of stack, can be be CF:STATUS_IN_CLOUD_FORMATION or some lizzy specific status
+
+  stack_patch:
+    type: object
+    properties:
+      new_traffic:
+        type: integer
+        format: int32
+        description: Percentage of the traffic to be routed to stack
+        minimum: 0
+        maximum: 100
+      new_ami_image:
+        type: string
+        description: "Use specified image (AMI ID or \"latest\")"
+        example: latest
+      region:
+        type: string
+        description: AWS region ID
+        pattern: "\\w{2}-\\w+-[0-9]"
+  problem:
+    description: |
+      Provides information about an error of some kind the service has encountered.
+    required:
+      - type
+      - title
+      - detail
+      - status
+    properties:
+      type:
+        type: string
+        format: uri
+        description: |
+          An URI that identifies the type of problem represented by this object. Dereferencing this URI may or may
+          not provide a human-readable description about the type of problem.
+      title:
+        type: string
+        description: |
+          A short human-readable description of the type of problem represented by this object. Does not contain
+          information specific to the given occurrence of the problem, and will not change between different
+          occurrences of the same type.
+      status:
+        type: integer
+        format: int32
+        description: |
+          The HTTP status code associated with the type of problem represented by this object.
+      detail:
+        type: string
+        description: |
+          A human-readable description of the specific occurrence of the project represented by this object.
+  delete_options:
+    type: object
+    properties:
+      dry_run:
+        type: boolean
+        description: Disable stack rollback on error
+      force:
+        type: boolean
+        description: Allow deleting multiple stacks
+      region:
+        type: string
+        description: AWS region ID
+        pattern: "\\w{2}-\\w+-[0-9]"
