@@ -1,0 +1,214 @@
+#!python
+
+import json
+import sys
+import time
+import traceback
+
+from argparse import ArgumentParser
+from collections import namedtuple
+from urlparse import urljoin
+from subprocess import Popen, PIPE, STDOUT, check_output
+from socket import socket, AF_INET, SOCK_STREAM
+
+import requests
+
+defaulttimeout = 4 # In seconds.
+tokenkey = 'server-token'
+# NB: Version is duplicated in setup.py.
+useragent = 'sous-sensu-checks/0.0.1'
+
+class Check(object):
+
+    def __init__(self, deployment, cluster):
+
+        # Assume valid unless we say so later.
+        self.valid = True
+
+        env = deployment['Env']
+        sourceID = deployment.get("SourceID")
+        self.manifestID = sourceID.get("Location")
+        if self.manifestID == "":
+            self.setInvalid()
+        flavor = deployment.get("Flavor") or ""
+        if flavor != "":
+            self.manifestID += ":" + flavor
+
+        # The cluster could be read from the deployments OT_ENV var, but taking it from
+        # args (see Main.run) as that's more explicit, and means we depend only on explicit
+        # config in mnanifests, rather than inherited config from the env defs in Sous.
+        self.Cluster = cluster
+
+        # Disco init URL is read from deployments but is typically inherited, and thus
+        # absent from manifests. We should keep an eye on this and ensure we continue to
+        # depend on full Sous deployments rather than manifests.
+        self.DiscoInitURL = env.get('OT_DISCO_INIT_URL') or self.setInvalid("Missing OT_DISCO_INIT_URL")
+
+        # Read from general deployment fields.
+        #
+        self.NumInstances = deployment['NumInstances'] or self.setInvalid("Missing NumInstances")
+    
+        # Read from env vars expected to be explicitly set in the manifest.
+        #
+        # Right now SERVICE_TYPE this is the only required env var.
+        self.AnnounceName = env.get('SERVICE_TYPE') or self.setInvalid("Missing SERVICE_TYPE") 
+        # Default sensu team to be revisited.
+        self.SensuTeam = env.get('OT_AUTOCHECK_SENSU_TEAM') or "alert_testing"
+        # Default runbook should be enforced.
+        self.AutocheckRunbookURL = env.get("OT_AUTOCHECK_RUNBOOK") or "https://wiki.otcorp.opentable.com/display/DCNetOps/Runbooks"
+        # Paging enabled by default.
+        self.DisablePaging = env.get("OT_AUTOCHECK_DISABLE_PAGING") or "YES"
+        self.AutoCheckTimeout = env.get("OT_AUTOCHECK_TIMEOUT_SECONDS") or 30
+
+    def command_args(self):
+        return [
+            "-s", self.AnnounceName,
+            "-d", self.DiscoInitURL,
+            "-c", str(self.NumInstances),
+            "-w", str(self.NumInstances),
+        ]
+
+    def command(self, binPath):
+        return [binPath] + self.command_args()
+
+    # __repr__ is a standard Python method to define the string representation of something,
+    # in this case its JSON representation.
+    def __repr__(self):
+        return json.dumps(self.json(), indent=4, sort_keys=True)
+
+    # setInvalid marks this check as invalid and returns a string meant to convey
+    # that information is undefined.
+    def setInvalid(self, reason):
+        self.valid = False
+        self.invalidReason = reason
+        return "<undefined>"
+
+    def checkName(self):
+        return "sous-autocheck_{0.AnnounceName}_{0.Cluster}".format(self)
+
+    # result returns a json serialisable map of the results of running
+    # this check. (It runs the check command in a shell. TODO: Run the check
+    # command more securely.)
+    def result(self, binPath):
+        command = self.command(binPath)
+        print "Running {0}".format(" ".join(command))
+        cmd = Popen(command, stderr=STDOUT, stdout=PIPE)
+        startTime = time.time()
+        output = cmd.communicate()
+        endTime = time.time()
+        stdout = output[0]
+        exitCode = cmd.returncode
+        return {
+            "client": "sous-sensu-checks",
+            "check": {
+                # Result-specific fields.
+                "name": self.checkName(),
+                "status": exitCode,
+                "output": stdout,
+                "issued": int(startTime),
+                "executed": int(startTime),
+                "duration": "{0:.3f}".format(endTime - startTime),
+
+                # General check fields.
+                "command": " ".join(command),
+                "contact": self.SensuTeam,
+                "runbook": self.AutocheckRunbookURL,
+                "page": True,
+                "timeout": self.AutoCheckTimeout,
+                "region": self.Cluster,
+            },
+        }
+
+
+
+class Main(object):
+  # Parse arguments.
+  def __init__(self):
+    self.parser = ArgumentParser(
+      description='Check health of Sous-deployed services.')
+
+    self.parser.add_argument('-s', '--server', default=None,
+      help='Sous server URL')
+
+    self.parser.add_argument('-c', '--cluster', default=None,
+      help='Sous logical cluster to inspect')
+
+    args = self.parser.parse_args()
+
+    # We do this manually here since the argparse default is to exit
+    # with code 2.  See parser_error.
+    if args.server is None:
+      self.parser_error('argument -s/--server is required')
+    if args.cluster is None:
+      self.parser_error('argument -c/--cluster is required')
+
+    self.args = args
+
+    # track output we've already seen and remove dupes
+    self.response_data_seen = set()
+
+  def parser_error(self, message):
+    # Code 3 is "UNKNOWN".  (argparse default is 2, which would be
+    # "CRITICAL"--inappropriate.)
+    self.parser.print_usage()
+    self.parser.exit(3, '%s: error: %s\n' % (self.parser.prog, message))
+
+  def requestsget(self, url, timeout):
+    return requests.get(url, timeout=timeout, headers={'User-Agent':useragent})
+
+  # Get deployments matching the specified cluster from the specified sous server.
+  def get_deployments(self):
+    url = urljoin(self.args.server, 'gdm')
+    resp = self.requestsget(url, defaulttimeout)
+    gdm = resp.json()
+    deployments = [d for d in gdm['Deployments'] if d['Env']['OT_ENV'] == self.args.cluster]
+    return deployments
+
+  def make_checks(self):
+    deployments = self.get_deployments()
+    checks = [Check(d, self.args.cluster) for d in deployments]
+    return checks
+
+  def run(self):
+    try:
+      checks = self.make_checks()
+    except Exception:
+      print 'failed to generate checks'
+      print traceback.format_exc()
+      return 3
+
+    exitCode = 0
+    invalidChecks = {c.manifestID: c for c in checks if not c.valid}
+    for manifestID, c in invalidChecks.iteritems():
+        exitCode = 1
+        sys.stderr.writelines("unable to check {0}: {1}\n".format(manifestID, c.invalidReason))
+    validChecks = [c for c in checks if c.valid]
+
+    binPath = check_output(["which", "otpl-service-check"]).strip()
+    if binPath == "":
+        print "unable to locate otpl-service-check binary, exiting."
+        sys.exit(1)
+
+    print "using {0}".format(binPath)
+    
+    results = [c.result(binPath) for c in validChecks]
+    for r in results:
+        j = json.dumps(r, indent=4, sort_keys=True)
+        print "Sending " + j
+        try:
+            s = socket(AF_INET, SOCK_STREAM)
+            s.connect(("localhost", 3030))
+            s.sendall(j)
+            s.close()
+        except Exception, error:
+            print "Error sending check result: {0}".format(error)
+        
+
+    sys.exit(exitCode)
+
+try:
+  sys.exit(Main().run())
+except Exception:
+  print 'unhandled exception'
+  print traceback.format_exc()
+  sys.exit(3)
