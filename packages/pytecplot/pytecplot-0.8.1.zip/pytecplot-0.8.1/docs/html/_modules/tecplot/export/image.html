@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tecplot.export.image &mdash; PyTecplot 0.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="top" title="PyTecplot 0.8.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="shortcut icon" type="image/gif" href="../../../_static/favicon.gif" />
+    <meta name="viewport" content="width=device-width,initial-scale=0.8">
+    
+    <script type="text/javascript" src="../../../_static/copybutton.js"></script>
+
+  </head>
+  <body role="document">
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="responsive-menu"><a href="#sidebar-anchor" title="Navigation">&#9776;</a></li>
+        <li><a href="../../../index.html">PyTecplot-0.8</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tecplot.export.image</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">..tecutil</span> <span class="kn">import</span> <span class="n">_tecutil</span><span class="p">,</span> <span class="n">lock</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="nn">constant</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">..exception</span> <span class="kn">import</span> <span class="n">TecplotSystemError</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">tecplot.tecutil</span> <span class="kn">import</span> <span class="n">sv</span>
+<span class="kn">from</span> <span class="nn">..layout</span> <span class="kn">import</span> <span class="n">frame</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_set_export_attribute</span><span class="p">(</span><span class="n">sv_constant</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">i_value</span><span class="p">,</span> <span class="n">d_value</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">_tecutil</span><span class="o">.</span><span class="n">ExportSetup</span><span class="p">(</span><span class="n">sv_constant</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">d_value</span><span class="p">,</span> <span class="n">i_value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">SetValueReturnCode</span><span class="o">.</span><span class="n">Ok</span><span class="p">,</span> <span class="n">SetValueReturnCode</span><span class="o">.</span><span class="n">DuplicateValue</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">TecplotSystemError</span><span class="p">(</span>
+            <span class="s1">&#39;Invalid {} value: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sv_constant</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_reset_export_setup_to_defaults</span><span class="p">():</span>
+
+    <span class="c1"># See the Tecplot scripting guide for default values used below.</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">EXPORTREGION</span><span class="p">,</span> <span class="n">ExportRegion</span><span class="o">.</span><span class="n">CurrentFrame</span><span class="p">)</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">CONVERTTO256COLORS</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">IMAGEWIDTH</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">USESUPERSAMPLEANTIALIASING</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">SUPERSAMPLEFACTOR</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">GRAYSCALEDEPTH</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">TIFFBYTEORDER</span><span class="p">,</span> <span class="n">TIFFByteOrder</span><span class="o">.</span><span class="n">Intel</span><span class="p">)</span>
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">QUALITY</span><span class="p">,</span> <span class="mf">75.0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_setup_common_attributes</span><span class="p">(</span><span class="n">export_format</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">supersample</span><span class="p">,</span>
+                             <span class="n">convert_to_256_colors</span><span class="p">):</span>
+
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">EXPORTFNAME</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">final_region</span> <span class="o">=</span> <span class="n">ExportRegion</span><span class="o">.</span><span class="n">CurrentFrame</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">region</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">Frame</span><span class="p">)</span> <span class="ow">or</span> <span class="n">region</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">region</span>
+
+    <span class="c1"># None or 0 width implies &quot;use screen width&quot;.</span>
+    <span class="c1"># The screen width is calculated with a TecUtil call.</span>
+
+    <span class="n">final_width</span> <span class="o">=</span> <span class="n">_tecutil</span><span class="o">.</span><span class="n">GetDefaultExportImageWidth</span><span class="p">(</span>
+        <span class="n">export_format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">final_region</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">width</span> <span class="k">else</span> <span class="n">width</span>
+
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">IMAGEWIDTH</span><span class="p">,</span> <span class="n">final_width</span><span class="p">)</span>
+
+    <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">EXPORTFORMAT</span><span class="p">,</span> <span class="n">export_format</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">convert_to_256_colors</span><span class="p">:</span>
+        <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">CONVERTTO256COLORS</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">region</span><span class="p">:</span>
+        <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">EXPORTREGION</span><span class="p">,</span> <span class="n">final_region</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">supersample</span><span class="p">:</span>
+        <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">USESUPERSAMPLEANTIALIASING</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">supersample</span> <span class="o">&lt;=</span> <span class="mi">16</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TecplotSystemError</span><span class="p">(</span><span class="s1">&#39;supersample must be between 2 and 16&#39;</span><span class="p">)</span>
+
+        <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">SUPERSAMPLEFACTOR</span><span class="p">,</span> <span class="n">supersample</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_do_export</span><span class="p">(</span><span class="n">export_type</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">region</span><span class="p">,</span> <span class="n">supersample</span><span class="p">,</span>
+               <span class="n">convert_to_256_colors</span><span class="p">,</span> <span class="n">additional_attributes</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">internal_export</span><span class="p">():</span>
+        <span class="n">_setup_common_attributes</span><span class="p">(</span><span class="n">export_format</span><span class="o">=</span><span class="n">export_type</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+                                 <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span>
+                                 <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
+                                 <span class="n">convert_to_256_colors</span><span class="o">=</span><span class="n">convert_to_256_colors</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">additional_attributes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">attribute</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">attribute</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">sv</span><span class="o">.</span><span class="n">GRAYSCALEDEPTH</span> <span class="ow">and</span> <span class="n">attribute</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                                    <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]:</span>
+                    <span class="k">raise</span> <span class="n">TecplotSystemError</span><span class="p">(</span><span class="s1">&#39;Gray Scale Depth must be one of &#39;</span>
+                                             <span class="s1">&#39;[0, 1, 4, 8]&#39;</span><span class="p">)</span>
+                <span class="n">_set_export_attribute</span><span class="p">(</span><span class="n">attribute</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">attribute</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_tecutil</span><span class="o">.</span><span class="n">Export</span><span class="p">(</span><span class="n">append</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TecplotSystemError</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_reset_export_setup_to_defaults</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">region</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">Frame</span><span class="p">):</span>
+            <span class="k">with</span> <span class="n">region</span><span class="o">.</span><span class="n">activated</span><span class="p">():</span>
+                <span class="n">internal_export</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">internal_export</span><span class="p">()</span>
+
+    <span class="k">except</span> <span class="n">TecplotSystemError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TecplotSystemError</span><span class="p">(</span><span class="s1">&#39;Could not export image &quot;{}&quot; : {}&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+
+
+<span class="nd">@lock</span><span class="p">()</span>
+<div class="viewcode-block" id="save_jpeg"><a class="viewcode-back" href="../../../api/tecplot.exporting.html#tecplot.export.save_jpeg">[docs]</a><span class="k">def</span> <span class="nf">save_jpeg</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">supersample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">quality</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save a `JPEG image</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/JPEG&gt;`_.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        filename (`string &lt;str&gt;`): |export_filename_description|</span>
+
+<span class="sd">        width (`integer &lt;int&gt;`): |export_width_description|</span>
+
+<span class="sd">        region (`frame &lt;Frame&gt;` or `ExportRegion`, optional): |export_region_description|</span>
+
+<span class="sd">        supersample (`integer &lt;int&gt;`, optional): |export_supersample_description|</span>
+
+<span class="sd">        quality (`integer &lt;int&gt;` 1-100, optional)</span>
+<span class="sd">            Select the quality of JPEG image.</span>
+<span class="sd">            Higher quality settings produce larger files and better</span>
+<span class="sd">            looking export images. Lower quality settings produce smaller files.</span>
+<span class="sd">            For best results, use a quality setting of **75** or higher.</span>
+<span class="sd">            (default: **75**)</span>
+
+<span class="sd">        encoding (`JPEGEncoding`, optional)</span>
+<span class="sd">            Encoding method for the JPEG file.</span>
+
+<span class="sd">            Encoding may be one of the following:</span>
+<span class="sd">                * `JPEGEncoding.Standard`</span>
+<span class="sd">                    Creates a JPEG which downloads one line at a time,</span>
+<span class="sd">                    starting at the top line.</span>
+<span class="sd">                * `JPEGEncoding.Progressive`</span>
+<span class="sd">                    Creates a JPEG image that can be displayed with</span>
+<span class="sd">                    a &quot;fade in&quot; effect in a browser.</span>
+<span class="sd">                    This is sometimes useful when viewing the JPEG in a</span>
+<span class="sd">                    browser with a slow connection, since it allows</span>
+<span class="sd">                    an approximation of the JPEG to be drawn immediately,</span>
+<span class="sd">                    and the browser does not have to wait for the entire</span>
+<span class="sd">                    image to download.</span>
+
+<span class="sd">                (default: `JPEGEncoding.Standard`)</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        `TecplotSystemError`: The image could not be saved due to a</span>
+<span class="sd">            file I/O error or invalid attribute.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        |export_general_info|</span>
+
+<span class="sd">    Create a new `frame &lt;Frame&gt;` and save a JPEG image of the frame</span>
+<span class="sd">    with quality **50** and supersampling::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tecplot</span>
+<span class="sd">        &gt;&gt;&gt; frame = tecplot.active_page().add_frame()</span>
+<span class="sd">        &gt;&gt;&gt; tecplot.load_layout(&#39;mylayout.lay&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; tecplot.export.save_jpeg(&#39;image.jpeg&#39;, width=600, supersample=2,</span>
+<span class="sd">        &gt;&gt;&gt;                         region=frame,</span>
+<span class="sd">        &gt;&gt;&gt;                         quality=50)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># clamp quality to 1-100 and divide by 100</span>
+    <span class="n">final_quality</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">quality</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+                          <span class="p">)</span> <span class="k">if</span> <span class="n">quality</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">None</span>
+
+    <span class="n">_do_export</span><span class="p">(</span><span class="n">export_type</span><span class="o">=</span><span class="n">ExportFormat</span><span class="o">.</span><span class="n">JPEG</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+               <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span> <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
+               <span class="n">convert_to_256_colors</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+               <span class="n">additional_attributes</span><span class="o">=</span><span class="p">[(</span><span class="n">sv</span><span class="o">.</span><span class="n">QUALITY</span><span class="p">,</span> <span class="n">final_quality</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">JPEGENCODING</span><span class="p">,</span> <span class="n">encoding</span><span class="p">)])</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;JPEG image file created: &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span></div>
+
+
+<span class="nd">@lock</span><span class="p">()</span>
+<div class="viewcode-block" id="save_tiff"><a class="viewcode-back" href="../../../api/tecplot.exporting.html#tecplot.export.save_tiff">[docs]</a><span class="k">def</span> <span class="nf">save_tiff</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">supersample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">convert_to_256_colors</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">gray_scale_depth</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+              <span class="n">byte_order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save a `TIFF image</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/TIFF&gt;`_.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        filename (`string &lt;str&gt;`): |export_filename_description|</span>
+
+<span class="sd">        width (`integer &lt;int&gt;`): |export_width_description|</span>
+
+<span class="sd">        region (`frame &lt;Frame&gt;` or `ExportRegion`, optional): |export_region_description|</span>
+
+<span class="sd">        supersample (`integer &lt;int&gt;`, optional): |export_supersample_description|</span>
+
+<span class="sd">        convert_to_256_colors (`Boolean &lt;bool&gt;`, optional): |export_convert256_description|</span>
+
+<span class="sd">        gray_scale_depth (`integer &lt;int&gt;`, optional)</span>
+<span class="sd">            Export a gray-scale TIFF.</span>
+<span class="sd">            The ``gray_scale_depth`` parameter may be</span>
+<span class="sd">            set to a depth of **1-8**</span>
+
+<span class="sd">            ``gray_scale_depth`` specifies the</span>
+<span class="sd">            number of shades of gray by how many bits of gray scale</span>
+<span class="sd">            information is used per pixel.</span>
+<span class="sd">            The larger the number of bits per pixel, the larger the</span>
+<span class="sd">            resulting file.</span>
+
+<span class="sd">            Options are:</span>
+<span class="sd">                * **0**: On/Off</span>
+<span class="sd">                    One bit per pixel using an on/off strategy.</span>
+<span class="sd">                    All background pixels are made white (on),</span>
+<span class="sd">                    and all foreground pixels, black (off).</span>
+<span class="sd">                    This setting creates small files and is</span>
+<span class="sd">                    good for images with lots of background, such as line</span>
+<span class="sd">                    plots and contour lines.</span>
+<span class="sd">                * **1**: 1 Bit per Pixel</span>
+<span class="sd">                    One bit per pixel using gray scale values of</span>
+<span class="sd">                    pixels to determine black or white.</span>
+<span class="sd">                    Those pixels that are more than 50 percent gray are</span>
+<span class="sd">                    black; the rest are white. This setting creates small</span>
+<span class="sd">                    files that might be useful for a rough draft</span>
+<span class="sd">                    or a preview image.</span>
+<span class="sd">                * **4**: 4 Bits per Pixel</span>
+<span class="sd">                    Four bits per pixel resulting</span>
+<span class="sd">                    in sixteen levels of gray scale. This setting</span>
+<span class="sd">                    generates fairly small image files with a</span>
+<span class="sd">                    fair number of gray levels.</span>
+<span class="sd">                    This setting works well for most preview image purposes.</span>
+<span class="sd">                * **8**:  8 Bits per Pixel</span>
+<span class="sd">                    Eight bits per pixel resulting in 256 levels of gray.</span>
+<span class="sd">                    This setting is useful for full image</span>
+<span class="sd">                    representation, but the files generated by this</span>
+<span class="sd">                    setting can be large.</span>
+
+<span class="sd">                (default: `None`)</span>
+
+<span class="sd">        byte_order (`TIFFByteOrder`, optional)</span>
+<span class="sd">            Specify the byte order (Intel or Motorola) of the TIFF image.</span>
+<span class="sd">            (Default: `TIFFByteOrder.Intel`)</span>
+
+
+<span class="sd">    Raises:</span>
+<span class="sd">        `TecplotSystemError`: The image could not be saved due to a</span>
+<span class="sd">            file I/O error or invalid attribute.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        |export_general_info|</span>
+
+<span class="sd">    Save a 4-bit gray scale TIFF image of the entire workspace with supersampling::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tecplot</span>
+<span class="sd">        &gt;&gt;&gt; from tecplot.constant import ExportRegion</span>
+<span class="sd">        &gt;&gt;&gt; tecplot.load_layout(&#39;mylayout.lay&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; tecplot.export.save_tiff(&#39;image.tiff&#39;, width=600, supersample=2,</span>
+<span class="sd">        &gt;&gt;&gt;                         region=ExportRegion.WorkArea,</span>
+<span class="sd">        &gt;&gt;&gt;                         gray_scale_depth=4)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_do_export</span><span class="p">(</span><span class="n">export_type</span><span class="o">=</span><span class="n">ExportFormat</span><span class="o">.</span><span class="n">TIFF</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+               <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span> <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
+               <span class="n">convert_to_256_colors</span><span class="o">=</span><span class="n">convert_to_256_colors</span><span class="p">,</span>
+               <span class="n">additional_attributes</span><span class="o">=</span><span class="p">[(</span><span class="n">sv</span><span class="o">.</span><span class="n">TIFFBYTEORDER</span><span class="p">,</span> <span class="n">byte_order</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="n">sv</span><span class="o">.</span><span class="n">GRAYSCALEDEPTH</span><span class="p">,</span> <span class="n">gray_scale_depth</span><span class="p">)])</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;TIFF image file created: &#39;</span><span class="o">+</span><span class="n">filename</span><span class="p">)</span></div>
+
+
+<span class="nd">@lock</span><span class="p">()</span>
+<div class="viewcode-block" id="save_png"><a class="viewcode-back" href="../../../api/tecplot.exporting.html#tecplot.export.save_png">[docs]</a><span class="k">def</span> <span class="nf">save_png</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">supersample</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+             <span class="n">convert_to_256_colors</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save a `PNG image</span>
+<span class="sd">    &lt;https://en.wikipedia.org/wiki/Portable_Network_Graphics&gt;`_.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        filename (`string &lt;str&gt;`): |export_filename_description|</span>
+
+<span class="sd">        width (`integer &lt;int&gt;`):  |export_width_description|</span>
+
+<span class="sd">        region (`frame &lt;Frame&gt;` or `ExportRegion`, optional): |export_region_description|</span>
+
+<span class="sd">        supersample (`integer &lt;int&gt;`, optional): |export_supersample_description|</span>
+
+<span class="sd">        convert_to_256_colors (`Boolean &lt;bool&gt;`, optional): |export_convert256_description|</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        `TecplotSystemError`: The image could not be saved due to a</span>
+<span class="sd">            file I/O error or invalid attribute.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        |export_general_info|</span>
+
+<span class="sd">    Save a PNG image of the entire workspace with supersampling::</span>
+
+<span class="sd">        &gt;&gt;&gt; import tecplot</span>
+<span class="sd">        &gt;&gt;&gt; from tecplot.constant import ExportRegion</span>
+<span class="sd">        &gt;&gt;&gt; tecplot.load_layout(&#39;mylayout.lay&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; tecplot.export.save_png(&#39;image.png&#39;, width=600, supersample=2,</span>
+<span class="sd">        &gt;&gt;&gt;                         region=ExportRegion.WorkArea)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_do_export</span><span class="p">(</span><span class="n">export_type</span><span class="o">=</span><span class="n">ExportFormat</span><span class="o">.</span><span class="n">PNG</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+               <span class="n">region</span><span class="o">=</span><span class="n">region</span><span class="p">,</span> <span class="n">supersample</span><span class="o">=</span><span class="n">supersample</span><span class="p">,</span>
+               <span class="n">convert_to_256_colors</span><span class="o">=</span><span class="n">convert_to_256_colors</span><span class="p">,</span>
+               <span class="n">additional_attributes</span><span class="o">=</span><span class="p">[])</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;PNG image file created: &#39;</span><span class="o">+</span><span class="n">filename</span><span class="p">)</span></div>
+
+
+<span class="nd">@lock</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">save_ps</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Save a `PostScript image &lt;https://en.wikipedia.org/wiki/PostScript&gt;`_.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        filename (`string &lt;str&gt;`): |export_filename_description|</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        `TecplotSystemError`: The image could not be saved due to a</span>
+<span class="sd">            file I/O error or invalid attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_do_export</span><span class="p">(</span><span class="n">ExportFormat</span><span class="o">.</span><span class="n">PS</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;PostScript image file created: &#39;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+    <a id="sidebar-anchor"></a>
+    
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/powered_by_tecplot.png" alt="Logo"/>
+            </a></p>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3><a href="../../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2017, Tecplot, Inc..
+      Last updated on Apr 19, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>

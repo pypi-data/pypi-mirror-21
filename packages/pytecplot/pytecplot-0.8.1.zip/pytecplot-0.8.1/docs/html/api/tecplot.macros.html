@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Macros &mdash; PyTecplot 0.8.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.8.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="top" title="PyTecplot 0.8.1 documentation" href="../index.html" />
+    <link rel="up" title="Reference" href="../reference.html" />
+    <link rel="next" title="Extensions" href="tecplot.extensions.html" />
+    <link rel="prev" title="Exporting" href="tecplot.exporting.html" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="shortcut icon" type="image/gif" href="../_static/favicon.gif" />
+    <meta name="viewport" content="width=device-width,initial-scale=0.8">
+    
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+
+  </head>
+  <body role="document">
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="responsive-menu"><a href="#sidebar-anchor" title="Navigation">&#9776;</a></li>
+        <li><a href="../index.html">PyTecplot-0.8</a> &raquo;</li>
+          <li><a href="../reference.html" accesskey="U">Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="macros">
+<h1>Macros<a class="headerlink" href="#macros" title="Permalink to this headline">¶</a></h1>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#module-tecplot.macro" id="id1">tecplot.macro</a></li>
+<li><a class="reference internal" href="#macro-execute-command" id="id2">macro.execute_command()</a></li>
+<li><a class="reference internal" href="#macro-execute-extended-command" id="id3">macro.execute_extended_command()</a></li>
+<li><a class="reference internal" href="#macro-execute-file" id="id4">macro.execute_file()</a></li>
+</ul>
+</div>
+<div class="section" id="module-tecplot.macro">
+<span id="tecplot-macro"></span><h2><a class="toc-backref" href="#id1">tecplot.macro</a><a class="headerlink" href="#module-tecplot.macro" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="macro-execute-command">
+<h2><a class="toc-backref" href="#id2">macro.execute_command()</a><a class="headerlink" href="#macro-execute-command" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="tecplot.macro.execute_command">
+<code class="descclassname">tecplot.macro.</code><code class="descname">execute_command</code><span class="sig-paren">(</span><em>command</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tecplot/macro.html#execute_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tecplot.macro.execute_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a series of tecplot macro commands.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>command</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><code class="xref any docutils literal"><span class="pre">string</span></code></a>) &#8211; The macro commands to be run.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="tecplot.exceptions.html#tecplot.exception.TecplotMacroError" title="tecplot.exception.TecplotMacroError"><code class="xref any py py-exc docutils literal"><span class="pre">TecplotMacroError</span></code></a> &#8211; Message will specify the command that failed.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Zero-based Indexing</p>
+<p class="last">It is important to know that all indexing in PyTecplot scripts are
+zero-based. This is a departure from the macro language which is
+one-based. This is to keep with the expectations when working in the
+python language. However, PyTecplot does not modify strings that are
+passed to the Tecplot Engine. This means that one-based indexing
+should be used when running macro commands from python or when using
+<a class="reference internal" href="tecplot.data.html#tecplot.data.operate.execute_equation" title="tecplot.data.operate.execute_equation"><code class="xref any py py-func docutils literal"><span class="pre">execute_equation()</span></code></a>.</p>
+</div>
+<p>This command splits the input into individual commands and runs them one
+at a time. See the <a class="reference external" href="http://download.tecplot.com/360/current/360_scripting_guide.pdf">Tecplot Macro Scripting Guide</a> for details about
+<a class="reference external" href="http://www.tecplot.com/products/tecplot-360">Tecplot 360</a>&#8216;s macro language.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The $!VARSET command is not supported. Tecplot Macro variables should be
+converted to Python variables.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Currently, only commands that do not require raw data, by use of the
+<code class="docutils literal"><span class="pre">RAWDATA</span></code> macro directive, are accepted.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Intrinsic variables (that is, variables with pipes such as
+<code class="docutils literal"><span class="pre">|DATASETFNAME|</span></code>) are not supported. If you need to use an intrinsic
+variable in the macro command, add the macro command to a text file and
+call <a class="reference internal" href="#tecplot.macro.execute_file" title="tecplot.macro.execute_file"><code class="xref any py py-func docutils literal"><span class="pre">execute_file</span></code></a>.</p>
+</div>
+<p>See the <a class="reference external" href="http://download.tecplot.com/360/current/360_scripting_guide.pdf">Tecplot Macro Scripting Guide</a> for more information about raw data
+and intrinsic variables.</p>
+<p>The following command will perform the same operations as the
+<a class="reference internal" href="../examples.html#hello-world"><span class="std std-ref">Hello, World! example</span></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tecplot</span><span class="o">.</span><span class="n">macro</span><span class="o">.</span><span class="n">execute_command</span><span class="p">(</span><span class="s1">r&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">  $!ATTACHTEXT</span>
+<span class="gp">... </span><span class="s1">    ANCHORPOS { X = 35 Y = 50 }</span>
+<span class="gp">... </span><span class="s1">    TEXTSHAPE { HEIGHT = 35 }</span>
+<span class="gp">... </span><span class="s1">    TEXT = &#39;Hello, World!&#39;</span>
+<span class="gp">... </span><span class="s1">  $!EXPORTSETUP EXPORTFNAME = &#39;hello_world.png&#39;</span>
+<span class="gp">... </span><span class="s1">  $!EXPORT</span>
+<span class="gp">... </span><span class="s1">    EXPORTREGION = CURRENTFRAME</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="macro-execute-extended-command">
+<h2><a class="toc-backref" href="#id3">macro.execute_extended_command()</a><a class="headerlink" href="#macro-execute-extended-command" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="tecplot.macro.execute_extended_command">
+<code class="descclassname">tecplot.macro.</code><code class="descname">execute_extended_command</code><span class="sig-paren">(</span><em>procid</em>, <em>cmd</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tecplot/macro.html#execute_extended_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tecplot.macro.execute_extended_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a tecplot macro command defined in an addon.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>procid</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><code class="xref any docutils literal"><span class="pre">string</span></code></a>) &#8211; Registered name of the addon.</li>
+<li><strong>cmd</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><code class="xref any docutils literal"><span class="pre">string</span></code></a>) &#8211; The command to run.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="tecplot.exceptions.html#tecplot.exception.TecplotMacroError" title="tecplot.exception.TecplotMacroError"><code class="xref any py py-exc docutils literal"><span class="pre">TecplotMacroError</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Zero-based Indexing</p>
+<p class="last">It is important to know that all indexing in PyTecplot scripts are
+zero-based. This is a departure from the macro language which is
+one-based. This is to keep with the expectations when working in the
+python language. However, PyTecplot does not modify strings that are
+passed to the Tecplot Engine. This means that one-based indexing
+should be used when running macro commands from python or when using
+<a class="reference internal" href="tecplot.data.html#tecplot.data.operate.execute_equation" title="tecplot.data.operate.execute_equation"><code class="xref any py py-func docutils literal"><span class="pre">execute_equation()</span></code></a>.</p>
+</div>
+<p>In general, the command string is formatted prior to being fed into the
+Tecplot Engine so liberal use of whitespace, including new-lines, are
+acceptable.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tecplot</span><span class="o">.</span><span class="n">macro</span><span class="o">.</span><span class="n">execute_extended_command</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">&#39;Multi Frame Manager&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="s1">&#39;TILEFRAMESSQUARE&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="macro-execute-file">
+<h2><a class="toc-backref" href="#id4">macro.execute_file()</a><a class="headerlink" href="#macro-execute-file" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="tecplot.macro.execute_file">
+<code class="descclassname">tecplot.macro.</code><code class="descname">execute_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tecplot/macro.html#execute_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tecplot.macro.execute_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a macro file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3.5/library/stdtypes.html#str" title="(in Python v3.5)"><code class="xref any docutils literal"><span class="pre">string</span></code></a>) &#8211; The file to be run.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="tecplot.exceptions.html#tecplot.exception.TecplotMacroError" title="tecplot.exception.TecplotMacroError"><code class="xref any py py-exc docutils literal"><span class="pre">TecplotMacroError</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>Zero-based Indexing</p>
+<p class="last">It is important to know that all indexing in PyTecplot scripts are
+zero-based. This is a departure from the macro language which is
+one-based. This is to keep with the expectations when working in the
+python language. However, PyTecplot does not modify strings that are
+passed to the Tecplot Engine. This means that one-based indexing
+should be used when running macro commands from python or when using
+<a class="reference internal" href="tecplot.data.html#tecplot.data.operate.execute_equation" title="tecplot.data.operate.execute_equation"><code class="xref any py py-func docutils literal"><span class="pre">execute_equation()</span></code></a>.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tecplot</span><span class="o">.</span><span class="n">macro</span><span class="o">.</span><span class="n">execute_file</span><span class="p">(</span><span class="s1">&#39;/path/to/macro_file.mcr&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+    <a id="sidebar-anchor"></a>
+    
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/powered_by_tecplot.png" alt="Logo"/>
+            </a></p>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3><a href="../index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tecplot.session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.layout.html">Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.data.html">Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.plot.html">Plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.axes.html">Axes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.plot_style.html">Plot Style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.annotations.html">Annotations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.exporting.html">Exporting</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Macros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.extensions.html">Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tecplot.exceptions.html">Exceptions</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/tecplot.macros.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tecplot.extensions.html" title="Extensions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tecplot.exporting.html" title="Exporting"
+             accesskey="P">previous</a> |</li>
+      </ul>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2017, Tecplot, Inc..
+      Last updated on Apr 19, 2017.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.5.
+    </div>
+  </body>
+</html>
