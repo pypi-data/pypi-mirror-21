@@ -1,0 +1,55 @@
+<html>
+ <head>
+  <title>eddie</title>
+  <script>
+
+    function init(){
+    	document.getElementById("eddie-message").focus();
+    }
+
+  	function sendMessage(){
+  		var input = document.getElementById("eddie-message");
+
+  		addMessage("you", input.value);
+  		var url = "/process?in_message=" + encodeURIComponent(input.value);
+  		input.value = "";
+
+	    var xhr = new XMLHttpRequest();
+	    xhr.open('GET', url, true);
+	    xhr.responseType = 'json';
+	    xhr.onload = function() {
+	      if (xhr.status == 200) {
+	        addMessage("bot", xhr.response.out_message);
+	      } else {
+	        addMessage("system", "Error");
+	      }
+	    };
+	    xhr.send();
+  	}
+
+  	function addMessage(user, message){
+  		var text = "<p><b>" + user + ":</b> " + message + "</p>";
+  		var chatScreen = document.getElementById("eddie-read")
+  		chatScreen.innerHTML += text;
+  		chatScreen.scrollTop += 100;
+  	}
+
+  </script>
+  <style type="text/css">
+  	#eddie-read {
+  		height: 90%;
+  		overflow-y: scroll;
+  		border: 1px solid silver;
+  	}
+  </style>
+ </head>
+ <body onload="javascript: init()">
+  <div id="eddie-read"></div>
+  <div id="eddie-write">
+    <form action="javascript: sendMessage()">
+	  <input type="text" id="eddie-message" />
+	  <input type="submit" value="Send" />
+	</form>
+  </div>
+ </body>
+</html>
