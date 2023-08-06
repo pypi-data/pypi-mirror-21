@@ -1,0 +1,246 @@
+# coding: UTF-8
+//
+//  ${model.name}.m
+//  ${model.name}
+//
+//  Created by tencent
+//  Copyright (c) 2015年 tencent. All rights reserved.
+//
+<%
+from chameleon.core.codegen.property import ObjectProperty
+from chameleon.core.codegen.property import FundamentalProperty
+from chameleon.core.codegen.property import CharProperty
+from chameleon.core.codegen.property import UnsignedCharProperty
+from chameleon.core.codegen.property import ShortProperty
+from chameleon.core.codegen.property import UnsignedShortProperty
+from chameleon.core.codegen.property import IntProperty
+from chameleon.core.codegen.property import UnsignedIntProperty
+from chameleon.core.codegen.property import LongProperty
+from chameleon.core.codegen.property import UnsignedLongProperty
+from chameleon.core.codegen.property import LongLongProperty
+from chameleon.core.codegen.property import UnsignedLongLongProperty
+from chameleon.core.codegen.property import FloatProperty
+from chameleon.core.codegen.property import DoubleProperty
+from chameleon.core.codegen.property import NSIntegerProperty
+from chameleon.core.codegen.property import NSUIntegerProperty
+from chameleon.core.codegen.property import Int8Property
+from chameleon.core.codegen.property import Int16Property
+from chameleon.core.codegen.property import Int32Property
+from chameleon.core.codegen.property import Int64Property
+from chameleon.core.codegen.property import UInt8Property
+from chameleon.core.codegen.property import UInt16Property
+from chameleon.core.codegen.property import UInt32Property
+from chameleon.core.codegen.property import UInt64Property
+from chameleon.core.codegen.property import BoolProperty
+from chameleon.core.codegen.property import NSArrayProperty
+from chameleon.core.codegen.property import NSStringProperty
+from chameleon.core.codegen.property import NSDictionaryProperty
+from chameleon.core.codegen.property import NSNumberProperty
+from chameleon.core.codegen.property import NSURLProperty
+from chameleon.core.codegen.property import NSDataProperty
+from chameleon.core.codegen.property import CustomObjectProperty
+from chameleon.core.codegen.property import DZFileProperty
+from chameleon.core.codegen.property import DZServerProperty
+from chameleon.core.codegen.property import DZMethodProperty
+from chameleon.core.codegen.property import DZHeaderProperty
+from chameleon.core.codegen.property import DZResponseProperty
+from chameleon.core.codegen.property import is_foundation_object_propery
+from chameleon.core.codegen.property import is_oc_object_propery
+from chameleon.core.codegen.property import DZPathProperty
+from chameleon.core.utilities.constant import ModelType
+%>
+
+<%
+  responses = []
+  for p in model.properties:
+      if isinstance(p, DZResponseProperty):
+          responses.append(p)
+          pass
+      pass
+
+  if len(responses) > 1:
+      raise NameError("multi response")
+  response = None
+  if (len(responses) == 1):
+      response = responses[0]
+%>
+
+<%
+  pathComponents = filter(lambda x:x.isPathComponents(),model.properties)
+  pathComponents.sort(lambda x,y: x.pathComponentsPriperty()-y.pathComponentsPriperty())
+%>
+
+#import "QCloud${model.name}Request.h"
+#import "QCloudObjectModel.h"
+% if model.customBuild():
+#import "QCloud${model.name}Request+Custom.h"
+%endif
+% if response != None:
+#import "${response.name}.h"
+% endif
+% for o in model.properties:
+  % if isinstance(o, CustomObjectProperty):
+#import "${o.type}.h"
+% elif isinstance(o, NSArrayProperty) and isinstance(o.containerType, CustomObjectProperty):
+#import "${o.containerType.type}.h"
+  % endif
+% endfor
+
+% if model.hasContainerClass():
+   % for p in model.properties:
+     % if isinstance(p, NSArrayProperty):
+      % if isinstance(p.containerType, CustomObjectProperty):
+@class ${p.containerType.type};
+      % endif
+     % endif
+  % endfor
+% endif
+
+NS_ASSUME_NONNULL_BEGIN
+@implementation QCloud${model.name}Request
+% if model.paramters.count("slow"):
+-  (instancetype) init
+{
+    self = [super init];
+    if (!self) {
+        return self;
+    }
+    self.priority = QCloudAbstractRequestPriorityLow;
+    return self;
+}
+% endif
+
+% if response != None :
+- (NSArray*) customResponseSerializer
+{
+    NSMutableArray* array = [[super customResponseSerializer] mutableCopy];
+    [array addObjectsFromArray:@[
+% if model.paramters.count('cos_response') > 0:
+                                 QCloudResponseCOSNormalRSPSerilizerBlock,
+% endif
+                                 QCloudResponseObjectSerilizerBlock([${p.name} class])
+                                 ]];
+    return array;
+}
+% elif model.paramters.count('cos_response') > 0:
+- (NSArray*) customResponseSerializer
+{
+    NSMutableArray* array = [[super customResponseSerializer] mutableCopy];
+    [array addObjectsFromArray:@[
+                                 QCloudResponseCOSNormalRSPSerilizerBlock,
+                                 ]];
+    return array;
+}
+% endif
+
+- (BOOL) buildRequestData:(NSError *__autoreleasing *)error
+{
+    if (![super buildRequestData:error]) {
+        return NO;
+    }
+
+    % for p in model.properties:
+      % if isinstance(p, ObjectProperty) and p.paramters.count("need"):
+    if (!self.${p.name} || ([self.${p.name} isKindOfClass:NSString.class] && ((NSString*)self.${p.name}).length == 0)) {
+        if (error != NULL) {
+            *error = [NSError bwn_errorWithCode:QCloudNetworkErrorCodeParamterInvalid message:[NSString stringWithFormat:@"paramter[${p.name}] is invalid (nil), it must have some value. please check it"]];
+            return NO;
+        }
+    }
+      % endif
+      % if isinstance(p, DZFileProperty):
+    if (self.${p.name}) {
+          % if p.secondName != None:
+        if(![self.requestData appendPartWithFileURL:[NSURL fileURLWithPath:self.${p.name}] name:@"${p.name}" fileName:[NSUUID UUID].UUIDString mimeType:@"${p.secondName}" headerParamters:@{} error:error])
+          % else:
+        if(![self.requestData appendPartWithFileURL:[NSURL fileURLWithPath:self.${p.name}] name:@"${p.name}" fileName:[NSUUID UUID].UUIDString mimeType:@"" headerParamters:@{} error:error])
+          % endif
+        {
+          return NO;
+        }
+    }
+      % elif isinstance(p, DZResponseProperty):
+
+      % elif isinstance(p , DZHeaderProperty):
+    [self.requestData setValue:@"${p.secondName}" forHTTPHeaderField:@"${p.name}"];
+      % elif isinstance(p, DZServerProperty):
+    self.requestData.serverURL = @"${p.name}";
+      % elif isinstance(p, DZMethodProperty):
+        % if p.isCosOperation():
+    [self.requestData setParameter:@"${p.name}" withKey:@"op"];
+        % else:
+    self.requestData.URIMethod = @"${p.name}";
+        % endif
+      % elif isinstance(p, NSArrayProperty):
+        % if isinstance(p.containerType, DZPathProperty):
+    for (int i=0; i < self.${p.name}.count ; i++) {
+        NSString* path = self.${p.name}[i];
+        NSString* name = [NSString stringWithFormat:@"${p.name}[%d]",i];
+        if (![self.requestData appendPartWithFileURL:[NSURL fileURLWithPath:path] name:name fileName:[NSUUID UUID].UUIDString mimeType:@"${p.secondName}" headerParamters:@{} error:error]) {
+            return NO;
+        }
+    }
+        % endif
+      % elif isinstance(p, FundamentalProperty):
+        % if isinstance(p, BoolProperty) and model.paramters.count("bool_to_true")>0:
+    [self.requestData setParameter:self.${p.name}?@"true":@"false" withKey:@"${p.serverKey()}"];
+        % elif p.secondName != None:
+    [self.requestData setNumberParamter:@(self.${p.name}) withKey:@"${p.secondName}"];
+        % else:
+    [self.requestData setNumberParamter:@(self.${p.name}) withKey:@"${p.name}"];
+        % endif
+      % elif isinstance(p, NSStringProperty):
+         % if not p.isPathComponents():
+    [self.requestData setParameter:self.${p.name} withKey:@"${p.serverKey()}"];
+         % endif
+      % elif isinstance(p, NSNumberProperty):
+        % if p.secondName != None:
+    [self.requestData setNumberParamter:self.${p.name} withKey:@"${p.secondName}"];
+        % else:
+    [self.requestData setNumberParamter:self.${p.name} withKey:@"${p.name}"];
+        % endif
+      % elif isinstance(p, NSURLProperty):
+        % if p.secondName != None:
+    [self.requestData setParameter:[self.${p.name} isFileURL]?self.${p.name}.path:self.${p.name}.absoluteString withKey:@"${p.secondName}"];
+        % else:
+    [self.requestData setParameter:[self.${p.name} isFileURL]?self.${p.name}.path:self.${p.name}.absoluteString withKey:@"${p.name}"];
+        % endif
+      % else:
+        % if p.secondName != None:
+    [self.requestData setParameter:[self.${p.name} qcloud_modelToJSONString] withKey:@"${p.secondName}"];
+        % else:
+    [self.requestData setParameter:[self.${p.name} qcloud_modelToJSONString] withKey:@"${p.name}"];
+        % endif
+      % endif
+    % endfor
+    % if len(pathComponents) > 0:
+    NSMutableArray* __pathComponents = [NSMutableArray arrayWithArray:self.requestData.URIComponents];
+      % for p in pathComponents:
+        % if p.paramters.count("hiden")==0:
+    if(self.${p.name}) [__pathComponents addObject:self.${p.name}];
+        % elif p.name == "COSAPPIDREPLACE":
+    if (self.runOnService.configuration.appID) [__pathComponents addObject:self.runOnService.configuration.appID];
+        % else:
+    [__pathComponents addObject:@"${p.name}"];
+        % endif
+      %endfor
+    self.requestData.URIComponents = __pathComponents;
+    %endif
+    % if model.customBuild():
+    if (![self customBuildRequestData:error]) return NO;
+    % endif
+    return YES;
+}
+% if response != None:
+- (void) setFinishBlock:(void (^)(${response.name}* result, NSError * error))QCloudRequestFinishBlock
+{
+    [super setFinishBlock:QCloudRequestFinishBlock];
+}
+% elif model.paramters.count("cos_response") > 0:
+- (void) setFinishBlock:(void (^)(NSDictionary* result, NSError * error))QCloudRequestFinishBlock;
+{
+    [super setFinishBlock:QCloudRequestFinishBlock];
+}
+% endif
+@end
+NS_ASSUME_NONNULL_END

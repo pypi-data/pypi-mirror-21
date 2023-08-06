@@ -1,0 +1,45 @@
+# coding: UTF-8
+//
+//  ${model.name}.h
+//  ${model.name}
+//
+//  Created by tencent
+//  Copyright (c) 2015年 tencent. All rights reserved.
+//
+<%
+from chameleon.core.codegen.property import ObjectProperty
+from chameleon.core.codegen.property import FundamentalProperty
+from chameleon.core.codegen.property import CustomObjectProperty
+from chameleon.core.codegen.property import NSArrayProperty
+from chameleon.core.codegen.property import NSStringProperty
+from chameleon.core.codegen.property import NSDictionaryProperty
+from chameleon.core.codegen.property import is_oc_object_propery
+%>
+#import <Foundation/Foundation.h>
+
+
+% for o in model.properties:
+  % if isinstance(o, CustomObjectProperty):
+#import "${o.type}.h"
+  % elif isinstance(o, NSArrayProperty) and not is_oc_object_propery(o.containerType.type):
+#import "${o.containerType.type}.h";
+  % endif
+% endfor
+NS_ASSUME_NONNULL_BEGIN
+@interface ${model.name} : NSObject
+% for i in model.properties:
+  % if i.comment != None:
+${i.comment}
+  %endif
+  % if isinstance(i, ObjectProperty):
+    % if isinstance(i, NSArrayProperty):
+@property (strong, nonatomic) ${i.type}<${i.containerType.type}*> *${i.name};
+    % else:
+@property (strong, nonatomic) ${i.type} *${i.name};
+    % endif
+  % elif isinstance(i, FundamentalProperty):
+@property (assign, nonatomic) ${i.type} ${i.name};
+  %endif
+% endfor
+@end
+NS_ASSUME_NONNULL_END

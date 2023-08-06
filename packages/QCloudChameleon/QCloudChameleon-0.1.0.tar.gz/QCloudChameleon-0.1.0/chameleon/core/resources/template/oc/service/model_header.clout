@@ -1,0 +1,39 @@
+
+//
+//  QCloud${model.name}Service.h
+//  QCloud${model.name}Service
+//
+//  Created by tencent
+//
+//
+<%
+from chameleon.core.codegen.property import ObjectProperty
+from chameleon.core.codegen.property import FundamentalProperty
+from chameleon.core.codegen.property import CustomObjectProperty
+from chameleon.core.codegen.property import DZNullHeaderProperty
+from chameleon.core.codegen.property import DZResponseProperty
+from chameleon.core.codegen.property import NSArrayProperty
+from chameleon.core.codegen.property import NSStringProperty
+from chameleon.core.codegen.property import NSDictionaryProperty
+from chameleon.core.codegen.property import is_oc_object_propery
+%>
+
+
+
+#import <Foundation/Foundation.h>
+#import <QCloudCore/QCloudService.h>
+
+% for request in model.subrequests:
+@class QCloud${request.name}Request;
+% endfor
+
+@interface QCloud${model.name}Service : QCloudService
++ (QCloud${model.name}Service*) default${model.name.upper()};
++ (QCloud${model.name}Service*) ${model.name.lower()}ServiceForKey:(NSString*)key;
++ (QCloud${model.name}Service*) registerDefault${model.name}WithConfiguration:(QCloudServiceConfiguration*)configuration;
++ (QCloud${model.name}Service*) register${model.name}WithConfiguration:(QCloudServiceConfiguration*)configuration withKey:(NSString*)key;
+
+% for request in model.subrequests:
+- (void) ${request.name}:(QCloud${request.name}Request*)request;
+% endfor
+@end

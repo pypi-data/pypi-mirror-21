@@ -1,0 +1,105 @@
+# coding: UTF-8
+//
+//  ${model.name}.h
+//  ${model.name}
+//
+//  Created by tencent
+//  Copyright (c) 2015年 tencent. All rights reserved.
+//
+<%
+from core.codegen.property import ObjectProperty
+from core.codegen.property import FundamentalProperty
+from core.codegen.property import CharProperty
+from core.codegen.property import UnsignedCharProperty
+from core.codegen.property import ShortProperty
+from core.codegen.property import UnsignedShortProperty
+from core.codegen.property import IntProperty
+from core.codegen.property import UnsignedIntProperty
+from core.codegen.property import LongProperty
+from core.codegen.property import UnsignedLongProperty
+from core.codegen.property import LongLongProperty
+from core.codegen.property import UnsignedLongLongProperty
+from core.codegen.property import FloatProperty
+from core.codegen.property import DoubleProperty
+from core.codegen.property import NSIntegerProperty
+from core.codegen.property import NSUIntegerProperty
+from core.codegen.property import Int8Property
+from core.codegen.property import Int16Property
+from core.codegen.property import Int32Property
+from core.codegen.property import Int64Property
+from core.codegen.property import UInt8Property
+from core.codegen.property import UInt16Property
+from core.codegen.property import UInt32Property
+from core.codegen.property import UInt64Property
+from core.codegen.property import BoolProperty
+from core.codegen.property import NSArrayProperty
+from core.codegen.property import NSStringProperty
+from core.codegen.property import NSDictionaryProperty
+from core.codegen.property import NSNumberProperty
+from core.codegen.property import NSURLProperty
+from core.codegen.property import NSDataProperty
+from core.codegen.property import CustomObjectProperty
+from core.codegen.property import is_foundation_object_propery
+from core.utilities.constant import ModelType
+%>
+
+#import "${model.name}.h"
+% for o in model.properties:
+  % if isinstance(o, CustomObjectProperty):
+#import "${o.type}.h"
+  % endif
+% endfor
+
+@implementation ${model.name}
+
++ (NSDictionary*) JSONKeyPathsByPropertyKey
+{
+    return @{
+% for p in model.properties:
+          @"${p.name}":@"${p.name}",
+% endfor
+    };
+}
+% for p in model.properties:
+% if isinstance(p, NSURLProperty):
+// NSURL
++ (NSValueTransformer *)${p.name}JSONTransformer {
+    return [MTLValueTransformer valueTransformerForName:MTLURLValueTransformerName];
+}
+% endif
+% if isinstance(p, NSArrayProperty):
+// NSArray
++ (NSValueTransformer *)${p.name}JSONTransformer {
+    return [MTLValueTransformer transformerUsingForwardBlock:^id(id value, BOOL *success, NSError *__autoreleasing *error) {
+        NSArray * jsonArray = value;
+        NSMutableArray * attrArray = [NSMutableArray array];
+       
+        [jsonArray enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+            [attrArray addObject:obj];
+        }];
+       
+        return attrArray;
+    }];
+}
+%endif
+% if isinstance(p, CustomObjectProperty):
+// 自定义类
++ (NSValueTransformer *)${p.name}JSONTransformer {
+
+    return [MTLValueTransformer transformerUsingForwardBlock:^id(id value, BOOL *success, NSError *__autoreleasing *error) {
+
+        ${p.name} *customModel = [MTLJSONAdapter modelOfClass:[${p.name} class] fromJSONDictionary:value error:nil];
+
+        return customModel;
+    }];
+}
+%endif
+%endfor
+
+// null值的处理方法回调
+- (void)setNilValueForKey:(NSString *)key {
+    // 基本数据类型
+    [self setValue:@0 forKey:key];
+}
+
+@end

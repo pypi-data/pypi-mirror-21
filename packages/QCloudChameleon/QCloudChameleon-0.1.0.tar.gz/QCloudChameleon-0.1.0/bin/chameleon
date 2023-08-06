@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+import sys
+import subprocess
+import os
+import argparse
+sys.path.append(".")
+sys.path.append("..")
+from antlr4 import *
+from chameleon.core.engine.ChameleonLexer import ChameleonLexer
+from chameleon.core.engine.ChameleonParser import ChameleonParser
+from chameleon.core.parser.listener import CLBuildListener
+from chameleon.core.config.config import *
+from chameleon.core.utilities.constant import *
+
+def main(argv):
+    argsParser = argparse.ArgumentParser()
+
+#inputfile
+    argsParser.add_argument("language", help = "指定将生成的语言", type=str)
+    argsParser.add_argument("inputFile", help="input file", type=str)
+#xcode project file addition
+    argsParser.add_argument("-x","--xcode", action="store_true", help="output files to xcode project, if app can find it in path")
+#oc 输出的格式
+    argsParser.add_argument("-ot", "--outType", type=str, choices=["mantle", "dic", "bwmodel"], help="指定OC代码的输出格式，目前支持的有mantle、直接字典映射、使用bwmodel方式")
+#输出目录
+    argsParser.add_argument("-d",  "--outDir", type=str, help="制定输出目录")
+#模板目录
+    argsParser.add_argument("-t", "--template", type=str, help="不使用默认的输出格式，而是使用制定的模板")
+#参数解析
+    args = argsParser.parse_args()
+#将解析出来的参数拷贝到全局的参数配置当中
+    Config.setupWithArgs(args)
+
+    print(Config.OUTPUT_DIR)
+
+    input = FileStream(args.inputFile, encoding="utf-8")
+    lexer = ChameleonLexer(input)
+    stream = CommonTokenStream(lexer)
+    parser = ChameleonParser(stream)
+    tree = parser.prog()
+
+    walker = ParseTreeWalker()
+    loader = CLBuildListener()
+    walker.walk(loader, tree)
+
+if __name__ == '__main__':
+    main(sys.argv)

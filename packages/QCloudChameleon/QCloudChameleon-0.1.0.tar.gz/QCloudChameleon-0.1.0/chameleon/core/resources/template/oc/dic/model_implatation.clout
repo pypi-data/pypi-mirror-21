@@ -1,0 +1,681 @@
+# coding: UTF-8
+//
+//  ${model.name}.m
+//  ${model.name}
+//
+//  Created by tencent
+//  Copyright (c) 2015年 tencent. All rights reserved.
+//
+<%
+from core.codegen.property import ObjectProperty
+from core.codegen.property import FundamentalProperty
+from core.codegen.property import CharProperty
+from core.codegen.property import UnsignedCharProperty
+from core.codegen.property import ShortProperty
+from core.codegen.property import UnsignedShortProperty
+from core.codegen.property import IntProperty
+from core.codegen.property import UnsignedIntProperty
+from core.codegen.property import LongProperty
+from core.codegen.property import UnsignedLongProperty
+from core.codegen.property import LongLongProperty
+from core.codegen.property import UnsignedLongLongProperty
+from core.codegen.property import FloatProperty
+from core.codegen.property import DoubleProperty
+from core.codegen.property import NSIntegerProperty
+from core.codegen.property import NSUIntegerProperty
+from core.codegen.property import Int8Property
+from core.codegen.property import Int16Property
+from core.codegen.property import Int32Property
+from core.codegen.property import Int64Property
+from core.codegen.property import UInt8Property
+from core.codegen.property import UInt16Property
+from core.codegen.property import UInt32Property
+from core.codegen.property import UInt64Property
+from core.codegen.property import BoolProperty
+from core.codegen.property import NSArrayProperty
+from core.codegen.property import NSStringProperty
+from core.codegen.property import NSDictionaryProperty
+from core.codegen.property import NSNumberProperty
+from core.codegen.property import NSURLProperty
+from core.codegen.property import NSDataProperty
+from core.codegen.property import CustomObjectProperty
+from core.codegen.property import is_foundation_object_propery
+from core.codegen.property import is_oc_object_propery
+from core.utilities.constant import ModelType
+%>
+#import "${model.name}.h"
+#import "BWTODictionary.h"
+#import "BWDeepCopy.h"
+#import "EnsureType.h"
+% for o in model.properties:
+  % if isinstance(o, CustomObjectProperty):
+#import "${o.type}.h"
+  % endif
+% endfor
+
+@implementation ${model.name}
+
+- (id)toDictionaryValue
+{
+    NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+    #define SET_NIL_OBJECT(obj, key) \
+    if (obj) { \
+        [dic setObject:obj  forKey:key];\
+    }
+    % for p in model.properties:
+    % if isinstance(p, CharProperty):
+    SET_NIL_OBJECT([NSNumber numberWithChar:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UnsignedCharProperty):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedChar:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, ShortProperty):
+    SET_NIL_OBJECT([NSNumber numberWithShort:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UnsignedShortProperty):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedShort:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, IntProperty):
+    SET_NIL_OBJECT([NSNumber numberWithInt:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UnsignedIntProperty):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedInt:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, LongProperty):
+    SET_NIL_OBJECT([NSNumber numberWithLong:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UnsignedLongProperty):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLong:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, LongLongProperty):
+    SET_NIL_OBJECT([NSNumber numberWithLongLong:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UnsignedLongLongProperty):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLongLong:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, FloatProperty):
+    SET_NIL_OBJECT([NSNumber numberWithFloat:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, DoubleProperty):
+    SET_NIL_OBJECT([NSNumber numberWithDouble:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, NSIntegerProperty):
+    SET_NIL_OBJECT([NSNumber numberWithInteger:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, NSUIntegerProperty):
+    SET_NIL_OBJECT([NSNumber numberWithInteger:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, Int8Property):
+    SET_NIL_OBJECT([NSNumber numberWithChar:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UInt8Property):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedChar:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, Int16Property):
+    SET_NIL_OBJECT([NSNumber numberWithShort:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UInt16Property):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedShort:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, Int32Property):
+    SET_NIL_OBJECT([NSNumber numberWithInt:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UInt32Property):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedInt:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, Int64Property):
+    SET_NIL_OBJECT([NSNumber numberWithLongLong:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, UInt64Property):
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLongLong:self.${p.name}],@"${p.name}");
+    %endif
+    % if isinstance(p, BoolProperty):
+    SET_NIL_OBJECT([NSNumber numberWithBool:self.${p.name}] ,@"${p.name}");
+    %endif
+    % if isinstance(p, ObjectProperty):
+    SET_NIL_OBJECT([self.${p.name} toDictionaryValue],@"${p.name}");
+    %endif
+    %endfor
+    return dic;
+}
+
+- (id)toServerDictionaryValue
+{
+    NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+    #define SET_NIL_OBJECT(obj, key) \
+    if (obj) { \
+        [dic setObject:obj  forKey:key];\
+    }
+    % for p in model.properties:
+    % if isinstance(p, CharProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithChar:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithChar:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UnsignedCharProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedChar:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedChar:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, ShortProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithShort:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithShort:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UnsignedShortProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedShort:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedShort:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, IntProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithInt:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithInt:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UnsignedIntProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedInt:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedInt:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, LongProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithLong:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithLong:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UnsignedLongProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLong:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLong:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, LongLongProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithLongLong:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithLongLong:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UnsignedLongLongProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLongLong:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLongLong:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, FloatProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithFloat:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithFloat:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, DoubleProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithDouble:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithDouble:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, NSIntegerProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithInteger:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithInteger:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, NSUIntegerProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithInteger:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithInteger:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, Int8Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithChar:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithChar:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UInt8Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedChar:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedChar:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, Int16Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithShort:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithShort:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UInt16Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedShort:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedShort:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, Int32Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithInt:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithInt:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UInt32Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedInt:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedInt:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, Int64Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithLongLong:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithLongLong:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, UInt64Property):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLongLong:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithUnsignedLongLong:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, BoolProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([NSNumber numberWithBool:self.${p.name}],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([NSNumber numberWithBool:self.${p.name}],@"${p.secondName}");
+    %endif
+    %endif
+    % if isinstance(p, ObjectProperty):
+    % if p.secondName is None:
+    SET_NIL_OBJECT([self.${p.name} toDictionaryValue],@"${p.name}");
+    % else:
+    SET_NIL_OBJECT([self.${p.name} toDictionaryValue],@"${p.secondName}");
+    %endif
+    %endif
+    %endfor
+    return dic;
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
+    ${model.name} *copyedModel = [[self.class allocWithZone:zone] init];
+    % for p in model.properties:
+    % if isinstance(p, ObjectProperty):
+    % if (isinstance(p, NSDictionaryProperty) or isinstance(p, NSArrayProperty)):
+    copyedModel.${p.name} = self.${p.name}.deepCopy;
+    % else:
+    copyedModel.${p.name} = self.${p.name}.copy;
+    % endif
+    % else:
+    copyedModel.${p.name} = self.${p.name};
+    % endif
+    % endfor
+    return copyedModel;
+}
+
+- (void)setValue:(id)value forKey:(NSString *)key
+{
+    if (NO){}
+% for p in model.properties:
+% if isinstance(p, CharProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureCharType(value);
+    }
+% endif
+% if isinstance(p, UnsignedCharProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedCharType(value);
+    }
+% endif
+% if isinstance(p, ShortProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureShortType(value);
+    }
+% endif
+% if isinstance(p, UnsignedShortProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedShortType(value);
+    }
+% endif
+% if isinstance(p, IntProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureIntType(value);
+    }
+% endif
+% if isinstance(p, UnsignedIntProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedIntType(value);
+    }
+% endif
+% if isinstance(p, LongProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureLongType(value);
+    }
+% endif
+% if isinstance(p, UnsignedLongProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedLongType(value);
+    }
+% endif
+% if isinstance(p, LongLongProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureLongLongType(value);
+    }
+% endif
+% if isinstance(p, UnsignedLongLongProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedLongLongType(value);
+    }
+% endif
+% if isinstance(p, Int8Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureCharType(value);
+    }
+% endif
+% if isinstance(p, UInt8Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedCharType(value);
+    }
+% endif
+% if isinstance(p, Int16Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureShortType(value);
+    }
+% endif
+% if isinstance(p, UInt16Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedShortType(value);
+    }
+% endif
+% if isinstance(p, Int32Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureIntType(value);
+    }
+% endif
+% if isinstance(p, UInt32Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedIntType(value);
+    }
+% endif
+% if isinstance(p, Int64Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureLongLongType(value);
+    }
+% endif
+% if isinstance(p, UInt64Property):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUnsignedLongLongType(value);
+    }
+% endif
+% if isinstance(p, FloatProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureFloatType(value);
+    }
+% endif
+% if isinstance(p, DoubleProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureDoubleType(value);
+    }
+% endif
+% if isinstance(p, BoolProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureBoolType(value);
+    }
+% endif
+% if isinstance(p, NSIntegerProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureIntegerType(value);
+    }
+% endif
+% if isinstance(p, NSUIntegerProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureUIntegerType(value);
+    }
+% endif
+% if isinstance(p, NSStringProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureStringType(value);
+     }
+% endif
+% if isinstance(p, NSNumberProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureNumberType(value);
+    }
+% endif
+% if isinstance(p, NSURLProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureURLType(value);
+    }
+% endif
+% if isinstance(p, NSDictionaryProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureDictionaryType(value);
+    }
+%endif
+% if isinstance(p, NSDataProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        _${p.name} = ensureDataType(value);
+    }
+%endif
+% if isinstance(p, CustomObjectProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        if ((!value) || ([value isKindOfClass:[NSNull class]])) {
+            _${p.name} = nil;
+            return;
+        }
+        NSAssert([value isKindOfClass:[NSDictionary class]], @"数据不是dictionary类型，无法向自定义类型转化");
+        ${p.type}* transObj = [[${p.type} alloc] init];
+        [transObj setValuesForKeysWithDictionary:value];
+        _${p.name} = transObj;
+    }
+% endif
+% if isinstance(p, NSArrayProperty):
+    %if p.secondName is None:
+    else if ([key isEqualToString:@"${p.name}"])
+    %else:
+    else if ([key isEqualToString:@"${p.name}"] || [key isEqualToString:@"${p.secondName}"])
+    %endif
+    {
+        if (nil == ensureArrayType(value))
+        {
+            _${p.name} = nil;
+            return;
+        }
+        NSArray* array = (NSArray*)value;
+        NSMutableArray* objects = [NSMutableArray new];
+        for (id obj in array) {
+            %if is_foundation_object_propery(p.containerType):
+            %if p.containerType == ModelType.Number:
+            if (ensureNumberType(obj))
+            {
+                [objects addObject:ensureNumberType(obj)];
+            }
+            %endif
+            % if p.containerType == ModelType.String:
+            if (ensureStringType(obj))
+            {
+                [objects addObject:ensureStringType(obj)];
+            }
+            %endif
+            %else:
+            NSAssert([obj isKindOfClass:[NSDictionary class]], @"数据不是dictionary类型，无法向自定义类型转化");
+            ${p.containerType }* transObj = [[${p.containerType } alloc] init];
+            [transObj setValuesForKeysWithDictionary:obj];
+            [objects addObject:transObj];
+            %endif
+        }
+        _${p.name} = objects;
+    }
+% endif
+% endfor
+}
+
+@end

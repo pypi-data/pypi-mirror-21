@@ -1,0 +1,94 @@
+# coding: UTF-8
+//
+//  ${model.name}.m
+//  ${model.name}
+//
+//  Created by tencent
+//  Copyright (c) 2015年 tencent. All rights reserved.
+//
+<%
+from chameleon.core.codegen.property import ObjectProperty
+from chameleon.core.codegen.property import FundamentalProperty
+from chameleon.core.codegen.property import CharProperty
+from chameleon.core.codegen.property import UnsignedCharProperty
+from chameleon.core.codegen.property import ShortProperty
+from chameleon.core.codegen.property import UnsignedShortProperty
+from chameleon.core.codegen.property import IntProperty
+from chameleon.core.codegen.property import UnsignedIntProperty
+from chameleon.core.codegen.property import LongProperty
+from chameleon.core.codegen.property import UnsignedLongProperty
+from chameleon.core.codegen.property import LongLongProperty
+from chameleon.core.codegen.property import UnsignedLongLongProperty
+from chameleon.core.codegen.property import FloatProperty
+from chameleon.core.codegen.property import DoubleProperty
+from chameleon.core.codegen.property import NSIntegerProperty
+from chameleon.core.codegen.property import NSUIntegerProperty
+from chameleon.core.codegen.property import Int8Property
+from chameleon.core.codegen.property import Int16Property
+from chameleon.core.codegen.property import Int32Property
+from chameleon.core.codegen.property import Int64Property
+from chameleon.core.codegen.property import UInt8Property
+from chameleon.core.codegen.property import UInt16Property
+from chameleon.core.codegen.property import UInt32Property
+from chameleon.core.codegen.property import UInt64Property
+from chameleon.core.codegen.property import BoolProperty
+from chameleon.core.codegen.property import NSArrayProperty
+from chameleon.core.codegen.property import NSStringProperty
+from chameleon.core.codegen.property import NSDictionaryProperty
+from chameleon.core.codegen.property import NSNumberProperty
+from chameleon.core.codegen.property import NSURLProperty
+from chameleon.core.codegen.property import NSDataProperty
+from chameleon.core.codegen.property import CustomObjectProperty
+from chameleon.core.codegen.property import is_foundation_object_propery
+from chameleon.core.codegen.property import is_oc_object_propery
+from chameleon.core.utilities.constant import ModelType
+%>
+#import "${model.name}.h"
+
+% for o in model.properties:
+  % if isinstance(o, CustomObjectProperty):
+#import "${o.type}.h"
+  % elif isinstance(o, NSArrayProperty) and isinstance(o.containerType, CustomObjectProperty):
+#import "${o.containerType.type}.h"
+  % endif
+% endfor
+
+% if model.hasContainerClass():
+   % for p in model.properties:
+     % if isinstance(p, NSArrayProperty):
+      % if isinstance(p.containerType, CustomObjectProperty):
+@class ${p.containerType.type};
+      % endif
+     % endif
+  % endfor
+% endif
+
+NS_ASSUME_NONNULL_BEGIN
+@implementation ${model.name}
+
+% if model.hasContainerClass():
++ (NSDictionary *)modelContainerPropertyGenericClass
+{
+   return @ {
+   % for p in model.properties:
+     % if isinstance(p, NSArrayProperty):
+      % if isinstance(p.containerType, CustomObjectProperty):
+      @"${p.mapKey()}":[${p.containerType.type} class],
+      % endif
+     % endif
+   % endfor
+  };
+}
+% endif
++ (NSDictionary *)modelCustomPropertyMapper
+{
+  return @{
+  % for p in model.properties:
+    % if p.secondName != None:
+      @"${p.name}" :@"${p.secondName}",
+    % endif
+  % endfor
+  };
+}
+@end
+NS_ASSUME_NONNULL_END
