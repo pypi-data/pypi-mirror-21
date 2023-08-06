@@ -1,0 +1,128 @@
+{% extends "constellation_base/base.html" %}
+
+{% block title %}Orderboard | Manage Boards{% endblock %}
+{% block heading %}Orderboard | Manage Boards{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_orderboard/css/orderboard.css' %}">
+{% endblock %}
+
+{% block js %}
+<div id="message-toast" class="mdl-js-snackbar mdl-snackbar">
+   <div class="mdl-snackbar__text"></div>
+   <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{{ block.super }}
+{% load static %}
+<script src="{% static 'constellation_orderboard/js/manage-boards.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script>
+    var url_api_v1_board_list = "{% url 'constellation_orderboard:api_v1_board_list' %}"
+    var url_api_v1_board_unarchive = "{% url 'constellation_orderboard:api_v1_board_unarchive' 0 %}"
+    var url_api_v1_board_archive = "{% url 'constellation_orderboard:api_v1_board_archive' 0 %}"
+    var url_board_edit = "{% url 'constellation_orderboard:manage_board_edit' 0 %}"
+    var url_view_board = "{% url 'constellation_orderboard:view_board' 0 %}"
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="boardsCard" class="mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    {% verbatim %}
+    <script id="handlebars-board" type="text/x-handlebars-template">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Boards</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <div class="mdl-list">
+            {{#if active_boards}}
+            {{#each active_boards}}
+                <div class="mdl-list__item">
+                    <span class="mdl-list__item-primary-content">
+                        <a href="{{url}}">{{name}}</a>
+                    </span>
+                    <span class="mdl-list__item-secondary-content">
+                        <span class="mdl-list__item-secondary-action">
+                          <a href="#" onclick="archiveBoard({{id}})"><i class="material-icons">close</i></a>
+                          <a href="#" onclick="editBoard({{id}})"><i class="material-icons">edit</i></a>
+                        </span>
+                    </span>
+                </div>
+            {{/each}}
+            {{else}}
+                No active boards yet -- add one below!
+            {{/if}}
+            </div>
+            <hr/>
+            <h5>Inactive Boards</h5>
+            <ul>
+            {{#each inactive_boards}}
+                <div class="mdl-list__item">
+                    <span class="mdl-list__item-primary-content">
+                        <span><a href="{{url}}">{{name}}</span>
+                    </span>
+                    <span class="mdl-list__item-secondary-content">
+                        <span class="mdl-list__item-secondary-action">
+                            <a href="#" onclick="unarchiveBoard({{id}})"><i class="material-icons">check_circle</i></a>
+                        </span>
+                    </span>
+                </div>
+            {{/each}}
+            </ul>
+        </div>
+    </script>
+    {% endverbatim %}
+</div>
+<div id="formCard" class="form-card mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+   <div class="mdl-card__title">
+      <h2 class="mdl-card__title-text">New Board</h2>
+   </div>
+   <div class="mdl-card__supporting-text">
+      <form method="post" action="{% url 'constellation_orderboard:api_v1_board_create' %}" id="newBoardForm" class="mdl-cell--12-col">
+         {% csrf_token %}
+         {{ form.active.as_hidden }}
+         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+            {{ form.name }}
+            <label class="mdl-textfield__label" for="{{ form.name.id_for_label }}">Name</label>
+         </div>
+         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+            {{ form.desc }}
+            <label class="mdl-textfield__label" for="{{ form.desc.id_for_label }}">Description</label>
+         </div>
+         <ul class="demo-list-control mdl-list">
+            <li class="mdl-list__item">
+               <span id="group-header" class="mdl-cell--4-col">Group</span>
+               <span class="mdl-cell--12-col permissions-header">
+                  <i id="perm-none" class="material-icons perm-icon">not_interested</i>
+                  <div class="mdl-tooltip" for="perm-none">No Permissions</div>
+                  <i id="perm-view" class="material-icons perm-icon">visibility</i>
+                  <div class="mdl-tooltip" for="perm-view">View Board</div>
+                  <i id="perm-add" class="material-icons perm-icon">add_box</i>
+                  <div class="mdl-tooltip" for="perm-add">Add Cards</div>
+                  <i id="perm-move" class="material-icons perm-icon">swap_horiz</i>
+                  <div class="mdl-tooltip" for="perm-move">Move Cards</div>
+                  <i id="perm-archive" class="material-icons perm-icon">archive</i>
+                  <div class="mdl-tooltip" for="perm-archive">Archive Cards</div>
+                  <i id="perm-manage" class="material-icons perm-icon">settings</i>
+                  <div class="mdl-tooltip" for="perm-manage">Manage Cards</div>
+               </span>
+               {% for group in groups %}
+               <li class="mdl-list__item">
+                  <span id="group-{{ group.1 }}" class="mdl-cell--4-col">{{ group.0 }}</span>
+                  <span class="mdl-cell--12-col">
+                     <input id="slider-{{ group.1 }}" name="group-{{ group.1 }}" class="mdl-slider mdl-js-slider group-permission" type="range" min="1" max="6" steps="1" value="1">
+                  </span>
+               </li>
+               {% endfor %}
+            </ul>
+            <div class="mdl-card__actions">
+               <div class="mdl-layout-spacer"></div>
+               <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--primary">
+                  Create Board <i class="material-icons right">done</i>
+               </button>
+            </div>
+         </form>
+      </div>
+   </div>
+   {% endblock %}

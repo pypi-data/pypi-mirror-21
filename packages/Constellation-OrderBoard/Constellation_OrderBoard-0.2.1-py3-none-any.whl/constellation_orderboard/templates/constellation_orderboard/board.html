@@ -1,0 +1,194 @@
+{% extends "constellation_base/base.html" %}
+
+{% block title %}{{ template_settings.organization }} -- Orderboard{% endblock %}
+{% block heading %}Orderboard{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_orderboard/css/orderboard.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dialog-polyfill/0.4.4/dialog-polyfill.min.css" />
+{% endblock %}
+
+{% block js %}
+<div id="message-toast" class="mdl-js-snackbar mdl-snackbar">
+    <div class="mdl-snackbar__text"></div>
+    <button class="mdl-snackbar__action" type="button"></button>
+</div>
+<dialog id="newItem" class="mdl-dialog">
+    <h4 class="mdl-dialog__title">New Item</h4>
+    <div class="mdl-dialog__content mdl-grid">
+        <form method="post" action="{% url 'constellation_orderboard:api_v1_card_create' id %}" id="newItemForm" class="mdl-grid">
+            {% csrf_token %}
+            {{ form.stage.as_hidden }}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+                {{ form.name }}
+                <label class="mdl-textfield__label" for="{{ form.name.id_for_label }}">Name</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--3-col-tablet mdl-cell--bottom">
+                {{ form.quantity }}
+                <label class="mdl-textfield__label" for="{{ form.quantity.id_for_label }}">Quantity</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--5-col-tablet mdl-cell--bottom">
+                {{ form.units }}
+                <label class="mdl-textfield__label" for="{{ form.units.id_for_label }}">Units</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:100%">
+                {{ form.notes }}
+                <label class="mdl-textfield__label" for="{{ form.notes.id_for_label }}">Description</label>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+                    Submit Item <i class="material-icons right">done</i>
+                </button>
+            </div>
+        </form>
+    </div>
+</dialog>
+<dialog id="editItem" class="mdl-dialog">
+    <h4 class="mdl-dialog__title">Edit Item</h4>
+    <div class="mdl-dialog__content mdl-grid">
+        <form method="post" action="{% url 'constellation_orderboard:api_v1_card_edit' id 0 %}" id="editItemForm" class="mdl-grid" name="0">
+            {% csrf_token %}
+            {{ editForm.stage.as_hidden }}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+                {{ editForm.name }}
+                <label class="mdl-textfield__label" for="{{ editForm.name.id_for_label }}">Name</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--3-col-tablet mdl-cell--bottom">
+                {{ editForm.quantity }}
+                <label class="mdl-textfield__label" for="{{ editForm.quantity.id_for_label }}">Quantity</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--5-col-tablet mdl-cell--bottom">
+                {{ editForm.units }}
+                <label class="mdl-textfield__label" for="{{ editForm.units.id_for_label }}">Units</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:100%">
+                {{ editForm.notes }}
+                <label class="mdl-textfield__label" for="{{ editForm.notes.id_for_label }}">Description</label>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+                    Submit Item <i class="material-icons right">done</i>
+                </button>
+            </div>
+        </form>
+    </div>
+</dialog>
+{{ block.super }}
+{% load static %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dialog-polyfill/0.4.4/dialog-polyfill.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script>
+    var board_id = "{{ id }}"
+    var url_api_v1_stage_list = "{% url 'constellation_orderboard:api_v1_stage_list' %}";
+    var url_api_v1_board_active_cards = "{% url 'constellation_orderboard:api_v1_board_active_cards' id %}";
+    var url_api_v1_card_move_left = "{% url 'constellation_orderboard:api_v1_card_move_left' id 0 %}";
+    var url_api_v1_card_move_right = "{% url 'constellation_orderboard:api_v1_card_move_right' id 0 %}";
+    var url_api_v1_card_archive = "{% url 'constellation_orderboard:api_v1_card_archive' id 0 %}";
+    var url_api_v1_card_edit = "{% url 'constellation_orderboard:api_v1_card_edit' id 0 %}";
+    var stage_form_id="{{ form.stage.id_for_label }}";
+    var edit_board_id="{{ editForm.board.id_for_label }}";
+    var edit_name_id="{{ editForm.name.id_for_label }}";
+    var edit_quantity_id="{{ editForm.quantity.id_for_label }}";
+    var edit_units_id="{{ editForm.units.id_for_label }}";
+    var edit_notes_id="{{ editForm.notes.id_for_label }}";
+</script>
+
+<script src="{% static 'constellation_orderboard/js/orderboard.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+{% load guardian_tags %}
+{% get_obj_perms request.user for board as "board_perms" %}
+{% verbatim %}
+<div class="mdl-grid board" id="board" style="width:100%">
+    <div class="waiting-spinner mdl-spinner mdl-js-spinner is-active"></div>
+    <script id="handlebars-board" type="text/x-handlebars-template">
+    {{#each stages}}
+        <div class="mdl-cell mdl-cell--12-col mdl-cell--{{../mdl_width}}-col-desktop stage" id="stage_{{name}}">
+        <hr class="mdl-cell--hide-desktop">
+        <h3 class="stage-name">{{name}}</h3>
+        {{#each cards}}
+            <div id="card_{{id}}" class="inventory-item mdl-card mdl-shadow--2dp mdl-color--accent mdl-color-text--white">
+                <div class="card_name mdl-card__title mdl-color-text--white">
+                    <span>{{name}}</span>&nbsp;<span id="card_{{id}}_quantity">({{quantity}}{{# if units }} {{units}}{{/if}})</span>
+                </div>
+                <div class="mdl-card__supporting-text mdl-color-text--white">
+                    <div id="card_{{id}}_notes" class="card_notes">{{notes}}</div>
+{% endverbatim %}
+{% if "action_move_cards" in board_perms %}
+{% verbatim %}
+                    <button onclick="moveItem({{id}}, 'left')" id="card_{{id}}_left_button" class="card_button card_left_button mdl-cell--hide-tablet mdl-cell--hide-phone">
+                        <i class="material-icons">chevron_left</i>
+                    </button>
+                    <button onclick="moveItem({{id}}, 'left')" id="card_{{id}}_up_button" class="card_button card_up_button mdl-cell--hide-desktop">
+                        <i class="material-icons">keyboard_arrow_up</i>
+                    </button>
+                    <button onclick="moveItem({{id}}, 'right')" id="card_{{id}}_right_button" class="card_right_button card_button mdl-cell--hide-tablet mdl-cell--hide-phone">
+                        <i class="material-icons">chevron_right</i>
+                    </button>
+                    <button onclick="moveItem({{id}}, 'right')" id="card_{{id}}_down_button" class="card_button card_down_button mdl-cell--hide-desktop">
+                        <i class="material-icons">keyboard_arrow_down</i>
+                    </button>
+{% endverbatim %}
+{% endif %}
+{% verbatim %}
+                    <div class="card_extra_buttons">
+                      <div class="card_extra_buttons_inner">
+{% endverbatim %}
+{% if "action_add_cards" in board_perms %}
+{% verbatim %}
+                        <span onclick="editItem({{id}})" id="card_{{id}}_edit_button" class="card_button card_edit_button">
+                          <i class="material-icons">mode_edit</i>
+                        </span>
+{% endverbatim %}
+{% endif %}
+{% if "action_archive_cards" in board_perms %}
+{% verbatim %}
+                        <span onclick="deleteItem({{id}})" id="card_{{id}}_close_button" class="card_button card_close_button">
+                          <i class="material-icons">close</i>
+                        </span>
+{% endverbatim %}
+{% endif %}
+{% verbatim %}
+                      </div>
+                    </div>
+                    <div id="card_{{id}}_progress" class="progress"> <div class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div></div>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+    {{/each}}
+    <div id="clear" style="clear:both;"></div>
+    </script>
+</div>
+<br/>
+<div class="divider"></div>
+{% endverbatim %}
+<div class="fixed-action-btn">
+  {% if "action_manage_board" in board_perms %}
+  <a href="{% url 'constellation_orderboard:manage_board_edit' id %}" class="fab">
+    <button id="archive" class="mdl-button mdl-js-button mdl-button--fab mdl-button--accent">
+      <i class="material-icons">settings</i>
+    </button>
+  </a>
+  {% endif %}
+
+  {% if "action_archive_cards" in board_perms %}
+  <a href="{% url 'constellation_orderboard:view_board_archive' id %}" class="fab">
+    <button id="archive" class="mdl-button mdl-js-button mdl-button--fab mdl-button--accent">
+      <i class="material-icons">archive</i>
+    </button>
+  </a>
+  {% endif %}
+
+  {% if "action_add_cards" in board_perms %}
+  <button id="showNewItem" class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored">
+    <i class="material-icons">add</i>
+  </button>
+  {% endif %}
+</div>
+
+<br/>
+{% endblock %}
