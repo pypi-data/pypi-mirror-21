@@ -1,0 +1,321 @@
+heat_template_version: ocata
+
+description: >
+  OpenStack containerized Swift Storage services.
+
+parameters:
+  DockerNamespace:
+    description: namespace
+    default: 'tripleoupstream'
+    type: string
+  DockerSwiftProxyImage:
+    description: image
+    default: 'centos-binary-swift-proxy-server:latest'
+    type: string
+  DockerSwiftAccountImage:
+    description: image
+    default: 'centos-binary-swift-account:latest'
+    type: string
+  DockerSwiftContainerImage:
+    description: image
+    default: 'centos-binary-swift-container:latest'
+    type: string
+  DockerSwiftObjectImage:
+    description: image
+    default: 'centos-binary-swift-object:latest'
+    type: string
+  EndpointMap:
+    default: {}
+    description: Mapping of service endpoint -> protocol. Typically set
+                 via parameter_defaults in the resource registry.
+    type: json
+  DefaultPasswords:
+    default: {}
+    type: json
+  ServiceNetMap:
+    default: {}
+    description: Mapping of service_name -> network name. Typically set
+                 via parameter_defaults in the resource registry.  This
+                 mapping overrides those in ServiceNetMapDefaults.
+    type: json
+
+resources:
+
+  SwiftStorageBase:
+    type: ../../puppet/services/swift-storage.yaml
+    properties:
+      EndpointMap: {get_param: EndpointMap}
+      ServiceNetMap: {get_param: ServiceNetMap}
+      DefaultPasswords: {get_param: DefaultPasswords}
+
+outputs:
+  role_data:
+    description: Role data for the swift storage services.
+    value:
+      service_name: {get_attr: [SwiftStorageBase, role_data, service_name]}
+      config_settings: {get_attr: [SwiftStorageBase, role_data, config_settings]}
+      step_config: &step_config
+        get_attr: [SwiftStorageBase, role_data, step_config]
+      service_config_settings: {get_attr: [SwiftStorageBase, role_data, service_config_settings]}
+      # BEGIN DOCKER SETTINGS
+      puppet_config:
+        config_volume: swift
+        puppet_tags: swift_config,swift_container_config,swift_container_sync_realms_config,swift_account_config,swift_object_config,swift_object_expirer_config
+        step_config: *step_config
+        config_image: &swift_proxy_image
+          list_join:
+            - '/'
+            - [ {get_param: DockerNamespace}, {get_param: DockerSwiftProxyImage} ]
+      kolla_config:
+        /var/lib/kolla/config_files/swift_account_auditor.json:
+          command: /usr/bin/swift-account-auditor /etc/swift/account-server.conf
+        /var/lib/kolla/config_files/swift_account_reaper.json:
+          command: /usr/bin/swift-account-reaper /etc/swift/account-server.conf
+        /var/lib/kolla/config_files/swift_account_replicator.json:
+          command: /usr/bin/swift-account-replicator /etc/swift/account-server.conf
+        /var/lib/kolla/config_files/swift_account_server.json:
+          command: /usr/bin/swift-account-server /etc/swift/account-server.conf
+        /var/lib/kolla/config_files/swift_container_auditor.json:
+          command: /usr/bin/swift-container-auditor /etc/swift/container-server.conf
+        /var/lib/kolla/config_files/swift_container_replicator.json:
+          command: /usr/bin/swift-container-replicator /etc/swift/container-server.conf
+        /var/lib/kolla/config_files/swift_container_updater.json:
+          command: /usr/bin/swift-container-updater /etc/swift/container-server.conf
+        /var/lib/kolla/config_files/swift_container_server.json:
+          command: /usr/bin/swift-container-server /etc/swift/container-server.conf
+        /var/lib/kolla/config_files/swift_object_auditor.json:
+          command: /usr/bin/swift-object-auditor /etc/swift/object-server.conf
+        /var/lib/kolla/config_files/swift_object_expirer.json:
+          command: /usr/bin/swift-object-expirer /etc/swift/object-expirer.conf
+        /var/lib/kolla/config_files/swift_object_replicator.json:
+          command: /usr/bin/swift-object-replicator /etc/swift/object-server.conf
+        /var/lib/kolla/config_files/swift_object_updater.json:
+          command: /usr/bin/swift-object-updater /etc/swift/object-server.conf
+        /var/lib/kolla/config_files/swift_object_server.json:
+          command: /usr/bin/swift-object-server /etc/swift/object-server.conf
+      docker_config:
+        step_3:
+          # The puppet config sets this up but we don't have a way to mount the named
+          # volume during the configuration stage.  We just need to create this
+          # directory and make sure it's owned by swift.
+          swift_setup_srv:
+            image: &swift_account_image
+              list_join:
+                - '/'
+                - [ {get_param: DockerNamespace}, {get_param: DockerSwiftAccountImage} ]
+            user: root
+            command: ['chown', '-R', 'swift:', '/srv/node']
+            volumes:
+              - /srv/node:/srv/node
+        step_4:
+          swift_account_auditor:
+            image: *swift_account_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_account_auditor.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: &kolla_env
+              - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
+          swift_account_reaper:
+            image: *swift_account_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_account_reaper.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_account_replicator:
+            image: *swift_account_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_account_replicator.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_account_server:
+            image: *swift_account_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_account_server.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_container_auditor:
+            image: &swift_container_image
+              list_join:
+                - '/'
+                - [ {get_param: DockerNamespace}, {get_param: DockerSwiftContainerImage} ]
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_container_auditor.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_container_replicator:
+            image: *swift_container_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_container_replicator.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_container_updater:
+            image: *swift_container_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_container_updater.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_container_server:
+            image: *swift_container_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_container_server.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_object_auditor:
+            image: &swift_object_image
+              list_join:
+                - '/'
+                - [ {get_param: DockerNamespace}, {get_param: DockerSwiftObjectImage} ]
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_object_auditor.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_object_expirer:
+            image: *swift_proxy_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_object_expirer.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_object_replicator:
+            image: *swift_object_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_object_replicator.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_object_updater:
+            image: *swift_object_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_object_updater.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+          swift_object_server:
+            image: *swift_object_image
+            net: host
+            user: swift
+            restart: always
+            volumes:
+              - /var/lib/kolla/config_files/swift_object_server.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/swift/etc/swift:/etc/swift:rw
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /run:/run
+              - /srv/node:/srv/node
+              - /dev:/dev
+            environment: *kolla_env
+      host_prep_tasks:
+        - name: create /srv/node
+          file:
+            path: /srv/node
+            state: directory
+      upgrade_tasks:
+        - name: Stop and disable swift storage services
+          tags: step2
+          service: name={{ item }} state=stopped enabled=no
+          with_items:
+            - openstack-swift-account-auditor
+            - openstack-swift-account-reaper
+            - openstack-swift-account-replicator
+            - openstack-swift-account
+            - openstack-swift-container-auditor
+            - openstack-swift-container-replicator
+            - openstack-swift-container-updater
+            - openstack-swift-container
+            - openstack-swift-object-auditor
+            - openstack-swift-object-replicator
+            - openstack-swift-object-updater
+            - openstack-swift-object

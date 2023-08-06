@@ -1,0 +1,32 @@
+heat_template_version: ocata
+
+parameters:
+  DockerNamespace:
+    type: string
+    default: tripleoupstream
+  DockerNamespaceIsRegistry:
+    type: boolean
+    default: false
+
+resources:
+
+  userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: setup_docker_host}
+
+  setup_docker_host:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          params:
+            $docker_registry: {get_param: DockerNamespace}
+            $docker_namespace_is_registry: {get_param: DockerNamespaceIsRegistry}
+          template: {get_file: ./setup_docker_host.sh}
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: userdata}
