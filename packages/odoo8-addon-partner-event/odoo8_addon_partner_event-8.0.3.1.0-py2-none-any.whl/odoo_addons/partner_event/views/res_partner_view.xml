@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- © 2014 Serv. Tecnol. Avanzados - Pedro M. Baeza
+     © 2015 Antiun Ingenieria S.L. - Javier Iniesta
+     © 2016 Antiun Ingenieria S.L. - Antonio Espinosa
+     License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html). -->
+<openerp>
+<data>
+
+<record id="act_partner_registration" model="ir.actions.act_window">
+    <field name="res_model">event.registration</field>
+    <field name="view_type">form</field>
+    <field name="name">Registrations</field>
+    <field name="view_mode">tree,form,calendar,graph</field>
+    <field name="domain">[("partner_id", "child_of", active_ids)]</field>
+    <field name="context">{'default_partner_id': active_id, 'search_default_done': 1, 'search_default_open': 1}</field>
+</record>
+
+<record model="ir.ui.view" id="view_partner_form_registrations">
+    <field name="name">Partner Form with registrations</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+        <div class="oe_right oe_button_box" position="inside">
+            <button name="%(partner_event.act_partner_registration)d"
+                    type="action"
+                    class="oe_stat_button oe_inline"
+                    help="Count of events with confirmed registrations."
+                    icon="fa-futbol-o">
+                <field name="event_count"
+                       widget="statinfo"/>
+            </button>
+        </div>
+    </field>
+</record>
+
+</data>
+</openerp>
