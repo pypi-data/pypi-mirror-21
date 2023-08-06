@@ -1,0 +1,107 @@
+Metadata-Version: 2.0
+Name: entityd
+Version: 0.16.1
+Summary: Entity monitoring agent for cobe.io
+Home-page: https://bitbucket.org/cobeio/act
+Author: cobe.io
+Author-email: info@cobe.io
+License: LGPLv3
+Keywords: topology performance availability monitoring
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Requires-Dist: Logbook
+Requires-Dist: cobe-act
+Requires-Dist: docker-py
+Requires-Dist: kube (==0.10.0)
+Requires-Dist: msgpack-python
+Requires-Dist: msgpack-python (>=0.4.5,<0.5)
+Requires-Dist: python-cobe
+Requires-Dist: pyyaml
+Requires-Dist: pyzmq
+Requires-Dist: pyzmq (>=14.7,<15.0)
+Requires-Dist: requests (>=2.11.1)
+Requires-Dist: setuptools
+Requires-Dist: syskit
+Requires-Dist: voluptuous (>=0.8.7,<0.9)
+
+Entityd Monitoring Agent for Cobe.io
+====================================
+
+A daemon which monitors entities on a host system and streams them to
+cobe.io.
+
+
+Installation
+============
+
+It is recommended to get a binary conda-based distribution from
+https://cobe.io which provides the entire Python environment
+required.  Once you have created a Topology Instance there it will
+offer to download an agent and provide installation instructions.
+
+However if you prefer you can install from PyPI as well, a few more
+manual steps are needed.  The entityd package relies on some other
+PyPI packages which may require install-time compilation depending on
+your setup.  If your system has everything available then installation
+is as simple as::
+
+   pip install entityd
+
+Alternatively you may prefer to install into a virtualenv created just
+for entityd, the pipsi_ project makes this very convenient::
+
+   pipsi install entityd
+
+.. _pipsi: https://github.com/mitsuhiko/pipsi
+
+
+Configuration
+-------------
+
+To securely communicate with cobe.io you need to install encryption
+keys which you can download from the agent installation page on
+cobe.io.  There are two files to download, ``modeld.key`` and
+``entityd.key_secret``, which need to be installed into an
+``etc/entityd/keys/`` directory.  If you installed entityd into a
+virtualenv, as recommended, then this directory is relative inside the
+virtualenv, e.g.: ``/path/to/venv/etc/entityd/keys/``.  You may have
+to create the directory before moving the keys there.
+
+
+Systemd
+-------
+
+Once installed you probably want to ensure it gets started
+automatically.  This will depend on the init system in use by your
+host.
+
+If you are using systemd_ you can install the following unit file to
+``/etc/systemd/system/entityd.service``, being sure to provide the
+correct path to the installed binary and the correct destination for
+your Topology Instance::
+
+   [Unit]
+   Description=Entityd monitoring agent for cobe.io
+   After=network.target
+
+   [Service]
+   Type=simple
+   ExecStart=/usr/local/bin/entityd --dest=tcp://modeld.example.cobe.io:25010
+
+   [Install]
+   WantedBy=multi-user.target
+
+.. _systemd: https://freedestop.org/wiki/Software/systemd/
+
+Once the unit file is installed you can start entityd using
+``systemctl start entityd.service``.  To automatically start it on
+system boot you also need to execute ``sytemctl enable
+entityd.service``.  If you modify the unit file be sure to execute
+``systemctl daemon-reload`` to re-read the configuration.
+
+
