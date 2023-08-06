@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% include "head.html" %}
+</head>
+
+<body>
+  {% block body %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="nav-side-menu">
+          <div class="brand">Certificate Authority</div>
+          <i class="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#menu-content"></i>
+          <div class="menu-list">
+            <ul id="menu-content" class="menu-content collapse out">
+              {% if not session.user_id %}
+              <li>
+                <a href="/">
+                  <i class="fa fa-home" aria-hidden="true"></i> Public Home
+                </a>
+              </li>
+              <li>
+                <a href="/user/sign-in">
+                  <i class="fa fa-cog" aria-hidden="true"></i> Manage Certificates
+                </a>
+              </li>
+              {% else -%}
+              <li>
+                <a href="/admin/">
+                  <i class="fa fa-home" aria-hidden="true"></i> Signed Certificates
+                </a>
+              </li>
+              <li><a href="/admin/csr_requests"><i class="fa fa-tachometer" aria-hidden="true"></i> Manage CSR 
+                <span style="font-weight: bold; margin-left: 5px; margin-right: 5px; color: #56d8ce;">[ {{ session.count_csr }} ] </span></a></li>
+              <!--<li><a href="/signed_certs"><i class="fa fa-check-square" aria-hidden="true"></i> Signed Certificates</a></li>
+              <li><a href="/revoked_certs"><i class="fa fa-minus-square" aria-hidden="true"></i> Revoked Certificates</a></li>-->
+              <li><a href="/admin/profile"><i class="fa fa-user" aria-hidden="true"></i> User Profile</a></li>
+              <!--<li><a href="/admin/logs"><i class="fa fa-book" aria-hidden="true"></i> Certificate Authority Logs</a></li>-->
+              <li><a href="/admin/logout"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout</a></li>
+              {% endif -%}
+            </ul>
+          </div>
+        </div>
+        <div class="container" id="main">
+          <div class="flashes-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    {{ message|safe }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+          </div>
+            {% block pre_content %}{% endblock %}
+            {% block content %}{% endblock %}
+            {% block post_content %}{% endblock %}
+        </div>
+    </div>
+  </div>
+  {% endblock %}
+  {% include "footer.html" %}
+</body>
+</html>

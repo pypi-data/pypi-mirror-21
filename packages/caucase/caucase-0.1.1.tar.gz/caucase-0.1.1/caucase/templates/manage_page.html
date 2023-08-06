@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block content %}
+	  <div class="page-header">
+      <h1>Administration <small>Certificate authority web</small></h1>
+    </div>
+
+		<div class="row">
+		  <div class="col-md-12">
+				<div class="panel panel-primary margin-top-40 table">
+					<div class="panel-heading">
+						<h3 class="panel-title">Certificates Signature request list</h3>
+						<div class="pull-right">
+							<span class="clickable filter" data-toggle="tooltip" title="Toggle table filter" data-container="body">
+								<i class="glyphicon glyphicon-filter"></i>
+							</span>
+						</div>
+					</div>
+					<div class="panel-body">
+						<input type="text" class="form-control" id="cacert-table-filter" data-action="filter" data-filters="#cacert-table" placeholder="Filter Columns" />
+					</div>
+					<table class="table table-hover" id="cacert-table">
+						<thead>
+							<tr>
+								<th class="hidden-xs">#</th>
+								<th class="hidden-xs">CSR ID</th>
+								<th class="hidden-xs">CRT ID</th>
+								<th>Common Name</th>
+								<th class="hidden-xs">Request Date</th>
+								<th></th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for csr in data_list -%}
+        		  <tr>
+        		    <td class="hidden-xs">{{ csr['index'] }}</td>
+        		    <td class="hidden-xs">{{ csr['csr_id'] }}</td>
+        		    <td class="hidden-xs">{{ csr['crt_id'] }}</td>
+        		    <td>{{ csr['common_name'] }}</td>
+        		    <td class="hidden-xs">{{ csr['creation_date'] }}</td>
+        		    <td>
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Action <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right">
+                      <li><a href="/admin/signcert?csr_id={{ csr['csr_id'] }}"><i class="fa fa-check-square" aria-hidden="true"></i> Sign</a></li>
+                      <li><a href="/csr/{{ csr['csr_id'] }}"><i class="fa fa-eye" aria-hidden="true"></i> Download</a></li>
+                      <li role="separator" class="divider"></li>
+                      <li><a href="/admin/deletecsr?csr_id={{ csr['csr_id'] }}"><i class="fa fa-times" aria-hidden="true"></i> Delete</a></li>
+                    </ul>
+                  </div>
+                </td>
+        		  </tr>
+        		  {% endfor -%}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+{% endblock %}

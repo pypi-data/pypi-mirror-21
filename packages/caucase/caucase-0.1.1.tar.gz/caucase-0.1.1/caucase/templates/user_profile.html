@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="page-header">
+  <h1>User account information</h1>
+</div>
+
+
+
+<div style="padding: 15px">
+  <p>
+    <a class="btn btn-default" href="{{ url_for('user.change_password') }}" role="button"  title="Download file">
+      <i class="fa fa-pencil-square-o" aria-hidden="true"></i> Change password</a>
+  </p>
+  {% from "macros.html" import render_field, render_submit_field %}
+  <form action="" method="POST" class="form" role="form">
+    <div class="row">
+      <div class="col-sm-6 col-md-5 col-lg-4">
+      {{ form.hidden_tag() }}
+
+      {{ render_field(form.username, tabindex=230, readonly=true) }}
+
+      {{ render_field(form.first_name, tabindex=240) }}
+  
+      {{ render_field(form.last_name, tabindex=250) }}
+      
+      {{ render_field(form.email, tabindex=260) }}
+  
+      {{ render_submit_field(form.submit, tabindex=280) }}
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
