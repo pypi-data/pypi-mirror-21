@@ -1,0 +1,129 @@
+==========
+Dependenpy
+==========
+
+
+
+A Python module that build dependency matrices between other modules.
+
+This Python module can build the dependency matrices of a project's packages,
+based on ``from ... import ...`` commands in their modules.
+For now, its purpose is purely informational.
+
+The module is composed of two classes: MatrixBuilder,
+which is initialized with a list of packages available is ``sys.path``, and Matrix,
+which is an autonomous class containing matrix data.
+This list of packages can be a string (one package), a list of string (several)
+or another type of list, used to define groups of packages with a legend.
+
+License
+=======
+
+Software licensed under `ISC`_ license.
+
+.. _ISC: https://www.isc.org/downloads/software-support-policy/isc-license/
+
+Installation
+============
+
+::
+
+    pip install dependenpy
+
+
+Usage
+=====
+
+.. code:: python
+
+    from dependenpy.utils import MatrixBuilder
+
+    myapps = (
+        ‘module1’,
+        ‘module2’,
+        ‘...’,
+        ‘moduleN’
+    )
+
+    # Create an empty instance
+    dm = MatrixBuilder(myapps)
+
+    # Init its data with build methods
+    dm.build()
+
+    # You can also use separately dm.build_modules(),
+    # dm.build_imports() and dm.build_matrices().
+    # You can even chain them: dm.build_modules().build_imports().build_matrices().
+    # The order is important, since matrices need imports, and imports need modules.
+    # The build() method is just a shortcut of the above chained command.
+
+    # Print max depth of submodules and the big dictionary of imports
+    print dm.max_depth
+    print dm.imports
+
+    # Output matrix of depth 1 in CSV
+    dm.get_matrix(1).to_csv()
+
+    # Output matrix of maximum depth in JSON
+    dm.get_matrix(0).to_json()
+
+
+The "other type" of list you can give to a MatrixBuilder looks like this:
+
+.. code:: python
+
+    my_packages = [
+        'Framework', ['django'],
+        'Libraries', ['dependenpy', 'django-archan'],
+        'Core features', ['members', 'surveys', 'news']
+        'Security layer', ['broker']
+    ]
+
+This way you can specify groups of packages.
+
+This module was originally design to work in a Django project.
+The Django package `django-meerkat`_ uses it to display the matrices with Highcharts.
+
+.. _django-meerkat: https://github.com/Pawamoy/django-meerkat
+
+
+Documentation
+=============
+
+`On ReadTheDocs`_
+
+.. _`On ReadTheDocs`: http://dependenpy.readthedocs.io/
+
+Development
+===========
+
+To run all the tests: ``tox``
+
+Thanks
+======
+
+Thanks to `dmishin`_ for the TSP solver, needed to compute the similarity order.
+
+.. _dmishin: https://github.com/dmishin
+
+=========
+Changelog
+=========
+
+2.0.3 (2017-04-20)
+==================
+
+* Fix occasional UnicodeEncode when reading UTF-8 file.
+* Handle bad characters in files when parsing with ``ast``.
+
+0.1.0 to 2.0.2 (2016-10-06)
+===========================
+
+* Development (alpha then beta version).
+
+0.1.0 (2016-10-06)
+==================
+
+* Alpha release on PyPI.
+
+
