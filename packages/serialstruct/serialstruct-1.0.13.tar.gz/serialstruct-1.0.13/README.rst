@@ -1,0 +1,30 @@
+serialstruct
+############
+
+Implements a StructuredPacket for pySerial's ``serial.threaded`` module
+
+Installation
+============
+
+.. code-block:: bash
+
+        $ pip install serialstruct
+
+
+Motivation
+==========
+When sending a structured binary packet over Serial, the only way (that I'm aware
+of) to guarantee packet alignment with arbitrary data is to send a header that's
+larger than any of the elements and add padding between each element. Here's an
+example:
+
+.. code-block:: c
+
+        struct Packet {
+                int sensor1;
+                int sensor2;
+        }
+
+If we send this over the wire and start reading at an arbitrary time, it's
+impossible to know what byte of the packet we're reading. To mitigate this we can
+add a header and some padding.
