@@ -1,0 +1,544 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.settings.ConfigurationGathering &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.settings.ConfigurationGathering</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">coalib.collecting.Collectors</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">collect_all_bears_from_sections</span><span class="p">,</span> <span class="n">filter_section_bears_by_languages</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coalib.misc</span> <span class="k">import</span> <span class="n">Constants</span>
+<span class="kn">from</span> <span class="nn">coalib.output.ConfWriter</span> <span class="k">import</span> <span class="n">ConfWriter</span>
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LOG_LEVEL</span> <span class="k">import</span> <span class="n">LOG_LEVEL</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.CliParsing</span> <span class="k">import</span> <span class="n">parse_cli</span><span class="p">,</span> <span class="n">check_conflicts</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.ConfParser</span> <span class="k">import</span> <span class="n">ConfParser</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Section</span> <span class="k">import</span> <span class="n">Section</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.SectionFilling</span> <span class="k">import</span> <span class="n">fill_settings</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Setting</span> <span class="k">import</span> <span class="n">Setting</span><span class="p">,</span> <span class="n">path</span>
+
+
+<div class="viewcode-block" id="merge_section_dicts"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.merge_section_dicts">[docs]</a><span class="k">def</span> <span class="nf">merge_section_dicts</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">higher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merges the section dictionaries. The values of higher will take</span>
+<span class="sd">    precedence over the ones of lower. Lower will hold the modified dict in</span>
+<span class="sd">    the end.</span>
+
+<span class="sd">    :param lower:  A section.</span>
+<span class="sd">    :param higher: A section which values will take precedence over the ones</span>
+<span class="sd">                   from the other.</span>
+<span class="sd">    :return:       The merged dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">higher</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">lower</span><span class="p">:</span>
+            <span class="n">lower</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">higher</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">ignore_defaults</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># no deep copy needed</span>
+            <span class="n">lower</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">higher</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">lower</span></div>
+
+
+<div class="viewcode-block" id="load_config_file"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.load_config_file">[docs]</a><span class="k">def</span> <span class="nf">load_config_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads sections from a config file. Prints an appropriate warning if</span>
+<span class="sd">    it doesn&#39;t exist and returns a section dict containing an empty</span>
+<span class="sd">    default section in that case.</span>
+
+<span class="sd">    It assumes that the cli_sections are available.</span>
+
+<span class="sd">    :param filename:    The file to load settings from.</span>
+<span class="sd">    :param log_printer: The log printer to log the warning/error to (in case).</span>
+<span class="sd">    :param silent:      Whether or not to warn the user/exit if the file</span>
+<span class="sd">                        doesn&#39;t exist.</span>
+<span class="sd">    :raises SystemExit: Exits when the given filename is invalid and is not the</span>
+<span class="sd">                        default coafile. Only raised when ``silent`` is</span>
+<span class="sd">                        ``False``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ConfParser</span><span class="p">()</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">silent</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="o">==</span> <span class="n">Constants</span><span class="o">.</span><span class="n">default_coafile</span><span class="p">:</span>
+                <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The default coafile </span><span class="si">{0!r}</span><span class="s1"> was not found. &#39;</span>
+                                 <span class="s1">&#39;You can generate a configuration file with &#39;</span>
+                                 <span class="s1">&#39;your current options by adding the `--save` &#39;</span>
+                                 <span class="s1">&#39;flag or suppress any use of config &#39;</span>
+                                 <span class="s1">&#39;files with `-I`.&#39;</span>
+                                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">Constants</span><span class="o">.</span><span class="n">default_coafile</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log_printer</span><span class="o">.</span><span class="n">err</span><span class="p">(</span><span class="s1">&#39;The requested coafile </span><span class="si">{0!r}</span><span class="s1"> does not exist. &#39;</span>
+                                <span class="s1">&#39;You can generate it with your current &#39;</span>
+                                <span class="s1">&#39;options by adding the `--save` flag or &#39;</span>
+                                <span class="s1">&#39;suppress any use of config files with `-I`.&#39;</span>
+                                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="n">Section</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">)}</span></div>
+
+
+<div class="viewcode-block" id="save_sections"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.save_sections">[docs]</a><span class="k">def</span> <span class="nf">save_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Saves the given sections if they are to be saved.</span>
+
+<span class="sd">    :param sections: A section dict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">default_section</span> <span class="o">=</span> <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">default_section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;save&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">)):</span>
+            <span class="n">conf_writer</span> <span class="o">=</span> <span class="n">ConfWriter</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">default_section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="n">Constants</span><span class="o">.</span><span class="n">default_coafile</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">conf_writer</span> <span class="o">=</span> <span class="n">ConfWriter</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">default_section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;save&#39;</span><span class="p">,</span> <span class="s1">&#39;.coafile&#39;</span><span class="p">)))</span>
+
+    <span class="n">conf_writer</span><span class="o">.</span><span class="n">write_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+    <span class="n">conf_writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="warn_nonexistent_targets"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.warn_nonexistent_targets">[docs]</a><span class="k">def</span> <span class="nf">warn_nonexistent_targets</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">sections</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints out a warning on the given log printer for all targets that are</span>
+<span class="sd">    not existent within the given sections.</span>
+
+<span class="sd">    :param targets:     The targets to check.</span>
+<span class="sd">    :param sections:    The sections to search. (Dict.)</span>
+<span class="sd">    :param log_printer: The log printer to warn to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+            <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;The requested section &#39;</span><span class="si">{section}</span><span class="s2">&#39; is not existent. &quot;</span>
+                <span class="s1">&#39;Thus it cannot be executed.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">section</span><span class="o">=</span><span class="n">target</span><span class="p">))</span>
+
+    <span class="c1"># Can&#39;t be summarized as python will evaluate conditions lazily, those</span>
+    <span class="c1"># functions have intended side effects though.</span>
+    <span class="n">files_config_absent</span> <span class="o">=</span> <span class="n">warn_config_absent</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="s1">&#39;files&#39;</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">)</span>
+    <span class="n">bears_config_absent</span> <span class="o">=</span> <span class="n">warn_config_absent</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="s1">&#39;bears&#39;</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">files_config_absent</span> <span class="ow">or</span> <span class="n">bears_config_absent</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Invalid CLI options provided</span></div>
+
+
+<div class="viewcode-block" id="warn_config_absent"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.warn_config_absent">[docs]</a><span class="k">def</span> <span class="nf">warn_config_absent</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if the given argument is present somewhere in the sections and emits</span>
+<span class="sd">    a warning that code analysis can not be run without it.</span>
+
+<span class="sd">    :param sections:    A dictionary of sections.</span>
+<span class="sd">    :param argument:    The argument to check for, e.g. &quot;files&quot;.</span>
+<span class="sd">    :param log_printer: A log printer to emit the warning to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">argument</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">section</span> <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;coala will not run any analysis. Did you forget &#39;</span>
+                         <span class="s1">&#39;to give the `--</span><span class="si">{}</span><span class="s1">` argument?&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">argument</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="load_configuration"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.load_configuration">[docs]</a><span class="k">def</span> <span class="nf">load_configuration</span><span class="p">(</span><span class="n">arg_list</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">arg_parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses the CLI args and loads the config file accordingly, taking</span>
+<span class="sd">    default_coafile and the users .coarc into account.</span>
+
+<span class="sd">    :param arg_list:    The list of command line arguments.</span>
+<span class="sd">    :param log_printer: The LogPrinter object for logging.</span>
+<span class="sd">    :return:            A tuple holding (log_printer: LogPrinter, sections:</span>
+<span class="sd">                        dict(str, Section), targets: list(str)). (Types</span>
+<span class="sd">                        indicated after colon.)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cli_sections</span> <span class="o">=</span> <span class="n">parse_cli</span><span class="p">(</span><span class="n">arg_list</span><span class="o">=</span><span class="n">arg_list</span><span class="p">,</span> <span class="n">arg_parser</span><span class="o">=</span><span class="n">arg_parser</span><span class="p">)</span>
+    <span class="n">check_conflicts</span><span class="p">(</span><span class="n">cli_sections</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">bool</span><span class="p">(</span><span class="n">cli_sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_config&#39;</span><span class="p">,</span> <span class="s1">&#39;False&#39;</span><span class="p">))</span> <span class="ow">and</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">cli_sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">))</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="n">cli_sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">add_or_create_setting</span><span class="p">(</span>
+            <span class="n">Setting</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">find_user_config</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()))))</span>
+
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># We don&#39;t want to store targets argument back to file, thus remove it</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">cli_sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)):</span>
+        <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cli_sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;no_config&#39;</span><span class="p">,</span> <span class="s1">&#39;False&#39;</span><span class="p">)):</span>
+        <span class="n">sections</span> <span class="o">=</span> <span class="n">cli_sections</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">base_sections</span> <span class="o">=</span> <span class="n">load_config_file</span><span class="p">(</span><span class="n">Constants</span><span class="o">.</span><span class="n">system_coafile</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">)</span>
+        <span class="n">user_sections</span> <span class="o">=</span> <span class="n">load_config_file</span><span class="p">(</span>
+            <span class="n">Constants</span><span class="o">.</span><span class="n">user_coafile</span><span class="p">,</span>
+            <span class="n">log_printer</span><span class="p">,</span>
+            <span class="n">silent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">default_config</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">base_sections</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="s1">&#39;.coafile&#39;</span><span class="p">))</span>
+        <span class="n">user_config</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_sections</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="n">default_config</span><span class="p">))</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">cli_sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="p">)))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">save</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">cli_sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;save&#39;</span><span class="p">,</span> <span class="s1">&#39;False&#39;</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># A file is deposited for the save parameter, means we want to save</span>
+            <span class="c1"># but to a specific file.</span>
+            <span class="n">save</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">coafile_sections</span> <span class="o">=</span> <span class="n">load_config_file</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">save</span><span class="p">)</span>
+
+        <span class="n">sections</span> <span class="o">=</span> <span class="n">merge_section_dicts</span><span class="p">(</span><span class="n">base_sections</span><span class="p">,</span> <span class="n">user_sections</span><span class="p">)</span>
+
+        <span class="n">sections</span> <span class="o">=</span> <span class="n">merge_section_dicts</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="n">coafile_sections</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;cli&#39;</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">cli</span><span class="se">\&#39;</span><span class="s1"> is an internally reserved section name. &#39;</span>
+                            <span class="s1">&#39;It may have been generated into your coafile &#39;</span>
+                            <span class="s1">&#39;while running coala with `--save`. The settings &#39;</span>
+                            <span class="s1">&#39;in that section will inherit implicitly to all &#39;</span>
+                            <span class="s1">&#39;sections as defaults just like CLI args do.&#39;</span>
+                            <span class="s1">&#39;Please change the name of that section in your &#39;</span>
+                            <span class="s1">&#39;coafile to avoid any unexpected behavior.&#39;</span><span class="p">)</span>
+
+        <span class="n">sections</span> <span class="o">=</span> <span class="n">merge_section_dicts</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="n">cli_sections</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">section</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">sections</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="n">section</span><span class="o">.</span><span class="n">set_default_section</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">section</span><span class="o">.</span><span class="n">contents</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Implicit </span><span class="se">\&#39;</span><span class="s1">Default</span><span class="se">\&#39;</span><span class="s1"> section inheritance is &#39;</span>
+                                <span class="s1">&#39;deprecated. It will be removed soon. To &#39;</span>
+                                <span class="s1">&#39;silence this warning remove settings in the &#39;</span>
+                                <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">Default</span><span class="se">\&#39;</span><span class="s1"> section from your coafile. You &#39;</span>
+                                <span class="s1">&#39;can use dots to specify inheritance: the &#39;</span>
+                                <span class="s1">&#39;section </span><span class="se">\&#39;</span><span class="s1">all.python</span><span class="se">\&#39;</span><span class="s1"> will inherit all &#39;</span>
+                                <span class="s1">&#39;settings from </span><span class="se">\&#39;</span><span class="s1">all</span><span class="se">\&#39;</span><span class="s1">.&#39;</span><span class="p">)</span>
+                <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">])</span>
+                <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;cli&#39;</span>
+                <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+
+    <span class="n">str_log_level</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;log_level&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">log_printer</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">str_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">str_log_level</span><span class="p">,</span>
+                                                   <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sections</span><span class="p">,</span> <span class="n">targets</span></div>
+
+
+<div class="viewcode-block" id="find_user_config"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.find_user_config">[docs]</a><span class="k">def</span> <span class="nf">find_user_config</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">max_trials</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Uses the filepath to find the most suitable user config file for the file</span>
+<span class="sd">    by going down one directory at a time and finding config files there.</span>
+
+<span class="sd">    :param file_path:  The path of the file whose user config needs to be found</span>
+<span class="sd">    :param max_trials: The maximum number of directories to go down to.</span>
+<span class="sd">    :return:           The config file&#39;s path, empty string if none was found</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span>
+        <span class="n">file_path</span><span class="p">)))</span>
+    <span class="n">old_dir</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">base_dir</span> <span class="o">=</span> <span class="p">(</span><span class="n">file_path</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+    <span class="n">home_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s1">&#39;~&#39;</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">base_dir</span> <span class="o">!=</span> <span class="n">old_dir</span> <span class="ow">and</span> <span class="n">old_dir</span> <span class="o">!=</span> <span class="n">home_dir</span> <span class="ow">and</span> <span class="n">max_trials</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">config_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s1">&#39;.coafile&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">config_file</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">config_file</span>
+
+        <span class="n">old_dir</span> <span class="o">=</span> <span class="n">base_dir</span>
+        <span class="n">base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">old_dir</span><span class="p">)</span>
+        <span class="n">max_trials</span> <span class="o">=</span> <span class="n">max_trials</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span></div>
+
+
+<div class="viewcode-block" id="get_config_directory"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.get_config_directory">[docs]</a><span class="k">def</span> <span class="nf">get_config_directory</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves the configuration directory for the given section.</span>
+
+<span class="sd">    Given an empty section:</span>
+
+<span class="sd">    &gt;&gt;&gt; section = Section(&quot;name&quot;)</span>
+
+<span class="sd">    The configuration directory is not defined and will therefore fallback to</span>
+<span class="sd">    the current directory:</span>
+
+<span class="sd">    &gt;&gt;&gt; get_config_directory(section) == os.path.abspath(&quot;.&quot;)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    If the ``files`` setting is given with an originating coafile, the directory</span>
+<span class="sd">    of the coafile will be assumed the configuration directory:</span>
+
+<span class="sd">    &gt;&gt;&gt; section.append(Setting(&quot;files&quot;, &quot;**&quot;, origin=&quot;/tmp/.coafile&quot;))</span>
+<span class="sd">    &gt;&gt;&gt; get_config_directory(section) == os.path.abspath(&#39;/tmp/&#39;)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    However if its origin is already a directory this will be preserved:</span>
+
+<span class="sd">    &gt;&gt;&gt; files = section[&#39;files&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; files.origin = os.path.abspath(&#39;/tmp/dir/&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; section.append(files)</span>
+<span class="sd">    &gt;&gt;&gt; os.makedirs(section[&#39;files&#39;].origin, exist_ok=True)</span>
+<span class="sd">    &gt;&gt;&gt; get_config_directory(section) == section[&#39;files&#39;].origin</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The user can manually set a project directory with the ``project_dir``</span>
+<span class="sd">    setting:</span>
+
+<span class="sd">    &gt;&gt;&gt; section.append(Setting(&#39;project_dir&#39;, os.path.abspath(&#39;/tmp&#39;), &#39;/&#39;))</span>
+<span class="sd">    &gt;&gt;&gt; get_config_directory(section) == os.path.abspath(&#39;/tmp&#39;)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    If no section is given, the current directory is returned:</span>
+
+<span class="sd">    &gt;&gt;&gt; get_config_directory(None) == os.path.abspath(&quot;.&quot;)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    To summarize, the config directory will be chosen by the following</span>
+<span class="sd">    priorities if possible in that order:</span>
+
+<span class="sd">    - the ``project_dir`` setting</span>
+<span class="sd">    - the origin of the ``files`` setting, if it&#39;s a directory</span>
+<span class="sd">    - the directory of the origin of the ``files`` setting</span>
+<span class="sd">    - the current directory</span>
+
+<span class="sd">    :param section: The section to inspect.</span>
+<span class="sd">    :return: The directory where the project is lying.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">section</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s1">&#39;project_dir&#39;</span> <span class="ow">in</span> <span class="n">section</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">path</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;project_dir&#39;</span><span class="p">))</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;files&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">config</span><span class="p">)</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_filtered_bears"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.get_filtered_bears">[docs]</a><span class="k">def</span> <span class="nf">get_filtered_bears</span><span class="p">(</span><span class="n">languages</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">arg_parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fetch bears and filter them based on given list of languages.</span>
+
+<span class="sd">    :param languages:   List of languages.</span>
+<span class="sd">    :param log_printer: The log_printer to handle logging.</span>
+<span class="sd">    :param arg_parser:  An ``ArgParser`` object.</span>
+<span class="sd">    :return:            Tuple containing dictionaries of local bears</span>
+<span class="sd">                        and global bears.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sections</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">load_configuration</span><span class="p">(</span><span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                     <span class="n">log_printer</span><span class="o">=</span><span class="n">log_printer</span><span class="p">,</span>
+                                     <span class="n">arg_parser</span><span class="o">=</span><span class="n">arg_parser</span><span class="p">)</span>
+    <span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span> <span class="o">=</span> <span class="n">collect_all_bears_from_sections</span><span class="p">(</span>
+        <span class="n">sections</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">languages</span><span class="p">:</span>
+        <span class="n">local_bears</span> <span class="o">=</span> <span class="n">filter_section_bears_by_languages</span><span class="p">(</span>
+            <span class="n">local_bears</span><span class="p">,</span> <span class="n">languages</span><span class="p">)</span>
+        <span class="n">global_bears</span> <span class="o">=</span> <span class="n">filter_section_bears_by_languages</span><span class="p">(</span>
+            <span class="n">global_bears</span><span class="p">,</span> <span class="n">languages</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span></div>
+
+
+<div class="viewcode-block" id="gather_configuration"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.ConfigurationGathering.gather_configuration">[docs]</a><span class="k">def</span> <span class="nf">gather_configuration</span><span class="p">(</span><span class="n">acquire_settings</span><span class="p">,</span>
+                         <span class="n">log_printer</span><span class="p">,</span>
+                         <span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                         <span class="n">arg_parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads all configuration files, retrieves bears and all needed</span>
+<span class="sd">    settings, saves back if needed and warns about non-existent targets.</span>
+
+<span class="sd">    This function:</span>
+
+<span class="sd">    -  Reads and merges all settings in sections from</span>
+
+<span class="sd">       -  Default config</span>
+<span class="sd">       -  User config</span>
+<span class="sd">       -  Configuration file</span>
+<span class="sd">       -  CLI</span>
+
+<span class="sd">    -  Collects all the bears</span>
+<span class="sd">    -  Fills up all needed settings</span>
+<span class="sd">    -  Writes back the new sections to the configuration file if needed</span>
+<span class="sd">    -  Gives all information back to caller</span>
+
+<span class="sd">    :param acquire_settings: The method to use for requesting settings. It will</span>
+<span class="sd">                             get a parameter which is a dictionary with the</span>
+<span class="sd">                             settings name as key and a list containing a</span>
+<span class="sd">                             description in [0] and the names of the bears</span>
+<span class="sd">                             who need this setting in all following indexes.</span>
+<span class="sd">    :param log_printer:      The log printer to use for logging. The log level</span>
+<span class="sd">                             will be adjusted to the one given by the section.</span>
+<span class="sd">    :param arg_list:         CLI args to use</span>
+<span class="sd">    :param arg_parser:       Instance of ArgParser that is used to parse</span>
+<span class="sd">                             none-setting arguments.</span>
+<span class="sd">    :return:                 A tuple with the following contents:</span>
+
+<span class="sd">                             -  A dictionary with the sections</span>
+<span class="sd">                             -  Dictionary of list of local bears for each</span>
+<span class="sd">                                section</span>
+<span class="sd">                             -  Dictionary of list of global bears for each</span>
+<span class="sd">                                section</span>
+<span class="sd">                             -  The targets list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note: arg_list can also be []. Hence we cannot use</span>
+    <span class="c1"># `arg_list = arg_list or default_list`</span>
+    <span class="n">arg_list</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">arg_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">arg_list</span>
+    <span class="n">sections</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">load_configuration</span><span class="p">(</span><span class="n">arg_list</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">arg_parser</span><span class="p">)</span>
+    <span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span> <span class="o">=</span> <span class="n">fill_settings</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+                                              <span class="n">acquire_settings</span><span class="p">,</span>
+                                              <span class="n">log_printer</span><span class="p">)</span>
+    <span class="n">save_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+    <span class="n">warn_nonexistent_targets</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">sections</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+            <span class="n">local_bears</span><span class="p">,</span>
+            <span class="n">global_bears</span><span class="p">,</span>
+            <span class="n">targets</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,378 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.languages.documentation.DocumentationComment &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.languages.documentation.DocumentationComment</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">generate_eq</span><span class="p">,</span> <span class="n">generate_repr</span>
+
+
+<span class="nd">@generate_repr</span><span class="p">()</span>
+<span class="nd">@generate_eq</span><span class="p">(</span><span class="s1">&#39;documentation&#39;</span><span class="p">,</span> <span class="s1">&#39;language&#39;</span><span class="p">,</span> <span class="s1">&#39;docstyle&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;indent&#39;</span><span class="p">,</span> <span class="s1">&#39;marker&#39;</span><span class="p">,</span> <span class="s1">&#39;range&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="DocumentationComment"><a class="viewcode-back" href="../../../../../coalib.bearlib.languages.documentation.html#coalib.bearlib.languages.documentation.DocumentationComment.DocumentationComment">[docs]</a><span class="k">class</span> <span class="nc">DocumentationComment</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DocumentationComment holds information about a documentation comment</span>
+<span class="sd">    inside source-code, like position etc.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Parameter</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Parameter&#39;</span><span class="p">,</span> <span class="s1">&#39;name, desc&#39;</span><span class="p">)</span>
+    <span class="n">ReturnValue</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;ReturnValue&#39;</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">)</span>
+    <span class="n">Description</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Description&#39;</span><span class="p">,</span> <span class="s1">&#39;desc&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">documentation</span><span class="p">,</span> <span class="n">docstyle_definition</span><span class="p">,</span>
+                 <span class="n">indent</span><span class="p">,</span> <span class="n">marker</span><span class="p">,</span> <span class="nb">range</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiates a new DocumentationComment.</span>
+
+<span class="sd">        :param documentation:</span>
+<span class="sd">            The documentation text.</span>
+<span class="sd">        :param docstyle_definition:</span>
+<span class="sd">            The ``DocstyleDefinition`` instance that defines what docstyle is</span>
+<span class="sd">            being used in the documentation.</span>
+<span class="sd">        :param indent:</span>
+<span class="sd">            The string of indentation used in front of the first marker of the</span>
+<span class="sd">            documentation.</span>
+<span class="sd">        :param marker:</span>
+<span class="sd">            The three-element tuple with marker strings, that identified this</span>
+<span class="sd">            documentation comment.</span>
+<span class="sd">        :param range:</span>
+<span class="sd">            The position range of type ``TextRange``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span> <span class="o">=</span> <span class="n">documentation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">docstyle_definition</span> <span class="o">=</span> <span class="n">docstyle_definition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">=</span> <span class="n">indent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">marker</span> <span class="o">=</span> <span class="n">marker</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">range</span> <span class="o">=</span> <span class="nb">range</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">language</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstyle_definition</span><span class="o">.</span><span class="n">language</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">docstyle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstyle_definition</span><span class="o">.</span><span class="n">docstyle</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstyle_definition</span><span class="o">.</span><span class="n">metadata</span>
+
+<div class="viewcode-block" id="DocumentationComment.parse"><a class="viewcode-back" href="../../../../../coalib.bearlib.languages.documentation.html#coalib.bearlib.languages.documentation.DocumentationComment.DocumentationComment.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parses documentation independent of language and docstyle.</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">            The list of all the parsed sections of the documentation. Every</span>
+<span class="sd">            section is a namedtuple of either ``Description`` or ``Parameter``</span>
+<span class="sd">            or ``ReturnValue``.</span>
+<span class="sd">        :raises NotImplementedError:</span>
+<span class="sd">            When no parsing method is present for the given language and</span>
+<span class="sd">            docstyle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstyle</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_documentation_with_symbols</span><span class="p">(</span>
+                <span class="p">(</span><span class="s1">&#39;:param &#39;</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">),</span> <span class="s1">&#39;:return:&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstyle</span> <span class="o">==</span> <span class="s1">&#39;doxygen&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_documentation_with_symbols</span><span class="p">(</span>
+                <span class="p">(</span><span class="s1">&#39;@param &#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">),</span> <span class="s1">&#39;@return &#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;java&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstyle</span> <span class="o">==</span> <span class="s1">&#39;default&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_documentation_with_symbols</span><span class="p">(</span>
+                <span class="p">(</span><span class="s1">&#39;@param  &#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">),</span> <span class="s1">&#39;@return &#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;golang&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">docstyle</span> <span class="o">==</span> <span class="s1">&#39;golang&#39;</span><span class="p">:</span>
+            <span class="c1"># golang does not have param, return markers</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s1">&#39;Documentation parsing for </span><span class="si">{0.language!r}</span><span class="s1"> in </span><span class="si">{0.docstyle!r}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39; has not been implemented yet&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_parse_documentation_with_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_identifiers</span><span class="p">,</span>
+                                          <span class="n">return_identifiers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parses documentation based on parameter and return symbols.</span>
+
+<span class="sd">        :param param_identifiers:</span>
+<span class="sd">            A tuple of two strings with which a parameter starts and ends.</span>
+<span class="sd">        :param return_identifiers:</span>
+<span class="sd">            The string with which a return description starts.</span>
+<span class="sd">        :return:</span>
+<span class="sd">            The list of all the parsed sections of the documentation. Every</span>
+<span class="sd">            section is a namedtuple of either ``Description`` or ``Parameter``</span>
+<span class="sd">            or ``ReturnValue``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">parse_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Description</span>
+
+        <span class="n">cur_param</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">desc</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+
+            <span class="n">stripped_line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">stripped_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">param_identifiers</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">parse_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Parameter</span>
+                <span class="n">param_offset</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
+                    <span class="n">param_identifiers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_identifiers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">splitted</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">param_offset</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">param_identifiers</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">cur_param</span> <span class="o">=</span> <span class="n">splitted</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+                <span class="n">param_desc</span> <span class="o">=</span> <span class="n">splitted</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">cur_param</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">param_desc</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="n">stripped_line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">return_identifiers</span><span class="p">):</span>
+                <span class="n">parse_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReturnValue</span>
+                <span class="n">return_offset</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span>
+                    <span class="n">return_identifiers</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">return_identifiers</span><span class="p">)</span>
+                <span class="n">retval_desc</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">return_offset</span><span class="p">:]</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ReturnValue</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="n">retval_desc</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="n">parse_mode</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReturnValue</span><span class="p">:</span>
+                <span class="n">retval_desc</span> <span class="o">+=</span> <span class="n">line</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ReturnValue</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="n">retval_desc</span><span class="p">))</span>
+
+            <span class="k">elif</span> <span class="n">parse_mode</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">Parameter</span><span class="p">:</span>
+                <span class="n">param_desc</span> <span class="o">+=</span> <span class="n">line</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">cur_param</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">param_desc</span><span class="p">))</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">desc</span> <span class="o">+=</span> <span class="n">line</span>
+                <span class="c1"># This is inside a try-except for cases where the list</span>
+                <span class="c1"># is empty and has nothing to pop.</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">parsed</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Description</span><span class="p">(</span><span class="n">desc</span><span class="o">=</span><span class="n">desc</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">parsed</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DocumentationComment.from_metadata"><a class="viewcode-back" href="../../../../../coalib.bearlib.languages.documentation.html#coalib.bearlib.languages.documentation.DocumentationComment.DocumentationComment.from_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">from_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">doccomment</span><span class="p">,</span> <span class="n">docstyle_definition</span><span class="p">,</span>
+                      <span class="n">marker</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="nb">range</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assembles a list of parsed documentation comment metadata.</span>
+
+<span class="sd">        This function just assembles the documentation comment</span>
+<span class="sd">        itself, without the markers and indentation.</span>
+
+<span class="sd">        &gt;&gt;&gt; from coalib.bearlib.languages.documentation.DocumentationComment \</span>
+<span class="sd">        ...     import DocumentationComment</span>
+<span class="sd">        &gt;&gt;&gt; from coalib.bearlib.languages.documentation.DocstyleDefinition \</span>
+<span class="sd">        ...     import DocstyleDefinition</span>
+<span class="sd">        &gt;&gt;&gt; from coalib.results.TextRange import TextRange</span>
+<span class="sd">        &gt;&gt;&gt; Description = DocumentationComment.Description</span>
+<span class="sd">        &gt;&gt;&gt; Parameter = DocumentationComment.Parameter</span>
+<span class="sd">        &gt;&gt;&gt; python_default = DocstyleDefinition.load(&quot;python3&quot;, &quot;default&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; parsed_doc = [Description(desc=&#39;\nDescription\n&#39;),</span>
+<span class="sd">        ...               Parameter(name=&#39;age&#39;, desc=&#39; Age\n&#39;)]</span>
+<span class="sd">        &gt;&gt;&gt; str(DocumentationComment.from_metadata(</span>
+<span class="sd">        ...         parsed_doc, python_default,</span>
+<span class="sd">        ...         python_default.markers[0], 4,</span>
+<span class="sd">        ...         TextRange.from_values(0, 0, 0, 0)))</span>
+<span class="sd">        &#39;\nDescription\n:param age: Age\n&#39;</span>
+
+<span class="sd">        :param doccomment:</span>
+<span class="sd">            The list of parsed documentation comment metadata.</span>
+<span class="sd">        :param docstyle_definition:</span>
+<span class="sd">            The ``DocstyleDefinition`` instance that defines what docstyle is</span>
+<span class="sd">            being used in a documentation comment.</span>
+<span class="sd">        :param marker:</span>
+<span class="sd">            The markers to be used in the documentation comment.</span>
+<span class="sd">        :param indent:</span>
+<span class="sd">            The indentation to be used in the documentation comment.</span>
+<span class="sd">        :param range:</span>
+<span class="sd">            The range of the documentation comment.</span>
+<span class="sd">        :return:</span>
+<span class="sd">            A ``DocumentationComment`` instance of the assembled documentation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">assembled_doc</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">doccomment</span><span class="p">:</span>
+            <span class="n">section_desc</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Parameter</span><span class="p">):</span>
+                <span class="n">assembled_doc</span> <span class="o">+=</span> <span class="p">(</span><span class="n">docstyle_definition</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">param_start</span> <span class="o">+</span>
+                                  <span class="n">section</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span>
+                                  <span class="n">docstyle_definition</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">param_end</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">ReturnValue</span><span class="p">):</span>
+                <span class="n">assembled_doc</span> <span class="o">+=</span> <span class="n">docstyle_definition</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">return_sep</span>
+
+            <span class="n">assembled_doc</span> <span class="o">+=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">section_desc</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">DocumentationComment</span><span class="p">(</span><span class="n">assembled_doc</span><span class="p">,</span> <span class="n">docstyle_definition</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span>
+                                    <span class="n">marker</span><span class="p">,</span> <span class="nb">range</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DocumentationComment.assemble"><a class="viewcode-back" href="../../../../../coalib.bearlib.languages.documentation.html#coalib.bearlib.languages.documentation.DocumentationComment.DocumentationComment.assemble">[docs]</a>    <span class="k">def</span> <span class="nf">assemble</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Assembles parsed documentation to the original documentation.</span>
+
+<span class="sd">        This function assembles the whole documentation comment, with the</span>
+<span class="sd">        given markers and indentation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">documentation</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">assembled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">assembled</span> <span class="o">+=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">assembled</span> <span class="o">+=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                             <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">line</span>
+                             <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">assembled</span> <span class="o">+</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="k">if</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">marker</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../../index.html">
+    <img class="logo" src="../../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../../coalib.html">coalib</a><ul>
+  <li><a href="../../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

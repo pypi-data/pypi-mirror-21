@@ -1,0 +1,362 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.languages.documentation.DocstyleDefinition &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.languages.documentation.DocstyleDefinition</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="k">import</span> <span class="n">iglob</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">enforce_signature</span><span class="p">,</span> <span class="n">generate_eq</span><span class="p">,</span> <span class="n">generate_repr</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.ConfParser</span> <span class="k">import</span> <span class="n">ConfParser</span>
+
+
+<span class="nd">@generate_repr</span><span class="p">()</span>
+<span class="nd">@generate_eq</span><span class="p">(</span><span class="s1">&#39;language&#39;</span><span class="p">,</span> <span class="s1">&#39;docstyle&#39;</span><span class="p">,</span> <span class="s1">&#39;markers&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="DocstyleDefinition"><a class="viewcode-back" href="../../../../../coalib.bearlib.languages.documentation.html#coalib.bearlib.languages.documentation.DocstyleDefinition.DocstyleDefinition">[docs]</a><span class="k">class</span> <span class="nc">DocstyleDefinition</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DocstyleDefinition class holds values that identify a certain type of</span>
+<span class="sd">    documentation comment (for which language, documentation style/tool used</span>
+<span class="sd">    etc.).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Metadata</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Metadata&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;param_start&#39;</span><span class="p">,</span> <span class="s1">&#39;param_end&#39;</span><span class="p">,</span>
+                                       <span class="s1">&#39;return_sep&#39;</span><span class="p">))</span>
+
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">docstyle</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">markers</span><span class="p">:</span> <span class="p">(</span><span class="n">Iterable</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+                 <span class="n">metadata</span><span class="p">:</span> <span class="n">Metadata</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiates a new DocstyleDefinition.</span>
+
+<span class="sd">        :param language: The case insensitive programming language of the</span>
+<span class="sd">                         documentation comment, e.g. ``&quot;CPP&quot;`` for C++ or</span>
+<span class="sd">                         ``&quot;PYTHON3&quot;``.</span>
+<span class="sd">        :param docstyle: The case insensitive documentation style/tool used</span>
+<span class="sd">                         to document code, e.g. ``&quot;default&quot;`` or ``&quot;doxygen&quot;``.</span>
+<span class="sd">        :param markers:  An iterable of marker/delimiter string iterables</span>
+<span class="sd">                         or a single marker/delimiter string iterable that</span>
+<span class="sd">                         identify a documentation comment. See ``markers``</span>
+<span class="sd">                         property for more details on markers.</span>
+<span class="sd">        :param metadata: A namedtuple consisting of certain attributes that</span>
+<span class="sd">                         form the layout of the certain documentation comment</span>
+<span class="sd">                         e.g. ``param_start`` defining the start symbol of</span>
+<span class="sd">                         the parameter fields and ``param_end`` defining the</span>
+<span class="sd">                         end.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_language</span> <span class="o">=</span> <span class="n">language</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_docstyle</span> <span class="o">=</span> <span class="n">docstyle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="c1"># Check and modify tuple if only one marker_set exists.</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">markers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">markers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">markers</span><span class="p">):</span>
+            <span class="n">markers</span> <span class="o">=</span> <span class="p">(</span><span class="n">markers</span><span class="p">,)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_markers</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">marker_set</span><span class="p">)</span> <span class="k">for</span> <span class="n">marker_set</span> <span class="ow">in</span> <span class="n">markers</span><span class="p">)</span>
+
+        <span class="c1"># Check marker set dimensions.</span>
+        <span class="k">for</span> <span class="n">marker_set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_markers</span><span class="p">:</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">marker_set</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">length</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Length of a given marker set was not 3 (was &#39;</span>
+                                 <span class="s1">&#39;actually </span><span class="si">{}</span><span class="s1">).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">length</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span> <span class="o">=</span> <span class="n">metadata</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">language</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The programming language.</span>
+
+<span class="sd">        :return: A lower-case string defining the programming language (i.e.</span>
+<span class="sd">                 &quot;cpp&quot; or &quot;python&quot;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_language</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">docstyle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The documentation style/tool used to document code.</span>
+
+<span class="sd">        :return: A lower-case string defining the docstyle (i.e. &quot;default&quot; or</span>
+<span class="sd">                 &quot;doxygen&quot;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_docstyle</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">markers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A tuple of marker sets that identify a documentation comment.</span>
+
+<span class="sd">        Marker sets consist of 3 entries where the first is the start-marker,</span>
+<span class="sd">        the second one the each-line marker and the last one the end-marker.</span>
+<span class="sd">        For example a marker tuple with a single marker set</span>
+<span class="sd">        ``((&quot;/**&quot;, &quot;*&quot;, &quot;*/&quot;),)`` would match following documentation comment:</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            /**</span>
+<span class="sd">             * This is documentation.</span>
+<span class="sd">             */</span>
+
+<span class="sd">        It&#39;s also possible to supply an empty each-line marker</span>
+<span class="sd">        (``(&quot;/**&quot;, &quot;&quot;, &quot;*/&quot;)``):</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            /**</span>
+<span class="sd">             This is more documentation.</span>
+<span class="sd">             */</span>
+
+<span class="sd">        Markers are matched &quot;greedy&quot;, that means it will match as many</span>
+<span class="sd">        each-line markers as possible. I.e. for ``(&quot;///&quot;, &quot;///&quot;, &quot;///&quot;)``):</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            /// Brief documentation.</span>
+<span class="sd">            ///</span>
+<span class="sd">            /// Detailed documentation.</span>
+
+<span class="sd">        :return: A tuple of marker/delimiter string tuples that identify a</span>
+<span class="sd">                 documentation comment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_markers</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A namedtuple of certain attributes present in the documentation.</span>
+
+<span class="sd">        These attributes are used to define parts of the documentation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metadata</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="DocstyleDefinition.load"><a class="viewcode-back" href="../../../../../coalib.bearlib.languages.documentation.html#coalib.bearlib.languages.documentation.DocstyleDefinition.DocstyleDefinition.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">docstyle</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">coalang_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads a ``DocstyleDefinition`` from the coala docstyle definition files.</span>
+
+<span class="sd">        This function considers all settings inside the according coalang-files</span>
+<span class="sd">        as markers, except ``param_start``, ``param_end`` and ``return_sep``</span>
+<span class="sd">        which are considered as special metadata markers.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            When placing new coala docstyle definition files, these must</span>
+<span class="sd">            consist of only lowercase letters and end with ``.coalang``!</span>
+
+<span class="sd">        :param language:           The case insensitive programming language of</span>
+<span class="sd">                                   the documentation comment as a string.</span>
+<span class="sd">        :param docstyle:           The case insensitive documentation</span>
+<span class="sd">                                   style/tool used to document code, e.g.</span>
+<span class="sd">                                   ``&quot;default&quot;`` or ``&quot;doxygen&quot;``.</span>
+<span class="sd">        :param coalang_dir:        Path to directory with coalang docstyle</span>
+<span class="sd">                                   definition files. This replaces the default</span>
+<span class="sd">                                   path if given.</span>
+<span class="sd">        :raises FileNotFoundError: Raised when the given docstyle was not</span>
+<span class="sd">                                   found.</span>
+<span class="sd">        :raises KeyError:          Raised when the given language is not</span>
+<span class="sd">                                   defined for given docstyle.</span>
+<span class="sd">        :return:                   The ``DocstyleDefinition`` for given language</span>
+<span class="sd">                                   and docstyle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">docstyle</span> <span class="o">=</span> <span class="n">docstyle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="n">language_config_parser</span> <span class="o">=</span> <span class="n">ConfParser</span><span class="p">(</span><span class="n">remove_empty_iter_elements</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">coalang_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">coalang_dir</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="n">docstyle</span> <span class="o">+</span> <span class="s1">&#39;.coalang&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">docstyle_settings</span> <span class="o">=</span> <span class="n">language_config_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">coalang_file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s1">&#39;Docstyle definition &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">docstyle</span><span class="p">)</span> <span class="o">+</span>
+                                    <span class="s1">&#39; not found.&#39;</span><span class="p">)</span>
+
+        <span class="n">language</span> <span class="o">=</span> <span class="n">language</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">docstyle_settings</span> <span class="o">=</span> <span class="n">docstyle_settings</span><span class="p">[</span><span class="n">language</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Language </span><span class="si">{!r}</span><span class="s1"> is not defined for docstyle </span><span class="si">{!r}</span><span class="s1">.&#39;</span>
+                           <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="n">docstyle</span><span class="p">))</span>
+
+        <span class="n">metadata_settings</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;param_start&#39;</span><span class="p">,</span> <span class="s1">&#39;param_end&#39;</span><span class="p">,</span> <span class="s1">&#39;return_sep&#39;</span><span class="p">)</span>
+
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Metadata</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">docstyle_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">req_setting</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+                                  <span class="k">for</span> <span class="n">req_setting</span> <span class="ow">in</span> <span class="n">metadata_settings</span><span class="p">))</span>
+
+        <span class="n">marker_sets</span> <span class="o">=</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                       <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span>
+                       <span class="n">docstyle_settings</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                       <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">metadata_settings</span> <span class="ow">and</span>
+                       <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;comment&#39;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="n">docstyle</span><span class="p">,</span> <span class="n">marker_sets</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="DocstyleDefinition.get_available_definitions"><a class="viewcode-back" href="../../../../../coalib.bearlib.languages.documentation.html#coalib.bearlib.languages.documentation.DocstyleDefinition.DocstyleDefinition.get_available_definitions">[docs]</a>    <span class="k">def</span> <span class="nf">get_available_definitions</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a sequence of pairs with ``(docstyle, language)`` which are</span>
+<span class="sd">        available when using ``load()``.</span>
+
+<span class="sd">        :return: A sequence of pairs with ``(docstyle, language)``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">language_config_parser</span> <span class="o">=</span> <span class="n">ConfParser</span><span class="p">(</span><span class="n">remove_empty_iter_elements</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s1">&#39;*.coalang&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">coalang_file</span> <span class="ow">in</span> <span class="n">iglob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+            <span class="n">docstyle</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">coalang_file</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Ignore files that are not lowercase, as coalang files have to be.</span>
+            <span class="k">if</span> <span class="n">docstyle</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">docstyle</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">language_config_parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">coalang_file</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">docstyle</span><span class="p">,</span> <span class="n">language</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../../index.html">
+    <img class="logo" src="../../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../../coalib.html">coalib</a><ul>
+  <li><a href="../../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

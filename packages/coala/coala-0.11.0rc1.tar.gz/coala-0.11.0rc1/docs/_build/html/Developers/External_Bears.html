@@ -1,0 +1,776 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>External Bears &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="How to use LocalBearTestHelper to test your bears" href="Testing_Bears.html" />
+    <link rel="prev" title="Linter Bears - Advanced Feature Reference" href="Linter_Bears_Advanced.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="external-bears">
+<h1>External Bears<a class="headerlink" href="#external-bears" title="Permalink to this headline">¶</a></h1>
+<p>Welcome. This tutorial will teach you how to use the
+<code class="docutils literal"><span class="pre">&#64;external_bear_wrap</span></code> decorator in order to write Bears in languages other
+than Python.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This tutorial assumes that you already know the basics. If you are new,
+please refer to the
+<a class="reference internal" href="Writing_Native_Bears.html"><span class="doc">Writing Native Bears</span></a> section.</p>
+<p class="last">If you are planning to create a bear that uses an already existing tool (aka
+linter), please refer to the
+<a class="reference internal" href="Writing_Linter_Bears.html"><span class="doc">Linter Bears</span></a> section.</p>
+</div>
+<div class="section" id="why-is-this-useful">
+<h2>Why is This Useful?<a class="headerlink" href="#why-is-this-useful" title="Permalink to this headline">¶</a></h2>
+<p>coala is a great language independent static analysis tool, where users can
+write their own static analysis routines.</p>
+<p>Enabling users to write external <code class="docutils literal"><span class="pre">bears</span></code> means that they can write their own
+static analysis routine in their favourite language.</p>
+</div>
+<div class="section" id="how-does-this-work">
+<h2>How Does This Work?<a class="headerlink" href="#how-does-this-work" title="Permalink to this headline">¶</a></h2>
+<p>By using the <code class="docutils literal"><span class="pre">&#64;external_bear_wrap</span></code> decorator you will have all the necessary
+data sent to your external executable (filename, lines, settings) as a JSON
+string via <code class="docutils literal"><span class="pre">stdin</span></code>. Afterwards, the analysis takes place in your executable
+that can be written in <strong>literally</strong> any language. In the end, you will have to
+provide the <code class="docutils literal"><span class="pre">Results</span></code> in a JSON string via stdout.</p>
+<p>In this tutorial, we will go through 2 examples where we create a very simple
+bear. The first example will use a <strong>compiled</strong> language, <code class="docutils literal"><span class="pre">C++</span></code>, that creates
+a standalone binary whilst in the second example we will take a look at
+<code class="docutils literal"><span class="pre">JS</span></code> that needs <code class="docutils literal"><span class="pre">node</span></code> in order to run out of the browser.</p>
+</div>
+<div class="section" id="external-bear-generation-tool">
+<h2>External Bear Generation Tool<a class="headerlink" href="#external-bear-generation-tool" title="Permalink to this headline">¶</a></h2>
+<p>If you really do not want to write any Python code, there is a tool
+<a class="reference external" href="https://gitlab.com/coala/coala-bear-management">here</a>,
+<code class="docutils literal"><span class="pre">coala-bears-create</span></code>, that will create the wrapper for you. We will be using</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala-bears-create -ext
+</pre></div>
+</div>
+<p>in order to generate the wrapper for the bear.</p>
+</div>
+<div class="section" id="writing-a-bear-in-c">
+<h2>Writing a Bear in C++<a class="headerlink" href="#writing-a-bear-in-c" title="Permalink to this headline">¶</a></h2>
+<p>The bear that will be created with this tutorial will check whether there is
+any <strong>coala</strong> spelled with a capital <code class="docutils literal"><span class="pre">C</span></code> since that is a horrible mistake for
+one to make.</p>
+<ol class="arabic simple">
+<li>Create a new directory and make it your current working directory.</li>
+<li>Run <code class="docutils literal"><span class="pre">coala-bears-create</span></code> as mentioned above in order to create the wrapper
+for our <code class="docutils literal"><span class="pre">C++</span></code> bear. Answer the first question with a path to your created
+directory (since it should be the current one you can choose the default
+value and just hit <code class="docutils literal"><span class="pre">Enter</span></code>).</li>
+<li>The most important questions are the ones regarding the executable name and
+the bear name. Use <code class="docutils literal"><span class="pre">coalaCheckBear</span></code> for the bear name and
+<code class="docutils literal"><span class="pre">coalaCheck_cpp</span></code> for the executable name.</li>
+<li>The rest of the questions are not important (languages, developer name and
+contact info, license, etc) to the tutorial and you can go with the
+defaults.
+When you are prompted about <code class="docutils literal"><span class="pre">settings</span></code> answer <code class="docutils literal"><span class="pre">no</span></code> (default). After the
+script is finished running there should be 2 files in your current
+directory:
+<code class="docutils literal"><span class="pre">coalaCheckBear.py</span></code> (the wrapper) and <code class="docutils literal"><span class="pre">coalaCheckBearTest.py</span></code>.</li>
+<li>This tutorial will not focus on testing so ignore the second file for now.
+The wrapper should look similar to the code block presented below. Some code
+has been cleaned for convenience of explanation.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="docutils literal"><span class="pre">LICENSE</span></code> specified applies only to the python code. You can license
+your executable however you see fit.</p>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.ExternalBearWrap</span> <span class="k">import</span> <span class="n">external_bear_wrap</span>
+
+
+<span class="nd">@external_bear_wrap</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;coalaCheck_cpp&#39;</span><span class="p">,</span>
+                    <span class="n">settings</span><span class="o">=</span><span class="p">{})</span>
+<span class="k">class</span> <span class="nc">coalaCheckBear</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks for coala written with uppercase &#39;C&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">LANGUAGES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;All&#39;</span><span class="p">}</span>
+    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;&#39;</span><span class="p">}</span>
+    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Me&#39;</span><span class="p">}</span>
+    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;me@mail.com&#39;</span><span class="p">}</span>
+    <span class="n">LICENSE</span> <span class="o">=</span> <span class="s1">&#39;AGPL&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">()</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="6">
+<li>Since the input will be a JSON string some kind of JSON class is needed.
+nlohmann&#8217;s JSON library (
+<a class="reference external" href="https://github.com/nlohmann/json">https://github.com/nlohmann/json</a>) is a
+great choice because it is easy to integrate and is used in this tutorial.</li>
+<li>Create <code class="docutils literal"><span class="pre">coalaCheck.cpp</span></code> and start by testing the input. The best thing
+about nlohmann&#8217;s JSON library is that you can parse JSON directly
+from stdin like this:</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#include &lt;iostream&gt;</span>
+
+<span class="c1">#include &quot;json.hpp&quot;</span>
+
+<span class="n">using</span> <span class="n">json</span> <span class="o">=</span> <span class="n">nlohmann</span><span class="p">::</span><span class="n">json</span><span class="p">;</span>
+<span class="n">using</span> <span class="n">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="n">json</span> <span class="ow">in</span><span class="p">;</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="ow">in</span><span class="p">;</span>
+
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="ow">in</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="8">
+<li>Create a <code class="docutils literal"><span class="pre">Makefile</span></code>. The JSON library requires C++11 so a sample
+<code class="docutils literal"><span class="pre">Makefile</span></code> would look like this:</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">build</span><span class="p">:</span> <span class="n">coalaCheck</span><span class="o">.</span><span class="n">cpp</span>
+    <span class="n">g</span><span class="o">++</span> <span class="o">-</span><span class="n">std</span><span class="o">=</span><span class="n">c</span><span class="o">++</span><span class="mi">11</span> <span class="o">-</span><span class="n">o</span> <span class="n">coalaCheck_cpp</span> <span class="n">coalaCheck</span><span class="o">.</span><span class="n">cpp</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="9">
+<li>Compile and test the binary by giving it a JSON string. It should print the
+JSON string back at <code class="docutils literal"><span class="pre">stdout</span></code>.</li>
+<li>Read about the JSON Spec that the input uses (<a class="reference internal" href="#the-json-spec">The JSON Spec</a>).
+The filename is found in <code class="docutils literal"><span class="pre">in[&quot;filename&quot;]</span></code> and the list of lines is found
+in <code class="docutils literal"><span class="pre">in[&quot;file&quot;]</span></code>.</li>
+<li>Create a result adding function, also an init function proves quite useful
+for initializing the output json.</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#include &lt;iostream&gt;</span>
+<span class="c1">#include &lt;string&gt;</span>
+
+<span class="c1">#include &quot;json.hpp&quot;</span>
+
+<span class="n">using</span> <span class="n">json</span> <span class="o">=</span> <span class="n">nlohmann</span><span class="p">::</span><span class="n">json</span><span class="p">;</span>
+<span class="n">using</span> <span class="n">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="n">json</span> <span class="ow">in</span><span class="p">;</span>
+<span class="n">json</span> <span class="n">out</span><span class="p">;</span>
+<span class="n">string</span> <span class="n">origin</span><span class="p">;</span>
+
+<span class="n">void</span> <span class="n">init_results</span><span class="p">(</span><span class="n">string</span> <span class="n">bear_name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">origin</span> <span class="o">=</span> <span class="n">bear_name</span><span class="p">;</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="p">::</span><span class="n">array</span><span class="p">({});</span>
+<span class="p">}</span>
+
+<span class="n">void</span> <span class="n">add_result</span><span class="p">(</span><span class="n">string</span> <span class="n">message</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">,</span> <span class="nb">int</span> <span class="n">column</span><span class="p">,</span> <span class="nb">int</span> <span class="n">severity</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">json</span> <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">{</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;affected_code&quot;</span><span class="p">,</span> <span class="n">json</span><span class="p">::</span><span class="n">array</span><span class="p">({{</span>
+                <span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="ow">in</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]},</span>
+                <span class="p">{</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="n">column</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="ow">in</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]},</span>
+                    <span class="p">{</span><span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">}</span>
+                <span class="p">}},</span>
+                <span class="p">{</span><span class="s2">&quot;end&quot;</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">+</span><span class="mi">6</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="ow">in</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]},</span>
+                    <span class="p">{</span><span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">}</span>
+                <span class="p">}}</span>
+            <span class="p">}})},</span>
+        <span class="p">{</span><span class="s2">&quot;severity&quot;</span><span class="p">,</span> <span class="n">severity</span><span class="p">}</span>
+    <span class="p">};</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="ow">in</span><span class="p">;</span>
+
+    <span class="n">init_results</span><span class="p">(</span><span class="s2">&quot;coalaCheckBear&quot;</span><span class="p">);</span>
+
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">out</span><span class="p">;</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="docutils literal"><span class="pre">C++</span></code> operators and syntax are not well suited for JSON manipulation
+but nlohmann&#8217;s JSON lib makes it as easy as possible.</p>
+</div>
+<ol class="arabic simple" start="12">
+<li>Iterate over the lines and check for <code class="docutils literal"><span class="pre">&quot;coala&quot;</span></code> with an uppercase <code class="docutils literal"><span class="pre">&quot;C&quot;</span></code>.
+Use <code class="docutils literal"><span class="pre">string</span></code>&#8216;s <code class="docutils literal"><span class="pre">find</span></code> function like so:</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#include &lt;iostream&gt;</span>
+<span class="c1">#include &lt;string&gt;</span>
+
+<span class="c1">#include &quot;json.hpp&quot;</span>
+
+<span class="n">using</span> <span class="n">json</span> <span class="o">=</span> <span class="n">nlohmann</span><span class="p">::</span><span class="n">json</span><span class="p">;</span>
+<span class="n">using</span> <span class="n">namespace</span> <span class="n">std</span><span class="p">;</span>
+
+<span class="n">json</span> <span class="ow">in</span><span class="p">;</span>
+<span class="n">json</span> <span class="n">out</span><span class="p">;</span>
+<span class="n">string</span> <span class="n">origin</span><span class="p">;</span>
+
+<span class="n">void</span> <span class="n">init_results</span><span class="p">(</span><span class="n">string</span> <span class="n">bear_name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">origin</span> <span class="o">=</span> <span class="n">bear_name</span><span class="p">;</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="p">::</span><span class="n">array</span><span class="p">({});</span>
+<span class="p">}</span>
+
+<span class="n">void</span> <span class="n">add_result</span><span class="p">(</span><span class="n">string</span> <span class="n">message</span><span class="p">,</span> <span class="nb">int</span> <span class="n">line</span><span class="p">,</span> <span class="nb">int</span> <span class="n">column</span><span class="p">,</span> <span class="nb">int</span> <span class="n">severity</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">json</span> <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="p">{</span><span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;affected_code&quot;</span><span class="p">,</span> <span class="n">json</span><span class="p">::</span><span class="n">array</span><span class="p">({{</span>
+                <span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="ow">in</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]},</span>
+                <span class="p">{</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="n">column</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="ow">in</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]},</span>
+                    <span class="p">{</span><span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">}</span>
+                <span class="p">}},</span>
+                <span class="p">{</span><span class="s2">&quot;end&quot;</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">+</span><span class="mi">6</span><span class="p">},</span>
+                    <span class="p">{</span><span class="s2">&quot;file&quot;</span><span class="p">,</span> <span class="ow">in</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]},</span>
+                    <span class="p">{</span><span class="s2">&quot;line&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">}</span>
+                <span class="p">}}</span>
+            <span class="p">}})},</span>
+        <span class="p">{</span><span class="s2">&quot;severity&quot;</span><span class="p">,</span> <span class="n">severity</span><span class="p">}</span>
+    <span class="p">};</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nb">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
+
+    <span class="n">cin</span> <span class="o">&gt;&gt;</span> <span class="ow">in</span><span class="p">;</span>
+
+    <span class="n">init_results</span><span class="p">(</span><span class="s2">&quot;coalaCheckBear&quot;</span><span class="p">);</span>
+
+    <span class="nb">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">auto</span> <span class="n">it</span><span class="o">=</span><span class="ow">in</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">begin</span><span class="p">();</span> <span class="n">it</span> <span class="o">!=</span><span class="ow">in</span><span class="p">[</span><span class="s2">&quot;file&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">end</span><span class="p">();</span> <span class="n">it</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+        <span class="n">string</span> <span class="n">line</span> <span class="o">=</span> <span class="o">*</span><span class="n">it</span><span class="p">;</span>
+        <span class="n">size_t</span> <span class="n">found</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Coala&quot;</span><span class="p">);</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">found</span> <span class="o">!=</span> <span class="n">string</span><span class="p">::</span><span class="n">npos</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">add_result</span><span class="p">(</span><span class="s2">&quot;Did you mean &#39;coala&#39;?&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">found</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Coala&quot;</span><span class="p">,</span> <span class="n">found</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">out</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="13">
+<li>After building the executable it has to be added to the <code class="docutils literal"><span class="pre">PATH</span></code> env
+variable. It is possible to modify the wrapper and give it the full
+path. Add the current directory to the <code class="docutils literal"><span class="pre">PATH</span></code> like so:</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ export PATH=$PATH:$PWD
+</pre></div>
+</div>
+<p>The last step is to test if everything is working properly. This is the
+testfile used in this tutorial (
+<a class="reference external" href="https://raw.githubusercontent.com/Redridge/coalaCheckBear-cpp/master/testfile">testfile</a>).</p>
+<ol class="arabic simple" start="14">
+<li>Execute the Bear by running:</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala -d . -b coalaCheckBear -f testfile
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you have ran <code class="docutils literal"><span class="pre">coala</span></code> over a file more than once without modifying it,
+coala will try to cache it. In order to avoid such behavior add
+<code class="docutils literal"><span class="pre">--flush-cache</span></code> at the end of the command.</p>
+</div>
+</div>
+<div class="section" id="writing-a-bear-with-javascript-and-node">
+<h2>Writing a Bear With Javascript and Node<a class="headerlink" href="#writing-a-bear-with-javascript-and-node" title="Permalink to this headline">¶</a></h2>
+<p>This part of the tutorial will demonstrate how to make an External Bear that
+uses a script that needs another binary to run (e.g. python, bash, node).</p>
+<ol class="arabic simple">
+<li>Run <code class="docutils literal"><span class="pre">coala-bears-create</span> <span class="pre">-ext</span></code> but supply <code class="docutils literal"><span class="pre">node</span></code> as the
+executable name.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This tutorial uses <code class="docutils literal"><span class="pre">node</span> <span class="pre">v6.2.2</span></code>. It should work with older versions too
+but we suggest that you update.</p>
+</div>
+<p>When another binary is needed to run the source code, the <code class="docutils literal"><span class="pre">create_arguments</span></code>
+method comes in handy.</p>
+<ol class="arabic simple" start="2">
+<li>Add the source code file as an argument to the <code class="docutils literal"><span class="pre">create_arguments</span></code> method
+(so that the command becomes <code class="docutils literal"><span class="pre">node</span> <span class="pre">coalaCheck.js</span></code>).</li>
+</ol>
+<p>The <code class="docutils literal"><span class="pre">create_arguments</span></code> method returns a tuple so if only one
+argument is added then a comma has to be used at the end
+(e.g. <code class="docutils literal"><span class="pre">(one_item,)</span></code>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="docutils literal"><span class="pre">LICENSE</span></code> specified applies only to the python code. You can license
+your executable however you see fit.</p>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.ExternalBearWrap</span> <span class="k">import</span> <span class="n">external_bear_wrap</span>
+
+
+<span class="nd">@external_bear_wrap</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;node&#39;</span><span class="p">,</span>
+                    <span class="n">settings</span><span class="o">=</span><span class="p">{})</span>
+<span class="k">class</span> <span class="nc">coalaCheckBear</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks for coala written with uppercase &#39;C&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">LANGUAGES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;All&#39;</span><span class="p">}</span>
+    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;node&#39;</span><span class="p">}</span>
+    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Me&#39;</span><span class="p">}</span>
+    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;me@mail.com&#39;</span><span class="p">}</span>
+    <span class="n">LICENSE</span> <span class="o">=</span> <span class="s1">&#39;AGPL&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;coalaCheck.js&#39;</span><span class="p">,)</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li>Create <code class="docutils literal"><span class="pre">coalaCheck.js</span></code> and add basic I/O handling.</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span>var input = &quot;&quot;;
+
+console.log = (msg) =&gt; {
+    process.stdout.write(`${msg}\n`);
+};
+
+process.stdin.setEncoding(&#39;utf8&#39;);
+
+process.stdin.on(&#39;readable&#39;, () =&gt; {
+    var chunk = process.stdin.read();
+    if (chunk !== null) {
+        input += chunk;
+    }
+});
+
+process.stdin.on(&#39;end&#39;, () =&gt; {
+    input = JSON.parse(input);
+    console.log(JSON.stringify(input));
+});
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li>The I/O can be tested by running <code class="docutils literal"><span class="pre">node</span> <span class="pre">coalaCheck.js</span></code> and
+supplying a valid JSON string in the stdin.</li>
+<li>Add the init and the add result functions.</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">var</span> <span class="n">out</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="n">var</span> <span class="n">origin</span><span class="p">;</span>
+
+<span class="n">init_results</span> <span class="o">=</span> <span class="p">(</span><span class="n">bear_name</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="n">origin</span> <span class="o">=</span> <span class="n">bear_name</span><span class="p">;</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="p">};</span>
+
+<span class="n">add_result</span> <span class="o">=</span> <span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">severity</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="n">var</span> <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;origin&quot;</span><span class="p">:</span> <span class="n">origin</span><span class="p">,</span>
+        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+        <span class="s2">&quot;affected_code&quot;</span><span class="p">:</span> <span class="p">[{</span>
+                <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="n">column</span><span class="p">,</span>
+                    <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;line&quot;</span><span class="p">:</span> <span class="n">line</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">+</span><span class="mi">6</span><span class="p">,</span>
+                    <span class="s2">&quot;file&quot;</span><span class="p">:</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;line&quot;</span><span class="p">:</span> <span class="n">line</span>
+                <span class="p">}</span>
+            <span class="p">}],</span>
+        <span class="s2">&quot;severity&quot;</span><span class="p">:</span> <span class="n">severity</span>
+    <span class="p">};</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="6">
+<li>Iterate over the lines and check for <code class="docutils literal"><span class="pre">&quot;coala&quot;</span></code> spelled with a capital
+<code class="docutils literal"><span class="pre">&quot;C&quot;</span></code>. The final source should look like this:</li>
+</ol>
+<div class="highlight-default"><div class="highlight"><pre><span></span>var input = &quot;&quot;;
+var out = {};
+var origin;
+
+console.log = (msg) =&gt; {
+    process.stdout.write(`${msg}\n`);
+};
+
+init_results = (bear_name) =&gt; {
+    origin = bear_name;
+    out[&quot;results&quot;] = [];
+};
+
+add_result = (message, line, column, severity) =&gt; {
+    var result = {
+        &quot;origin&quot;: origin,
+        &quot;message&quot;: message,
+        &quot;affected_code&quot;: [{
+                &quot;file&quot;: input[&quot;filename&quot;],
+                &quot;start&quot;: {
+                    &quot;column&quot;: column,
+                    &quot;file&quot;: input[&quot;filename&quot;],
+                    &quot;line&quot;: line
+                },
+                &quot;end&quot;: {
+                    &quot;column&quot;: column+6,
+                    &quot;file&quot;: input[&quot;filename&quot;],
+                    &quot;line&quot;: line
+                }
+            }],
+        &quot;severity&quot;: severity
+    };
+    out[&quot;results&quot;].push(result)
+};
+
+process.stdin.setEncoding(&#39;utf8&#39;);
+
+process.stdin.on(&#39;readable&#39;, () =&gt; {
+    var chunk = process.stdin.read();
+    if (chunk !== null) {
+        input += chunk;
+    }
+});
+
+process.stdin.on(&#39;end&#39;, () =&gt; {
+    input = JSON.parse(input);
+    init_results(&quot;coalaCheckBear&quot;);
+    for (i in input[&quot;file&quot;]) {
+        var line = input[&quot;file&quot;][i];
+        var found = line.indexOf(&quot;Coala&quot;);
+        while (found != -1) {
+            add_result(&quot;Did you mean &#39;coala&#39;?&quot;, parseInt(i)+1, found+1, 2);
+            found = line.indexOf(&quot;Coala&quot;, found+1)
+        }
+    }
+    console.log(JSON.stringify(out));
+});
+</pre></div>
+</div>
+<p>In order to run this Bear there is no need to add the source code to the path
+because the binary being run is <code class="docutils literal"><span class="pre">node</span></code>. Although there is a problem: the
+argument supplied will be looked up only in the current directory. To fix this
+you can add the full path of the <code class="docutils literal"><span class="pre">.js</span></code> file in the argument list. In this
+case just run the bear from the same directory as <code class="docutils literal"><span class="pre">coalaCheck.js</span></code>. The code
+for this example can be found
+<a class="reference external" href="https://github.com/Redridge/coalaCheckBear-js">here</a>.</p>
+</div>
+<div class="section" id="the-json-spec">
+<h2>The JSON Spec<a class="headerlink" href="#the-json-spec" title="Permalink to this headline">¶</a></h2>
+<p>coala will send you data in a JSON string via stdin and the executable has to
+provide a JSON string via stdout. The specs are the following:</p>
+<ul class="simple">
+<li>input JSON spec</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="9%" />
+<col width="47%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Tree</td>
+<td>Type</td>
+<td>Description</td>
+</tr>
+<tr class="row-even"><td>filename</td>
+<td>str</td>
+<td>the name of the file being analysed</td>
+</tr>
+<tr class="row-odd"><td>file</td>
+<td>list</td>
+<td>file contents as a list of lines</td>
+</tr>
+<tr class="row-even"><td>settings</td>
+<td>obj</td>
+<td>settings as key:value pairs</td>
+</tr>
+</tbody>
+</table>
+<ul class="simple">
+<li>output JSON spec</li>
+</ul>
+<table border="1" class="docutils">
+<colgroup>
+<col width="4%" />
+<col width="4%" />
+<col width="4%" />
+<col width="28%" />
+<col width="10%" />
+<col width="49%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td colspan="4">Tree</td>
+<td>Type</td>
+<td>Description</td>
+</tr>
+<tr class="row-even"><td colspan="4">results</td>
+<td>list</td>
+<td>list of results</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td colspan="3">origin</td>
+<td>str</td>
+<td>usually the name of the bear</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td colspan="3">message</td>
+<td>str</td>
+<td>message to be displayed to the user</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td colspan="3">affected_code</td>
+<td>list</td>
+<td>contains SourceRange objects</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td colspan="2">file</td>
+<td>str</td>
+<td>the name of the file</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td colspan="2">start</td>
+<td>obj</td>
+<td>start position of affected code</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>file</td>
+<td>str</td>
+<td>the name of the file</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>line</td>
+<td>int</td>
+<td>line number</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>column</td>
+<td>int</td>
+<td>column number</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td colspan="2">end</td>
+<td>obj</td>
+<td>end position of affected code</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>file</td>
+<td>str</td>
+<td>the name of the file</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>line</td>
+<td>int</td>
+<td>line number</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>column</td>
+<td>int</td>
+<td>column number</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td colspan="3">severity</td>
+<td>int</td>
+<td>severity of the result (0-2)</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td colspan="3">debug_msg</td>
+<td>str</td>
+<td>message to be shown in DEBUG log</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td colspan="3">additional_info</td>
+<td>str</td>
+<td>additional info to be displayed</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The output JSON spec is the same as the one that <code class="docutils literal"><span class="pre">coala</span> <span class="pre">--json</span></code> uses. If you
+ever get lost you can run <code class="docutils literal"><span class="pre">coala</span> <span class="pre">--json</span></code> over a file and check the results.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">External Bears</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#why-is-this-useful">Why is This Useful?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-does-this-work">How Does This Work?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#external-bear-generation-tool">External Bear Generation Tool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-a-bear-in-c">Writing a Bear in C++</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-a-bear-with-javascript-and-node">Writing a Bear With Javascript and Node</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-json-spec">The JSON Spec</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Linter_Bears_Advanced.html" title="previous chapter">Linter Bears - Advanced Feature Reference</a></li>
+      <li>Next: <a href="Testing_Bears.html" title="next chapter">How to use LocalBearTestHelper to test your bears</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/External_Bears.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

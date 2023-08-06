@@ -1,0 +1,750 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bears package &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="index.html" />
+    <link rel="up" title="coalib package" href="coalib.html" />
+    <link rel="next" title="coalib.collecting package" href="coalib.collecting.html" />
+    <link rel="prev" title="coalib.bearlib.spacing package" href="coalib.bearlib.spacing.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="coalib-bears-package">
+<h1>coalib.bears package<a class="headerlink" href="#coalib-bears-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coalib.bears.BEAR_KIND">
+<span id="coalib-bears-bear-kind-module"></span><h2>coalib.bears.BEAR_KIND module<a class="headerlink" href="#module-coalib.bears.BEAR_KIND" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coalib.bears.Bear">
+<span id="coalib-bears-bear-module"></span><h2>coalib.bears.Bear module<a class="headerlink" href="#module-coalib.bears.Bear" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.bears.Bear.Bear">
+<em class="property">class </em><code class="descclassname">coalib.bears.Bear.</code><code class="descname">Bear</code><span class="sig-paren">(</span><em>section: coalib.settings.Section.Section</em>, <em>message_queue</em>, <em>timeout=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyprint.Printer.Printer</span></code>, <a class="reference internal" href="coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin" title="coalib.output.printers.LogPrinter.LogPrinterMixin"><code class="xref py py-class docutils literal"><span class="pre">coalib.output.printers.LogPrinter.LogPrinterMixin</span></code></a></p>
+<p>A bear contains the actual subroutine that is responsible for checking
+source code for certain specifications. However it can actually do
+whatever it wants with the files it gets. If you are missing some Result
+type, feel free to contact us and/or help us extending the coalib.</p>
+<p>This is the base class for every bear. If you want to write an bear, you
+will probably want to look at the GlobalBear and LocalBear classes that
+inherit from this class. In any case you&#8217;ll want to overwrite at least the
+run method. You can send debug/warning/error messages through the
+debug(), warn(), err() functions. These will send the
+appropriate messages so that they are outputted. Be aware that if you use
+err(), you are expected to also terminate the bear run-through
+immediately.</p>
+<p>Settings are available at all times through self.section.</p>
+<p>To indicate which languages your bear supports, just give it the
+<code class="docutils literal"><span class="pre">LANGUAGES</span></code> value which should be a set of string(s):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dependency_management.requirements.PackageRequirement</span> <span class="k">import</span> <span class="p">(</span>
+<span class="gp">... </span><span class="n">PackageRequirement</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dependency_management.requirements.PipRequirement</span> <span class="k">import</span> <span class="p">(</span>
+<span class="gp">... </span><span class="n">PipRequirement</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">LANGUAGES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;CPP&#39;</span><span class="p">,</span><span class="s1">&#39;C#&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To indicate the requirements of the bear, assign <code class="docutils literal"><span class="pre">REQUIREMENTS</span></code> a set
+with instances of <code class="docutils literal"><span class="pre">PackageRequirements</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="n">PackageRequirement</span><span class="p">(</span><span class="s1">&#39;pip&#39;</span><span class="p">,</span> <span class="s1">&#39;coala_decorators&#39;</span><span class="p">,</span> <span class="s1">&#39;0.2.1&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>If your bear uses requirements from a manager we have a subclass from,
+you can use the subclass, such as <code class="docutils literal"><span class="pre">PipRequirement</span></code>, without specifying
+manager:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;coala_decorators&#39;</span><span class="p">,</span> <span class="s1">&#39;0.2.1&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>To specify additional attributes to your bear, use the following:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Jon Snow&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;jon_snow@gmail.com&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">MAINTAINERS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Catelyn Stark&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">MAINTAINERS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;catelyn_stark@gmail.com&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">LICENSE</span> <span class="o">=</span> <span class="s1">&#39;AGPL-3.0&#39;</span>
+<span class="gp">... </span>    <span class="n">ASCIINEMA_URL</span> <span class="o">=</span> <span class="s1">&#39;https://asciinema.org/a/80761&#39;</span>
+</pre></div>
+</div>
+<p>If the maintainers are the same as the authors, they can be omitted:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Jon Snow&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;jon_snow@gmail.com&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">maintainers</span>
+<span class="go">{&#39;Jon Snow&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">maintainers_emails</span>
+<span class="go">{&#39;jon_snow@gmail.com&#39;}</span>
+</pre></div>
+</div>
+<p>If your bear needs to include local files, then specify it giving strings
+containing relative file paths to the INCLUDE_LOCAL_FILES set:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">INCLUDE_LOCAL_FILES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;checkstyle.jar&#39;</span><span class="p">,</span> <span class="s1">&#39;google_checks.xml&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To keep track easier of what a bear can do, simply tell it to the CAN_FIX
+and the CAN_DETECT sets. Possible values:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">CAN_DETECT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Syntax&#39;</span><span class="p">,</span> <span class="s1">&#39;Formatting&#39;</span><span class="p">,</span> <span class="s1">&#39;Security&#39;</span><span class="p">,</span> <span class="s1">&#39;Complexity&#39;</span><span class="p">,</span> <span class="s1">&#39;Smell&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Unused Code&#39;</span><span class="p">,</span> <span class="s1">&#39;Redundancy&#39;</span><span class="p">,</span> <span class="s1">&#39;Variable Misuse&#39;</span><span class="p">,</span> <span class="s1">&#39;Spelling&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Memory Leak&#39;</span><span class="p">,</span> <span class="s1">&#39;Documentation&#39;</span><span class="p">,</span> <span class="s1">&#39;Duplication&#39;</span><span class="p">,</span> <span class="s1">&#39;Commented Code&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Grammar&#39;</span><span class="p">,</span> <span class="s1">&#39;Missing Import&#39;</span><span class="p">,</span> <span class="s1">&#39;Unreachable Code&#39;</span><span class="p">,</span> <span class="s1">&#39;Undefined Element&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Code Simplification&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CAN_FIX</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Syntax&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Specifying something to CAN_FIX makes it obvious that it can be detected
+too, so it may be omitted:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">CAN_DETECT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Syntax&#39;</span><span class="p">,</span> <span class="s1">&#39;Security&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">CAN_FIX</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Redundancy&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">SomeBear</span><span class="o">.</span><span class="n">can_detect</span><span class="p">))</span>
+<span class="go">[&#39;Redundancy&#39;, &#39;Security&#39;, &#39;Syntax&#39;]</span>
+</pre></div>
+</div>
+<p>Every bear has a data directory which is unique to that particular bear:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeOtherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">==</span> <span class="n">SomeOtherBear</span><span class="o">.</span><span class="n">data_dir</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>BEAR_DEPS contains bear classes that are to be executed before this bear
+gets executed. The results of these bears will then be passed to the
+run method as a dict via the dependency_results argument. The dict
+will have the name of the Bear as key and the list of its results as
+results:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeOtherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">BEAR_DEPS</span> <span class="o">=</span> <span class="p">{</span><span class="n">SomeBear</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeOtherBear</span><span class="o">.</span><span class="n">BEAR_DEPS</span>
+<span class="go">{&lt;class &#39;coalib.bears.Bear.SomeBear&#39;&gt;}</span>
+</pre></div>
+</div>
+<p>Every bear resides in some directory which is specified by the
+source_location attribute:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">source_location</span>
+<span class="go">&#39;...Bear.py&#39;</span>
+</pre></div>
+</div>
+<p>Every linter bear makes use of an executable tool for its operations.
+The SEE_MORE attribute provides a link to the main page of the linter
+tool:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">PyLintBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">SEE_MORE</span> <span class="o">=</span> <span class="s1">&#39;https://www.pylint.org/&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PyLintBear</span><span class="o">.</span><span class="n">SEE_MORE</span>
+<span class="go">&#39;https://www.pylint.org/&#39;</span>
+</pre></div>
+</div>
+<p>In the future, bears will not survive without aspects. aspects are defined
+as part of the <code class="docutils literal"><span class="pre">class</span></code> statement&#8217;s parameter list. According to the
+classic <code class="docutils literal"><span class="pre">CAN_DETECT</span></code> and <code class="docutils literal"><span class="pre">CAN_FIX</span></code> attributes, aspects can either be
+only <code class="docutils literal"><span class="pre">'detect'</span></code>-able or also <code class="docutils literal"><span class="pre">'fix'</span></code>-able:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coalib.bearlib.aspects.Metadata</span> <span class="k">import</span> <span class="n">CommitMessage</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">aspectsCommitBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">,</span> <span class="n">aspects</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">... </span>        <span class="s1">&#39;detect&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">CommitMessage</span><span class="o">.</span><span class="n">Shortlog</span><span class="o">.</span><span class="n">ColonExistence</span><span class="p">],</span>
+<span class="gp">... </span>        <span class="s1">&#39;fix&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">CommitMessage</span><span class="o">.</span><span class="n">Shortlog</span><span class="o">.</span><span class="n">TrailingPeriod</span><span class="p">],</span>
+<span class="gp">... </span><span class="p">}):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">aspectsCommitBear</span><span class="o">.</span><span class="n">aspects</span><span class="p">[</span><span class="s1">&#39;detect&#39;</span><span class="p">]</span>
+<span class="go">[&lt;aspectclass &#39;Root.Metadata.CommitMessage.Shortlog.ColonExistence&#39;&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">aspectsCommitBear</span><span class="o">.</span><span class="n">aspects</span><span class="p">[</span><span class="s1">&#39;fix&#39;</span><span class="p">]</span>
+<span class="go">[&lt;aspectclass &#39;Root.Metadata.CommitMessage.Shortlog.TrailingPeriod&#39;&gt;]</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.ASCIINEMA_URL">
+<code class="descname">ASCIINEMA_URL</code><em class="property"> = ''</em><a class="headerlink" href="#coalib.bears.Bear.Bear.ASCIINEMA_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.AUTHORS">
+<code class="descname">AUTHORS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.AUTHORS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.AUTHORS_EMAILS">
+<code class="descname">AUTHORS_EMAILS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.AUTHORS_EMAILS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.BEAR_DEPS">
+<code class="descname">BEAR_DEPS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.BEAR_DEPS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.CAN_DETECT">
+<code class="descname">CAN_DETECT</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.CAN_DETECT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.CAN_FIX">
+<code class="descname">CAN_FIX</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.CAN_FIX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.INCLUDE_LOCAL_FILES">
+<code class="descname">INCLUDE_LOCAL_FILES</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.INCLUDE_LOCAL_FILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.LANGUAGES">
+<code class="descname">LANGUAGES</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.LANGUAGES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.LICENSE">
+<code class="descname">LICENSE</code><em class="property"> = ''</em><a class="headerlink" href="#coalib.bears.Bear.Bear.LICENSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.MAINTAINERS">
+<code class="descname">MAINTAINERS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.MAINTAINERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.MAINTAINERS_EMAILS">
+<code class="descname">MAINTAINERS_EMAILS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.MAINTAINERS_EMAILS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.PLATFORMS">
+<code class="descname">PLATFORMS</code><em class="property"> = {'any'}</em><a class="headerlink" href="#coalib.bears.Bear.Bear.PLATFORMS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.REQUIREMENTS">
+<code class="descname">REQUIREMENTS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.REQUIREMENTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.SEE_MORE">
+<code class="descname">SEE_MORE</code><em class="property"> = ''</em><a class="headerlink" href="#coalib.bears.Bear.Bear.SEE_MORE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.can_detect">
+<code class="descname">can_detect</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.can_detect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.bears.Bear.Bear.check_prerequisites">
+<em class="property">classmethod </em><code class="descname">check_prerequisites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.check_prerequisites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.check_prerequisites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether needed runtime prerequisites of the bear are satisfied.</p>
+<p>This function gets executed at construction.</p>
+<p>Section value requirements shall be checked inside the <code class="docutils literal"><span class="pre">run</span></code> method.
+&gt;&gt;&gt; from dependency_management.requirements.PipRequirement import (
+... PipRequirement)
+&gt;&gt;&gt; class SomeBear(Bear):
+...     REQUIREMENTS = {PipRequirement(&#8216;pip&#8217;)}</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">check_prerequisites</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeOtherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;really_bad_package&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SomeOtherBear</span><span class="o">.</span><span class="n">check_prerequisites</span><span class="p">()</span>
+<span class="go">&#39;really_bad_package is not installed. You can install it using ...&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">anotherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;bad_package&#39;</span><span class="p">,</span> <span class="s1">&#39;0.0.1&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">anotherBear</span><span class="o">.</span><span class="n">check_prerequisites</span><span class="p">()</span>
+<span class="go">&#39;bad_package 0.0.1 is not installed. You can install it using ...&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if prerequisites are satisfied, else False or a string
+that serves a more detailed description of what&#8217;s missing.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.data_dir">
+<code class="descname">data_dir</code><em class="property"> = '/home/coyote/.local/share/coala-bears/Bear'</em><a class="headerlink" href="#coalib.bears.Bear.Bear.data_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.Bear.Bear.download_cached_file">
+<code class="descname">download_cached_file</code><span class="sig-paren">(</span><em>url</em>, <em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.download_cached_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.download_cached_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downloads the file if needed and caches it for the next time. If a
+download happens, the user will be informed.</p>
+<p>Take a sane simple bear:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">queue</span> <span class="k">import</span> <span class="n">Queue</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bear</span> <span class="o">=</span> <span class="n">Bear</span><span class="p">(</span><span class="n">Section</span><span class="p">(</span><span class="s2">&quot;a section&quot;</span><span class="p">),</span> <span class="n">Queue</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>We can now carelessly query for a neat file that doesn&#8217;t exist yet:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">remove</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">bear</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;a_file&quot;</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="n">remove</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">bear</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;a_file&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">file</span> <span class="o">=</span> <span class="n">bear</span><span class="o">.</span><span class="n">download_cached_file</span><span class="p">(</span><span class="s2">&quot;https://github.com/&quot;</span><span class="p">,</span> <span class="s2">&quot;a_file&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we download it again, it&#8217;ll be much faster as no download occurs:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">newfile</span> <span class="o">=</span> <span class="n">bear</span><span class="o">.</span><span class="n">download_cached_file</span><span class="p">(</span><span class="s2">&quot;https://github.com/&quot;</span><span class="p">,</span> <span class="s2">&quot;a_file&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">newfile</span> <span class="o">==</span> <span class="n">file</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> &#8211; The URL to download the file from.</li>
+<li><strong>filename</strong> &#8211; The filename it should get, e.g. &#8220;test.txt&#8221;.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A full path to the file ready for you to use!</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.Bear.Bear.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.execute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.Bear.Bear.get_config_dir">
+<code class="descname">get_config_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.get_config_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.get_config_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the directory where the configuration file is.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Directory of the config file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.bears.Bear.Bear.get_metadata">
+<em class="property">classmethod </em><code class="descname">get_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.get_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Metadata for the run function. However parameters like
+<code class="docutils literal"><span class="pre">self</span></code> or parameters implicitly used by coala (e.g.
+filename for local bears) are already removed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.bears.Bear.Bear.get_non_optional_settings">
+<em class="property">classmethod </em><code class="descname">get_non_optional_settings</code><span class="sig-paren">(</span><em>recurse=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.get_non_optional_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.get_non_optional_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method has to determine which settings are needed by this bear.
+The user will be prompted for needed settings that are not available
+in the settings file so don&#8217;t include settings where a default value
+would do.</p>
+<p>Note: This function also queries settings from bear dependencies in
+recursive manner. Though circular dependency chains are a challenge to
+achieve, this function would never return on them!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>recurse</strong> &#8211; Get the settings recursively from its dependencies.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dictionary of needed settings as keys and a tuple of
+help text and annotation as values.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="coalib.bears.Bear.Bear.kind">
+<em class="property">static </em><code class="descname">kind</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.kind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.kind" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The kind of the bear</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.Bear.Bear.log_message">
+<code class="descname">log_message</code><span class="sig-paren">(</span><em>log_message</em>, <em>timestamp=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.log_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.log_message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.maintainers">
+<code class="descname">maintainers</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.maintainers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.maintainers_emails">
+<code class="descname">maintainers_emails</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.bears.Bear.Bear.maintainers_emails" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.bears.Bear.Bear.missing_dependencies">
+<em class="property">classmethod </em><code class="descname">missing_dependencies</code><span class="sig-paren">(</span><em>lst</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.missing_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.missing_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given list contains all dependencies.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lst</strong> &#8211; A list of all already resolved bear classes (not
+instances).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A set of missing dependencies.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.name">
+<code class="descname">name</code><em class="property"> = 'Bear'</em><a class="headerlink" href="#coalib.bears.Bear.Bear.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.new_result">
+<code class="descname">new_result</code><a class="headerlink" href="#coalib.bears.Bear.Bear.new_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a partial for creating a result with this bear already bound.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.Bear.Bear.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>*args</em>, <em>*</em>, <em>dependency_results=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.Bear.Bear.run_bear_from_section">
+<code class="descname">run_bear_from_section</code><span class="sig-paren">(</span><em>args</em>, <em>kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.run_bear_from_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.run_bear_from_section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="coalib.bears.Bear.Bear.setup_dependencies">
+<em class="property">static </em><code class="descname">setup_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/Bear.html#Bear.setup_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.Bear.Bear.setup_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a user defined function that can download and set up
+dependencies (via download_cached_file or arbitrary other means) in an
+OS independent way.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.bears.Bear.Bear.source_location">
+<code class="descname">source_location</code><em class="property"> = '/home/coyote/projects/coala/coalib/bears/Bear.py'</em><a class="headerlink" href="#coalib.bears.Bear.Bear.source_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.bears.GlobalBear">
+<span id="coalib-bears-globalbear-module"></span><h2>coalib.bears.GlobalBear module<a class="headerlink" href="#module-coalib.bears.GlobalBear" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.bears.GlobalBear.GlobalBear">
+<em class="property">class </em><code class="descclassname">coalib.bears.GlobalBear.</code><code class="descname">GlobalBear</code><span class="sig-paren">(</span><em>file_dict</em>, <em>section</em>, <em>message_queue</em>, <em>timeout=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/GlobalBear.html#GlobalBear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.GlobalBear.GlobalBear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#coalib.bears.Bear.Bear" title="coalib.bears.Bear.Bear"><code class="xref py py-class docutils literal"><span class="pre">coalib.bears.Bear.Bear</span></code></a></p>
+<p>A GlobalBear analyzes semantic facts across several files.</p>
+<p>The results of a GlobalBear will be presented grouped by the origin Bear.
+Therefore Results spanning across multiple files are allowed and will be
+handled correctly.</p>
+<p>If you are inspecting a single file at a time, you should consider
+using a LocalBear.</p>
+<dl class="staticmethod">
+<dt id="coalib.bears.GlobalBear.GlobalBear.kind">
+<em class="property">static </em><code class="descname">kind</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/GlobalBear.html#GlobalBear.kind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.GlobalBear.GlobalBear.kind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.GlobalBear.GlobalBear.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>*args</em>, <em>*</em>, <em>dependency_results=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/GlobalBear.html#GlobalBear.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.GlobalBear.GlobalBear.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles all files in file_dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dependency_results</strong> &#8211; The dictionary of {bear name:
+result list}.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of Result type.</td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference internal" href="#module-coalib.bears.Bear" title="coalib.bears.Bear"><code class="xref py py-class docutils literal"><span class="pre">coalib.bears.Bear</span></code></a> for <cite>run</cite> method description.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.bears.LocalBear">
+<span id="coalib-bears-localbear-module"></span><h2>coalib.bears.LocalBear module<a class="headerlink" href="#module-coalib.bears.LocalBear" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.bears.LocalBear.LocalBear">
+<em class="property">class </em><code class="descclassname">coalib.bears.LocalBear.</code><code class="descname">LocalBear</code><span class="sig-paren">(</span><em>section: coalib.settings.Section.Section</em>, <em>message_queue</em>, <em>timeout=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/LocalBear.html#LocalBear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.LocalBear.LocalBear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#coalib.bears.Bear.Bear" title="coalib.bears.Bear.Bear"><code class="xref py py-class docutils literal"><span class="pre">coalib.bears.Bear.Bear</span></code></a></p>
+<p>A LocalBear is a Bear that analyzes only one file at once. It therefore can
+not analyze semantical facts over multiple files.</p>
+<p>This has the advantage that it can be highly parallelized. In addition,
+the results from multiple bears for one file can be shown together for that
+file, which is better to grasp for the user. coala takes care of all that.</p>
+<p>Examples for LocalBear&#8217;s could be:</p>
+<ul class="simple">
+<li>A SpaceConsistencyBear that checks every line for trailing whitespaces,
+tabs, etc.</li>
+<li>A VariableNameBear that checks variable names and constant names for
+certain conditions</li>
+</ul>
+<dl class="classmethod">
+<dt id="coalib.bears.LocalBear.LocalBear.get_metadata">
+<em class="property">classmethod </em><code class="descname">get_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/LocalBear.html#LocalBear.get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.LocalBear.LocalBear.get_metadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="coalib.bears.LocalBear.LocalBear.kind">
+<em class="property">static </em><code class="descname">kind</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/LocalBear.html#LocalBear.kind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.LocalBear.LocalBear.kind" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.bears.LocalBear.LocalBear.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>filename</em>, <em>file</em>, <em>*args</em>, <em>*</em>, <em>dependency_results=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/LocalBear.html#LocalBear.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.LocalBear.LocalBear.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles the given file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; The filename of the file</li>
+<li><strong>file</strong> &#8211; The file contents as string array</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of Result</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.bears.meta">
+<span id="coalib-bears-meta-module"></span><h2>coalib.bears.meta module<a class="headerlink" href="#module-coalib.bears.meta" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.bears.meta.bearclass">
+<em class="property">class </em><code class="descclassname">coalib.bears.meta.</code><code class="descname">bearclass</code><span class="sig-paren">(</span><em>clsname</em>, <em>bases</em>, <em>clsattrs</em>, <em>*varargs</em>, <em>*</em>, <em>aspects=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/bears/meta.html#bearclass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.bears.meta.bearclass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">type</span></code></p>
+<p>Metaclass for <a class="reference internal" href="#coalib.bears.Bear.Bear" title="coalib.bears.Bear.Bear"><code class="xref py py-class docutils literal"><span class="pre">coalib.bears.Bear.Bear</span></code></a> and therefore all bear
+classes.</p>
+<p>Pushing bears into the future... ;)</p>
+<dl class="attribute">
+<dt id="coalib.bears.meta.bearclass.aspects">
+<code class="descname">aspects</code><em class="property"> = defaultdict(&lt;function bearclass.&lt;lambda&gt;&gt;, {})</em><a class="headerlink" href="#coalib.bears.meta.bearclass.aspects" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.bears">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-coalib.bears" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coalib.html">coalib package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="coalib.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coalib.bearlib.html">coalib.bearlib package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">coalib.bears package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.bears.BEAR_KIND">coalib.bears.BEAR_KIND module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.bears.Bear">coalib.bears.Bear module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.bears.GlobalBear">coalib.bears.GlobalBear module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.bears.LocalBear">coalib.bears.LocalBear module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.bears.meta">coalib.bears.meta module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.bears">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.collecting.html">coalib.collecting package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.core.html">coalib.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.misc.html">coalib.misc package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.output.html">coalib.output package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.parsing.html">coalib.parsing package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.processes.html">coalib.processes package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.results.html">coalib.results package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.settings.html">coalib.settings package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.testing.html">coalib.testing package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala">coalib.coala module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_ci">coalib.coala_ci module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_delete_orig">coalib.coala_delete_orig module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_format">coalib.coala_format module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_json">coalib.coala_json module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_main">coalib.coala_main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_modes">coalib.coala_modes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="coalib.html">coalib package</a><ul>
+      <li>Previous: <a href="coalib.bearlib.spacing.html" title="previous chapter">coalib.bearlib.spacing package</a></li>
+      <li>Next: <a href="coalib.collecting.html" title="next chapter">coalib.collecting package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/coalib.bears.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

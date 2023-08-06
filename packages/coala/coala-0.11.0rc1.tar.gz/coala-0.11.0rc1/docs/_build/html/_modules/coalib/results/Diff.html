@@ -1,0 +1,768 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.results.Diff &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.results.Diff</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">difflib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">unidiff</span> <span class="k">import</span> <span class="n">PatchSet</span>
+
+<span class="kn">from</span> <span class="nn">coalib.results.LineDiff</span> <span class="k">import</span> <span class="n">LineDiff</span><span class="p">,</span> <span class="n">ConflictError</span>
+<span class="kn">from</span> <span class="nn">coalib.results.SourceRange</span> <span class="k">import</span> <span class="n">SourceRange</span>
+<span class="kn">from</span> <span class="nn">coalib.results.TextRange</span> <span class="k">import</span> <span class="n">TextRange</span>
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">enforce_signature</span><span class="p">,</span> <span class="n">generate_eq</span>
+
+
+<span class="nd">@generate_eq</span><span class="p">(</span><span class="s1">&#39;_file&#39;</span><span class="p">,</span> <span class="s1">&#39;modified&#39;</span><span class="p">,</span> <span class="s1">&#39;rename&#39;</span><span class="p">,</span> <span class="s1">&#39;delete&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="Diff"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff">[docs]</a><span class="k">class</span> <span class="nc">Diff</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Diff result represents a difference for one file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_list</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an empty diff for the given file.</span>
+
+<span class="sd">        :param file_list: The original (unmodified) file as a list of its</span>
+<span class="sd">                          lines.</span>
+<span class="sd">        :param rename:    False or str containing new name of file.</span>
+<span class="sd">        :param delete:    True if file is set to be deleted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="n">file_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rename</span> <span class="o">=</span> <span class="n">rename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete</span> <span class="o">=</span> <span class="n">delete</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Diff.from_string_arrays"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.from_string_arrays">[docs]</a>    <span class="k">def</span> <span class="nf">from_string_arrays</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">file_array_1</span><span class="p">,</span> <span class="n">file_array_2</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a Diff object from two arrays containing strings.</span>
+
+<span class="sd">        If this Diff is applied to the original array, the second array will be</span>
+<span class="sd">        created.</span>
+
+<span class="sd">        :param file_array_1: Original array</span>
+<span class="sd">        :param file_array_2: Array to compare</span>
+<span class="sd">        :param rename:       False or str containing new name of file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">file_array_1</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="n">rename</span><span class="p">)</span>
+
+        <span class="n">matcher</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">SequenceMatcher</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_array_1</span><span class="p">,</span> <span class="n">file_array_2</span><span class="p">)</span>
+        <span class="c1"># We use this because its faster (generator) and doesn&#39;t yield as much</span>
+        <span class="c1"># useless information as get_opcodes.</span>
+        <span class="k">for</span> <span class="n">change_group</span> <span class="ow">in</span> <span class="n">matcher</span><span class="o">.</span><span class="n">get_grouped_opcodes</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">tag</span><span class="p">,</span>
+                 <span class="n">a_index_1</span><span class="p">,</span>
+                 <span class="n">a_index_2</span><span class="p">,</span>
+                 <span class="n">b_index_1</span><span class="p">,</span>
+                 <span class="n">b_index_2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">change_group</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;delete&#39;</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a_index_1</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">a_index_2</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="n">result</span><span class="o">.</span><span class="n">delete_line</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;insert&#39;</span><span class="p">:</span>
+                    <span class="c1"># We add after line, they add before, so dont add 1 here</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">add_lines</span><span class="p">(</span><span class="n">a_index_1</span><span class="p">,</span>
+                                     <span class="n">file_array_2</span><span class="p">[</span><span class="n">b_index_1</span><span class="p">:</span><span class="n">b_index_2</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;replace&#39;</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">change_line</span><span class="p">(</span><span class="n">a_index_1</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                                       <span class="n">file_array_1</span><span class="p">[</span><span class="n">a_index_1</span><span class="p">],</span>
+                                       <span class="n">file_array_2</span><span class="p">[</span><span class="n">b_index_1</span><span class="p">])</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">add_lines</span><span class="p">(</span><span class="n">a_index_1</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                                     <span class="n">file_array_2</span><span class="p">[</span><span class="n">b_index_1</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">b_index_2</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a_index_1</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="n">a_index_2</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                        <span class="n">result</span><span class="o">.</span><span class="n">delete_line</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Diff.from_unified_diff"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.from_unified_diff">[docs]</a>    <span class="k">def</span> <span class="nf">from_unified_diff</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">unified_diff</span><span class="p">,</span> <span class="n">original_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a ``Diff`` object from given unified diff.</span>
+
+<span class="sd">        If the provided unified diff does not contain any patch,</span>
+<span class="sd">        the ``Diff`` object initialized from the original file is</span>
+<span class="sd">        returned.</span>
+
+<span class="sd">        :param unified_diff:  Unified diff string.</span>
+<span class="sd">        :param original_file: The contents of the original file</span>
+<span class="sd">                              (line-splitted).</span>
+<span class="sd">        :raises RuntimeError: Raised when the context lines or the</span>
+<span class="sd">                              lines to be removed do not match in</span>
+<span class="sd">                              the original file and the unified diff.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">patch_set</span> <span class="o">=</span> <span class="n">PatchSet</span><span class="p">(</span><span class="n">unified_diff</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">Diff</span><span class="p">(</span><span class="n">original_file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">patch_set</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">diff</span>
+
+        <span class="c1"># FIXME Handle patches consisting of changes in more than one file</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">patch_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">hunk</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file_line</span> <span class="o">=</span> <span class="n">hunk</span><span class="o">.</span><span class="n">source_start</span>
+            <span class="n">hunk_iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">hunk</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">hunk_iterator</span><span class="p">)</span>
+                    <span class="n">source_code</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">line</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">is_added</span><span class="p">:</span>
+                        <span class="n">add_set</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="c1"># As ``Diff`` does not allow line additions to a</span>
+                        <span class="c1"># position more than one time, add all the</span>
+                        <span class="c1"># consecutive &#39;+&#39; lines at once.</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="k">while</span> <span class="n">line</span><span class="o">.</span><span class="n">is_added</span><span class="p">:</span>
+                                <span class="n">add_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source_code</span><span class="p">)</span>
+                                <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">hunk_iterator</span><span class="p">)</span>
+                                <span class="n">source_code</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">line</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+
+                            <span class="n">diff</span><span class="o">.</span><span class="n">add_lines</span><span class="p">(</span><span class="n">file_line</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">add_set</span><span class="p">)</span>
+
+                        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                            <span class="n">diff</span><span class="o">.</span><span class="n">add_lines</span><span class="p">(</span><span class="n">file_line</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">add_set</span><span class="p">)</span>
+                            <span class="k">break</span>
+
+                    <span class="n">original_line</span> <span class="o">=</span> <span class="n">original_file</span><span class="p">[</span><span class="n">file_line</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">is_removed</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">source_code</span> <span class="o">!=</span> <span class="n">original_line</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                                <span class="s1">&#39;The line to delete does not match with &#39;</span>
+                                <span class="s1">&#39;the line in the original file. &#39;</span>
+                                <span class="s1">&#39;Line to delete: </span><span class="si">{!r}</span><span class="s1">, &#39;</span>
+                                <span class="s1">&#39;Original line #</span><span class="si">{!r}</span><span class="s1">: </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="n">source_code</span><span class="p">,</span>
+                                    <span class="n">file_line</span><span class="p">,</span>
+                                    <span class="n">original_line</span><span class="p">)</span>
+                                <span class="p">)</span>
+                        <span class="n">diff</span><span class="o">.</span><span class="n">delete_line</span><span class="p">(</span><span class="n">file_line</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">source_code</span> <span class="o">!=</span> <span class="n">original_line</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                                <span class="s1">&#39;Context lines do not match. &#39;</span>
+                                <span class="s1">&#39;Line from unified diff: </span><span class="si">{!r}</span><span class="s1">, &#39;</span>
+                                <span class="s1">&#39;Original line #</span><span class="si">{!r}</span><span class="s1">: </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                    <span class="n">source_code</span><span class="p">,</span>
+                                    <span class="n">file_line</span><span class="p">,</span>
+                                    <span class="n">original_line</span><span class="p">)</span>
+                                <span class="p">)</span>
+
+                    <span class="n">file_line</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">diff</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Diff.from_clang_fixit"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.from_clang_fixit">[docs]</a>    <span class="k">def</span> <span class="nf">from_clang_fixit</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">fixit</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a Diff object from a given clang fixit and the file contents.</span>
+
+<span class="sd">        :param fixit: A cindex.Fixit object.</span>
+<span class="sd">        :param file:  A list of lines in the file to apply the fixit to.</span>
+<span class="sd">        :return:      The corresponding Diff object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
+
+        <span class="n">oldvalue</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="n">fixit</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                                  <span class="n">fixit</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="p">])</span>
+        <span class="n">endindex</span> <span class="o">=</span> <span class="n">fixit</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="n">fixit</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">newvalue</span> <span class="o">=</span> <span class="p">(</span><span class="n">oldvalue</span><span class="p">[:</span><span class="n">fixit</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="n">fixit</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span>
+                    <span class="n">oldvalue</span><span class="p">[</span><span class="n">endindex</span><span class="p">:])</span>
+        <span class="n">new_file</span> <span class="o">=</span> <span class="p">(</span><span class="n">file</span><span class="p">[:</span><span class="n">fixit</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">file</span><span class="p">)(</span><span class="n">newvalue</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span> <span class="o">+</span>
+                    <span class="n">file</span><span class="p">[</span><span class="n">fixit</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="p">:])</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_string_arrays</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">new_file</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_change</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_nr</span><span class="p">,</span> <span class="n">min_line</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line_nr</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;line_nr needs to be an integer.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">line_nr</span> <span class="o">&lt;</span> <span class="n">min_line</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;The given line number is not allowed.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">line_nr</span><span class="p">,</span> <span class="n">LineDiff</span><span class="p">())</span>
+
+<div class="viewcode-block" id="Diff.stats"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.stats">[docs]</a>    <span class="k">def</span> <span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns tuple containing number of additions and deletions in the diff.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">additions</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">deletions</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">line_diff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">line_diff</span><span class="o">.</span><span class="n">change</span><span class="p">:</span>
+                <span class="n">additions</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">deletions</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">line_diff</span><span class="o">.</span><span class="n">delete</span><span class="p">:</span>
+                <span class="n">deletions</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">line_diff</span><span class="o">.</span><span class="n">add_after</span><span class="p">:</span>
+                <span class="n">additions</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">line_diff</span><span class="o">.</span><span class="n">add_after</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">additions</span><span class="p">,</span> <span class="n">deletions</span></div>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns total number of additions and deletions in diff.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: string containing new name of the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rename</span>
+
+    <span class="nd">@rename</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">rename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rename</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">False</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param rename: False or string containing new name of file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rename</span> <span class="o">=</span> <span class="n">rename</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: True if file is set to be deleted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delete</span>
+
+    <span class="nd">@delete</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delete</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param delete: True if file is set to be deleted, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_delete</span> <span class="o">=</span> <span class="n">delete</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">original</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the original file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">modified</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the modified file, after applying the Diff to the original.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="n">current_line</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Note that line_nr counts from _1_ although 0 is possible when</span>
+        <span class="c1"># inserting lines before everything</span>
+        <span class="k">for</span> <span class="n">line_nr</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="n">current_line</span><span class="p">:</span><span class="nb">max</span><span class="p">(</span><span class="n">line_nr</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+            <span class="n">linediff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">[</span><span class="n">line_nr</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">linediff</span><span class="o">.</span><span class="n">delete</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">linediff</span><span class="o">.</span><span class="n">change</span> <span class="ow">and</span> <span class="n">line_nr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="n">line_nr</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">linediff</span><span class="o">.</span><span class="n">change</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">linediff</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">linediff</span><span class="o">.</span><span class="n">add_after</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">linediff</span><span class="o">.</span><span class="n">add_after</span><span class="p">)</span>
+
+            <span class="n">current_line</span> <span class="o">=</span> <span class="n">line_nr</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="n">current_line</span><span class="p">:])</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">unified_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a unified diff corresponding to this patch.</span>
+
+<span class="sd">        Note that the unified diff is not deterministic and thus not suitable</span>
+<span class="sd">        for equality comparison.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">difflib</span><span class="o">.</span><span class="n">unified_diff</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">modified</span><span class="p">,</span>
+            <span class="n">tofile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rename</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rename</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__json__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override JSON export, using the unified diff is the easiest thing for</span>
+<span class="sd">        the users.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unified_diff</span>
+
+<div class="viewcode-block" id="Diff.affected_code"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.affected_code">[docs]</a>    <span class="k">def</span> <span class="nf">affected_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a list of SourceRange objects which point to the related code.</span>
+<span class="sd">        Changes on continuous lines will be put into one SourceRange.</span>
+
+<span class="sd">        :param filename: The filename to associate the SourceRange&#39;s to.</span>
+<span class="sd">        :return:         A list of all related SourceRange objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_diff</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Diff.split_diff"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.split_diff">[docs]</a>    <span class="k">def</span> <span class="nf">split_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Splits this diff into small pieces, such that several continuously</span>
+<span class="sd">        altered lines are still together in one diff. All subdiffs will be</span>
+<span class="sd">        yielded.</span>
+
+<span class="sd">        A diff like this with changes being together closely won&#39;t be splitted:</span>
+
+<span class="sd">        &gt;&gt;&gt; diff = Diff.from_string_arrays([     &#39;b&#39;, &#39;c&#39;, &#39;e&#39;],</span>
+<span class="sd">        ...                                [&#39;a&#39;, &#39;b&#39;, &#39;d&#39;, &#39;f&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; len(list(diff.split_diff()))</span>
+<span class="sd">        1</span>
+
+<span class="sd">        If we set the distance to 0, it will be splitted:</span>
+
+<span class="sd">        &gt;&gt;&gt; len(list(diff.split_diff(distance=0)))</span>
+<span class="sd">        2</span>
+
+<span class="sd">        If a negative distance is given, every change will be yielded as an own</span>
+<span class="sd">        diff, even if they are right beneath each other:</span>
+
+<span class="sd">        &gt;&gt;&gt; len(list(diff.split_diff(distance=-1)))</span>
+<span class="sd">        3</span>
+
+<span class="sd">        If a file gets renamed or deleted only, it will be yielded as is:</span>
+
+<span class="sd">        &gt;&gt;&gt; len(list(Diff([], rename=&#39;test&#39;).split_diff()))</span>
+<span class="sd">        1</span>
+
+<span class="sd">        An empty diff will not yield any diffs:</span>
+
+<span class="sd">        &gt;&gt;&gt; len(list(Diff([]).split_diff()))</span>
+<span class="sd">        0</span>
+
+<span class="sd">        :param distance: Number of unchanged lines that are allowed in between</span>
+<span class="sd">                         two changed lines so they get yielded as one diff.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">last_line</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">this_diff</span> <span class="o">=</span> <span class="n">Diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rename</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delete</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">&gt;</span> <span class="n">last_line</span> <span class="o">+</span> <span class="n">distance</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">this_diff</span><span class="o">.</span><span class="n">_changes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">this_diff</span>
+                <span class="n">this_diff</span> <span class="o">=</span> <span class="n">Diff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">,</span> <span class="n">rename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rename</span><span class="p">,</span>
+                                 <span class="n">delete</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delete</span><span class="p">)</span>
+
+            <span class="n">last_line</span> <span class="o">=</span> <span class="n">line</span>
+            <span class="n">this_diff</span><span class="o">.</span><span class="n">_changes</span><span class="p">[</span><span class="n">line</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">[</span><span class="n">line</span><span class="p">]</span>
+
+        <span class="c1"># If the diff contains no line changes, the loop above will not be run</span>
+        <span class="c1"># else, this_diff will never be empty and thus this has to be yielded</span>
+        <span class="c1"># always.</span>
+        <span class="k">yield</span> <span class="n">this_diff</span></div>
+
+<div class="viewcode-block" id="Diff.range"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.range">[docs]</a>    <span class="k">def</span> <span class="nf">range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates a SourceRange spanning over the whole Diff. If something is</span>
+<span class="sd">        added after the 0th line (i.e. before the first line) the first line</span>
+<span class="sd">        will be included in the SourceRange.</span>
+
+<span class="sd">        The range of an empty diff will only affect the filename:</span>
+
+<span class="sd">        &gt;&gt;&gt; range = Diff([]).range(&quot;file&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; range.file is None</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; print(range.start.line)</span>
+<span class="sd">        None</span>
+
+<span class="sd">        :param filename: The filename to associate the SourceRange with.</span>
+<span class="sd">        :return:         A SourceRange object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SourceRange</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">SourceRange</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                       <span class="n">start_line</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">start</span><span class="p">),</span>
+                                       <span class="n">end_line</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds another diff to this one. Will throw an exception if this is not</span>
+<span class="sd">        possible. (This will *not* be done in place.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Diff</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Only diffs can be added to a diff.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rename</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">rename</span> <span class="ow">and</span> <span class="kc">False</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rename</span><span class="p">,</span>
+                                                         <span class="n">other</span><span class="o">.</span><span class="n">rename</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ConflictError</span><span class="p">(</span><span class="s1">&#39;Diffs contain conflicting renamings.&#39;</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">rename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rename</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">rename</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">delete</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delete</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">delete</span>
+
+        <span class="k">for</span> <span class="n">line_nr</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">_changes</span><span class="p">:</span>
+            <span class="n">change</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">_changes</span><span class="p">[</span><span class="n">line_nr</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">delete</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">delete_line</span><span class="p">(</span><span class="n">line_nr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">add_after</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add_lines</span><span class="p">(</span><span class="n">line_nr</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">add_after</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">change</span><span class="o">.</span><span class="n">change</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">change_line</span><span class="p">(</span><span class="n">line_nr</span><span class="p">,</span> <span class="n">change</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">change</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; bool(Diff([]))</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; bool(Diff([], rename=&quot;some&quot;))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; bool(Diff([], delete=True))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; bool(Diff.from_string_arrays([&#39;1&#39;], []))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        :return: False if the patch has no effect at all when applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span> <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delete</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Diff.delete_line"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.delete_line">[docs]</a>    <span class="k">def</span> <span class="nf">delete_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_nr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark the given line nr as deleted. The first line is line number 1.</span>
+
+<span class="sd">        Raises an exception if line number doesn&#39;t exist in the diff.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">line_nr</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;The given line number is out of bounds.&#39;</span><span class="p">)</span>
+
+        <span class="n">linediff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_change</span><span class="p">(</span><span class="n">line_nr</span><span class="p">)</span>
+        <span class="n">linediff</span><span class="o">.</span><span class="n">delete</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">[</span><span class="n">line_nr</span><span class="p">]</span> <span class="o">=</span> <span class="n">linediff</span></div>
+
+<div class="viewcode-block" id="Diff.delete_lines"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.delete_lines">[docs]</a>    <span class="k">def</span> <span class="nf">delete_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_nr_start</span><span class="p">,</span> <span class="n">line_nr_end</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete lines in a specified range, inclusively.</span>
+
+<span class="sd">        The range must be valid, i.e. lines must exist in diff, else an</span>
+<span class="sd">        exception is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">line_nr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">line_nr_start</span><span class="p">,</span> <span class="n">line_nr_end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">delete_line</span><span class="p">(</span><span class="n">line_nr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Diff.add_lines"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.add_lines">[docs]</a>    <span class="k">def</span> <span class="nf">add_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_nr_before</span><span class="p">,</span> <span class="n">lines</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds lines after the given line number.</span>
+
+<span class="sd">        :param line_nr_before: Line number of the line before the additions.</span>
+<span class="sd">                               Use 0 for insert lines before everything.</span>
+<span class="sd">        :param lines:          A list of lines to add.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">lines</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">return</span>  <span class="c1"># No action</span>
+
+        <span class="n">linediff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_change</span><span class="p">(</span><span class="n">line_nr_before</span><span class="p">,</span> <span class="n">min_line</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">linediff</span><span class="o">.</span><span class="n">add_after</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConflictError</span><span class="p">(</span><span class="s1">&#39;Cannot add lines after the given line since &#39;</span>
+                                <span class="s1">&#39;there are already lines.&#39;</span><span class="p">)</span>
+
+        <span class="n">linediff</span><span class="o">.</span><span class="n">add_after</span> <span class="o">=</span> <span class="n">lines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">[</span><span class="n">line_nr_before</span><span class="p">]</span> <span class="o">=</span> <span class="n">linediff</span></div>
+
+<div class="viewcode-block" id="Diff.add_line"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.add_line">[docs]</a>    <span class="k">def</span> <span class="nf">add_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_nr_before</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds line after the given line number.</span>
+
+<span class="sd">        :param line_nr_before: Line number of the line before the addition.</span>
+<span class="sd">                               Use 0 to insert line before everything.</span>
+<span class="sd">        :param line:           Line to add.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_lines</span><span class="p">(</span><span class="n">line_nr_before</span><span class="p">,</span> <span class="p">[</span><span class="n">line</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="Diff.modify_line"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.modify_line">[docs]</a>    <span class="k">def</span> <span class="nf">modify_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_nr</span><span class="p">,</span> <span class="n">replacement</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Changes the given line with the given line number. The replacement will</span>
+<span class="sd">        be there instead.</span>
+
+<span class="sd">        Given an empty diff object:</span>
+
+<span class="sd">        &gt;&gt;&gt; diff = Diff([&#39;Hey there! Gorgeous.\n&#39;,</span>
+<span class="sd">        ...              &quot;It&#39;s nice that we&#39;re here.\n&quot;])</span>
+
+<span class="sd">        We can change a line easily:</span>
+
+<span class="sd">        &gt;&gt;&gt; diff.modify_line(1,</span>
+<span class="sd">        ...                  &#39;Hey there! This is sad.\n&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; diff.modified</span>
+<span class="sd">        [&#39;Hey there! This is sad.\n&#39;, &quot;It&#39;s nice that we&#39;re here.\n&quot;]</span>
+
+<span class="sd">        We can even merge changes within one line:</span>
+
+<span class="sd">        &gt;&gt;&gt; diff.modify_line(1,</span>
+<span class="sd">        ...                  &#39;Hello. :( Gorgeous.\n&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; diff.modified</span>
+<span class="sd">        [&#39;Hello. :( This is sad.\n&#39;, &quot;It&#39;s nice that we&#39;re here.\n&quot;]</span>
+
+<span class="sd">        However, if we change something that has been changed before, we&#39;ll get</span>
+<span class="sd">        a conflict:</span>
+
+<span class="sd">        &gt;&gt;&gt; diff.modify_line(1,  # +ELLIPSIS</span>
+<span class="sd">        ...                  &#39;Hello. This is not ok. Gorgeous.\n&#39;)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">         ...</span>
+<span class="sd">        coalib.results.LineDiff.ConflictError: ...</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">linediff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_change</span><span class="p">(</span><span class="n">line_nr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">linediff</span><span class="o">.</span><span class="n">change</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">linediff</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">replacement</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">replacement</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">linediff</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ConflictError</span><span class="p">(</span><span class="s1">&#39;Cannot merge the given line changes.&#39;</span><span class="p">)</span>
+
+            <span class="n">orig_diff</span> <span class="o">=</span> <span class="n">Diff</span><span class="o">.</span><span class="n">from_string_arrays</span><span class="p">(</span><span class="n">linediff</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                <span class="n">linediff</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">new_diff</span> <span class="o">=</span> <span class="n">Diff</span><span class="o">.</span><span class="n">from_string_arrays</span><span class="p">(</span><span class="n">linediff</span><span class="o">.</span><span class="n">change</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                               <span class="n">replacement</span><span class="p">)</span>
+            <span class="n">replacement</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">orig_diff</span> <span class="o">+</span> <span class="n">new_diff</span><span class="p">)</span><span class="o">.</span><span class="n">modified</span><span class="p">)</span>
+
+        <span class="n">linediff</span><span class="o">.</span><span class="n">change</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">[</span><span class="n">line_nr</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">replacement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_changes</span><span class="p">[</span><span class="n">line_nr</span><span class="p">]</span> <span class="o">=</span> <span class="n">linediff</span></div>
+
+<div class="viewcode-block" id="Diff.change_line"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.change_line">[docs]</a>    <span class="k">def</span> <span class="nf">change_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_nr</span><span class="p">,</span> <span class="n">original_line</span><span class="p">,</span> <span class="n">replacement</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Use of change_line method is deprecated. Instead &#39;</span>
+                      <span class="s1">&#39;use modify_line method, without the original_line &#39;</span>
+                      <span class="s1">&#39;argument&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modify_line</span><span class="p">(</span><span class="n">line_nr</span><span class="p">,</span> <span class="n">replacement</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Diff.replace"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.replace">[docs]</a>    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">range</span><span class="p">,</span> <span class="n">replacement</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replaces a part of text. Allows to span multiple lines.</span>
+
+<span class="sd">        This function uses ``add_lines`` and ``delete_lines`` accordingly, so</span>
+<span class="sd">        calls of those functions on lines given ``range`` affects after usage</span>
+<span class="sd">        or vice versa lead to ``ConflictError``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from coalib.results.TextRange import TextRange</span>
+<span class="sd">        &gt;&gt;&gt; test_text = [&#39;hello\n&#39;, &#39;world\n&#39;, &#39;4lines\n&#39;, &#39;done\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; def replace(range, text):</span>
+<span class="sd">        ...     diff = Diff(test_text)</span>
+<span class="sd">        ...     diff.replace(range, text)</span>
+<span class="sd">        ...     return diff.modified</span>
+<span class="sd">        &gt;&gt;&gt; replace(TextRange.from_values(1, 5, 4, 3), &#39;\nyeah\ncool\nno&#39;)</span>
+<span class="sd">        [&#39;hell\n&#39;, &#39;yeah\n&#39;, &#39;cool\n&#39;, &#39;none\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; replace(TextRange.from_values(2, 1, 3, 5), &#39;b&#39;)</span>
+<span class="sd">        [&#39;hello\n&#39;, &#39;bes\n&#39;, &#39;done\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; replace(TextRange.from_values(1, 6, 4, 3), &#39;&#39;)</span>
+<span class="sd">        [&#39;hellone\n&#39;]</span>
+
+<span class="sd">        :param range:       The ``TextRange`` that gets replaced.</span>
+<span class="sd">        :param replacement: The replacement string. Can be multiline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Remaining parts of the lines not affected by the replace.</span>
+        <span class="n">first_part</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">[</span><span class="nb">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][:</span><span class="nb">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">last_part</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">[</span><span class="nb">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="nb">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_lines</span><span class="p">(</span><span class="nb">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="p">,</span> <span class="nb">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_lines</span><span class="p">(</span><span class="nb">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                       <span class="p">(</span><span class="n">first_part</span> <span class="o">+</span> <span class="n">replacement</span> <span class="o">+</span> <span class="n">last_part</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="kc">True</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Diff.insert"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inserts (multiline) text at arbitrary position.</span>
+
+<span class="sd">        &gt;&gt;&gt; from coalib.results.TextPosition import TextPosition</span>
+<span class="sd">        &gt;&gt;&gt; test_text = [&#39;123\n&#39;, &#39;456\n&#39;, &#39;789\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; def insert(position, text):</span>
+<span class="sd">        ...     diff = Diff(test_text)</span>
+<span class="sd">        ...     diff.insert(position, text)</span>
+<span class="sd">        ...     return diff.modified</span>
+<span class="sd">        &gt;&gt;&gt; insert(TextPosition(2, 3), &#39;woopy doopy&#39;)</span>
+<span class="sd">        [&#39;123\n&#39;, &#39;45woopy doopy6\n&#39;, &#39;789\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; insert(TextPosition(1, 1), &#39;woopy\ndoopy&#39;)</span>
+<span class="sd">        [&#39;woopy\n&#39;, &#39;doopy123\n&#39;, &#39;456\n&#39;, &#39;789\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; insert(TextPosition(2, 4), &#39;\nwoopy\ndoopy\n&#39;)</span>
+<span class="sd">        [&#39;123\n&#39;, &#39;456\n&#39;, &#39;woopy\n&#39;, &#39;doopy\n&#39;, &#39;\n&#39;, &#39;789\n&#39;]</span>
+
+<span class="sd">        :param position: The ``TextPosition`` where to insert text.</span>
+<span class="sd">        :param text:     The text to insert.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">TextRange</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">position</span><span class="p">),</span> <span class="n">text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Diff.remove"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Diff.Diff.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">range</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a piece of text in a given range.</span>
+
+<span class="sd">        &gt;&gt;&gt; from coalib.results.TextRange import TextRange</span>
+<span class="sd">        &gt;&gt;&gt; test_text = [&#39;nice\n&#39;, &#39;try\n&#39;, &#39;bro\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; def remove(range):</span>
+<span class="sd">        ...     diff = Diff(test_text)</span>
+<span class="sd">        ...     diff.remove(range)</span>
+<span class="sd">        ...     return diff.modified</span>
+<span class="sd">        &gt;&gt;&gt; remove(TextRange.from_values(1, 1, 1, 4))</span>
+<span class="sd">        [&#39;e\n&#39;, &#39;try\n&#39;, &#39;bro\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; remove(TextRange.from_values(1, 5, 2, 1))</span>
+<span class="sd">        [&#39;nicetry\n&#39;, &#39;bro\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; remove(TextRange.from_values(1, 3, 3, 2))</span>
+<span class="sd">        [&#39;niro\n&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; remove(TextRange.from_values(2, 1, 2, 1))</span>
+<span class="sd">        [&#39;nice\n&#39;, &#39;try\n&#39;, &#39;bro\n&#39;]</span>
+
+<span class="sd">        :param range: The range to delete.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="nb">range</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

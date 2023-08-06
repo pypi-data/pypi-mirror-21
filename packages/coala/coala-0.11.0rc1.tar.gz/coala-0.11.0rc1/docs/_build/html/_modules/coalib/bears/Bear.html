@@ -1,0 +1,637 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bears.Bear &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bears.Bear</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">makedirs</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span><span class="p">,</span> <span class="n">abspath</span><span class="p">,</span> <span class="n">exists</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">appdirs</span> <span class="k">import</span> <span class="n">user_data_dir</span>
+
+<span class="kn">from</span> <span class="nn">pyprint.Printer</span> <span class="k">import</span> <span class="n">Printer</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="p">(</span><span class="n">enforce_signature</span><span class="p">,</span> <span class="n">classproperty</span><span class="p">,</span>
+                                    <span class="n">get_public_members</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bears.BEAR_KIND</span> <span class="k">import</span> <span class="n">BEAR_KIND</span>
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LogPrinter</span> <span class="k">import</span> <span class="n">LogPrinterMixin</span>
+<span class="kn">from</span> <span class="nn">coalib.results.Result</span> <span class="k">import</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.FunctionMetadata</span> <span class="k">import</span> <span class="n">FunctionMetadata</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Section</span> <span class="k">import</span> <span class="n">Section</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.ConfigurationGathering</span> <span class="k">import</span> <span class="n">get_config_directory</span>
+
+<span class="kn">from</span> <span class="nn">.meta</span> <span class="k">import</span> <span class="n">bearclass</span>
+
+
+<div class="viewcode-block" id="Bear"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear">[docs]</a><span class="k">class</span> <span class="nc">Bear</span><span class="p">(</span><span class="n">Printer</span><span class="p">,</span> <span class="n">LogPrinterMixin</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">bearclass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A bear contains the actual subroutine that is responsible for checking</span>
+<span class="sd">    source code for certain specifications. However it can actually do</span>
+<span class="sd">    whatever it wants with the files it gets. If you are missing some Result</span>
+<span class="sd">    type, feel free to contact us and/or help us extending the coalib.</span>
+
+<span class="sd">    This is the base class for every bear. If you want to write an bear, you</span>
+<span class="sd">    will probably want to look at the GlobalBear and LocalBear classes that</span>
+<span class="sd">    inherit from this class. In any case you&#39;ll want to overwrite at least the</span>
+<span class="sd">    run method. You can send debug/warning/error messages through the</span>
+<span class="sd">    debug(), warn(), err() functions. These will send the</span>
+<span class="sd">    appropriate messages so that they are outputted. Be aware that if you use</span>
+<span class="sd">    err(), you are expected to also terminate the bear run-through</span>
+<span class="sd">    immediately.</span>
+
+<span class="sd">    Settings are available at all times through self.section.</span>
+
+<span class="sd">    To indicate which languages your bear supports, just give it the</span>
+<span class="sd">    ``LANGUAGES`` value which should be a set of string(s):</span>
+
+<span class="sd">    &gt;&gt;&gt; from dependency_management.requirements.PackageRequirement import (</span>
+<span class="sd">    ... PackageRequirement)</span>
+<span class="sd">    &gt;&gt;&gt; from dependency_management.requirements.PipRequirement import (</span>
+<span class="sd">    ... PipRequirement)</span>
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">    ...     LANGUAGES = {&#39;C&#39;, &#39;CPP&#39;,&#39;C#&#39;, &#39;D&#39;}</span>
+
+<span class="sd">    To indicate the requirements of the bear, assign ``REQUIREMENTS`` a set</span>
+<span class="sd">    with instances of ``PackageRequirements``.</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">    ...     REQUIREMENTS = {</span>
+<span class="sd">    ...         PackageRequirement(&#39;pip&#39;, &#39;coala_decorators&#39;, &#39;0.2.1&#39;)}</span>
+
+<span class="sd">    If your bear uses requirements from a manager we have a subclass from,</span>
+<span class="sd">    you can use the subclass, such as ``PipRequirement``, without specifying</span>
+<span class="sd">    manager:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">    ...     REQUIREMENTS = {PipRequirement(&#39;coala_decorators&#39;, &#39;0.2.1&#39;)}</span>
+
+<span class="sd">    To specify additional attributes to your bear, use the following:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">    ...     AUTHORS = {&#39;Jon Snow&#39;}</span>
+<span class="sd">    ...     AUTHORS_EMAILS = {&#39;jon_snow@gmail.com&#39;}</span>
+<span class="sd">    ...     MAINTAINERS = {&#39;Catelyn Stark&#39;}</span>
+<span class="sd">    ...     MAINTAINERS_EMAILS = {&#39;catelyn_stark@gmail.com&#39;}</span>
+<span class="sd">    ...     LICENSE = &#39;AGPL-3.0&#39;</span>
+<span class="sd">    ...     ASCIINEMA_URL = &#39;https://asciinema.org/a/80761&#39;</span>
+
+<span class="sd">    If the maintainers are the same as the authors, they can be omitted:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">    ...     AUTHORS = {&#39;Jon Snow&#39;}</span>
+<span class="sd">    ...     AUTHORS_EMAILS = {&#39;jon_snow@gmail.com&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; SomeBear.maintainers</span>
+<span class="sd">    {&#39;Jon Snow&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; SomeBear.maintainers_emails</span>
+<span class="sd">    {&#39;jon_snow@gmail.com&#39;}</span>
+
+<span class="sd">    If your bear needs to include local files, then specify it giving strings</span>
+<span class="sd">    containing relative file paths to the INCLUDE_LOCAL_FILES set:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">    ...     INCLUDE_LOCAL_FILES = {&#39;checkstyle.jar&#39;, &#39;google_checks.xml&#39;}</span>
+
+<span class="sd">    To keep track easier of what a bear can do, simply tell it to the CAN_FIX</span>
+<span class="sd">    and the CAN_DETECT sets. Possible values:</span>
+
+<span class="sd">    &gt;&gt;&gt; CAN_DETECT = {&#39;Syntax&#39;, &#39;Formatting&#39;, &#39;Security&#39;, &#39;Complexity&#39;, &#39;Smell&#39;,</span>
+<span class="sd">    ... &#39;Unused Code&#39;, &#39;Redundancy&#39;, &#39;Variable Misuse&#39;, &#39;Spelling&#39;,</span>
+<span class="sd">    ... &#39;Memory Leak&#39;, &#39;Documentation&#39;, &#39;Duplication&#39;, &#39;Commented Code&#39;,</span>
+<span class="sd">    ... &#39;Grammar&#39;, &#39;Missing Import&#39;, &#39;Unreachable Code&#39;, &#39;Undefined Element&#39;,</span>
+<span class="sd">    ... &#39;Code Simplification&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; CAN_FIX = {&#39;Syntax&#39;, ...}</span>
+
+<span class="sd">    Specifying something to CAN_FIX makes it obvious that it can be detected</span>
+<span class="sd">    too, so it may be omitted:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">    ...     CAN_DETECT = {&#39;Syntax&#39;, &#39;Security&#39;}</span>
+<span class="sd">    ...     CAN_FIX = {&#39;Redundancy&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; list(sorted(SomeBear.can_detect))</span>
+<span class="sd">    [&#39;Redundancy&#39;, &#39;Security&#39;, &#39;Syntax&#39;]</span>
+
+<span class="sd">    Every bear has a data directory which is unique to that particular bear:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear): pass</span>
+<span class="sd">    &gt;&gt;&gt; class SomeOtherBear(Bear): pass</span>
+<span class="sd">    &gt;&gt;&gt; SomeBear.data_dir == SomeOtherBear.data_dir</span>
+<span class="sd">    False</span>
+
+<span class="sd">    BEAR_DEPS contains bear classes that are to be executed before this bear</span>
+<span class="sd">    gets executed. The results of these bears will then be passed to the</span>
+<span class="sd">    run method as a dict via the dependency_results argument. The dict</span>
+<span class="sd">    will have the name of the Bear as key and the list of its results as</span>
+<span class="sd">    results:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear): pass</span>
+<span class="sd">    &gt;&gt;&gt; class SomeOtherBear(Bear):</span>
+<span class="sd">    ...     BEAR_DEPS = {SomeBear}</span>
+<span class="sd">    &gt;&gt;&gt; SomeOtherBear.BEAR_DEPS</span>
+<span class="sd">    {&lt;class &#39;coalib.bears.Bear.SomeBear&#39;&gt;}</span>
+
+<span class="sd">    Every bear resides in some directory which is specified by the</span>
+<span class="sd">    source_location attribute:</span>
+
+<span class="sd">    &gt;&gt;&gt; class SomeBear(Bear): pass</span>
+<span class="sd">    &gt;&gt;&gt; SomeBear.source_location</span>
+<span class="sd">    &#39;...Bear.py&#39;</span>
+
+<span class="sd">    Every linter bear makes use of an executable tool for its operations.</span>
+<span class="sd">    The SEE_MORE attribute provides a link to the main page of the linter</span>
+<span class="sd">    tool:</span>
+
+<span class="sd">    &gt;&gt;&gt; class PyLintBear(Bear):</span>
+<span class="sd">    ...     SEE_MORE = &#39;https://www.pylint.org/&#39;</span>
+<span class="sd">    &gt;&gt;&gt; PyLintBear.SEE_MORE</span>
+<span class="sd">    &#39;https://www.pylint.org/&#39;</span>
+
+<span class="sd">    In the future, bears will not survive without aspects. aspects are defined</span>
+<span class="sd">    as part of the ``class`` statement&#39;s parameter list. According to the</span>
+<span class="sd">    classic ``CAN_DETECT`` and ``CAN_FIX`` attributes, aspects can either be</span>
+<span class="sd">    only ``&#39;detect&#39;``-able or also ``&#39;fix&#39;``-able:</span>
+
+<span class="sd">    &gt;&gt;&gt; from coalib.bearlib.aspects.Metadata import CommitMessage</span>
+
+<span class="sd">    &gt;&gt;&gt; class aspectsCommitBear(Bear, aspects={</span>
+<span class="sd">    ...         &#39;detect&#39;: [CommitMessage.Shortlog.ColonExistence],</span>
+<span class="sd">    ...         &#39;fix&#39;: [CommitMessage.Shortlog.TrailingPeriod],</span>
+<span class="sd">    ... }):</span>
+<span class="sd">    ...     pass</span>
+
+<span class="sd">    &gt;&gt;&gt; aspectsCommitBear.aspects[&#39;detect&#39;]</span>
+<span class="sd">    [&lt;aspectclass &#39;Root.Metadata.CommitMessage.Shortlog.ColonExistence&#39;&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; aspectsCommitBear.aspects[&#39;fix&#39;]</span>
+<span class="sd">    [&lt;aspectclass &#39;Root.Metadata.CommitMessage.Shortlog.TrailingPeriod&#39;&gt;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">LANGUAGES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">MAINTAINERS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">MAINTAINERS_EMAILS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">PLATFORMS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;any&#39;</span><span class="p">}</span>
+    <span class="n">LICENSE</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">INCLUDE_LOCAL_FILES</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">CAN_DETECT</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">CAN_FIX</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">ASCIINEMA_URL</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">SEE_MORE</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">BEAR_DEPS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="nd">@classproperty</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: The name of the bear</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+
+    <span class="nd">@classproperty</span>
+    <span class="k">def</span> <span class="nf">can_detect</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: A set that contains everything a bear can detect, gathering</span>
+<span class="sd">                 information from what it can fix too.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">CAN_DETECT</span> <span class="o">|</span> <span class="bp">cls</span><span class="o">.</span><span class="n">CAN_FIX</span>
+
+    <span class="nd">@classproperty</span>
+    <span class="k">def</span> <span class="nf">source_location</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: The file path where the bear was fetched from.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getfile</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="nd">@classproperty</span>
+    <span class="k">def</span> <span class="nf">maintainers</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: A set containing ``MAINTAINERS`` if specified, else takes</span>
+<span class="sd">                 ``AUTHORS`` by default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">AUTHORS</span> <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">MAINTAINERS</span> <span class="o">==</span> <span class="nb">set</span><span class="p">()</span> <span class="k">else</span> <span class="bp">cls</span><span class="o">.</span><span class="n">MAINTAINERS</span>
+
+    <span class="nd">@classproperty</span>
+    <span class="k">def</span> <span class="nf">maintainers_emails</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: A set containing ``MAINTAINERS_EMAILS`` if specified, else</span>
+<span class="sd">                 takes ``AUTHORS_EMAILS`` by default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">AUTHORS_EMAILS</span> <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">MAINTAINERS_EMAILS</span> <span class="o">==</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">else</span> <span class="bp">cls</span><span class="o">.</span><span class="n">MAINTAINERS_EMAILS</span><span class="p">)</span>
+
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">section</span><span class="p">:</span> <span class="n">Section</span><span class="p">,</span>
+                 <span class="n">message_queue</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs a new bear.</span>
+
+<span class="sd">        :param section:       The section object where bear settings are</span>
+<span class="sd">                              contained.</span>
+<span class="sd">        :param message_queue: The queue object for messages. Can be ``None``.</span>
+<span class="sd">        :param timeout:       The time the bear is allowed to run. To set no</span>
+<span class="sd">                              time limit, use 0.</span>
+<span class="sd">        :raises TypeError:    Raised when ``message_queue`` is no queue.</span>
+<span class="sd">        :raises RuntimeError: Raised when bear requirements are not fulfilled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Printer</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">message_queue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span> <span class="s1">&#39;put&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;message_queue has to be a Queue or None.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">section</span> <span class="o">=</span> <span class="n">section</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_queue</span> <span class="o">=</span> <span class="n">message_queue</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_dependencies</span><span class="p">()</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">check_prerequisites</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">error_string</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;The bear &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span>
+                            <span class="s1">&#39; does not fulfill all requirements.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">error_string</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">cp</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="p">(</span><span class="n">error_string</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">error_string</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Bear.log_message"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.log_message">[docs]</a>    <span class="k">def</span> <span class="nf">log_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_message</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">message_queue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">log_message</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bear.run"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">dependency_results</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="Bear.run_bear_from_section"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.run_bear_from_section">[docs]</a>    <span class="k">def</span> <span class="nf">run_bear_from_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">create_params_from_section</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The bear </span><span class="si">{}</span><span class="s1"> cannot be executed.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+            <span class="k">return</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bear.execute"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Running bear </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="c1"># If it&#39;s already a list it won&#39;t change it</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_bear_from_section</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">()</span> <span class="o">==</span> <span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Bear </span><span class="si">{}</span><span class="s1"> failed to run on file </span><span class="si">{}</span><span class="s1">. Take a look &#39;</span>
+                          <span class="s1">&#39;at debug messages (`-V`) for further &#39;</span>
+                          <span class="s1">&#39;information.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Bear </span><span class="si">{}</span><span class="s1"> failed to run. Take a look &#39;</span>
+                          <span class="s1">&#39;at debug messages (`-V`) for further &#39;</span>
+                          <span class="s1">&#39;information.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s1">&#39;The bear </span><span class="si">{bear}</span><span class="s1"> raised an exception. If you are the author &#39;</span>
+                <span class="s1">&#39;of this bear, please make sure to catch all exceptions. If &#39;</span>
+                <span class="s1">&#39;not and this error annoys you, you might want to get in &#39;</span>
+                <span class="s1">&#39;contact with the author of this bear.</span><span class="se">\n\n</span><span class="s1">Traceback &#39;</span>
+                <span class="s1">&#39;information is provided below:</span><span class="se">\n\n</span><span class="si">{traceback}</span><span class="s1">&#39;</span>
+                <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bear</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">traceback</span><span class="o">=</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()))</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Bear.kind"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.kind">[docs]</a>    <span class="k">def</span> <span class="nf">kind</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: The kind of the bear</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Bear.get_metadata"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.get_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: Metadata for the run function. However parameters like</span>
+<span class="sd">                 ``self`` or parameters implicitly used by coala (e.g.</span>
+<span class="sd">                 filename for local bears) are already removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">run</span><span class="p">,</span>
+            <span class="n">omit</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;self&#39;</span><span class="p">,</span> <span class="s1">&#39;dependency_results&#39;</span><span class="p">})</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__json__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Override JSON export of ``Bear`` object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># json cannot serialize properties, so drop them</span>
+        <span class="n">_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">get_public_members</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">property</span><span class="p">)}</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+        <span class="n">non_optional_params</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">non_optional_params</span>
+        <span class="n">optional_params</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">optional_params</span>
+        <span class="n">_dict</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;desc&#39;</span><span class="p">:</span> <span class="n">metadata</span><span class="o">.</span><span class="n">desc</span><span class="p">,</span>
+            <span class="s1">&#39;non_optional_params&#39;</span><span class="p">:</span> <span class="p">({</span><span class="n">param</span><span class="p">:</span> <span class="n">non_optional_params</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">0</span><span class="p">]}</span>
+                                    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">non_optional_params</span><span class="p">),</span>
+            <span class="s1">&#39;optional_params&#39;</span><span class="p">:</span> <span class="p">({</span><span class="n">param</span><span class="p">:</span> <span class="n">optional_params</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">0</span><span class="p">]}</span>
+                                <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">optional_params</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">_dict</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Bear.missing_dependencies"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.missing_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">missing_dependencies</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">lst</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the given list contains all dependencies.</span>
+
+<span class="sd">        :param lst: A list of all already resolved bear classes (not</span>
+<span class="sd">                    instances).</span>
+<span class="sd">        :return:    A set of missing dependencies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">BEAR_DEPS</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Bear.get_non_optional_settings"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.get_non_optional_settings">[docs]</a>    <span class="k">def</span> <span class="nf">get_non_optional_settings</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">recurse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method has to determine which settings are needed by this bear.</span>
+<span class="sd">        The user will be prompted for needed settings that are not available</span>
+<span class="sd">        in the settings file so don&#39;t include settings where a default value</span>
+<span class="sd">        would do.</span>
+
+<span class="sd">        Note: This function also queries settings from bear dependencies in</span>
+<span class="sd">        recursive manner. Though circular dependency chains are a challenge to</span>
+<span class="sd">        achieve, this function would never return on them!</span>
+
+<span class="sd">        :param recurse: Get the settings recursively from its dependencies.</span>
+<span class="sd">        :return:        A dictionary of needed settings as keys and a tuple of</span>
+<span class="sd">                        help text and annotation as values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">non_optional_settings</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">recurse</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">dependency</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">BEAR_DEPS</span><span class="p">:</span>
+                <span class="n">non_optional_settings</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="n">dependency</span><span class="o">.</span><span class="n">get_non_optional_settings</span><span class="p">())</span>
+
+        <span class="n">non_optional_settings</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">non_optional_params</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">non_optional_settings</span></div>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Bear.setup_dependencies"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.setup_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">setup_dependencies</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a user defined function that can download and set up</span>
+<span class="sd">        dependencies (via download_cached_file or arbitrary other means) in an</span>
+<span class="sd">        OS independent way.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Bear.check_prerequisites"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.check_prerequisites">[docs]</a>    <span class="k">def</span> <span class="nf">check_prerequisites</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether needed runtime prerequisites of the bear are satisfied.</span>
+
+<span class="sd">        This function gets executed at construction.</span>
+
+<span class="sd">        Section value requirements shall be checked inside the ``run`` method.</span>
+<span class="sd">        &gt;&gt;&gt; from dependency_management.requirements.PipRequirement import (</span>
+<span class="sd">        ... PipRequirement)</span>
+<span class="sd">        &gt;&gt;&gt; class SomeBear(Bear):</span>
+<span class="sd">        ...     REQUIREMENTS = {PipRequirement(&#39;pip&#39;)}</span>
+
+<span class="sd">        &gt;&gt;&gt; SomeBear.check_prerequisites()</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; class SomeOtherBear(Bear):</span>
+<span class="sd">        ...     REQUIREMENTS = {PipRequirement(&#39;really_bad_package&#39;)}</span>
+
+<span class="sd">        &gt;&gt;&gt; SomeOtherBear.check_prerequisites()</span>
+<span class="sd">        &#39;really_bad_package is not installed. You can install it using ...&#39;</span>
+
+<span class="sd">        &gt;&gt;&gt; class anotherBear(Bear):</span>
+<span class="sd">        ...     REQUIREMENTS = {PipRequirement(&#39;bad_package&#39;, &#39;0.0.1&#39;)}</span>
+
+<span class="sd">        &gt;&gt;&gt; anotherBear.check_prerequisites()</span>
+<span class="sd">        &#39;bad_package 0.0.1 is not installed. You can install it using ...&#39;</span>
+
+<span class="sd">        :return: True if prerequisites are satisfied, else False or a string</span>
+<span class="sd">                 that serves a more detailed description of what&#39;s missing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">requirement</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">REQUIREMENTS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">requirement</span><span class="o">.</span><span class="n">is_installed</span><span class="p">():</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">requirement</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; is not installed. You can &#39;</span> <span class="o">+</span> <span class="p">(</span>
+                    <span class="s1">&#39;install it using &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span>
+                    <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">requirement</span><span class="o">.</span><span class="n">install_command</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Bear.get_config_dir"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.get_config_dir">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gives the directory where the configuration file is.</span>
+
+<span class="sd">        :return: Directory of the config file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">get_config_directory</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">section</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Bear.download_cached_file"><a class="viewcode-back" href="../../../coalib.bears.html#coalib.bears.Bear.Bear.download_cached_file">[docs]</a>    <span class="k">def</span> <span class="nf">download_cached_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Downloads the file if needed and caches it for the next time. If a</span>
+<span class="sd">        download happens, the user will be informed.</span>
+
+<span class="sd">        Take a sane simple bear:</span>
+
+<span class="sd">        &gt;&gt;&gt; from queue import Queue</span>
+<span class="sd">        &gt;&gt;&gt; bear = Bear(Section(&quot;a section&quot;), Queue())</span>
+
+<span class="sd">        We can now carelessly query for a neat file that doesn&#39;t exist yet:</span>
+
+<span class="sd">        &gt;&gt;&gt; from os import remove</span>
+<span class="sd">        &gt;&gt;&gt; if exists(join(bear.data_dir, &quot;a_file&quot;)):</span>
+<span class="sd">        ...     remove(join(bear.data_dir, &quot;a_file&quot;))</span>
+<span class="sd">        &gt;&gt;&gt; file = bear.download_cached_file(&quot;https://github.com/&quot;, &quot;a_file&quot;)</span>
+
+<span class="sd">        If we download it again, it&#39;ll be much faster as no download occurs:</span>
+
+<span class="sd">        &gt;&gt;&gt; newfile = bear.download_cached_file(&quot;https://github.com/&quot;, &quot;a_file&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; newfile == file</span>
+<span class="sd">        True</span>
+
+<span class="sd">        :param url:      The URL to download the file from.</span>
+<span class="sd">        :param filename: The filename it should get, e.g. &quot;test.txt&quot;.</span>
+<span class="sd">        :return:         A full path to the file ready for you to use!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">filename</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Downloading </span><span class="si">{filename!r}</span><span class="s1"> for bear </span><span class="si">{bearname}</span><span class="s1"> from </span><span class="si">{url}</span><span class="s1">.&#39;</span>
+                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">bearname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">))</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">16</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">filename</span></div>
+
+    <span class="nd">@classproperty</span>
+    <span class="k">def</span> <span class="nf">data_dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a directory that may be used by the bear to store stuff. Every</span>
+<span class="sd">        bear has an own directory dependent on their name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">abspath</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">user_data_dir</span><span class="p">(</span><span class="s1">&#39;coala-bears&#39;</span><span class="p">),</span> <span class="bp">cls</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">makedirs</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data_dir</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">new_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a partial for creating a result with this bear already bound.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">Result</span><span class="o">.</span><span class="n">from_values</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.results.Result &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.results.Result</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">relpath</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">enforce_signature</span><span class="p">,</span> <span class="n">generate_ordering</span><span class="p">,</span> <span class="n">generate_repr</span><span class="p">,</span> <span class="n">get_public_members</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coalib.bearlib.aspects</span> <span class="k">import</span> <span class="n">aspectbase</span>
+<span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="n">RESULT_SEVERITY</span>
+<span class="kn">from</span> <span class="nn">coalib.results.SourceRange</span> <span class="k">import</span> <span class="n">SourceRange</span>
+
+
+<span class="c1"># Omit additional info, debug message and diffs for brevity</span>
+<span class="nd">@generate_repr</span><span class="p">((</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="nb">hex</span><span class="p">),</span>
+               <span class="s1">&#39;origin&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;affected_code&#39;</span><span class="p">,</span>
+               <span class="p">(</span><span class="s1">&#39;severity&#39;</span><span class="p">,</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">reverse</span><span class="o">.</span><span class="n">get</span><span class="p">),</span>
+               <span class="s1">&#39;confidence&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;message&#39;</span><span class="p">,</span>
+               <span class="p">(</span><span class="s1">&#39;aspect&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">aspect</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">aspect</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span><span class="p">))</span>
+<span class="nd">@generate_ordering</span><span class="p">(</span><span class="s1">&#39;affected_code&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;severity&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;confidence&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;origin&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;message_base&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;message_arguments&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;aspect&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;additional_info&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;debug_msg&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="Result"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Result.Result">[docs]</a><span class="k">class</span> <span class="nc">Result</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A result is anything that has an origin and a message.</span>
+
+<span class="sd">    Optionally it might affect a file.</span>
+
+<span class="sd">    Result messages can also have arguments. The message is python</span>
+<span class="sd">    style formatted with these arguments.</span>
+
+<span class="sd">    &gt;&gt;&gt; r = Result(&#39;origin&#39;,&#39;{arg1} and {arg2}&#39;, \</span>
+<span class="sd">           message_arguments={&#39;arg1&#39;: &#39;foo&#39;, &#39;arg2&#39;: &#39;bar&#39;})</span>
+<span class="sd">    &gt;&gt;&gt; r.message</span>
+<span class="sd">    &#39;foo and bar&#39;</span>
+
+<span class="sd">    Message arguments may be changed later. The result message</span>
+<span class="sd">    will also reflect these changes.</span>
+
+<span class="sd">    &gt;&gt;&gt; r.message_arguments = {&#39;arg1&#39;: &#39;spam&#39;, &#39;arg2&#39;: &#39;eggs&#39;}</span>
+<span class="sd">    &gt;&gt;&gt; r.message</span>
+<span class="sd">    &#39;spam and eggs&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">origin</span><span class="p">,</span>
+                 <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">affected_code</span><span class="p">:</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span><span class="o">=</span><span class="p">(),</span>
+                 <span class="n">severity</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                 <span class="n">additional_info</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">debug_msg</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">diffs</span><span class="p">:</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">confidence</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                 <span class="n">aspect</span><span class="p">:</span> <span class="p">(</span><span class="n">aspectbase</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">message_arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param origin:</span>
+<span class="sd">            Class name or creator object of this object.</span>
+<span class="sd">        :param message:</span>
+<span class="sd">            Base message to show with this result.</span>
+<span class="sd">        :param affected_code:</span>
+<span class="sd">            A tuple of SourceRange objects pointing to related positions in the</span>
+<span class="sd">            source code.</span>
+<span class="sd">        :param severity:</span>
+<span class="sd">            Severity of this result.</span>
+<span class="sd">        :param additional_info:</span>
+<span class="sd">            A long description holding additional information about the issue</span>
+<span class="sd">            and/or how to fix it. You can use this like a manual entry for a</span>
+<span class="sd">            category of issues.</span>
+<span class="sd">        :param debug_msg:</span>
+<span class="sd">            A message which may help the user find out why this result was</span>
+<span class="sd">            yielded.</span>
+<span class="sd">        :param diffs:</span>
+<span class="sd">            A dictionary with filename as key and ``Diff`` object</span>
+<span class="sd">            associated with it as value.</span>
+<span class="sd">        :param confidence:</span>
+<span class="sd">            A number between 0 and 100 describing the likelihood of this result</span>
+<span class="sd">            being a real issue.</span>
+<span class="sd">        :param aspect:</span>
+<span class="sd">            An aspectclass instance which this result is associated to.</span>
+<span class="sd">            Note that this should be a leaf of the aspect tree!</span>
+<span class="sd">            (If you have a node, spend some time figuring out which of</span>
+<span class="sd">            the leafs exactly your result belongs to.)</span>
+<span class="sd">        :param message_arguments:</span>
+<span class="sd">            Arguments to be provided to the base message.</span>
+<span class="sd">        :raises ValueError:</span>
+<span class="sd">            Raised when confidence is not between 0 and 100.</span>
+<span class="sd">        :raises KeyError:</span>
+<span class="sd">            Raised when message_base can not be formatted with</span>
+<span class="sd">            message_arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">origin</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="n">origin</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">if</span> <span class="n">severity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">reverse</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;severity is not a valid RESULT_SEVERITY&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">origin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_base</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_arguments</span> <span class="o">=</span> <span class="n">message_arguments</span>
+        <span class="k">if</span> <span class="n">message_arguments</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message_base</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">message_arguments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug_msg</span> <span class="o">=</span> <span class="n">debug_msg</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">additional_info</span> <span class="o">=</span> <span class="n">additional_info</span>
+        <span class="c1"># Sorting is important for tuple comparison</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">affected_code</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">affected_code</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">severity</span> <span class="o">=</span> <span class="n">severity</span>
+        <span class="k">if</span> <span class="n">confidence</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">confidence</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Value of confidence should be between 0 and 100.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">confidence</span> <span class="o">=</span> <span class="n">confidence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diffs</span> <span class="o">=</span> <span class="n">diffs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">int</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aspect</span> <span class="o">=</span> <span class="n">aspect</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">message_arguments</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message_base</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message_base</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">message_arguments</span><span class="p">)</span>
+
+    <span class="nd">@message</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_base</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="Result.from_values"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Result.Result.from_values">[docs]</a>    <span class="k">def</span> <span class="nf">from_values</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                    <span class="n">origin</span><span class="p">,</span>
+                    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                    <span class="n">line</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">column</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">end_line</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">end_column</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">severity</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                    <span class="n">additional_info</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                    <span class="n">debug_msg</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                    <span class="n">diffs</span><span class="p">:</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">confidence</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                    <span class="n">aspect</span><span class="p">:</span> <span class="p">(</span><span class="n">aspectbase</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">message_arguments</span><span class="p">:</span> <span class="nb">dict</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a result with only one SourceRange with the given start and end</span>
+<span class="sd">        locations.</span>
+
+<span class="sd">        :param origin:</span>
+<span class="sd">            Class name or creator object of this object.</span>
+<span class="sd">        :param message:</span>
+<span class="sd">            Base message to show with this result.</span>
+<span class="sd">        :param message_arguments:</span>
+<span class="sd">            Arguments to be provided to the base message</span>
+<span class="sd">        :param file:</span>
+<span class="sd">            The related file.</span>
+<span class="sd">        :param line:</span>
+<span class="sd">            The first related line in the file. (First line is 1)</span>
+<span class="sd">        :param column:</span>
+<span class="sd">            The column indicating the first character. (First character is 1)</span>
+<span class="sd">        :param end_line:</span>
+<span class="sd">            The last related line in the file.</span>
+<span class="sd">        :param end_column:</span>
+<span class="sd">            The column indicating the last character.</span>
+<span class="sd">        :param severity:</span>
+<span class="sd">            Severity of this result.</span>
+<span class="sd">        :param additional_info:</span>
+<span class="sd">            A long description holding additional information about the issue</span>
+<span class="sd">            and/or how to fix it. You can use this like a manual entry for a</span>
+<span class="sd">            category of issues.</span>
+<span class="sd">        :param debug_msg:</span>
+<span class="sd">            A message which may help the user find out why this result was</span>
+<span class="sd">            yielded.</span>
+<span class="sd">        :param diffs:</span>
+<span class="sd">            A dictionary with filename as key and ``Diff`` object</span>
+<span class="sd">            associated with it as value.</span>
+<span class="sd">        :param confidence:</span>
+<span class="sd">            A number between 0 and 100 describing the likelihood of this result</span>
+<span class="sd">            being a real issue.</span>
+<span class="sd">        :param aspect:</span>
+<span class="sd">            An Aspect object which this result is associated to. Note that this</span>
+<span class="sd">            should be a leaf of the aspect tree! (If you have a node, spend</span>
+<span class="sd">            some time figuring out which of the leafs exactly your result</span>
+<span class="sd">            belongs to.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">range</span> <span class="o">=</span> <span class="n">SourceRange</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">file</span><span class="p">,</span>
+                                        <span class="n">line</span><span class="p">,</span>
+                                        <span class="n">column</span><span class="p">,</span>
+                                        <span class="n">end_line</span><span class="p">,</span>
+                                        <span class="n">end_column</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span>
+                   <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+                   <span class="n">affected_code</span><span class="o">=</span><span class="p">(</span><span class="nb">range</span><span class="p">,),</span>
+                   <span class="n">severity</span><span class="o">=</span><span class="n">severity</span><span class="p">,</span>
+                   <span class="n">additional_info</span><span class="o">=</span><span class="n">additional_info</span><span class="p">,</span>
+                   <span class="n">debug_msg</span><span class="o">=</span><span class="n">debug_msg</span><span class="p">,</span>
+                   <span class="n">diffs</span><span class="o">=</span><span class="n">diffs</span><span class="p">,</span>
+                   <span class="n">confidence</span><span class="o">=</span><span class="n">confidence</span><span class="p">,</span>
+                   <span class="n">aspect</span><span class="o">=</span><span class="n">aspect</span><span class="p">,</span>
+                   <span class="n">message_arguments</span><span class="o">=</span><span class="n">message_arguments</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Result.to_string_dict"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Result.Result.to_string_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_string_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes a dictionary which has all keys and values as strings and</span>
+<span class="sd">        contains all the data that the base Result has.</span>
+
+<span class="sd">        FIXME: diffs are not serialized ATM.</span>
+<span class="sd">        FIXME: Only the first SourceRange of affected_code is serialized. If</span>
+<span class="sd">        there are more, this data is currently missing.</span>
+
+<span class="sd">        :return: Dictionary with keys and values as string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="n">members</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;additional_info&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;debug_msg&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;message&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;message_base&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;message_arguments&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;origin&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;confidence&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">member</span><span class="p">)</span>
+            <span class="n">retval</span><span class="p">[</span><span class="n">member</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">retval</span><span class="p">[</span><span class="s1">&#39;severity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">reverse</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">affected_code</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">retval</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affected_code</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">file</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affected_code</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span>
+            <span class="n">retval</span><span class="p">[</span><span class="s1">&#39;line_nr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span> <span class="k">if</span> <span class="n">line</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">retval</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">],</span> <span class="n">retval</span><span class="p">[</span><span class="s1">&#39;line_nr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="n">retval</span></div>
+
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="Result.apply"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Result.Result.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Applies all contained diffs to the given file_dict. This operation will</span>
+<span class="sd">        be done in-place.</span>
+
+<span class="sd">        :param file_dict: A dictionary containing all files with filename as</span>
+<span class="sd">                          key and all lines a value. Will be modified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">diff</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">diffs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">file_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">modified</span></div>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Joins those patches to one patch.</span>
+
+<span class="sd">        :param other: The other patch.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diffs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">diffs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">diffs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">diffs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">diffs</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">+=</span> <span class="n">other</span><span class="o">.</span><span class="n">diffs</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">diffs</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">diffs</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="Result.overlaps"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Result.Result.overlaps">[docs]</a>    <span class="k">def</span> <span class="nf">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ranges</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determines if the result overlaps with source ranges provided.</span>
+
+<span class="sd">        :param ranges: A list SourceRange objects to check for overlap.</span>
+<span class="sd">        :return:       True if the ranges overlap with the result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ranges</span><span class="p">,</span> <span class="n">SourceRange</span><span class="p">):</span>
+            <span class="n">ranges</span> <span class="o">=</span> <span class="p">[</span><span class="n">ranges</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="nb">range</span> <span class="ow">in</span> <span class="n">ranges</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">self_range</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">affected_code</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">range</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">self_range</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Result.location_repr"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.Result.Result.location_repr">[docs]</a>    <span class="k">def</span> <span class="nf">location_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves a string, that briefly represents</span>
+<span class="sd">        the affected code of the result.</span>
+
+<span class="sd">        :return: A string containing all of the affected files</span>
+<span class="sd">                 separated by a comma.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">affected_code</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;the whole project&#39;</span>
+
+        <span class="c1"># Set important to exclude duplicate file names</span>
+        <span class="n">range_paths</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span>
+                          <span class="k">for</span> <span class="n">sourcerange</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">affected_code</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">relpath</span><span class="p">(</span><span class="n">range_path</span><span class="p">))</span>
+                         <span class="k">for</span> <span class="n">range_path</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">range_paths</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">__json__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_relpath</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">_dict</span> <span class="o">=</span> <span class="n">get_public_members</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">use_relpath</span> <span class="ow">and</span> <span class="n">_dict</span><span class="p">[</span><span class="s1">&#39;diffs&#39;</span><span class="p">]:</span>
+            <span class="n">_dict</span><span class="p">[</span><span class="s1">&#39;diffs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">relpath</span><span class="p">(</span><span class="n">file</span><span class="p">):</span> <span class="n">diff</span>
+                              <span class="k">for</span> <span class="n">file</span><span class="p">,</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">_dict</span><span class="p">[</span><span class="s1">&#39;diffs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">_dict</span><span class="p">[</span><span class="s1">&#39;aspect&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aspect</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span>
+        <span class="k">return</span> <span class="n">_dict</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

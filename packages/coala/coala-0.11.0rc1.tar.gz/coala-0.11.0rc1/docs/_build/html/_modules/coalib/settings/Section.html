@@ -1,0 +1,482 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.settings.Section &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.settings.Section</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">coalib.collecting.Collectors</span> <span class="k">import</span> <span class="n">collect_registered_bears_dirs</span>
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">enforce_signature</span><span class="p">,</span> <span class="n">generate_repr</span>
+<span class="kn">from</span> <span class="nn">coalib.misc.DictUtilities</span> <span class="k">import</span> <span class="n">update_ordered_dict_key</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Setting</span> <span class="k">import</span> <span class="n">Setting</span><span class="p">,</span> <span class="n">path_list</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.Globbing</span> <span class="k">import</span> <span class="n">glob_escape</span>
+
+
+<div class="viewcode-block" id="append_to_sections"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.append_to_sections">[docs]</a><span class="k">def</span> <span class="nf">append_to_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+                       <span class="n">key</span><span class="p">,</span>
+                       <span class="n">value</span><span class="p">,</span>
+                       <span class="n">origin</span><span class="p">,</span>
+                       <span class="n">section_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">from_cli</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">to_append</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Appends the given data as a Setting to a Section with the given name. If</span>
+<span class="sd">    the Section does not exist before it will be created empty.</span>
+
+<span class="sd">    :param sections:     The sections dictionary to add to.</span>
+<span class="sd">    :param key:          The key of the setting to add.</span>
+<span class="sd">    :param value:        The value of the setting to add.</span>
+<span class="sd">    :param origin:       The origin value of the setting to add.</span>
+<span class="sd">    :param section_name: The name of the section to add to.</span>
+<span class="sd">    :param from_cli:     Whether or not this data comes from the CLI.</span>
+<span class="sd">    :param to_append:    The boolean value if setting value needs to be</span>
+<span class="sd">                         appended to a setting in the defaults of a section.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">section_name</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">section_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">section_name</span> <span class="o">=</span> <span class="s1">&#39;default&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+        <span class="n">sections</span><span class="p">[</span><span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">Section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+
+    <span class="n">sections</span><span class="p">[</span><span class="n">section_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Setting</span><span class="p">(</span>
+        <span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">origin</span><span class="p">,</span> <span class="n">from_cli</span><span class="o">=</span><span class="n">from_cli</span><span class="p">,</span> <span class="n">to_append</span><span class="o">=</span><span class="n">to_append</span><span class="p">))</span></div>
+
+
+<span class="nd">@generate_repr</span><span class="p">()</span>
+<div class="viewcode-block" id="Section"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section">[docs]</a><span class="k">class</span> <span class="nc">Section</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class holds a set of settings.</span>
+
+<span class="sd">    To add settings and sections to a dictionary of sections we can use</span>
+<span class="sd">    ``append_to_sections``:</span>
+
+<span class="sd">    &gt;&gt;&gt; sections = {}</span>
+<span class="sd">    &gt;&gt;&gt; append_to_sections(sections,</span>
+<span class="sd">    ...                    &#39;test1&#39;,</span>
+<span class="sd">    ...                    &#39;val&#39;,</span>
+<span class="sd">    ...                    &#39;origin&#39;,</span>
+<span class="sd">    ...                    section_name=&#39;all&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; &#39;all&#39; in sections</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; len(sections)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; str(sections)</span>
+<span class="sd">    &quot;{&#39;all&#39;: &lt;Section object(contents=OrderedDict([(&#39;test1&#39;, ...&quot;</span>
+
+<span class="sd">    We can also add settings that can be appended to other settings. Basically</span>
+<span class="sd">    it takes the default value of the setting which resides in the defaults of</span>
+<span class="sd">    the section and appends the value of the setting in the second and returns</span>
+<span class="sd">    the value of the setting:</span>
+
+<span class="sd">    &gt;&gt;&gt; append_to_sections(sections,</span>
+<span class="sd">    ...                    &#39;test1&#39;,</span>
+<span class="sd">    ...                    &#39;val2&#39;,</span>
+<span class="sd">    ...                    &#39;origin&#39;,</span>
+<span class="sd">    ...                    section_name=&#39;all.python&#39;,</span>
+<span class="sd">    ...                    to_append=True)</span>
+
+<span class="sd">    When the section has no defaults:</span>
+
+<span class="sd">    &gt;&gt;&gt; str(sections[&#39;all.python&#39;][&#39;test1&#39;])</span>
+<span class="sd">    &#39;val2&#39;</span>
+
+<span class="sd">    After assigning defaults:</span>
+
+<span class="sd">    &gt;&gt;&gt; sections[&#39;all.python&#39;].set_default_section(sections)</span>
+<span class="sd">    &gt;&gt;&gt; str(sections[&#39;all.python&#39;][&#39;test1&#39;])</span>
+<span class="sd">    &#39;val, val2&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__prepare_key</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span><span class="p">,</span>
+                 <span class="n">defaults</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">defaults</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">defaults</span><span class="p">,</span> <span class="n">Section</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;defaults has to be a Section object or None.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">defaults</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;defaults may not be self for non-recursivity.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contents</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Section.bear_dirs"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.bear_dirs">[docs]</a>    <span class="k">def</span> <span class="nf">bear_dirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">bear_dirs</span> <span class="o">=</span> <span class="n">path_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bear_dirs&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">bear_dir</span> <span class="ow">in</span> <span class="n">bear_dirs</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bear_dir</span><span class="p">)</span>
+        <span class="n">bear_dir_globs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">glob_escape</span><span class="p">(</span><span class="n">bear_dir</span><span class="p">),</span> <span class="s1">&#39;**&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">bear_dir</span> <span class="ow">in</span> <span class="n">bear_dirs</span><span class="p">]</span>
+        <span class="n">bear_dir_globs</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">glob_escape</span><span class="p">(</span><span class="n">bear_dir</span><span class="p">),</span> <span class="s1">&#39;**&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">bear_dir</span> <span class="ow">in</span> <span class="n">collect_registered_bears_dirs</span><span class="p">(</span><span class="s1">&#39;coalabears&#39;</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">bear_dir_globs</span></div>
+
+<div class="viewcode-block" id="Section.is_enabled"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.is_enabled">[docs]</a>    <span class="k">def</span> <span class="nf">is_enabled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if this section is enabled or, if targets is not empty, if it is</span>
+<span class="sd">        included in the targets list.</span>
+
+<span class="sd">        :param targets: List of target section names, all lower case.</span>
+<span class="sd">        :return:        True or False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;enabled&#39;</span><span class="p">,</span> <span class="s1">&#39;true&#39;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">targets</span></div>
+
+<div class="viewcode-block" id="Section.append"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">setting</span><span class="p">,</span> <span class="n">custom_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">setting</span><span class="p">,</span> <span class="n">Setting</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span>
+        <span class="k">if</span> <span class="n">custom_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__prepare_key</span><span class="p">(</span><span class="n">setting</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__prepare_key</span><span class="p">(</span><span class="n">custom_key</span><span class="p">)</span>
+
+        <span class="c1"># Setting asserts key != &quot;&quot; for us</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">setting</span></div>
+
+<div class="viewcode-block" id="Section.add_or_create_setting"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.add_or_create_setting">[docs]</a>    <span class="k">def</span> <span class="nf">add_or_create_setting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                              <span class="n">setting</span><span class="p">,</span>
+                              <span class="n">custom_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                              <span class="n">allow_appending</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds the value of the setting to an existing setting if there is</span>
+<span class="sd">        already a setting  with the key. Otherwise creates a new setting.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">custom_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">setting</span><span class="o">.</span><span class="n">key</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">custom_key</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__contains__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="ow">and</span> <span class="n">allow_appending</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="n">val</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">setting</span><span class="o">.</span><span class="n">_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">custom_key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">setting</span><span class="p">,</span> <span class="n">custom_key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span></div>
+
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Setting</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a Setting object from the given value if needed and assigns the</span>
+<span class="sd">        setting to the key:</span>
+
+<span class="sd">        &gt;&gt;&gt; section = Section(&#39;section_name&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; section[&#39;key&#39;] = &#39;value&#39;</span>
+<span class="sd">        &gt;&gt;&gt; section[&#39;key&#39;].value</span>
+<span class="sd">        &#39;value&#39;</span>
+
+<span class="sd">        :param key:   Argument whose value is to be set</span>
+<span class="sd">        :param value: The value of the given key</span>
+<span class="sd">        :return:      Returns nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Setting</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">custom_key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># It must be a string since signature is enforced</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Setting</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">joined</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ignore_defaults</span><span class="p">:</span>
+            <span class="c1"># Since we only return the iterator of joined (which doesnt contain</span>
+            <span class="c1"># values) it&#39;s ok to override values here</span>
+            <span class="n">joined</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">joined</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__prepare_key</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Empty keys are invalid.&#39;</span><span class="p">)</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">to_append</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="ow">and</span> <span class="n">res</span><span class="o">.</span><span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">_value</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="n">res</span><span class="o">.</span><span class="n">_value</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">to_append</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="n">res</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ignore_defaults</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;Required index is unavailable.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">value_list</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key</span> <span class="o">+</span> <span class="s1">&#39; : &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+                               <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; {&#39;</span> <span class="o">+</span> <span class="n">value_list</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+
+<div class="viewcode-block" id="Section.get"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the item without raising an exception. If the item is not</span>
+<span class="sd">        available an appropriate Setting will be generated from your provided</span>
+<span class="sd">        default value.</span>
+
+<span class="sd">        :param key:             The key of the setting to return.</span>
+<span class="sd">        :param default:         The default value</span>
+<span class="sd">        :param ignore_defaults: Whether or not to ignore the default section.</span>
+<span class="sd">        :return:                The setting.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Setting</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">default</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Section.copy"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: a deep copy of this object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">contents</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Section.update"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_section</span><span class="p">,</span> <span class="n">ignore_defaults</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Incorporates all keys and values from the other section into this one.</span>
+<span class="sd">        Values from the other section override the ones from this one.</span>
+
+<span class="sd">        Default values from the other section override the default values from</span>
+<span class="sd">        this only.</span>
+
+<span class="sd">        :param other_section:   Another Section</span>
+<span class="sd">        :param ignore_defaults: If set to true, do not take default values from</span>
+<span class="sd">                                other</span>
+<span class="sd">        :return:                self</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_section</span><span class="p">,</span> <span class="n">Section</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;other_section has to be a Section&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other_section</span><span class="o">.</span><span class="n">contents</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_defaults</span> <span class="ow">and</span> <span class="n">other_section</span><span class="o">.</span><span class="n">defaults</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">other_section</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other_section</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Section.update_setting"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.update_setting">[docs]</a>    <span class="k">def</span> <span class="nf">update_setting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                       <span class="n">key</span><span class="p">,</span>
+                       <span class="n">new_key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">new_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates a setting with new values.</span>
+<span class="sd">        :param key:       The old key string.</span>
+<span class="sd">        :param new_key:   The new key string.</span>
+<span class="sd">        :param new_value: The new value for the setting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">new_key</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">contents</span> <span class="o">=</span> <span class="n">update_ordered_dict_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">,</span>
+                                                    <span class="n">key</span><span class="p">,</span>
+                                                    <span class="n">new_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">new_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">new_key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">new_value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">new_value</span></div>
+
+<div class="viewcode-block" id="Section.delete_setting"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.delete_setting">[docs]</a>    <span class="k">def</span> <span class="nf">delete_setting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete a setting</span>
+<span class="sd">        :param key: The key of the setting to be deleted</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Section.set_default_section"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Section.Section.set_default_section">[docs]</a>    <span class="k">def</span> <span class="nf">set_default_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sections</span><span class="p">,</span> <span class="n">section_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find and set the defaults of a section from a dictionary of sections.</span>
+<span class="sd">        The defaults are found on the basis of &#39;.&#39; in section names:</span>
+
+<span class="sd">        &gt;&gt;&gt; sections = {&#39;all&#39;: Section(&#39;all&#39;)}</span>
+<span class="sd">        &gt;&gt;&gt; section = Section(&#39;all.python&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; section.set_default_section(sections)</span>
+<span class="sd">        &gt;&gt;&gt; section.defaults.name</span>
+<span class="sd">        &#39;all&#39;</span>
+<span class="sd">        &gt;&gt;&gt; section = Section(&#39;all.python.syntax&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; section.set_default_section(sections)</span>
+<span class="sd">        &gt;&gt;&gt; section.defaults.name</span>
+<span class="sd">        &#39;all&#39;</span>
+
+<span class="sd">        :param sections:     A dictionary of sections.</span>
+<span class="sd">        :param section_name: Optional section name argument to find the default</span>
+<span class="sd">                             section for. If not given then use member section</span>
+<span class="sd">                             name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default_section</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">section_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">default_section</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">default_section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">sections</span><span class="p">[</span><span class="n">default_section</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_default_section</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="n">default_section</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s1">&#39;cli&#39;</span> <span class="ow">in</span> <span class="n">sections</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s1">&#39;cli&#39;</span><span class="p">:</span>
+            <span class="c1"># CLI section is now default</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.aspects.Redundancy &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.aspects.Redundancy</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">coalib.bearlib.languages</span> <span class="k">import</span> <span class="n">Language</span>
+<span class="kn">from</span> <span class="nn">coalib.bearlib.aspects</span> <span class="k">import</span> <span class="n">Root</span><span class="p">,</span> <span class="n">Taste</span>
+
+
+<span class="nd">@Root</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="Redundancy"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.Redundancy">[docs]</a><span class="k">class</span> <span class="nc">Redundancy</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This aspect describes redundancy in your source code.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Redundant code makes your code harder to read and understand.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Redundant code can usually be removed without consequences.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@Redundancy</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="Clone"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.Clone">[docs]</a><span class="k">class</span> <span class="nc">Clone</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Code clones are multiple pieces of source code in your</span>
+<span class="sd">    codebase that are very similar.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        extern int array_a[];</span>
+<span class="s2">        extern int array_b[];</span>
+
+<span class="s2">        int sum_a = 0;</span>
+
+<span class="s2">        for (int i = 0; i &lt; 4; i++)</span>
+<span class="s2">            sum_a += array_a[i];</span>
+
+<span class="s2">        int average_a = sum_a / 4;</span>
+
+<span class="s2">        int sum_b = 0;</span>
+
+<span class="s2">        for (int i = 0; i &lt; 4; i++)</span>
+<span class="s2">            sum_b += array_b[i];</span>
+
+<span class="s2">        int average_b = sum_b / 4;</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;C++&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Code clones make editing more difficult due to unnecessary increases</span>
+<span class="s2">        in complexity and length.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Usually code clones can be simplified to only one occurrence. In a</span>
+<span class="s2">        lot of cases, both just use different values or variables and can</span>
+<span class="s2">        be reduced to one function called with different parameters or</span>
+<span class="s2">        loops.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+    <span class="n">min_clone_tokens</span> <span class="o">=</span> <span class="n">Taste</span><span class="p">[</span><span class="nb">int</span><span class="p">](</span>
+        <span class="s1">&#39;The number of tokens that have to be equal for it to&#39;</span>
+        <span class="s1">&#39; be detected as a code clone.&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+    <span class="n">ignore_using</span> <span class="o">=</span> <span class="n">Taste</span><span class="p">[</span><span class="nb">bool</span><span class="p">](</span>
+        <span class="s1">&#39;Ignore ``using`` directives in C#.&#39;</span><span class="p">,</span>
+        <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">languages</span><span class="o">=</span><span class="p">(</span><span class="n">Language</span><span class="o">.</span><span class="n">CSharp</span><span class="p">,</span> <span class="p">))</span></div>
+
+
+<span class="nd">@Redundancy</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnusedImport"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnusedImport">[docs]</a><span class="k">class</span> <span class="nc">UnusedImport</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unused imports are any kind of import/include that is not needed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        import sys</span>
+<span class="s2">        import os</span>
+
+<span class="s2">        print(&#39;coala is always written with lowercase c&#39;)</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Redundant imports can cause a performance degrade and make code</span>
+<span class="s2">        harder to understand when reading through it. Also it causes</span>
+<span class="s2">        unneeded dependencies within your modules. In most programming</span>
+<span class="s2">        languages, unused imports may have side effects and that may</span>
+<span class="s2">        be a common false positive. However those should be avoided.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Usually, unused imports can simply be removed.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@Redundancy</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnreachableCode"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnreachableCode">[docs]</a><span class="k">class</span> <span class="nc">UnreachableCode</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unreachable code, sometimes called dead code, is source code that</span>
+<span class="sd">    can never be executed during the program execution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        def func():</span>
+<span class="s2">            return True</span>
+
+<span class="s2">        if func():</span>
+<span class="s2">            a = </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">        else:</span>
+<span class="s2">            a = (i for i in range (5))</span>
+<span class="s2">            print (id(a))</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Unreachable code, makes the source code longer and more difficult</span>
+<span class="s2">        to maintain.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Those pieces of code can easily be removed without consequences.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@UnreachableCode</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnusedFunction"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnusedFunction">[docs]</a><span class="k">class</span> <span class="nc">UnusedFunction</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An unused function is a function that is never called during</span>
+<span class="sd">    code execution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        def func():</span>
+<span class="s2">            pass</span>
+
+<span class="s2">        print(&#39;coala is always written with lowercase c&#39;)</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Unused functions make the source code more longer and more</span>
+<span class="s2">        difficult to maintain.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        It is recommended to remove those functions. If you would like</span>
+<span class="s2">        to access it&#39;s source code later for other purposes, you can</span>
+<span class="s2">        rely on a version control system like Git, Mercurial or</span>
+<span class="s2">        Subversion.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@UnreachableCode</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnreachableStatement"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnreachableStatement">[docs]</a><span class="k">class</span> <span class="nc">UnreachableStatement</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An unreachable statement is a statement that is never executed</span>
+<span class="sd">    during code execution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        def func():</span>
+<span class="s2">            return True</span>
+
+<span class="s2">        if func():</span>
+<span class="s2">            a = </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">        else:</span>
+<span class="s2">            a = (i for i in range (5))</span>
+<span class="s2">            print (id(a))</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        These statement can be remove without harming the code.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@Redundancy</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnusedVariable"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnusedVariable">[docs]</a><span class="k">class</span> <span class="nc">UnusedVariable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unused variables are declared but never used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        a = </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">        print (&#39;coala&#39;)</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Unused variables can degrade performance marginally but more importantly</span>
+<span class="s2">        makes the source code harder to read and understand.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Those variables can easily be removed without consequences.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@UnusedVariable</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnusedParameter"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnusedParameter">[docs]</a><span class="k">class</span> <span class="nc">UnusedParameter</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unused parameters are functions arguments which are never used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        def func(a):</span>
+<span class="s2">            pass</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Unused paramaters are useless to functions, they them difficult to</span>
+<span class="s2">        use and maintain.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        Those parameters can easily be removed without consequences.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@UnusedVariable</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnusedLocalVariable"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnusedLocalVariable">[docs]</a><span class="k">class</span> <span class="nc">UnusedLocalVariable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    These are variable which are defined locally but never used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        def func():</span>
+<span class="s2">            for i in range (5):</span>
+<span class="s2">                a = 0</span>
+<span class="s2">                print ( &#39; coala &#39; )</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        They make the code difficult to maintain.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        These can easily be removed without consequences.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<span class="nd">@UnusedVariable</span><span class="o">.</span><span class="n">subaspect</span>
+<div class="viewcode-block" id="UnusedGlobalVariable"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Redundancy.UnusedGlobalVariable">[docs]</a><span class="k">class</span> <span class="nc">UnusedGlobalVariable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    These are variable which have a global scope but are never used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">docs</span><span class="p">:</span>
+        <span class="n">example</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        a = 0</span>
+<span class="s2">        for i in range (5):</span>
+<span class="s2">            print ( &#39; coala &#39; )</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">example_language</span> <span class="o">=</span> <span class="s1">&#39;python&#39;</span>
+        <span class="n">importance_reason</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        They make the code difficult to maintain.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="n">fix_suggestions</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        These can easily be removed without consequences.</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  <li><a href="../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

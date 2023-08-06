@@ -1,0 +1,290 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.coala_main &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../index.html" />
+    <link rel="up" title="coalib" href="../coalib.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.coala_main</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+
+<span class="kn">from</span> <span class="nn">pyprint.ConsolePrinter</span> <span class="k">import</span> <span class="n">ConsolePrinter</span>
+
+<span class="kn">from</span> <span class="nn">coalib</span> <span class="k">import</span> <span class="n">VERSION</span>
+<span class="kn">from</span> <span class="nn">coalib.misc.Exceptions</span> <span class="k">import</span> <span class="n">get_exitcode</span>
+<span class="kn">from</span> <span class="nn">coalib.output.Interactions</span> <span class="k">import</span> <span class="n">fail_acquire_settings</span>
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LogPrinter</span> <span class="k">import</span> <span class="n">LogPrinter</span>
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LOG_LEVEL</span> <span class="k">import</span> <span class="n">LOG_LEVEL</span>
+<span class="kn">from</span> <span class="nn">coalib.output.Logging</span> <span class="k">import</span> <span class="n">CounterHandler</span>
+<span class="kn">from</span> <span class="nn">coalib.processes.Processing</span> <span class="k">import</span> <span class="n">execute_section</span><span class="p">,</span> <span class="n">simplify_section_result</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.ConfigurationGathering</span> <span class="k">import</span> <span class="n">gather_configuration</span>
+<span class="kn">from</span> <span class="nn">coalib.misc.Caching</span> <span class="k">import</span> <span class="n">FileCache</span>
+<span class="kn">from</span> <span class="nn">coalib.misc.CachingUtilities</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">settings_changed</span><span class="p">,</span> <span class="n">update_settings_db</span><span class="p">,</span> <span class="n">get_settings_hash</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="do_nothing"><a class="viewcode-back" href="../../coalib.html#coalib.coala_main.do_nothing">[docs]</a><span class="k">def</span> <span class="nf">do_nothing</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="run_coala"><a class="viewcode-back" href="../../coalib.html#coalib.coala_main.run_coala">[docs]</a><span class="k">def</span> <span class="nf">run_coala</span><span class="p">(</span><span class="n">console_printer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">log_printer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">print_results</span><span class="o">=</span><span class="n">do_nothing</span><span class="p">,</span>
+              <span class="n">acquire_settings</span><span class="o">=</span><span class="n">fail_acquire_settings</span><span class="p">,</span>
+              <span class="n">print_section_beginning</span><span class="o">=</span><span class="n">do_nothing</span><span class="p">,</span>
+              <span class="n">nothing_done</span><span class="o">=</span><span class="n">do_nothing</span><span class="p">,</span>
+              <span class="n">autoapply</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">force_show_patch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+              <span class="n">arg_parser</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a main method that should be usable for almost all purposes and</span>
+<span class="sd">    reduces executing coala to one function call.</span>
+
+<span class="sd">    :param console_printer:         Object to print messages on the console.</span>
+<span class="sd">    :param log_printer:             A LogPrinter object to use for logging.</span>
+<span class="sd">    :param print_results:           A callback that takes a LogPrinter, a</span>
+<span class="sd">                                    section, a list of results to be printed,</span>
+<span class="sd">                                    the file dict and the mutable file diff</span>
+<span class="sd">                                    dict.</span>
+<span class="sd">    :param acquire_settings:        The method to use for requesting settings.</span>
+<span class="sd">                                    It will get a parameter which is a</span>
+<span class="sd">                                    dictionary with the settings name as key</span>
+<span class="sd">                                    and a list containing a description in [0]</span>
+<span class="sd">                                    and the names of the bears who need this</span>
+<span class="sd">                                    setting in all following indexes.</span>
+<span class="sd">    :param print_section_beginning: A callback that will be called with a</span>
+<span class="sd">                                    section name string whenever analysis of a</span>
+<span class="sd">                                    new section is started.</span>
+<span class="sd">    :param nothing_done:            A callback that will be called with only a</span>
+<span class="sd">                                    log printer that shall indicate that</span>
+<span class="sd">                                    nothing was done.</span>
+<span class="sd">    :param autoapply:               Set this to false to not autoapply any</span>
+<span class="sd">                                    actions. If you set this to `False`,</span>
+<span class="sd">                                    `force_show_patch` will be ignored.</span>
+<span class="sd">    :param force_show_patch:        If set to True, a patch will be always</span>
+<span class="sd">                                    shown. (Using ApplyPatchAction.)</span>
+<span class="sd">    :param arg_parser:              Instance of ArgParser that is used to parse</span>
+<span class="sd">                                    non-setting arguments.</span>
+<span class="sd">    :param arg_list:                The CLI argument list.</span>
+<span class="sd">    :return:                        A dictionary containing a list of results</span>
+<span class="sd">                                    for all analyzed sections as key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">log_printer</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">LogPrinter</span><span class="p">(</span><span class="n">ConsolePrinter</span><span class="p">(),</span> <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span> <span class="k">if</span> <span class="n">log_printer</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="n">log_printer</span><span class="p">)</span>
+
+    <span class="n">exitcode</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">file_dicts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">yielded_results</span> <span class="o">=</span> <span class="n">yielded_unfixed_results</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">did_nothing</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">sections</span><span class="p">,</span> <span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">gather_configuration</span><span class="p">(</span>
+            <span class="n">acquire_settings</span><span class="p">,</span>
+            <span class="n">log_printer</span><span class="p">,</span>
+            <span class="n">arg_parser</span><span class="o">=</span><span class="n">arg_parser</span><span class="p">,</span>
+            <span class="n">arg_list</span><span class="o">=</span><span class="n">arg_list</span><span class="p">)</span>
+
+        <span class="n">log_printer</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Platform </span><span class="si">{}</span><span class="s1"> -- Python </span><span class="si">{}</span><span class="s1">, coalib </span><span class="si">{}</span><span class="s1">&#39;</span>
+                          <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">(),</span> <span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">(),</span>
+                                  <span class="n">VERSION</span><span class="p">))</span>
+
+        <span class="n">settings_hash</span> <span class="o">=</span> <span class="n">get_settings_hash</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+        <span class="n">flush_cache</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flush_cache&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">or</span>
+                           <span class="n">settings_changed</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">settings_hash</span><span class="p">))</span>
+
+        <span class="n">cache</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sections</span><span class="p">[</span><span class="s1">&#39;cli&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;disable_caching&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">cache</span> <span class="o">=</span> <span class="n">FileCache</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">flush_cache</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">section_name</span><span class="p">,</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">section</span><span class="o">.</span><span class="n">is_enabled</span><span class="p">(</span><span class="n">targets</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">autoapply</span><span class="p">:</span>
+                <span class="n">section</span><span class="p">[</span><span class="s1">&#39;default_actions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">elif</span> <span class="n">force_show_patch</span><span class="p">:</span>
+                <span class="n">section</span><span class="p">[</span><span class="s1">&#39;default_actions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;*: ShowPatchAction&#39;</span>
+                <span class="n">section</span><span class="p">[</span><span class="s1">&#39;show_result_on_top&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;yeah&#39;</span>
+
+            <span class="n">print_section_beginning</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+            <span class="n">section_result</span> <span class="o">=</span> <span class="n">execute_section</span><span class="p">(</span>
+                <span class="n">section</span><span class="o">=</span><span class="n">section</span><span class="p">,</span>
+                <span class="n">global_bear_list</span><span class="o">=</span><span class="n">global_bears</span><span class="p">[</span><span class="n">section_name</span><span class="p">],</span>
+                <span class="n">local_bear_list</span><span class="o">=</span><span class="n">local_bears</span><span class="p">[</span><span class="n">section_name</span><span class="p">],</span>
+                <span class="n">print_results</span><span class="o">=</span><span class="n">print_results</span><span class="p">,</span>
+                <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
+                <span class="n">log_printer</span><span class="o">=</span><span class="n">log_printer</span><span class="p">,</span>
+                <span class="n">console_printer</span><span class="o">=</span><span class="n">console_printer</span><span class="p">)</span>
+            <span class="n">yielded</span><span class="p">,</span> <span class="n">yielded_unfixed</span><span class="p">,</span> <span class="n">results</span><span class="p">[</span><span class="n">section_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">simplify_section_result</span><span class="p">(</span><span class="n">section_result</span><span class="p">))</span>
+
+            <span class="n">yielded_results</span> <span class="o">=</span> <span class="n">yielded_results</span> <span class="ow">or</span> <span class="n">yielded</span>
+            <span class="n">yielded_unfixed_results</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">yielded_unfixed_results</span> <span class="ow">or</span> <span class="n">yielded_unfixed</span><span class="p">)</span>
+            <span class="n">did_nothing</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">file_dicts</span><span class="p">[</span><span class="n">section_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">section_result</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="n">update_settings_db</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">settings_hash</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+            <span class="n">cache</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">CounterHandler</span><span class="o">.</span><span class="n">get_num_calls_for_level</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">exitcode</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">did_nothing</span><span class="p">:</span>
+            <span class="n">nothing_done</span><span class="p">(</span><span class="n">log_printer</span><span class="p">)</span>
+            <span class="n">exitcode</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">yielded_unfixed_results</span><span class="p">:</span>
+            <span class="n">exitcode</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">yielded_results</span><span class="p">:</span>
+            <span class="n">exitcode</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+        <span class="n">exitcode</span> <span class="o">=</span> <span class="n">exitcode</span> <span class="ow">or</span> <span class="n">get_exitcode</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">exitcode</span><span class="p">,</span> <span class="n">file_dicts</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

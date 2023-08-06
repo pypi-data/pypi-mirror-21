@@ -1,0 +1,590 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Linter Bears &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="Linter Bears - Advanced Feature Reference" href="Linter_Bears_Advanced.html" />
+    <link rel="prev" title="Guide to Writing a Native Bear" href="Writing_Native_Bears.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="linter-bears">
+<h1>Linter Bears<a class="headerlink" href="#linter-bears" title="Permalink to this headline">¶</a></h1>
+<p>Welcome. This tutorial aims to show you how to use the <code class="docutils literal"><span class="pre">&#64;linter</span></code> decorator in
+order to integrate linters in your bears.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>If you are planning to create a bear that does static code analysis without
+wrapping a tool, please refer to
+<a class="reference internal" href="Writing_Native_Bears.html"><span class="doc">this link instead</span></a>.</p>
+<p class="last">This tutorial takes you through the process of writing a local linter
+Bear. If you want to write a global linter Bear, for a tool that does not
+run once for each file, but only once for the whole project, you can still
+go through the steps and then read about the differences of global linter
+Bears at <a class="reference internal" href="#global-bears"><span class="std std-ref">Global Linter Bears</span></a>.</p>
+</div>
+<div class="section" id="why-is-this-useful">
+<h2>Why is This Useful?<a class="headerlink" href="#why-is-this-useful" title="Permalink to this headline">¶</a></h2>
+<p>A lot of programming languages already have linters implemented, so if your
+project uses a language that does not already have a linter Bear you might
+need to implement it on your own. Don&#8217;t worry, it&#8217;s easy!</p>
+</div>
+<div class="section" id="what-do-we-need">
+<h2>What do we Need?<a class="headerlink" href="#what-do-we-need" title="Permalink to this headline">¶</a></h2>
+<p>First of all, we need the linter executable that we are going to use.
+In this tutorial we will build the PylintTutorialBear so we need Pylint, a
+common linter for Python. It can be found <a class="reference external" href="https://www.pylint.org/">here</a>.
+Since it is a python package we can go ahead and install it with</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip3 install pylint
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing-the-bear">
+<h2>Writing the Bear<a class="headerlink" href="#writing-the-bear" title="Permalink to this headline">¶</a></h2>
+<p>To write a linter bear, we need to create a class that interfaces with our
+linter-bear infrastructure, which is provided via the <code class="docutils literal"><span class="pre">&#64;linter</span></code> decorator.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.Linter</span> <span class="k">import</span> <span class="n">linter</span>
+
+<span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;pylint&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PylintTutorialBear</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>As you can see <code class="docutils literal"><span class="pre">pylint</span></code> is already provided as an executable name which gets
+invoked on the files you are going to lint. This is a mandatory argument for
+the decorator.</p>
+<p>The linter class is only capable of processing one file at a time, for this
+purpose <code class="docutils literal"><span class="pre">pylint</span></code> or the external tool needs to be invoked every time with the
+appropriate parameters. This is done inside <code class="docutils literal"><span class="pre">create_arguments</span></code>,</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;pylint&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PylintTutorialBear</span><span class="p">:</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">create_arguments</span></code> accepts three parameters:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">filename</span></code>: The absolute path to the file that gets processed.</li>
+<li><code class="docutils literal"><span class="pre">file</span></code>: The contents of the file to process, given as a list of lines
+(including the return character).</li>
+<li><code class="docutils literal"><span class="pre">config_file</span></code>: The absolute path to a config file to use. If no config file
+is used, this parameter is <code class="docutils literal"><span class="pre">None</span></code>. Processing of the config file
+is left to the Bear&#8217;s implementation of the method.</li>
+</ul>
+<p>You can use these parameters to construct the command line arguments. The
+linter expects from you to return an argument sequence here. A tuple is
+preferred. We will do this soon for <code class="docutils literal"><span class="pre">PylintTutorialBear</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><code class="docutils literal"><span class="pre">create_arguments</span></code> doesn&#8217;t have to be a static method. In this case you
+also need to prepend <code class="docutils literal"><span class="pre">self</span></code> to the parameters in the signature. Some
+functionality of <code class="docutils literal"><span class="pre">&#64;linter</span></code> is only available inside an instance, like
+logging.</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;Hello world&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>So which are the exact command line arguments we need to provide? It depends on
+the output format of the linter. The <code class="docutils literal"><span class="pre">&#64;linter</span></code> decorator is capable of
+handling different output formats:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">regex</span></code>: This parses issue messages yielded by the underlying executable.</li>
+<li><code class="docutils literal"><span class="pre">corrected</span></code>: Auto-generates results from a fixed/corrected file provided by
+the tool.</li>
+<li><code class="docutils literal"><span class="pre">unified-diff</span></code>: This auto-generates results from a unified-diff output
+provided by the executable.</li>
+</ul>
+<p>In this tutorial we are going to use the <code class="docutils literal"><span class="pre">regex</span></code> output format. But before we
+continue with modifying our bear, we need to figure out how exactly output from
+Pylint looks like so we can parse it accordingly.</p>
+<p>We get some promising output when invoking Pylint with</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ pylint --msg-template=&quot;L{line}C{column}: {msg_id} - {msg}&quot; --reports=n
+</pre></div>
+</div>
+<p>Sample output looks like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">No</span> <span class="n">config</span> <span class="n">file</span> <span class="n">found</span><span class="p">,</span> <span class="n">using</span> <span class="n">default</span> <span class="n">configuration</span>
+<span class="o">*************</span> <span class="n">Module</span> <span class="n">coalib</span><span class="o">.</span><span class="n">bearlib</span><span class="o">.</span><span class="n">abstractions</span><span class="o">.</span><span class="n">Linter</span>
+<span class="n">L1C0</span><span class="p">:</span> <span class="n">C0111</span> <span class="o">-</span> <span class="n">Missing</span> <span class="n">module</span> <span class="n">docstring</span>
+<span class="n">L42C48</span><span class="p">:</span> <span class="n">E1101</span> <span class="o">-</span> <span class="n">Class</span> <span class="s1">&#39;Enum&#39;</span> <span class="n">has</span> <span class="n">no</span> <span class="s1">&#39;reverse&#39;</span> <span class="n">member</span>
+<span class="n">L77C32</span><span class="p">:</span> <span class="n">E1101</span> <span class="o">-</span> <span class="n">Class</span> <span class="s1">&#39;Enum&#39;</span> <span class="n">has</span> <span class="n">no</span> <span class="s1">&#39;reverse&#39;</span> <span class="n">member</span>
+<span class="n">L21C0</span><span class="p">:</span> <span class="n">R0912</span> <span class="o">-</span> <span class="n">Too</span> <span class="n">many</span> <span class="n">branches</span> <span class="p">(</span><span class="mi">16</span><span class="o">/</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">L121C28</span><span class="p">:</span> <span class="n">W0613</span> <span class="o">-</span> <span class="n">Unused</span> <span class="n">argument</span> <span class="s1">&#39;filename&#39;</span>
+</pre></div>
+</div>
+<p>This is something we can parse easily with a regex. So let&#8217;s implement
+everything we&#8217;ve found out so far:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;pylint&#39;</span><span class="p">,</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;regex&#39;</span><span class="p">,</span>
+        <span class="n">output_regex</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;L(?P&lt;line&gt;\d+)C(?P&lt;column&gt;\d+): (?P&lt;message&gt;.*)&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PylintTutorialBear</span><span class="p">:</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;--msg-template=&quot;L</span><span class="si">{line}</span><span class="s1">C</span><span class="si">{column}</span><span class="s1">: </span><span class="si">{msg_id}</span><span class="s1"> - </span><span class="si">{msg}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;--reports=n&#39;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As you can see, the <code class="docutils literal"><span class="pre">output_regex</span></code> parameter consists of named groups. These
+are important to construct a meaningful result that contains the information
+that is printed out.</p>
+<p>For the exact list of named groups <code class="docutils literal"><span class="pre">&#64;linter</span></code> recognizes, see the <a class="reference external" href="https://api.coala.io/en/latest/">API
+documentation</a>.</p>
+<p>For more info generally on regexes, see <a class="reference external" href="https://docs.python.org/3/library/re.html">Python re module</a>.</p>
+<p>Let&#8217;s brush up our <code class="docutils literal"><span class="pre">output_regex</span></code> a bit to use even more information:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="o">...</span>
+        <span class="n">output_regex</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;L(?P&lt;line&gt;\d+)C(?P&lt;column&gt;\d+): &#39;</span>
+                     <span class="sa">r</span><span class="s1">&#39;(?P&lt;message&gt;(?P&lt;origin&gt;.\d+) - .*)&#39;</span><span class="p">),</span>
+        <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we use the issue identification as the origin so we are able to deactivate
+single rules via ignore statements inside code.</p>
+<p>This class is already fully functional and allows to parse issues yielded by
+Pylint!</p>
+</div>
+<div class="section" id="using-severities">
+<h2>Using Severities<a class="headerlink" href="#using-severities" title="Permalink to this headline">¶</a></h2>
+<p>coala uses three types of severities that categorize the importance of a
+result:</p>
+<ul class="simple">
+<li>INFO</li>
+<li>NORMAL</li>
+<li>MAJOR</li>
+</ul>
+<p>which are defined in <code class="docutils literal"><span class="pre">coalib.results.RESULT_SEVERITY</span></code>. Pylint output contains
+severity information we can use:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">L1C0</span><span class="p">:</span> <span class="n">C0111</span> <span class="o">-</span> <span class="n">Missing</span> <span class="n">module</span> <span class="n">docstring</span>
+</pre></div>
+</div>
+<p>The letter before the error code is the severity. In order to make use of the
+severity, we need to define it inside the <code class="docutils literal"><span class="pre">output_regex</span></code> parameter using the
+named group <code class="docutils literal"><span class="pre">severity</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="o">...</span>
+        <span class="n">output_regex</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;L(?P&lt;line&gt;\d+)C(?P&lt;column&gt;\d+): (?P&lt;message&gt;&#39;</span>
+                     <span class="sa">r</span><span class="s1">&#39;(?P&lt;origin&gt;(?P&lt;severity&gt;[WFECRI])\d+) - .*)&#39;</span><span class="p">,</span>
+        <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So we want to take up the severities denoted by the letters <code class="docutils literal"><span class="pre">W</span></code>, <code class="docutils literal"><span class="pre">F</span></code>,
+<code class="docutils literal"><span class="pre">E</span></code>, <code class="docutils literal"><span class="pre">C</span></code>, <code class="docutils literal"><span class="pre">R</span></code> or <code class="docutils literal"><span class="pre">I</span></code>. In order to use this severity value, we will
+first have to provide a map that takes the matched severity letter and maps it
+to a severity value of <code class="docutils literal"><span class="pre">coalib.results.RESULT_SEVERITY</span></code> so coala
+understands it. This is possible via the <code class="docutils literal"><span class="pre">severity_map</span></code> parameter of
+<code class="docutils literal"><span class="pre">&#64;linter</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="n">RESULT_SEVERITY</span>
+
+<span class="nd">@linter</span><span class="p">(</span><span class="o">...</span>
+        <span class="n">severity_map</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;W&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">},</span>
+        <span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">coalib.results.RESULT_SEVERITY</span></code> contains three different values, <code class="docutils literal"><span class="pre">Info</span></code>,
+<code class="docutils literal"><span class="pre">Warning</span></code> and <code class="docutils literal"><span class="pre">Error</span></code> you can use.</p>
+<p>We can test our bear like this</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala --bear-dirs=. --bears=PylintTutorialBear --files=sample.py
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order for the above command to work we should have 2 files in
+our current dir: <code class="docutils literal"><span class="pre">PylintTutorialBear.py</span></code> and our <code class="docutils literal"><span class="pre">sample.py</span></code>.
+Naming is <strong>very</strong> important in coala. coala will look for bears
+by their <strong>filename</strong> and display them based on their
+<strong>classname</strong>.</p>
+</div>
+<p>Normally, providing a severity-map is not needed, as coala has a default
+severity-map which recognizes many common words used for severities. Check out
+the API documentation for keywords supported!</p>
+</div>
+<div class="section" id="suggest-corrections-using-the-corrected-and-unified-diff-output-formats">
+<h2>Suggest Corrections Using the <code class="docutils literal"><span class="pre">corrected</span></code> and <code class="docutils literal"><span class="pre">unified-diff</span></code> Output Formats<a class="headerlink" href="#suggest-corrections-using-the-corrected-and-unified-diff-output-formats" title="Permalink to this headline">¶</a></h2>
+<p>These output formats are very simple to use and don&#8217;t require further setup from
+your side inside the bear:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="o">...</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;corrected&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="o">...</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;unified-diff&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If your underlying tool generates a corrected file or a unified-diff of the
+corrections, the class automatically generates patches for the changes made and
+yields results accordingly.</p>
+</div>
+<div class="section" id="adding-settings-to-our-bear">
+<h2>Adding Settings to our Bear<a class="headerlink" href="#adding-settings-to-our-bear" title="Permalink to this headline">¶</a></h2>
+<p>If we run</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ pylint --help
+</pre></div>
+</div>
+<p>We can see that there is a <code class="docutils literal"><span class="pre">--rcfile</span></code> option which lets us specify a
+configuration file for Pylint. Let&#8217;s add that functionality to our bear.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.Linter</span> <span class="k">import</span> <span class="n">linter</span>
+<span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="n">RESULT_SEVERITY</span>
+
+<span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;pylint&#39;</span><span class="p">,</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;regex&#39;</span><span class="p">,</span>
+        <span class="n">output_regex</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;L(?P&lt;line&gt;\d+)C(?P&lt;column&gt;\d+): &#39;</span>
+                     <span class="sa">r</span><span class="s1">&#39;(?P&lt;message&gt;(?P&lt;severity&gt;[WFECRI]).*)&#39;</span><span class="p">,</span>
+        <span class="n">severity_map</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;W&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">})</span>
+<span class="k">class</span> <span class="nc">PylintTutorialBear</span><span class="p">:</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
+                         <span class="n">pylint_rcfile</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;--msg-template=&quot;L</span><span class="si">{line}</span><span class="s1">C</span><span class="si">{column}</span><span class="s1">: </span><span class="si">{msg_id}</span><span class="s1"> - </span><span class="si">{msg}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;--reports=n&#39;</span><span class="p">,</span> <span class="s1">&#39;--rcfile=&#39;</span> <span class="o">+</span> <span class="n">pylint_rcfile</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Just adding the needed parameter to the <code class="docutils literal"><span class="pre">create_arguments</span></code> signature
+suffices, like you would do for other bears inside <code class="docutils literal"><span class="pre">run</span></code>! Additional
+parameters are automatically queried from the coafile. Let&#8217;s also add some
+documentation together with the metadata attributes:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PylintTutorialBear</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lints your Python files!</span>
+
+<span class="sd">    Checks for coding standards (like well-formed variable names), detects</span>
+<span class="sd">    semantical errors (like true implementation of declared interfaces or</span>
+<span class="sd">    membership via type inference), duplicated code.</span>
+
+<span class="sd">    See http://pylint-messages.wikidot.com/all-messages for a list of all</span>
+<span class="sd">    checks and error codes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
+                         <span class="n">pylint_rcfile</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param pylint_rcfile:</span>
+<span class="sd">            The configuration file Pylint shall use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The documentation of the param is parsed by coala and it will be used
+as help to the user for that specific setting.</p>
+</div>
+</div>
+<div class="section" id="finished-bear">
+<h2>Finished Bear<a class="headerlink" href="#finished-bear" title="Permalink to this headline">¶</a></h2>
+<p>Well done, you made it this far! Now you should have built a fully
+functional Python linter Bear. If you followed the code from this tutorial
+it should look something like this</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.Linter</span> <span class="k">import</span> <span class="n">linter</span>
+<span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="n">RESULT_SEVERITY</span>
+
+<span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;pylint&#39;</span><span class="p">,</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;regex&#39;</span><span class="p">,</span>
+        <span class="n">output_regex</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;L(?P&lt;line&gt;\d+)C(?P&lt;column&gt;\d+): &#39;</span>
+                     <span class="sa">r</span><span class="s1">&#39;(?P&lt;message&gt;(?P&lt;severity&gt;[WFECRI]).*)&#39;</span><span class="p">,</span>
+        <span class="n">severity_map</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;W&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">})</span>
+<span class="k">class</span> <span class="nc">PylintTutorialBear</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lints your Python files!</span>
+
+<span class="sd">    Checks for coding standards (like well-formed variable names), detects</span>
+<span class="sd">    semantical errors (like true implementation of declared interfaces or</span>
+<span class="sd">    membership via type inference), duplicated code.</span>
+
+<span class="sd">    See http://pylint-messages.wikidot.com/all-messages for a list of all</span>
+<span class="sd">    checks and error codes.</span>
+
+<span class="sd">    https://pylint.org/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
+                         <span class="n">pylint_rcfile</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param pylint_rcfile:</span>
+<span class="sd">            The configuration file Pylint shall use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;--msg-template=&quot;L</span><span class="si">{line}</span><span class="s1">C</span><span class="si">{column}</span><span class="s1">: </span><span class="si">{msg_id}</span><span class="s1"> - </span><span class="si">{msg}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;--reports=n&#39;</span><span class="p">,</span> <span class="s1">&#39;--rcfile=&#39;</span> <span class="o">+</span> <span class="n">pylint_rcfile</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-metadata-attributes">
+<h2>Adding Metadata Attributes<a class="headerlink" href="#adding-metadata-attributes" title="Permalink to this headline">¶</a></h2>
+<p>Now we need to add some more precious information to our bear. This helps
+by giving more information about each bear and also helps some functions
+gather information by using these values. Our bear now looks like:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.Linter</span> <span class="k">import</span> <span class="n">linter</span>
+<span class="kn">from</span> <span class="nn">dependency_management.requirements.PipRequirement</span> <span class="k">import</span> <span class="n">PipRequirement</span>
+<span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="n">RESULT_SEVERITY</span>
+
+<span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;pylint&#39;</span><span class="p">,</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;regex&#39;</span><span class="p">,</span>
+        <span class="n">output_regex</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;L(?P&lt;line&gt;\d+)C(?P&lt;column&gt;\d+): &#39;</span>
+                     <span class="sa">r</span><span class="s1">&#39;(?P&lt;message&gt;(?P&lt;severity&gt;[WFECRI]).*)&#39;</span><span class="p">,</span>
+        <span class="n">severity_map</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;W&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                      <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                      <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">})</span>
+<span class="k">class</span> <span class="nc">PylintTutorialBear</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lints your Python files!</span>
+
+<span class="sd">    Checks for coding standards (like well-formed variable names), detects</span>
+<span class="sd">    semantical errors (like true implementation of declared interfaces or</span>
+<span class="sd">    membership via type inference), duplicated code.</span>
+
+<span class="sd">    See http://pylint-messages.wikidot.com/all-messages for a list of all</span>
+<span class="sd">    checks and error codes.</span>
+
+<span class="sd">    https://pylint.org/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">LANGUAGES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Python&quot;</span><span class="p">,</span> <span class="s2">&quot;Python 2&quot;</span><span class="p">,</span> <span class="s2">&quot;Python 3&quot;</span><span class="p">}</span>
+    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;pylint&#39;</span><span class="p">,</span> <span class="s1">&#39;1.*&#39;</span><span class="p">)}</span>
+    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;The coala developers&#39;</span><span class="p">}</span>
+    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;coala-devel@googlegroups.com&#39;</span><span class="p">}</span>
+    <span class="n">LICENSE</span> <span class="o">=</span> <span class="s1">&#39;AGPL-3.0&#39;</span>
+    <span class="n">CAN_DETECT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Unused Code&#39;</span><span class="p">,</span> <span class="s1">&#39;Formatting&#39;</span><span class="p">,</span> <span class="s1">&#39;Duplication&#39;</span><span class="p">,</span> <span class="s1">&#39;Security&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;Syntax&#39;</span><span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
+                         <span class="n">pylint_rcfile</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">):</span>
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      :param pylint_rcfile:</span>
+<span class="sd">          The configuration file Pylint shall use.</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;--msg-template=&quot;L</span><span class="si">{line}</span><span class="s1">C</span><span class="si">{column}</span><span class="s1">: </span><span class="si">{msg_id}</span><span class="s1"> - </span><span class="si">{msg}</span><span class="s1">&quot;&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;--reports=n&#39;</span><span class="p">,</span> <span class="s1">&#39;--rcfile=&#39;</span> <span class="o">+</span> <span class="n">pylint_rcfile</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-and-testing-our-bear">
+<h2>Running and Testing our Bear<a class="headerlink" href="#running-and-testing-our-bear" title="Permalink to this headline">¶</a></h2>
+<p>By running</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala --bear-dirs=. --bears=PylintTutorialBear -B
+</pre></div>
+</div>
+<p>We can see that our Bear setting is documented properly. To use coala
+with our Bear on <cite>sample.py</cite> we run</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala --bear-dirs=. --bears=PylintTutorialBear --files=sample.py
+</pre></div>
+</div>
+<p>To use our <cite>pylint_rcfile</cite> setting we can do</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala --bear-dirs=. --bears=PythonTutorialBear \
+&gt; -S pylint_rcfile=my_rcfile --files=sample.py
+</pre></div>
+</div>
+<p>You now know how to write a linter Bear and also how to use it in your
+project.</p>
+<p>Congratulations!</p>
+</div>
+<div class="section" id="global-linter-bears">
+<span id="global-bears"></span><h2>Global Linter Bears<a class="headerlink" href="#global-linter-bears" title="Permalink to this headline">¶</a></h2>
+<p>Some linting tools do not run on file level, i.e. once for each file, but on
+project level. They might check some properties of the directory structure or
+only check one specific file like the <code class="docutils literal"><span class="pre">setup.py</span></code>.</p>
+<p>For these tools we need a <code class="docutils literal"><span class="pre">GlobalBear</span></code> and we can also use <code class="docutils literal"><span class="pre">&#64;linter</span></code> to
+give us one, by passing the parameter <code class="docutils literal"><span class="pre">global_bear=True</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.Linter</span> <span class="k">import</span> <span class="n">linter</span>
+
+<span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;some_tool&#39;</span><span class="p">,</span>
+        <span class="n">global_bear</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">output_format</span><span class="o">=</span><span class="s1">&#39;regex&#39;</span><span class="p">,</span>
+        <span class="n">output_regex</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;&lt;filename&gt;: &lt;message&gt;&#39;&#39;)</span>
+<span class="k">class</span> <span class="nc">SomeToolBear</span><span class="p">:</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">config_file</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">create_arguments</span></code> method takes no <code class="docutils literal"><span class="pre">filename</span></code> and <code class="docutils literal"><span class="pre">file</span></code> in this case
+since there is no file context. You can still make coala aware of the file an
+issue was detected in, by using the <code class="docutils literal"><span class="pre">filename</span></code> named group in
+your <code class="docutils literal"><span class="pre">output_regex</span></code> if relevant to the wrapped tool.</p>
+</div>
+<div class="section" id="where-to-find-more">
+<h2>Where to Find More...<a class="headerlink" href="#where-to-find-more" title="Permalink to this headline">¶</a></h2>
+<p>If you need more information about the <code class="docutils literal"><span class="pre">&#64;linter</span></code> decorator, refer to the <a class="reference external" href="http://api.coala.io/en/latest/coalib.bearlib.abstractions.html#module-coalib.bearlib.abstractions.Linter">API
+documentation</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Writing Linter Bears</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#why-is-this-useful">Why is This Useful?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-do-we-need">What do we Need?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-the-bear">Writing the Bear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-severities">Using Severities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#suggest-corrections-using-the-corrected-and-unified-diff-output-formats">Suggest Corrections Using the <code class="docutils literal"><span class="pre">corrected</span></code> and <code class="docutils literal"><span class="pre">unified-diff</span></code> Output Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-settings-to-our-bear">Adding Settings to our Bear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#finished-bear">Finished Bear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-metadata-attributes">Adding Metadata Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-and-testing-our-bear">Running and Testing our Bear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#global-linter-bears">Global Linter Bears</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#where-to-find-more">Where to Find More...</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Writing_Native_Bears.html" title="previous chapter">Guide to Writing a Native Bear</a></li>
+      <li>Next: <a href="Linter_Bears_Advanced.html" title="next chapter">Linter Bears - Advanced Feature Reference</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/Writing_Linter_Bears.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.results.result_actions.ShowPatchAction &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib" href="../../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.results.result_actions.ShowPatchAction</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">difflib</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">relpath</span><span class="p">,</span> <span class="n">join</span>
+
+<span class="kn">from</span> <span class="nn">pyprint.ConsolePrinter</span> <span class="k">import</span> <span class="n">ConsolePrinter</span>
+
+<span class="kn">from</span> <span class="nn">coalib.results.Diff</span> <span class="k">import</span> <span class="n">ConflictError</span>
+<span class="kn">from</span> <span class="nn">coalib.results.Result</span> <span class="k">import</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.ResultAction</span> <span class="k">import</span> <span class="n">ResultAction</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">enforce_signature</span>
+
+
+<div class="viewcode-block" id="format_line"><a class="viewcode-back" href="../../../../coalib.results.result_actions.html#coalib.results.result_actions.ApplyPatchAction.format_line">[docs]</a><span class="k">def</span> <span class="nf">format_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">real_nr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">sign</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">,</span> <span class="n">mod_nr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;|</span><span class="si">{:&gt;4}{}{:&gt;4}</span><span class="s1">|</span><span class="si">{:1}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">real_nr</span><span class="p">,</span>
+                                         <span class="n">sign</span><span class="p">,</span>
+                                         <span class="n">mod_nr</span><span class="p">,</span>
+                                         <span class="n">symbol</span><span class="p">,</span>
+                                         <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="print_from_name"><a class="viewcode-back" href="../../../../coalib.results.result_actions.html#coalib.results.result_actions.ApplyPatchAction.print_from_name">[docs]</a><span class="k">def</span> <span class="nf">print_from_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+    <span class="n">printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">real_nr</span><span class="o">=</span><span class="s1">&#39;----&#39;</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_to_name"><a class="viewcode-back" href="../../../../coalib.results.result_actions.html#coalib.results.result_actions.ApplyPatchAction.print_to_name">[docs]</a><span class="k">def</span> <span class="nf">print_to_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+    <span class="n">printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">mod_nr</span><span class="o">=</span><span class="s1">&#39;++++&#39;</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_beautified_diff"><a class="viewcode-back" href="../../../../coalib.results.result_actions.html#coalib.results.result_actions.ApplyPatchAction.print_beautified_diff">[docs]</a><span class="k">def</span> <span class="nf">print_beautified_diff</span><span class="p">(</span><span class="n">difflines</span><span class="p">,</span> <span class="n">printer</span><span class="p">):</span>
+    <span class="n">current_line_added</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">current_line_subtracted</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">difflines</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;@@&#39;</span><span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">):</span><span class="n">line</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)]</span>
+            <span class="n">subtracted</span><span class="p">,</span> <span class="n">added</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
+            <span class="n">current_line_added</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">added</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">current_line_subtracted</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">subtracted</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;---&#39;</span><span class="p">):</span>
+            <span class="n">print_from_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;+++&#39;</span><span class="p">):</span>
+            <span class="n">print_to_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="mi">4</span><span class="p">:])</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">):</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_line</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                                      <span class="n">mod_nr</span><span class="o">=</span><span class="n">current_line_added</span><span class="p">,</span>
+                                      <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">),</span>
+                          <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
+            <span class="n">current_line_added</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">):</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_line</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                                      <span class="n">real_nr</span><span class="o">=</span><span class="n">current_line_subtracted</span><span class="p">,</span>
+                                      <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">),</span>
+                          <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+            <span class="n">current_line_subtracted</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_line</span><span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
+                                      <span class="n">real_nr</span><span class="o">=</span><span class="n">current_line_subtracted</span><span class="p">,</span>
+                                      <span class="n">mod_nr</span><span class="o">=</span><span class="n">current_line_added</span><span class="p">,</span>
+                                      <span class="n">symbol</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">))</span>
+            <span class="n">current_line_subtracted</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">current_line_added</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="ShowPatchAction"><a class="viewcode-back" href="../../../../coalib.results.result_actions.html#coalib.results.result_actions.ApplyPatchAction.ShowPatchAction">[docs]</a><span class="k">class</span> <span class="nc">ShowPatchAction</span><span class="p">(</span><span class="n">ResultAction</span><span class="p">):</span>
+
+    <span class="n">SUCCESS_MESSAGE</span> <span class="o">=</span> <span class="s1">&#39;Displayed patch successfully.&#39;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="ShowPatchAction.is_applicable"><a class="viewcode-back" href="../../../../coalib.results.result_actions.html#coalib.results.result_actions.ApplyPatchAction.ShowPatchAction.is_applicable">[docs]</a>    <span class="k">def</span> <span class="nf">is_applicable</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="n">Result</span><span class="p">,</span> <span class="n">original_file_dict</span><span class="p">,</span> <span class="n">file_diff_dict</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">diffs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;This result has no patch attached.&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Needed so the addition is run for all patches -&gt; ConflictError</span>
+            <span class="n">nonempty_patches</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">diffs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">diff</span> <span class="ow">and</span> <span class="p">(</span><span class="n">filename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_diff_dict</span> <span class="ow">or</span>
+                             <span class="n">diff</span> <span class="o">+</span> <span class="n">file_diff_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">!=</span>
+                             <span class="n">file_diff_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]):</span>
+                    <span class="n">nonempty_patches</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">nonempty_patches</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="s1">&#39;The given patches do not change anything anymore.&#39;</span>
+
+        <span class="k">except</span> <span class="n">ConflictError</span> <span class="k">as</span> <span class="n">ce</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;Two or more patches conflict with &#39;</span>
+                    <span class="s1">&#39;each other: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ce</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="ShowPatchAction.apply"><a class="viewcode-back" href="../../../../coalib.results.result_actions.html#coalib.results.result_actions.ApplyPatchAction.ShowPatchAction.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+              <span class="n">result</span><span class="p">,</span>
+              <span class="n">original_file_dict</span><span class="p">,</span>
+              <span class="n">file_diff_dict</span><span class="p">,</span>
+              <span class="n">colored</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+              <span class="n">show_result_on_top</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show patch</span>
+
+<span class="sd">        :param colored:</span>
+<span class="sd">            Whether or not to use colored output.</span>
+<span class="sd">        :param show_result_on_top:</span>
+<span class="sd">            Set this to True if you want to show the result info on top.</span>
+<span class="sd">            (Useful for e.g. coala_ci.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">printer</span> <span class="o">=</span> <span class="n">ConsolePrinter</span><span class="p">(</span><span class="n">colored</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">show_result_on_top</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">coalib.output.ConsoleInteraction</span> <span class="k">import</span> <span class="n">print_result</span>
+            <span class="c1"># Most of the params are empty because they&#39;re unneeded in</span>
+            <span class="c1"># noninteractive mode. Yes, this cries for a refactoring...</span>
+            <span class="n">print_result</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">{},</span> <span class="n">result</span><span class="p">,</span> <span class="p">{},</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">this_diff</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">diffs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="n">to_filename</span> <span class="o">=</span> <span class="n">this_diff</span><span class="o">.</span><span class="n">rename</span> <span class="k">if</span> <span class="n">this_diff</span><span class="o">.</span><span class="n">rename</span> <span class="k">else</span> <span class="n">filename</span>
+            <span class="n">to_filename</span> <span class="o">=</span> <span class="s1">&#39;/dev/null&#39;</span> <span class="k">if</span> <span class="n">this_diff</span><span class="o">.</span><span class="n">delete</span> <span class="k">else</span> <span class="n">to_filename</span>
+            <span class="n">original_file</span> <span class="o">=</span> <span class="n">original_file_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">current_file</span> <span class="o">=</span> <span class="n">file_diff_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">modified</span>
+                <span class="n">new_file</span> <span class="o">=</span> <span class="p">(</span><span class="n">file_diff_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">+</span> <span class="n">this_diff</span><span class="p">)</span><span class="o">.</span><span class="n">modified</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="n">current_file</span> <span class="o">=</span> <span class="n">original_file</span>
+                <span class="n">new_file</span> <span class="o">=</span> <span class="n">this_diff</span><span class="o">.</span><span class="n">modified</span>
+
+            <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">current_file</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_file</span><span class="p">):</span>
+                <span class="n">print_beautified_diff</span><span class="p">(</span><span class="n">difflib</span><span class="o">.</span><span class="n">unified_diff</span><span class="p">(</span><span class="n">current_file</span><span class="p">,</span>
+                                                           <span class="n">new_file</span><span class="p">,</span>
+                                                           <span class="n">fromfile</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+                                                           <span class="n">tofile</span><span class="o">=</span><span class="n">to_filename</span><span class="p">),</span>
+                                      <span class="n">printer</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">filename</span> <span class="o">!=</span> <span class="n">to_filename</span><span class="p">:</span>
+                <span class="n">print_from_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="n">join</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">relpath</span><span class="p">(</span><span class="n">filename</span><span class="p">)))</span>
+                <span class="n">print_to_name</span><span class="p">(</span><span class="n">printer</span><span class="p">,</span> <span class="n">join</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">relpath</span><span class="p">(</span><span class="n">to_filename</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">file_diff_dict</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

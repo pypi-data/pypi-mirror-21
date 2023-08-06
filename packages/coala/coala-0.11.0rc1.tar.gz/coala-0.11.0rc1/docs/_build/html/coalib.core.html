@@ -1,0 +1,1031 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.core package &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="index.html" />
+    <link rel="up" title="coalib package" href="coalib.html" />
+    <link rel="next" title="coalib.misc package" href="coalib.misc.html" />
+    <link rel="prev" title="coalib.collecting package" href="coalib.collecting.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="coalib-core-package">
+<h1>coalib.core package<a class="headerlink" href="#coalib-core-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coalib.core.Bear">
+<span id="coalib-core-bear-module"></span><h2>coalib.core.Bear module<a class="headerlink" href="#module-coalib.core.Bear" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.core.Bear.Bear">
+<em class="property">class </em><code class="descclassname">coalib.core.Bear.</code><code class="descname">Bear</code><span class="sig-paren">(</span><em>section: coalib.settings.Section.Section</em>, <em>file_dict: dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A bear contains the actual subroutine that is responsible for checking
+source code for certain specifications. However, it can actually do
+whatever it wants with the files it gets.</p>
+<p>This is the base class for every bear. If you want to write a bear, you
+will probably want to look at the <code class="docutils literal"><span class="pre">ProjectBear</span></code> and <code class="docutils literal"><span class="pre">FileBear</span></code> classes
+that inherit from this class.</p>
+<p>To indicate which languages your bear supports, just give it the
+<code class="docutils literal"><span class="pre">LANGUAGES</span></code> value which should be a set of string(s):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">LANGUAGES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;CPP&#39;</span><span class="p">,</span> <span class="s1">&#39;C#&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To indicate the requirements of the bear, assign <code class="docutils literal"><span class="pre">REQUIREMENTS</span></code> a set
+with instances of <code class="docutils literal"><span class="pre">PackageRequirements</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dependency_management.requirements.PackageRequirement</span> <span class="k">import</span> <span class="p">(</span>
+<span class="gp">... </span>    <span class="n">PackageRequirement</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="n">PackageRequirement</span><span class="p">(</span><span class="s1">&#39;pip&#39;</span><span class="p">,</span> <span class="s1">&#39;coala_decorators&#39;</span><span class="p">,</span> <span class="s1">&#39;0.2.1&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>If your bear uses requirements from a manager we have a subclass from,
+you can use the subclass, such as <code class="docutils literal"><span class="pre">PipRequirement</span></code>, without specifying
+manager:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dependency_management.requirements.PipRequirement</span> <span class="k">import</span> <span class="p">(</span>
+<span class="gp">... </span>    <span class="n">PipRequirement</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;coala_decorators&#39;</span><span class="p">,</span> <span class="s1">&#39;0.2.1&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>To specify additional attributes to your bear, use the following:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Jon Snow&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;jon_snow@gmail.com&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">MAINTAINERS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Catelyn Stark&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">MAINTAINERS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;catelyn_stark@gmail.com&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">LICENSE</span> <span class="o">=</span> <span class="s1">&#39;AGPL-3.0&#39;</span>
+<span class="gp">... </span>    <span class="n">ASCIINEMA_URL</span> <span class="o">=</span> <span class="s1">&#39;https://asciinema.org/a/80761&#39;</span>
+</pre></div>
+</div>
+<p>If the maintainers are the same as the authors, they can be omitted:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Jon Snow&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;jon_snow@gmail.com&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">maintainers</span>
+<span class="go">{&#39;Jon Snow&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">maintainers_emails</span>
+<span class="go">{&#39;jon_snow@gmail.com&#39;}</span>
+</pre></div>
+</div>
+<p>If your bear needs to include local files, then specify it giving strings
+containing relative file paths to the INCLUDE_LOCAL_FILES set:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">INCLUDE_LOCAL_FILES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;checkstyle.jar&#39;</span><span class="p">,</span> <span class="s1">&#39;google_checks.xml&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To keep track easier of what a bear can do, simply tell it to the
+<code class="docutils literal"><span class="pre">CAN_FIX</span></code> and the <code class="docutils literal"><span class="pre">CAN_DETECT</span></code> sets. Possible values are:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">CAN_DETECT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Syntax&#39;</span><span class="p">,</span> <span class="s1">&#39;Formatting&#39;</span><span class="p">,</span> <span class="s1">&#39;Security&#39;</span><span class="p">,</span> <span class="s1">&#39;Complexity&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Smell&#39;</span><span class="p">,</span> <span class="s1">&#39;Unused Code&#39;</span><span class="p">,</span> <span class="s1">&#39;Redundancy&#39;</span><span class="p">,</span> <span class="s1">&#39;Variable Misuse&#39;</span><span class="p">,</span> <span class="s1">&#39;Spelling&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Memory Leak&#39;</span><span class="p">,</span> <span class="s1">&#39;Documentation&#39;</span><span class="p">,</span> <span class="s1">&#39;Duplication&#39;</span><span class="p">,</span> <span class="s1">&#39;Commented Code&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Grammar&#39;</span><span class="p">,</span> <span class="s1">&#39;Missing Import&#39;</span><span class="p">,</span> <span class="s1">&#39;Unreachable Code&#39;</span><span class="p">,</span> <span class="s1">&#39;Undefined Element&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s1">&#39;Code Simplification&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CAN_FIX</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Syntax&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Specifying something to <code class="docutils literal"><span class="pre">CAN_FIX</span></code> makes it obvious that it can be
+detected too, so it may be omitted:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">CAN_DETECT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Syntax&#39;</span><span class="p">,</span> <span class="s1">&#39;Security&#39;</span><span class="p">}</span>
+<span class="gp">... </span>    <span class="n">CAN_FIX</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Redundancy&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">SomeBear</span><span class="o">.</span><span class="n">can_detect</span><span class="p">)</span>
+<span class="go">[&#39;Redundancy&#39;, &#39;Security&#39;, &#39;Syntax&#39;]</span>
+</pre></div>
+</div>
+<p>Every bear has a data directory which is unique to that particular bear:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeOtherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">data_dir</span> <span class="o">==</span> <span class="n">SomeOtherBear</span><span class="o">.</span><span class="n">data_dir</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>A bear can be dependent from other bears. <code class="docutils literal"><span class="pre">BEAR_DEPS</span></code> contains bear
+classes that are to be executed before this bear gets executed. The results
+of these bears will then be passed inside <code class="docutils literal"><span class="pre">self.dependency_results</span></code> as a
+dict. The dict will have the name of the bear as key and a list of its
+results as values:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span> <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeOtherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">BEAR_DEPS</span> <span class="o">=</span> <span class="p">{</span><span class="n">SomeBear</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SomeOtherBear</span><span class="o">.</span><span class="n">BEAR_DEPS</span>
+<span class="go">{&lt;class &#39;coalib.core.Bear.SomeBear&#39;&gt;}</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.ASCIINEMA_URL">
+<code class="descname">ASCIINEMA_URL</code><em class="property"> = ''</em><a class="headerlink" href="#coalib.core.Bear.Bear.ASCIINEMA_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.AUTHORS">
+<code class="descname">AUTHORS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.AUTHORS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.AUTHORS_EMAILS">
+<code class="descname">AUTHORS_EMAILS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.AUTHORS_EMAILS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.BEAR_DEPS">
+<code class="descname">BEAR_DEPS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.BEAR_DEPS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.CAN_DETECT">
+<code class="descname">CAN_DETECT</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.CAN_DETECT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.CAN_FIX">
+<code class="descname">CAN_FIX</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.CAN_FIX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.INCLUDE_LOCAL_FILES">
+<code class="descname">INCLUDE_LOCAL_FILES</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.INCLUDE_LOCAL_FILES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.LANGUAGES">
+<code class="descname">LANGUAGES</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.LANGUAGES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.LICENSE">
+<code class="descname">LICENSE</code><em class="property"> = ''</em><a class="headerlink" href="#coalib.core.Bear.Bear.LICENSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.MAINTAINERS">
+<code class="descname">MAINTAINERS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.MAINTAINERS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.MAINTAINERS_EMAILS">
+<code class="descname">MAINTAINERS_EMAILS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.MAINTAINERS_EMAILS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.PLATFORMS">
+<code class="descname">PLATFORMS</code><em class="property"> = {'any'}</em><a class="headerlink" href="#coalib.core.Bear.Bear.PLATFORMS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.REQUIREMENTS">
+<code class="descname">REQUIREMENTS</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.REQUIREMENTS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.Bear.Bear.analyze">
+<code class="descname">analyze</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.analyze"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.analyze" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs the code analysis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterable of results.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.can_detect">
+<code class="descname">can_detect</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.can_detect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.core.Bear.Bear.check_prerequisites">
+<em class="property">classmethod </em><code class="descname">check_prerequisites</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.check_prerequisites"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.check_prerequisites" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether needed runtime prerequisites of the bear are satisfied.</p>
+<p>This function gets executed at construction.</p>
+<p>Section value requirements shall be checked inside the <code class="docutils literal"><span class="pre">run</span></code> method.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dependency_management.requirements.PipRequirement</span> <span class="k">import</span> <span class="p">(</span>
+<span class="gp">... </span>    <span class="n">PipRequirement</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;pip&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SomeBear</span><span class="o">.</span><span class="n">check_prerequisites</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">SomeOtherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span><span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;really_bad_package&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SomeOtherBear</span><span class="o">.</span><span class="n">check_prerequisites</span><span class="p">()</span>
+<span class="go">&#39;Following requirements are not installed: really_bad_package (...)&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if prerequisites are satisfied, else False or a string
+that serves a more detailed description of what&#8217;s missing.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.data_dir">
+<code class="descname">data_dir</code><em class="property"> = '/home/coyote/.local/share/coala-bears/Bear'</em><a class="headerlink" href="#coalib.core.Bear.Bear.data_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.dependency_results">
+<code class="descname">dependency_results</code><a class="headerlink" href="#coalib.core.Bear.Bear.dependency_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains all dependency results.</p>
+<p>This variable gets set during bear execution from the core and can be
+used from <code class="docutils literal"><span class="pre">analyze</span></code>.</p>
+<p>Modifications to the returned dictionary while the core is running
+leads to undefined behaviour.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="n">Section</span><span class="p">(</span><span class="s1">&#39;my-section&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">file_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;file1.txt&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bear</span> <span class="o">=</span> <span class="n">Bear</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bear</span><span class="o">.</span><span class="n">dependency_results</span>
+<span class="go">defaultdict(&lt;class &#39;list&#39;&gt;, {})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dependency_bear</span> <span class="o">=</span> <span class="n">Bear</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bear</span><span class="o">.</span><span class="n">dependency_results</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">dependency_bear</span><span class="p">)]</span> <span class="o">+=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bear</span><span class="o">.</span><span class="n">dependency_results</span>
+<span class="go">defaultdict(&lt;class &#39;list&#39;&gt;, {&lt;class &#39;coalib.core.Bear.Bear&#39;&gt;: [1, 2]})</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dictionary with bear-types as keys and their results received.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.core.Bear.Bear.download_cached_file">
+<em class="property">classmethod </em><code class="descname">download_cached_file</code><span class="sig-paren">(</span><em>url</em>, <em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.download_cached_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.download_cached_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downloads the file if needed and caches it for the next time. If a
+download happens, the user will be informed.</p>
+<p>Take a sane simple bear:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="n">Section</span><span class="p">(</span><span class="s1">&#39;my-section&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">file_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;file1.txt&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;&#39;</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bear</span> <span class="o">=</span> <span class="n">Bear</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can now carelessly query for a neat file that doesn&#8217;t exist yet:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">remove</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">bear</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;a_file&#39;</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="n">remove</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">bear</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;a_file&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">file</span> <span class="o">=</span> <span class="n">bear</span><span class="o">.</span><span class="n">download_cached_file</span><span class="p">(</span><span class="s1">&#39;https://github.com/&#39;</span><span class="p">,</span> <span class="s1">&#39;a_file&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we download it again, it&#8217;ll be much faster as no download occurs:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">newfile</span> <span class="o">=</span> <span class="n">bear</span><span class="o">.</span><span class="n">download_cached_file</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s1">&#39;https://github.com/&#39;</span><span class="p">,</span> <span class="s1">&#39;a_file&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">newfile</span> <span class="o">==</span> <span class="n">file</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> &#8211; The URL to download the file from.</li>
+<li><strong>filename</strong> &#8211; The filename it should get, e.g. &#8220;test.txt&#8221;.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A full path to the file ready for you to use!</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.Bear.Bear.execute_task">
+<code class="descname">execute_task</code><span class="sig-paren">(</span><em>args</em>, <em>kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.execute_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.execute_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a task.</p>
+<p>By default returns a list of results collected from this bear.</p>
+<p>This function has to return something that is picklable to make bears
+work in multi-process environments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> &#8211; The arguments of a task.</li>
+<li><strong>kwargs</strong> &#8211; The keyword-arguments of a task.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of results from the bear.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.Bear.Bear.generate_tasks">
+<code class="descname">generate_tasks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.generate_tasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.generate_tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is responsible for providing the job arguments <code class="docutils literal"><span class="pre">analyze</span></code>
+gets called with.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An iterable containing the positional and keyword arguments
+organized in pairs: <code class="docutils literal"><span class="pre">(args-tuple,</span> <span class="pre">kwargs-dict)</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.Bear.Bear.get_config_dir">
+<code class="descname">get_config_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.get_config_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.get_config_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the directory where the configuration file resides.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Directory of the config file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.core.Bear.Bear.get_metadata">
+<em class="property">classmethod </em><code class="descname">get_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.get_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.get_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Metadata for the <code class="docutils literal"><span class="pre">analyze</span></code> function extracted from its signature.
+Excludes parameter <code class="docutils literal"><span class="pre">self</span></code>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.core.Bear.Bear.get_non_optional_settings">
+<em class="property">classmethod </em><code class="descname">get_non_optional_settings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.get_non_optional_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.get_non_optional_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method has to determine which settings are needed by this bear.
+The user will be prompted for needed settings that are not available
+in the settings file so don&#8217;t include settings where a default value
+would do.</p>
+<p>Note: This function also queries settings from bear dependencies in
+recursive manner. Though circular dependency chains are a challenge to
+achieve, this function would never return on them!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dictionary of needed settings as keys and a tuple of help
+text and annotation as values</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.maintainers">
+<code class="descname">maintainers</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.maintainers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.maintainers_emails">
+<code class="descname">maintainers_emails</code><em class="property"> = set()</em><a class="headerlink" href="#coalib.core.Bear.Bear.maintainers_emails" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.name">
+<code class="descname">name</code><em class="property"> = 'Bear'</em><a class="headerlink" href="#coalib.core.Bear.Bear.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.new_result">
+<code class="descname">new_result</code><a class="headerlink" href="#coalib.core.Bear.Bear.new_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a partial for creating a result with this bear already bound.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="coalib.core.Bear.Bear.setup_dependencies">
+<em class="property">static </em><code class="descname">setup_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Bear.html#Bear.setup_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Bear.Bear.setup_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a user defined function that can download and set up
+dependencies (via download_cached_file or arbitrary other means) in an
+OS independent way.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.Bear.Bear.source_location">
+<code class="descname">source_location</code><em class="property"> = '/home/coyote/projects/coala/coalib/core/Bear.py'</em><a class="headerlink" href="#coalib.core.Bear.Bear.source_location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.core.CircularDependencyError">
+<span id="coalib-core-circulardependencyerror-module"></span><h2>coalib.core.CircularDependencyError module<a class="headerlink" href="#module-coalib.core.CircularDependencyError" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="coalib.core.CircularDependencyError.CircularDependencyError">
+<em class="property">exception </em><code class="descclassname">coalib.core.CircularDependencyError.</code><code class="descname">CircularDependencyError</code><span class="sig-paren">(</span><em>node=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/CircularDependencyError.html#CircularDependencyError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.CircularDependencyError.CircularDependencyError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<p>An error identifying a circular dependency.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.core.Core">
+<span id="coalib-core-core-module"></span><h2>coalib.core.Core module<a class="headerlink" href="#module-coalib.core.Core" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.core.Core.cleanup_bear">
+<code class="descclassname">coalib.core.Core.</code><code class="descname">cleanup_bear</code><span class="sig-paren">(</span><em>bear</em>, <em>running_tasks</em>, <em>event_loop</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Core.html#cleanup_bear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Core.cleanup_bear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cleans up state of an ongoing run for a bear.</p>
+<ul class="simple">
+<li>If the given bear has no running tasks left, it removes the bear from
+the <code class="docutils literal"><span class="pre">running_tasks</span></code> dict.</li>
+<li>Checks whether there are any remaining tasks, and quits the event loop
+accordingly if none are left.</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bear</strong> &#8211; The bear to clean up state for.</li>
+<li><strong>running_tasks</strong> &#8211; The dict of running-tasks.</li>
+<li><strong>event_loop</strong> &#8211; The event-loop tasks are scheduled on.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.core.Core.finish_task">
+<code class="descclassname">coalib.core.Core.</code><code class="descname">finish_task</code><span class="sig-paren">(</span><em>bear</em>, <em>result_callback</em>, <em>running_tasks</em>, <em>event_loop</em>, <em>executor</em>, <em>task</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Core.html#finish_task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Core.finish_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>The callback for when a task of a bear completes. It is responsible for
+checking if the bear completed its execution and the handling of the
+result generated by the task.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bear</strong> &#8211; The bear that the task belongs to.</li>
+<li><strong>result_callback</strong> &#8211; A callback function which is called when results are available.</li>
+<li><strong>running_tasks</strong> &#8211; Dictionary that keeps track of the remaining tasks of each bear.</li>
+<li><strong>event_loop</strong> &#8211; The <code class="docutils literal"><span class="pre">asyncio</span></code> event loop bear-tasks are scheduled on.</li>
+<li><strong>executor</strong> &#8211; The executor to which the bear tasks are scheduled.</li>
+<li><strong>task</strong> &#8211; The task that completed.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.core.Core.run">
+<code class="descclassname">coalib.core.Core.</code><code class="descname">run</code><span class="sig-paren">(</span><em>bears</em>, <em>result_callback</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Core.html#run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Core.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a coala session.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bears</strong> &#8211; The bear instances to run.</li>
+<li><strong>result_callback</strong> &#8211; <p>A callback function which is called when results are available. Must
+have following signature:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">result_callback</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.core.Core.schedule_bears">
+<code class="descclassname">coalib.core.Core.</code><code class="descname">schedule_bears</code><span class="sig-paren">(</span><em>bears</em>, <em>result_callback</em>, <em>event_loop</em>, <em>running_tasks</em>, <em>executor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Core.html#schedule_bears"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Core.schedule_bears" title="Permalink to this definition">¶</a></dt>
+<dd><p>Schedules the tasks of bears to the given executor and runs them on the
+given event loop.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bears</strong> &#8211; A list of bear instances to be scheduled onto the process pool.</li>
+<li><strong>result_callback</strong> &#8211; A callback function which is called when results are available.</li>
+<li><strong>event_loop</strong> &#8211; The asyncio event loop to schedule bear tasks on.</li>
+<li><strong>running_tasks</strong> &#8211; Tasks that are already scheduled, organized in a dict with
+bear instances as keys and asyncio-coroutines as values containing
+their scheduled tasks.</li>
+<li><strong>executor</strong> &#8211; The executor to which the bear tasks are scheduled.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.core.DependencyTracker">
+<span id="coalib-core-dependencytracker-module"></span><h2>coalib.core.DependencyTracker module<a class="headerlink" href="#module-coalib.core.DependencyTracker" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.core.DependencyTracker.DependencyTracker">
+<em class="property">class </em><code class="descclassname">coalib.core.DependencyTracker.</code><code class="descname">DependencyTracker</code><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A <code class="docutils literal"><span class="pre">DependencyTracker</span></code> allows to register and manage dependencies between
+objects.</p>
+<p>This class uses a directed graph to track relations.</p>
+<p>Add a dependency relation between two objects:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">object1</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">object2</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">object2</span><span class="p">,</span> <span class="n">object1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This would define that <code class="docutils literal"><span class="pre">object1</span></code> is dependent on <code class="docutils literal"><span class="pre">object2</span></code>.</p>
+<p>If you define that <code class="docutils literal"><span class="pre">object2</span></code> has its dependency duty fulfilled, you can
+resolve it:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resolved</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">object2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolved</span>
+<span class="go">{&lt;object object at ...&gt;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolved_object</span> <span class="o">=</span> <span class="n">resolved</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resolved_object</span> <span class="ow">is</span> <span class="n">object1</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>This returns all objects that are now freed, meaning they have no
+dependencies any more.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">object3</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">object2</span><span class="p">,</span> <span class="n">object1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">object3</span><span class="p">,</span> <span class="n">object1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">object2</span><span class="p">)</span>
+<span class="go">set()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">object3</span><span class="p">)</span>
+<span class="go">{&lt;object object at ...&gt;}</span>
+</pre></div>
+</div>
+<p>The ones who instantiate a <code class="docutils literal"><span class="pre">DependencyTracker</span></code> are responsible for
+resolving dependencies in the right order. Dependencies which are itself
+dependent will be forcefully resolved and removed from their according
+dependencies too.</p>
+<dl class="method">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>dependency</em>, <em>dependant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a dependency relation.</p>
+<p>This function does not check for circular dependencies.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">{1, 2}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dependency</strong> &#8211; The object that is the dependency.</li>
+<li><strong>dependant</strong> &#8211; The object that is the dependant.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.are_dependencies_resolved">
+<code class="descname">are_dependencies_resolved</code><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.are_dependencies_resolved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether all dependencies in this <code class="docutils literal"><span class="pre">DependencyTracker</span></code> instance
+are resolved.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">are_dependencies_resolved</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">are_dependencies_resolved</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">{1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">are_dependencies_resolved</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal"><span class="pre">True</span></code> when all dependencies resolved, <code class="docutils literal"><span class="pre">False</span></code> if not.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.check_circular_dependencies">
+<code class="descname">check_circular_dependencies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker.check_circular_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.check_circular_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks whether there are circular dependency conflicts.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">check_circular_dependencies</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+ <span class="c">...</span>
+<span class="gr">coalib.core.CircularDependencyError.CircularDependencyError</span>: <span class="n">...</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>CircularDependencyError</strong> &#8211; Raised on circular dependency conflicts.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.get_all_dependants">
+<code class="descname">get_all_dependants</code><span class="sig-paren">(</span><em>dependency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker.get_all_dependants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.get_all_dependants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set of all dependants of the given dependency, even
+indirectly related ones.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_all_dependants</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">{1, 2}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dependency</strong> &#8211; The dependency to get all dependants for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A set of dependants.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.get_all_dependencies">
+<code class="descname">get_all_dependencies</code><span class="sig-paren">(</span><em>dependant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker.get_all_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.get_all_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set of all dependencies of the given dependants, even
+indirectly related ones.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_all_dependencies</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">{0, 1}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dependant</strong> &#8211; The dependant to get all dependencies for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A set of dependencies.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.get_dependants">
+<code class="descname">get_dependants</code><span class="sig-paren">(</span><em>dependency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker.get_dependants"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.get_dependants" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all immediate dependants for the given dependency.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_dependants</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">{1, 2}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_dependants</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">{3}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_dependants</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">set()</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dependency</strong> &#8211; The dependency to retrieve all dependants from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A set of dependants.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.get_dependencies">
+<code class="descname">get_dependencies</code><span class="sig-paren">(</span><em>dependant</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker.get_dependencies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.get_dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all immediate dependencies of a given dependant.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_dependencies</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">set()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_dependencies</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">{0}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">get_dependencies</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">{0, 1}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dependant</strong> &#8211; The dependant to retrieve all dependencies from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A set of dependencies.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.core.DependencyTracker.DependencyTracker.resolve">
+<code class="descname">resolve</code><span class="sig-paren">(</span><em>dependency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/DependencyTracker.html#DependencyTracker.resolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.DependencyTracker.DependencyTracker.resolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves all dependency-relations from the given dependency, and frees
+and returns dependants with no more dependencies. If the given
+dependency is itself a dependant, all those relations are also removed.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span> <span class="o">=</span> <span class="n">DependencyTracker</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">{1, 2}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">{3}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tracker</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">set()</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dependency</strong> &#8211; The dependency.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Returns a set of dependants whose dependencies were all resolved.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.core.Graphs">
+<span id="coalib-core-graphs-module"></span><h2>coalib.core.Graphs module<a class="headerlink" href="#module-coalib.core.Graphs" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.core.Graphs.traverse_graph">
+<code class="descclassname">coalib.core.Graphs.</code><code class="descname">traverse_graph</code><span class="sig-paren">(</span><em>start_nodes</em>, <em>get_successive_nodes</em>, <em>run_on_edge=&lt;function &lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/core/Graphs.html#traverse_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.core.Graphs.traverse_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traverses all edges of a directed, possibly disconnected graph once.
+Detects cyclic graphs by raising a <code class="docutils literal"><span class="pre">CircularDependencyError</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">5</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">3</span><span class="p">:</span> <span class="p">[</span><span class="mi">6</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">get_successive_nodes</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">[])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">edges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">append_to_edges</span><span class="p">(</span><span class="n">prev</span><span class="p">,</span> <span class="n">nxt</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">edges</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">prev</span><span class="p">,</span> <span class="n">nxt</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traverse_graph</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span> <span class="n">get_successive_nodes</span><span class="p">,</span> <span class="n">append_to_edges</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+<span class="go">[(1, 2), (2, 3), (2, 4), (3, 6), (5, 3)]</span>
+</pre></div>
+</div>
+<p>You can also use this function to detect cyclic graphs:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">graph</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">3</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traverse_graph</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="n">get_successive_nodes</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+ <span class="c">...</span>
+<span class="gr">coalib.core.CircularDependencyError.CircularDependencyError</span>: <span class="n">...</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start_nodes</strong> &#8211; The nodes where to start traversing the graph.</li>
+<li><strong>get_successive_nodes</strong> &#8211; A callable that takes in a node and returns an iterable of nodes to
+traverse next.</li>
+<li><strong>run_on_edge</strong> &#8211; A callable that is run on each edge during traversing. Takes in two
+parameters, the previous- and next-node which form an edge. The default
+is an empty function.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>CircularDependencyError</strong> &#8211; Raised when the graph is cyclic.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-coalib.core" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coalib.html">coalib package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="coalib.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coalib.bearlib.html">coalib.bearlib package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.bears.html">coalib.bears package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.collecting.html">coalib.collecting package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">coalib.core package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.core.Bear">coalib.core.Bear module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.core.CircularDependencyError">coalib.core.CircularDependencyError module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.core.Core">coalib.core.Core module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.core.DependencyTracker">coalib.core.DependencyTracker module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.core.Graphs">coalib.core.Graphs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.core">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.misc.html">coalib.misc package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.output.html">coalib.output package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.parsing.html">coalib.parsing package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.processes.html">coalib.processes package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.results.html">coalib.results package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.settings.html">coalib.settings package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.testing.html">coalib.testing package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala">coalib.coala module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_ci">coalib.coala_ci module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_delete_orig">coalib.coala_delete_orig module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_format">coalib.coala_format module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_json">coalib.coala_json module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_main">coalib.coala_main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_modes">coalib.coala_modes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="coalib.html">coalib package</a><ul>
+      <li>Previous: <a href="coalib.collecting.html" title="previous chapter">coalib.collecting package</a></li>
+      <li>Next: <a href="coalib.misc.html" title="next chapter">coalib.misc package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/coalib.core.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

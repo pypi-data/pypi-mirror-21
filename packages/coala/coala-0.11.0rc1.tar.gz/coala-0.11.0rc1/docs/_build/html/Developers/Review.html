@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Reviewing &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="Development Setup Notes" href="Development_Setup.html" />
+    <link rel="prev" title="Git Tutorial" href="Git_Basics.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="reviewing">
+<h1>Reviewing<a class="headerlink" href="#reviewing" title="Permalink to this headline">¶</a></h1>
+<p>This document is a guide to coala&#8217;s review process.</p>
+<div class="section" id="am-i-good-enough-to-do-code-review">
+<h2>Am I Good Enough to Do Code Review?<a class="headerlink" href="#am-i-good-enough-to-do-code-review" title="Permalink to this headline">¶</a></h2>
+<p><strong>Yes,</strong> if you already fixed a newcomer issue.</p>
+<p>Reviewing can help you understand the other side of the table and learn more
+about coala and python. When reviewing you will get to know new people, more
+code and it ultimately helps you to become a better coder than you could do
+on your own.</p>
+<p>You can totally help us review source code. Especially try to review source
+code of others and share what you have learnt with them. You can use acks and
+unacks like everyone else and <code class="docutils literal"><span class="pre">cobot</span></code> even allows you to set PRs to WIP. Check
+the section below for more information.</p>
+<p>Generally follow this process:</p>
+<ol class="arabic simple">
+<li>Check if the change is helping us. Sometimes people propose changes that are
+only helpful for specific usecases but may break others. The concept has to
+be good. Consider engaging in a discussion on gitter if you are unsure!</li>
+<li>Check for automatic builds. Give the contributor hints on how he can resolve
+them.</li>
+<li>Review the actual code. Suggest improvements and simplifications.</li>
+</ol>
+<p><strong>Be sure to not value quantity over quality!</strong> Be transparent and polite:
+Explain why something has to be changed and don&#8217;t just &#8220;command&#8221; the coder to
+obey guidelines for no reason. Reviewing always involves saying someone that
+his code isn&#8217;t right, be very careful not to appear rude even if
+you don&#8217;t mean it! Bad reviews will scare away other contributors.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Commits should have a good size, every logical change should be one commit.
+If there are multiple changes, those make multiple commits. Don&#8217;t propose
+to squash commits without a reason!</p>
+</div>
+<p>When reviewing, try to be thorough: if you don&#8217;t find any issues with a pull
+request, you likely missed something.</p>
+<p>If you don&#8217;t find any issues with a Pull Request and acknowledge it, a senior
+member will look over it and perform the merge if everything is good.</p>
+</div>
+<div class="section" id="manual-review-process">
+<h2>Manual Review Process<a class="headerlink" href="#manual-review-process" title="Permalink to this headline">¶</a></h2>
+<p>The review process for coala is as follows:</p>
+<ol class="arabic">
+<li><p class="first">Anyone can submit commits for review. These are submitted via Pull Requests
+on Github.</p>
+</li>
+<li><p class="first">The Pull Request will be labeled with a <code class="docutils literal"><span class="pre">process</span></code> label:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">pending</span> <span class="pre">review</span></code> the commit has just been pushed and is awaiting review</li>
+<li><code class="docutils literal"><span class="pre">wip</span></code> the Pull Request has been marked as a <code class="docutils literal"><span class="pre">Work</span> <span class="pre">in</span> <span class="pre">Progress</span></code> by the
+reviewers and has comments on it regarding how the commits shall be
+changed</li>
+<li><code class="docutils literal"><span class="pre">approved</span></code> the commits have been reviewed by the developers and they
+are ready to be merged into the master branch</li>
+</ul>
+</div></blockquote>
+<p>If you don&#8217;t have write access to coala, you can change the labels using
+<code class="docutils literal"><span class="pre">cobot</span> <span class="pre">mark</span> <span class="pre">wip</span> <span class="pre">&lt;URL&gt;</span></code> or <code class="docutils literal"><span class="pre">cobot</span> <span class="pre">mark</span> <span class="pre">pending</span> <span class="pre">&lt;URL&gt;</span></code>.</p>
+</li>
+<li><p class="first">The developers will acknowledge the commits by writing</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">ack</span> <span class="pre">commit_SHA</span></code> or <code class="docutils literal"><span class="pre">commit_SHA</span> <span class="pre">is</span> <span class="pre">ready</span></code>, in case the commit is
+ready, or</li>
+<li><code class="docutils literal"><span class="pre">unack</span> <span class="pre">commit_SHA</span></code> or <code class="docutils literal"><span class="pre">commit_SHA</span> <span class="pre">needs</span> <span class="pre">work</span></code> in case it is not ready
+yet and needs some more work or</li>
+<li><code class="docutils literal"><span class="pre">reack</span> <span class="pre">commit_SHA</span></code> in case the commit was acknowledged before, was
+rebased without conflicts and the rebase did not introduce logical
+problems.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only one acknowledgment is needed per commit i.e <code class="docutils literal"><span class="pre">ack</span> <span class="pre">commit_SHA</span></code>.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">If the commits are not linearly mergeable into master, rebase and go
+to step one.</p>
+</li>
+<li><p class="first">All commits are acknowledged and fit linearly onto master. All
+continuous integration services (as described below) pass. A maintainer
+may leave the <code class="docutils literal"><span class="pre">&#64;rultor</span> <span class="pre">merge</span></code> command to get the PR merged automatically.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="automated-review-process">
+<h2>Automated Review Process<a class="headerlink" href="#automated-review-process" title="Permalink to this headline">¶</a></h2>
+<p>It is only allowed to merge a pull request into master if all <code class="docutils literal"><span class="pre">required</span></code>
+GitHub states are green. This includes the GitMate review as well as the
+Continuous Integration systems.</p>
+<p>Continuous integration is always done for the last commit on a pull
+request but should ideally pass for every commit.</p>
+</div>
+<div class="section" id="for-the-reviewers">
+<h2>For the Reviewers<a class="headerlink" href="#for-the-reviewers" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Generated code is not intended to be reviewed. Instead rather try to
+verify that the generation was done right. The commit message should
+expose that.</li>
+<li>Every commit is reviewed independently from the other commits.</li>
+<li>Tests should pass for each commit. If you suspect that tests might
+not pass and a commit is not checked by continuous integration, try
+running the tests locally.</li>
+<li>Check the surroundings. In many cases people forget to remove the
+import when removing the use of something or similar things. It is
+usually good to take a look at the whole file to see if it&#8217;s still
+consistent.</li>
+<li>Check the commit message.</li>
+<li>Take a look at continuous integration results in the end even if they
+pass.</li>
+<li>Coverage must not fall.</li>
+<li>Be sure to assure that the tests cover all corner cases and validate the
+behaviour well. E.g. for bear tests just testing for a good and bad file
+is <strong>not</strong> sufficient.</li>
+</ul>
+<p>As you perform your review of each commit, please make comments on the
+relevant lines of code in the GitHub pull request. After performing your
+review, please comment on the pull request directly as follows:</p>
+<ul class="simple">
+<li>If any commit passed review, make a comment that begins with &#8220;ack&#8221;,
+&#8220;reack&#8221;, or &#8220;ready&#8221; (all case-insensitive) and contains at least the
+first 6 characters of each passing commit hash delimited by spaces,
+commas, or forward slashes (the commit URLs from GitHub satisfy the
+commit hash requirements).</li>
+<li>If any commit failed to pass review, make a comment that begins with
+&#8220;unack&#8221; or &#8220;needs work&#8221; (all case-insensitive) and contains at least
+the first 6 characters of each passing commit hash delimited by
+spaces, commas, or forward slashes (the commit URLs from GitHub
+satisfy the commit hash requirements).</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">GitMate only separates by spaces and commas. If you copy and paste the SHAs
+they sometimes contain tabs or other whitespace, be sure to remove those!</p>
+</div>
+<p>Example:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>unack 14e3ae1 823e363 342700d
+</pre></div>
+</div>
+<p>If you have a large number of commits to ack, you can easily generate a
+list with <code class="docutils literal"><span class="pre">git</span> <span class="pre">log</span> <span class="pre">--oneline</span> <span class="pre">master..</span></code> and write a message like this
+example:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>reack
+a8cde5b  Docs: Clarify that users may have pyvenv
+5a05253  Docs: Change Developer Tutorials -&gt; Resources
+c3acb62  Docs: Create a set of notes for development setup
+
+Rebased on top of changes that are not affected by documentation
+changes.
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Review</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#am-i-good-enough-to-do-code-review">Am I Good Enough to Do Code Review?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#manual-review-process">Manual Review Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#automated-review-process">Automated Review Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#for-the-reviewers">For the Reviewers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Git_Basics.html" title="previous chapter">Git Tutorial</a></li>
+      <li>Next: <a href="Development_Setup.html" title="next chapter">Development Setup Notes</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/Review.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

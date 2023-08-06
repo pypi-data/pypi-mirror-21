@@ -1,0 +1,556 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.parsing.Globbing &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.parsing.Globbing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">lru_cache</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">yield_once</span>
+<span class="kn">from</span> <span class="nn">coalib.misc.Constants</span> <span class="k">import</span> <span class="n">GLOBBING_SPECIAL_CHARS</span>
+
+
+<span class="k">def</span> <span class="nf">_end_of_set_index</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">start_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the position of the appropriate closing bracket for a glob set in</span>
+<span class="sd">    string.</span>
+
+<span class="sd">    :param string:      Glob string with wildcards</span>
+<span class="sd">    :param start_index: Index at which the set starts, meaning the position</span>
+<span class="sd">                        right behind the opening bracket</span>
+<span class="sd">    :return:            Position of appropriate closing bracket</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="n">closing_index</span> <span class="o">=</span> <span class="n">start_index</span>
+    <span class="k">if</span> <span class="n">closing_index</span> <span class="o">&lt;</span> <span class="n">length</span> <span class="ow">and</span> <span class="n">string</span><span class="p">[</span><span class="n">closing_index</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;!&#39;</span><span class="p">:</span>
+        <span class="n">closing_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">closing_index</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>  <span class="c1"># The set cannot be closed by a bracket here.</span>
+        <span class="n">closing_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">while</span> <span class="n">closing_index</span> <span class="o">&lt;</span> <span class="n">length</span> <span class="ow">and</span> <span class="n">string</span><span class="p">[</span><span class="n">closing_index</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;]&#39;</span><span class="p">:</span>
+        <span class="n">closing_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">closing_index</span>
+
+
+<div class="viewcode-block" id="glob_escape"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.glob_escape">[docs]</a><span class="k">def</span> <span class="nf">glob_escape</span><span class="p">(</span><span class="n">input_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Escapes the given string with ``[c]`` pattern. Examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from coalib.parsing.Globbing import glob_escape</span>
+<span class="sd">    &gt;&gt;&gt; glob_escape(&#39;test (1)&#39;)</span>
+<span class="sd">    &#39;test [(]1[)]&#39;</span>
+<span class="sd">    &gt;&gt;&gt; glob_escape(&#39;test folder?&#39;)</span>
+<span class="sd">    &#39;test folder[?]&#39;</span>
+<span class="sd">    &gt;&gt;&gt; glob_escape(&#39;test*folder&#39;)</span>
+<span class="sd">    &#39;test[*]folder&#39;</span>
+
+<span class="sd">    :param input_string: String that is to be escaped with ``[ ]``.</span>
+<span class="sd">    :return:             Escaped string in which all the special glob characters</span>
+<span class="sd">                         ``()[]|?*`` are escaped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;(?P&lt;char&gt;[&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">GLOBBING_SPECIAL_CHARS</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;])&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;[</span><span class="se">\\</span><span class="s1">g&lt;char&gt;]&#39;</span><span class="p">,</span> <span class="n">input_string</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_position_is_bracketed</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tests whether the char at string[position] is inside a valid pair of</span>
+<span class="sd">    brackets (and therefore loses its special meaning)</span>
+
+<span class="sd">    :param string:   Glob string with wildcards</span>
+<span class="sd">    :param position: Position of a char in string</span>
+<span class="sd">    :return:         Whether or not the char is inside a valid set of brackets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Allow negative positions and trim too long ones.</span>
+    <span class="n">position</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">[:</span><span class="n">position</span><span class="p">])</span>
+
+    <span class="n">index</span><span class="p">,</span> <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">position</span><span class="p">:</span>
+        <span class="n">char</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;[&#39;</span><span class="p">:</span>
+            <span class="n">closing_index</span> <span class="o">=</span> <span class="n">_end_of_set_index</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">closing_index</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;=</span> <span class="n">position</span> <span class="o">&lt;</span> <span class="n">closing_index</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">closing_index</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_boundary_of_alternatives_indices</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines the location of a set of alternatives in a glob pattern.</span>
+<span class="sd">    Alternatives are defined by a matching set of non-bracketed parentheses.</span>
+
+<span class="sd">    :param pattern: Glob pattern with wildcards.</span>
+<span class="sd">    :return:        Indices of the innermost set of matching non-bracketed</span>
+<span class="sd">                    parentheses in a tuple. The Index of a missing parenthesis</span>
+<span class="sd">                    will be passed as None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Taking the leftmost closing parenthesis and the rightmost opening</span>
+    <span class="c1"># parenthesis left of it ensures that the parentheses belong together and</span>
+    <span class="c1"># the pattern is parsed correctly from the most nested section outwards.</span>
+    <span class="n">end_pos</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_position_is_bracketed</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()):</span>
+            <span class="n">end_pos</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">break</span>  <span class="c1"># Break to get leftmost.</span>
+
+    <span class="n">start_pos</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">(&#39;</span><span class="p">,</span> <span class="n">pattern</span><span class="p">[:</span><span class="n">end_pos</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_position_is_bracketed</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()):</span>
+            <span class="n">start_pos</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span>
+            <span class="c1"># No break to get rightmost.</span>
+
+    <span class="k">return</span> <span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span>
+
+
+<span class="nd">@yield_once</span>
+<span class="k">def</span> <span class="nf">_iter_choices</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterate through each choice of an alternative. Splits pattern on &#39;|&#39;s if</span>
+<span class="sd">    they are not bracketed.</span>
+
+<span class="sd">    :param pattern: String of choices separated by &#39;|&#39;s</span>
+<span class="sd">    :return:        Iterator that yields parts of string separated by</span>
+<span class="sd">                    non-bracketed &#39;|&#39;s</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start_pos</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">split_pos_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">|&#39;</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)]</span>
+    <span class="n">split_pos_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">end_pos</span> <span class="ow">in</span> <span class="n">split_pos_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_position_is_bracketed</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">pattern</span><span class="p">[</span><span class="n">start_pos</span><span class="p">:</span> <span class="n">end_pos</span><span class="p">]</span>
+            <span class="n">start_pos</span> <span class="o">=</span> <span class="n">end_pos</span> <span class="o">+</span> <span class="mi">1</span>
+
+
+<span class="nd">@yield_once</span>
+<span class="k">def</span> <span class="nf">_iter_alternatives</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterates through all glob patterns that can be obtaines by combination of</span>
+<span class="sd">    all choices for each alternative</span>
+
+<span class="sd">    :param pattern: Glob pattern with wildcards</span>
+<span class="sd">    :return:        Iterator that yields all glob patterns without alternatives</span>
+<span class="sd">                    that can be created from the given pattern containing them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span> <span class="o">=</span> <span class="n">_boundary_of_alternatives_indices</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="p">(</span><span class="n">start_pos</span><span class="p">,</span> <span class="n">end_pos</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">pattern</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Iterate through choices inside of parenthesis (separated by &#39;|&#39;):</span>
+        <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">_iter_choices</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="n">start_pos</span><span class="p">:</span> <span class="n">end_pos</span><span class="p">]):</span>
+            <span class="c1"># Put glob expression back together with alternative:</span>
+            <span class="n">variant</span> <span class="o">=</span> <span class="n">pattern</span><span class="p">[:</span><span class="n">start_pos</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">choice</span> <span class="o">+</span> <span class="n">pattern</span><span class="p">[</span><span class="n">end_pos</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+
+            <span class="c1"># Iterate through alternatives outside of parenthesis.</span>
+            <span class="c1"># (pattern can have more alternatives elsewhere)</span>
+            <span class="k">for</span> <span class="n">glob_pattern</span> <span class="ow">in</span> <span class="n">_iter_alternatives</span><span class="p">(</span><span class="n">variant</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">glob_pattern</span>
+
+
+<div class="viewcode-block" id="translate"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.translate">[docs]</a><span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translates a pattern into a regular expression.</span>
+
+<span class="sd">    :param pattern: Glob pattern with wildcards</span>
+<span class="sd">    :return:        Regular expression with the same meaning</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
+        <span class="n">char</span> <span class="o">=</span> <span class="n">pattern</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
+            <span class="c1"># &#39;**&#39; matches everything</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">length</span> <span class="ow">and</span> <span class="n">pattern</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
+                <span class="n">regex</span> <span class="o">+=</span> <span class="s1">&#39;.*&#39;</span>
+            <span class="c1"># On Windows, &#39;*&#39; matches everything but the filesystem</span>
+            <span class="c1"># separators &#39;/&#39; and &#39;\&#39;.</span>
+            <span class="k">elif</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>  <span class="c1"># pragma posix: no cover</span>
+                <span class="n">regex</span> <span class="o">+=</span> <span class="s1">&#39;[^/</span><span class="se">\\\\</span><span class="s1">]*&#39;</span>
+            <span class="c1"># On all other (~Unix-) platforms, &#39;*&#39; matches everything but the</span>
+            <span class="c1"># filesystem separator, most likely &#39;/&#39;.</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma nt: no cover</span>
+                <span class="n">regex</span> <span class="o">+=</span> <span class="s1">&#39;[^&#39;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;]*&#39;</span>
+        <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span>
+            <span class="n">regex</span> <span class="o">+=</span> <span class="s1">&#39;.&#39;</span>
+        <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;[&#39;</span><span class="p">:</span>
+            <span class="n">closing_index</span> <span class="o">=</span> <span class="n">_end_of_set_index</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">closing_index</span> <span class="o">&gt;=</span> <span class="n">length</span><span class="p">:</span>
+                <span class="n">regex</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">[&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sequence</span> <span class="o">=</span> <span class="n">pattern</span><span class="p">[</span><span class="n">index</span><span class="p">:</span><span class="n">closing_index</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">closing_index</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="n">sequence</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;!&#39;</span><span class="p">:</span>
+                    <span class="n">sequence</span> <span class="o">=</span> <span class="s1">&#39;^&#39;</span> <span class="o">+</span> <span class="n">sequence</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">elif</span> <span class="n">sequence</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;^&#39;</span><span class="p">:</span>
+                    <span class="n">sequence</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">sequence</span>
+                <span class="n">regex</span> <span class="o">+=</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="n">sequence</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">regex</span> <span class="o">=</span> <span class="n">regex</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">regex</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">Z(?ms)&#39;</span></div>
+
+
+<div class="viewcode-block" id="fnmatch"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.fnmatch">[docs]</a><span class="k">def</span> <span class="nf">fnmatch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">globs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tests whether name matches one of the given globs.</span>
+
+<span class="sd">    :param name:  File or directory name</span>
+<span class="sd">    :param globs: Glob string with wildcards or list of globs</span>
+<span class="sd">    :return:      Boolean: Whether or not name is matched by glob</span>
+
+<span class="sd">    Glob Syntax:</span>
+
+<span class="sd">    -  &#39;[seq]&#39;:         Matches any character in seq. Cannot be empty. Any</span>
+<span class="sd">                        special character looses its special meaning in a set.</span>
+<span class="sd">    -  &#39;[!seq]&#39;:        Matches any character not in seq. Cannot be empty. Any</span>
+<span class="sd">                        special character looses its special meaning in a set.</span>
+<span class="sd">    -  &#39;(seq_a|seq_b)&#39;: Matches either sequence_a or sequence_b as a whole.</span>
+<span class="sd">                        More than two or just one sequence can be given.</span>
+<span class="sd">    -  &#39;?&#39;:             Matches any single character.</span>
+<span class="sd">    -  &#39;*&#39;:             Matches everything but os.sep.</span>
+<span class="sd">    -  &#39;**&#39;:            Matches everything.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">globs</span> <span class="o">=</span> <span class="p">(</span><span class="n">globs</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">globs</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">globs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">globs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">compiled_pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">glob</span> <span class="ow">in</span> <span class="n">globs</span>
+               <span class="k">for</span> <span class="n">compiled_pattern</span> <span class="ow">in</span> <span class="n">_compile_pattern</span><span class="p">(</span><span class="n">glob</span><span class="p">))</span></div>
+
+
+<span class="nd">@lru_cache</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">_compile_pattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">translate</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span>
+                     <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">pat</span><span class="p">))))</span>
+                 <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="n">_iter_alternatives</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_absolute_flat_glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Glob function for a pattern that do not contain wildcards.</span>
+
+<span class="sd">    :pattern: File or directory path</span>
+<span class="sd">    :return:  Iterator that yields at most one valid file or dir name</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dirname</span><span class="p">,</span> <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">basename</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">pattern</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Patterns ending with a slash should match only directories.</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">pattern</span>
+    <span class="k">return</span>
+
+
+<span class="k">def</span> <span class="nf">_iter_relative_dirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursively iterates subdirectories of all levels from dirname</span>
+
+<span class="sd">    :param dirname: Directory name</span>
+<span class="sd">    :return:        Iterator that yields files and directory from the given dir</span>
+<span class="sd">                    and all it&#39;s (recursive) subdirectories</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dirname</span><span class="p">:</span>
+        <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">curdir</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">files_or_dirs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">os</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">file_or_dir</span> <span class="ow">in</span> <span class="n">files_or_dirs</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">file_or_dir</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">file_or_dir</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">sub_file_or_dir</span> <span class="ow">in</span> <span class="n">_iter_relative_dirs</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_or_dir</span><span class="p">,</span> <span class="n">sub_file_or_dir</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="relative_wildcard_glob"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.relative_wildcard_glob">[docs]</a><span class="k">def</span> <span class="nf">relative_wildcard_glob</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Non-recursive glob for one directory. Accepts wildcards.</span>
+
+<span class="sd">    :param dirname: Directory name</span>
+<span class="sd">    :param pattern: Glob pattern with wildcards</span>
+<span class="sd">    :return:        List of files in the dir of dirname that match the pattern</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dirname</span><span class="p">:</span>
+        <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">curdir</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;**&#39;</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_iter_relative_dirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">translate</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span><span class="o">.</span><span class="n">match</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">name</span><span class="p">)):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="relative_flat_glob"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.relative_flat_glob">[docs]</a><span class="k">def</span> <span class="nf">relative_flat_glob</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Non-recursive glob for one directory. Does not accept wildcards.</span>
+
+<span class="sd">    :param dirname:  Directory name</span>
+<span class="sd">    :param basename: Basename of a file in dir of dirname</span>
+<span class="sd">    :return:         List containing Basename if the file exists</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">basename</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">basename</span><span class="p">]</span>
+    <span class="k">return</span><span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="relative_recursive_glob"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.relative_recursive_glob">[docs]</a><span class="k">def</span> <span class="nf">relative_recursive_glob</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursive Glob for one directory and all its (nested) subdirectories.</span>
+<span class="sd">    Accepts only &#39;**&#39; as pattern.</span>
+
+<span class="sd">    :param dirname: Directory name</span>
+<span class="sd">    :param pattern: The recursive wildcard &#39;**&#39;</span>
+<span class="sd">    :return:        Iterator that yields all the (nested) subdirectories of the</span>
+<span class="sd">                    given dir</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">pattern</span> <span class="o">==</span> <span class="s1">&#39;**&#39;</span>
+    <span class="k">if</span> <span class="n">dirname</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">pattern</span><span class="p">[:</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">relative_dir</span> <span class="ow">in</span> <span class="n">_iter_relative_dirs</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">relative_dir</span></div>
+
+
+<span class="n">wildcard_check_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;([*?[])&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="has_wildcard"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.has_wildcard">[docs]</a><span class="k">def</span> <span class="nf">has_wildcard</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks whether pattern has any wildcards.</span>
+
+<span class="sd">    :param pattern: Glob pattern that may contain wildcards</span>
+<span class="sd">    :return:        Boolean: Whether or not there are wildcards in pattern</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">wildcard_check_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+<span class="k">def</span> <span class="nf">_iglob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="n">dirname</span><span class="p">,</span> <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_wildcard</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">_absolute_flat_glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">file</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">basename</span> <span class="o">==</span> <span class="s1">&#39;**&#39;</span><span class="p">:</span>
+        <span class="n">relative_glob_function</span> <span class="o">=</span> <span class="n">relative_recursive_glob</span>
+    <span class="k">elif</span> <span class="n">has_wildcard</span><span class="p">(</span><span class="n">basename</span><span class="p">):</span>
+        <span class="n">relative_glob_function</span> <span class="o">=</span> <span class="n">relative_wildcard_glob</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">relative_glob_function</span> <span class="o">=</span> <span class="n">relative_flat_glob</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dirname</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">relative_glob_function</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">file</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Prevent an infinite recursion if a drive or UNC path contains</span>
+    <span class="c1"># wildcard characters (i.e. r&#39;\\?\C:&#39;).</span>
+    <span class="k">if</span> <span class="n">dirname</span> <span class="o">!=</span> <span class="n">pattern</span> <span class="ow">and</span> <span class="n">has_wildcard</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+        <span class="n">dirs</span> <span class="o">=</span> <span class="n">iglob</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">dirname</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">dirname</span> <span class="ow">in</span> <span class="n">dirs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">relative_glob_function</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+
+<span class="nd">@yield_once</span>
+<div class="viewcode-block" id="iglob"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.iglob">[docs]</a><span class="k">def</span> <span class="nf">iglob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterates all filesystem paths that get matched by the glob pattern.</span>
+<span class="sd">    Syntax is equal to that of fnmatch.</span>
+
+<span class="sd">    :param pattern: Glob pattern with wildcards</span>
+<span class="sd">    :return:        Iterator that yields all file names that match pattern</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="n">_iter_alternatives</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">pat</span><span class="p">)</span>
+        <span class="n">pat</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normcase</span><span class="p">(</span><span class="n">pat</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pat</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_iglob</span><span class="p">(</span><span class="n">pat</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">name</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_iglob</span><span class="p">(</span><span class="n">pat</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">name</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="glob"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.Globbing.glob">[docs]</a><span class="k">def</span> <span class="nf">glob</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterates all filesystem paths that get matched by the glob pattern.</span>
+<span class="sd">    Syntax is equal to that of fnmatch.</span>
+
+<span class="sd">    :param pattern: Glob pattern with wildcards</span>
+<span class="sd">    :return:        List of all file names that match pattern</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">iglob</span><span class="p">(</span><span class="n">pattern</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

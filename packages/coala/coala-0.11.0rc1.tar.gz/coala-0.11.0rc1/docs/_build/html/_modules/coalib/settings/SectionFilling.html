@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.settings.SectionFilling &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.settings.SectionFilling</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bears.BEAR_KIND</span> <span class="k">import</span> <span class="n">BEAR_KIND</span>
+<span class="kn">from</span> <span class="nn">coalib.collecting</span> <span class="k">import</span> <span class="n">Dependencies</span>
+<span class="kn">from</span> <span class="nn">coalib.collecting.Collectors</span> <span class="k">import</span> <span class="n">collect_bears</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Setting</span> <span class="k">import</span> <span class="n">Setting</span>
+
+
+<div class="viewcode-block" id="fill_settings"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.SectionFilling.fill_settings">[docs]</a><span class="k">def</span> <span class="nf">fill_settings</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="n">acquire_settings</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves all bears and requests missing settings via the given</span>
+<span class="sd">    acquire_settings method.</span>
+
+<span class="sd">    This will retrieve all bears and their dependencies.</span>
+
+<span class="sd">    :param sections:         The sections to fill up, modified in place.</span>
+<span class="sd">    :param acquire_settings: The method to use for requesting settings. It will</span>
+<span class="sd">                             get a parameter which is a dictionary with the</span>
+<span class="sd">                             settings name as key and a list containing a</span>
+<span class="sd">                             description in [0] and the names of the bears</span>
+<span class="sd">                             who need this setting in all following indexes.</span>
+<span class="sd">    :param log_printer:      The log printer to use for logging.</span>
+<span class="sd">    :return:                 A tuple containing (local_bears, global_bears),</span>
+<span class="sd">                             each of them being a dictionary with the section</span>
+<span class="sd">                             name as key and as value the bears as a list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">local_bears</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">global_bears</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">section_name</span><span class="p">,</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">bear_dirs</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="n">bear_dirs</span><span class="p">()</span>
+        <span class="n">bears</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bears&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+        <span class="n">section_local_bears</span><span class="p">,</span> <span class="n">section_global_bears</span> <span class="o">=</span> <span class="n">collect_bears</span><span class="p">(</span>
+            <span class="n">bear_dirs</span><span class="p">,</span>
+            <span class="n">bears</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">,</span> <span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">GLOBAL</span><span class="p">],</span>
+            <span class="n">log_printer</span><span class="p">)</span>
+        <span class="n">section_local_bears</span> <span class="o">=</span> <span class="n">Dependencies</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">section_local_bears</span><span class="p">)</span>
+        <span class="n">section_global_bears</span> <span class="o">=</span> <span class="n">Dependencies</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">section_global_bears</span><span class="p">)</span>
+        <span class="n">all_bears</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">section_local_bears</span><span class="p">)</span>
+        <span class="n">all_bears</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">section_global_bears</span><span class="p">)</span>
+        <span class="n">fill_section</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">acquire_settings</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">all_bears</span><span class="p">)</span>
+
+        <span class="n">local_bears</span><span class="p">[</span><span class="n">section_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">section_local_bears</span>
+        <span class="n">global_bears</span><span class="p">[</span><span class="n">section_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">section_global_bears</span>
+
+    <span class="k">return</span> <span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span></div>
+
+
+<div class="viewcode-block" id="fill_section"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.SectionFilling.fill_section">[docs]</a><span class="k">def</span> <span class="nf">fill_section</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">acquire_settings</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">bears</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves needed settings from given bears and asks the user for</span>
+<span class="sd">    missing values.</span>
+
+<span class="sd">    If a setting is requested by several bears, the help text from the</span>
+<span class="sd">    latest bear will be taken.</span>
+
+<span class="sd">    :param section:          A section containing available settings. Settings</span>
+<span class="sd">                             will be added if some are missing.</span>
+<span class="sd">    :param acquire_settings: The method to use for requesting settings. It will</span>
+<span class="sd">                             get a parameter which is a dictionary with the</span>
+<span class="sd">                             settings name as key and a list containing a</span>
+<span class="sd">                             description in [0] and the names of the bears</span>
+<span class="sd">                             who need this setting in all following indexes.</span>
+<span class="sd">    :param log_printer:      The log printer for logging.</span>
+<span class="sd">    :param bears:            All bear classes or instances.</span>
+<span class="sd">    :return:                 The new section.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Retrieve needed settings.</span>
+    <span class="n">prel_needed_settings</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">bear</span> <span class="ow">in</span> <span class="n">bears</span><span class="p">:</span>
+        <span class="n">needed</span> <span class="o">=</span> <span class="n">bear</span><span class="o">.</span><span class="n">get_non_optional_settings</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">needed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">prel_needed_settings</span><span class="p">:</span>
+                <span class="n">prel_needed_settings</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bear</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">prel_needed_settings</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">needed</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                             <span class="n">bear</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="c1"># Strip away existent settings.</span>
+    <span class="n">needed_settings</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">setting</span><span class="p">,</span> <span class="n">help_text</span> <span class="ow">in</span> <span class="n">prel_needed_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">setting</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">section</span><span class="p">:</span>
+            <span class="n">needed_settings</span><span class="p">[</span><span class="n">setting</span><span class="p">]</span> <span class="o">=</span> <span class="n">help_text</span>
+
+    <span class="c1"># Get missing ones.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">needed_settings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">new_vals</span> <span class="o">=</span> <span class="n">acquire_settings</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">needed_settings</span><span class="p">,</span> <span class="n">section</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">setting</span><span class="p">,</span> <span class="n">help_text</span> <span class="ow">in</span> <span class="n">new_vals</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Setting</span><span class="p">(</span><span class="n">setting</span><span class="p">,</span> <span class="n">help_text</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">section</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

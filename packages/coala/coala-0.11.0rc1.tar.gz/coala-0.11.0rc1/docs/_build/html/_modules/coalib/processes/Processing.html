@@ -1,0 +1,888 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.processes.Processing &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.processes.Processing</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">queue</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+
+<span class="kn">from</span> <span class="nn">coalib.collecting.Collectors</span> <span class="k">import</span> <span class="n">collect_files</span>
+<span class="kn">from</span> <span class="nn">coala_utils.string_processing.StringConverter</span> <span class="k">import</span> <span class="n">StringConverter</span>
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LOG_LEVEL</span> <span class="k">import</span> <span class="n">LOG_LEVEL</span>
+<span class="kn">from</span> <span class="nn">coalib.processes.BearRunning</span> <span class="k">import</span> <span class="n">run</span>
+<span class="kn">from</span> <span class="nn">coalib.processes.CONTROL_ELEMENT</span> <span class="k">import</span> <span class="n">CONTROL_ELEMENT</span>
+<span class="kn">from</span> <span class="nn">coalib.processes.LogPrinterThread</span> <span class="k">import</span> <span class="n">LogPrinterThread</span>
+<span class="kn">from</span> <span class="nn">coalib.results.Result</span> <span class="k">import</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.ApplyPatchAction</span> <span class="k">import</span> <span class="n">ApplyPatchAction</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.IgnoreResultAction</span> <span class="k">import</span> <span class="n">IgnoreResultAction</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.PrintDebugMessageAction</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">PrintDebugMessageAction</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.ShowPatchAction</span> <span class="k">import</span> <span class="n">ShowPatchAction</span>
+<span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="n">RESULT_SEVERITY</span>
+<span class="kn">from</span> <span class="nn">coalib.results.SourceRange</span> <span class="k">import</span> <span class="n">SourceRange</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Setting</span> <span class="k">import</span> <span class="n">glob_list</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.Globbing</span> <span class="k">import</span> <span class="n">fnmatch</span>
+
+
+<span class="n">ACTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="n">ApplyPatchAction</span><span class="p">,</span>
+           <span class="n">PrintDebugMessageAction</span><span class="p">,</span>
+           <span class="n">ShowPatchAction</span><span class="p">,</span>
+           <span class="n">IgnoreResultAction</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="get_cpu_count"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.get_cpu_count">[docs]</a><span class="k">def</span> <span class="nf">get_cpu_count</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+    <span class="c1"># cpu_count is not implemented for some CPU architectures/OSes</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">return</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="fill_queue"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.fill_queue">[docs]</a><span class="k">def</span> <span class="nf">fill_queue</span><span class="p">(</span><span class="n">queue_fill</span><span class="p">,</span> <span class="n">any_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes element from a list and populates a queue with those elements.</span>
+
+<span class="sd">    :param queue_fill: The queue to be filled.</span>
+<span class="sd">    :param any_list:   List containing the elements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">any_list</span><span class="p">:</span>
+        <span class="n">queue_fill</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_running_processes"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.get_running_processes">[docs]</a><span class="k">def</span> <span class="nf">get_running_processes</span><span class="p">(</span><span class="n">processes</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">((</span><span class="mi">1</span> <span class="k">if</span> <span class="n">process</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">process</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_process_group"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.create_process_group">[docs]</a><span class="k">def</span> <span class="nf">create_process_group</span><span class="p">(</span><span class="n">command_array</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>  <span class="c1"># pragma posix: no cover</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+            <span class="n">command_array</span><span class="p">,</span>
+            <span class="n">creationflags</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">CREATE_NEW_PROCESS_GROUP</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma nt: no cover</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command_array</span><span class="p">,</span>
+                                <span class="n">preexec_fn</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">setsid</span><span class="p">,</span>
+                                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">proc</span></div>
+
+
+<div class="viewcode-block" id="get_default_actions"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.get_default_actions">[docs]</a><span class="k">def</span> <span class="nf">get_default_actions</span><span class="p">(</span><span class="n">section</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses the key ``default_actions`` in the given section.</span>
+
+<span class="sd">    :param section:    The section where to parse from.</span>
+<span class="sd">    :return:           A dict with the bearname as keys and their default</span>
+<span class="sd">                       actions as values and another dict that contains bears</span>
+<span class="sd">                       and invalid action names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">default_actions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">section</span><span class="p">[</span><span class="s1">&#39;default_actions&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{},</span> <span class="p">{}</span>
+
+    <span class="n">action_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">action</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">action</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">ACTIONS</span><span class="p">}</span>
+    <span class="n">invalid_action_set</span> <span class="o">=</span> <span class="n">default_actions</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="o">-</span> <span class="n">action_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">invalid_actions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">invalid_action_set</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">invalid_actions</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">bear</span><span class="p">:</span> <span class="n">action</span>
+            <span class="k">for</span> <span class="n">bear</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">default_actions</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">invalid_action_set</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">invalid</span> <span class="ow">in</span> <span class="n">invalid_actions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">del</span> <span class="n">default_actions</span><span class="p">[</span><span class="n">invalid</span><span class="p">]</span>
+
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">{</span><span class="n">bearname</span><span class="p">:</span> <span class="n">action_dict</span><span class="p">[</span><span class="n">action_name</span><span class="p">]</span>
+               <span class="k">for</span> <span class="n">bearname</span><span class="p">,</span> <span class="n">action_name</span> <span class="ow">in</span> <span class="n">default_actions</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="n">actions</span><span class="p">,</span> <span class="n">invalid_actions</span></div>
+
+
+<div class="viewcode-block" id="autoapply_actions"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.autoapply_actions">[docs]</a><span class="k">def</span> <span class="nf">autoapply_actions</span><span class="p">(</span><span class="n">results</span><span class="p">,</span>
+                      <span class="n">file_dict</span><span class="p">,</span>
+                      <span class="n">file_diff_dict</span><span class="p">,</span>
+                      <span class="n">section</span><span class="p">,</span>
+                      <span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Auto-applies actions like defined in the given section.</span>
+
+<span class="sd">    :param results:        A list of results.</span>
+<span class="sd">    :param file_dict:      A dictionary containing the name of files and its</span>
+<span class="sd">                           contents.</span>
+<span class="sd">    :param file_diff_dict: A dictionary that contains filenames as keys and</span>
+<span class="sd">                           diff objects as values.</span>
+<span class="sd">    :param section:        The section.</span>
+<span class="sd">    :param log_printer:    A log printer instance to log messages on.</span>
+<span class="sd">    :return:               A list of unprocessed results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">default_actions</span><span class="p">,</span> <span class="n">invalid_actions</span> <span class="o">=</span> <span class="n">get_default_actions</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+    <span class="n">no_autoapply_warn</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;no_autoapply_warn&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">bearname</span><span class="p">,</span> <span class="n">actionname</span> <span class="ow">in</span> <span class="n">invalid_actions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Selected default action </span><span class="si">{!r}</span><span class="s1"> for bear </span><span class="si">{!r}</span><span class="s1"> does &#39;</span>
+                         <span class="s1">&#39;not exist. Ignoring action.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">actionname</span><span class="p">,</span>
+                                                              <span class="n">bearname</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">default_actions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># There&#39;s nothing to auto-apply.</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="n">not_processed_results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Match full bear names deterministically, prioritized!</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="n">default_actions</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">bear_glob</span> <span class="ow">in</span> <span class="n">default_actions</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fnmatch</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">bear_glob</span><span class="p">):</span>
+                    <span class="n">action</span> <span class="o">=</span> <span class="n">default_actions</span><span class="p">[</span><span class="n">bear_glob</span><span class="p">]</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">not_processed_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+        <span class="n">applicable</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">is_applicable</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">,</span> <span class="n">file_diff_dict</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">applicable</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">no_autoapply_warn</span><span class="p">:</span>
+                <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">applicable</span><span class="p">))</span>
+            <span class="n">not_processed_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">action</span><span class="p">()</span><span class="o">.</span><span class="n">apply_from_section</span><span class="p">(</span><span class="n">result</span><span class="p">,</span>
+                                        <span class="n">file_dict</span><span class="p">,</span>
+                                        <span class="n">file_diff_dict</span><span class="p">,</span>
+                                        <span class="n">section</span><span class="p">)</span>
+            <span class="n">log_printer</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Applied </span><span class="si">{!r}</span><span class="s1"> on </span><span class="si">{}</span><span class="s1"> from </span><span class="si">{!r}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">action</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">location_repr</span><span class="p">(),</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">ex</span><span class="p">:</span>
+            <span class="n">not_processed_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="n">log_printer</span><span class="o">.</span><span class="n">log_exception</span><span class="p">(</span>
+                <span class="s1">&#39;Failed to execute action </span><span class="si">{!r}</span><span class="s1"> with error: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">action</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">ex</span><span class="p">),</span>
+                <span class="n">ex</span><span class="p">)</span>
+            <span class="n">log_printer</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;-&gt; for result &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">not_processed_results</span></div>
+
+
+<div class="viewcode-block" id="check_result_ignore"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.check_result_ignore">[docs]</a><span class="k">def</span> <span class="nf">check_result_ignore</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">ignore_ranges</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines if the result has to be ignored.</span>
+
+<span class="sd">    Any result will be ignored if its origin matches any bear names and its</span>
+<span class="sd">    SourceRange overlaps with the ignore range.</span>
+
+<span class="sd">    Note that everything after a space in the origin will be cut away, so the</span>
+<span class="sd">    user can ignore results with an origin like `CSecurityBear (buffer)` with</span>
+<span class="sd">    just `# Ignore CSecurityBear`.</span>
+
+<span class="sd">    :param result:        The result that needs to be checked.</span>
+<span class="sd">    :param ignore_ranges: A list of tuples, each containing a list of lower</span>
+<span class="sd">                          cased affected bearnames and a SourceRange to</span>
+<span class="sd">                          ignore. If any of the bearname lists is empty, it</span>
+<span class="sd">                          is considered an ignore range for all bears.</span>
+<span class="sd">                          This may be a list of globbed bear wildcards.</span>
+<span class="sd">    :return:              True if the result has to be ignored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">bears</span><span class="p">,</span> <span class="nb">range</span> <span class="ow">in</span> <span class="n">ignore_ranges</span><span class="p">:</span>
+        <span class="n">orig</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="nb">range</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bears</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">orig</span> <span class="ow">in</span> <span class="n">bears</span> <span class="ow">or</span> <span class="n">fnmatch</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="n">bears</span><span class="p">))):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="print_result"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.print_result">[docs]</a><span class="k">def</span> <span class="nf">print_result</span><span class="p">(</span><span class="n">results</span><span class="p">,</span>
+                 <span class="n">file_dict</span><span class="p">,</span>
+                 <span class="n">retval</span><span class="p">,</span>
+                 <span class="n">print_results</span><span class="p">,</span>
+                 <span class="n">section</span><span class="p">,</span>
+                 <span class="n">log_printer</span><span class="p">,</span>
+                 <span class="n">file_diff_dict</span><span class="p">,</span>
+                 <span class="n">ignore_ranges</span><span class="p">,</span>
+                 <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes the results produced by each bear and gives them to the print_results</span>
+<span class="sd">    method to present to the user.</span>
+
+<span class="sd">    :param results:        A list of results.</span>
+<span class="sd">    :param file_dict:      A dictionary containing the name of files and its</span>
+<span class="sd">                           contents.</span>
+<span class="sd">    :param retval:         It is True if no results were yielded ever before.</span>
+<span class="sd">                           If it is False this function will return False no</span>
+<span class="sd">                           matter what happens. Else it depends on if this</span>
+<span class="sd">                           invocation yields results.</span>
+<span class="sd">    :param print_results:  A function that prints all given results appropriate</span>
+<span class="sd">                           to the output medium.</span>
+<span class="sd">    :param file_diff_dict: A dictionary that contains filenames as keys and</span>
+<span class="sd">                           diff objects as values.</span>
+<span class="sd">    :param ignore_ranges:  A list of SourceRanges. Results that affect code in</span>
+<span class="sd">                           any of those ranges will be ignored.</span>
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :return:               Returns False if any results were yielded. Else</span>
+<span class="sd">                           True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">min_severity_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;min_severity&#39;</span><span class="p">,</span> <span class="s1">&#39;INFO&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">min_severity</span> <span class="o">=</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">str_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">min_severity_str</span><span class="p">,</span> <span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">result</span><span class="p">:</span>
+                          <span class="nb">type</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Result</span> <span class="ow">and</span>
+                          <span class="n">result</span><span class="o">.</span><span class="n">severity</span> <span class="o">&gt;=</span> <span class="n">min_severity</span> <span class="ow">and</span>
+                          <span class="ow">not</span> <span class="n">check_result_ignore</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">ignore_ranges</span><span class="p">),</span>
+                          <span class="n">results</span><span class="p">))</span>
+
+    <span class="n">patched_results</span> <span class="o">=</span> <span class="n">autoapply_actions</span><span class="p">(</span><span class="n">results</span><span class="p">,</span>
+                                        <span class="n">file_dict</span><span class="p">,</span>
+                                        <span class="n">file_diff_dict</span><span class="p">,</span>
+                                        <span class="n">section</span><span class="p">,</span>
+                                        <span class="n">log_printer</span><span class="p">)</span>
+
+    <span class="n">print_results</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span>
+                  <span class="n">section</span><span class="p">,</span>
+                  <span class="n">patched_results</span><span class="p">,</span>
+                  <span class="n">file_dict</span><span class="p">,</span>
+                  <span class="n">file_diff_dict</span><span class="p">,</span>
+                  <span class="n">console_printer</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retval</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">patched_results</span></div>
+
+
+<div class="viewcode-block" id="get_file_dict"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.get_file_dict">[docs]</a><span class="k">def</span> <span class="nf">get_file_dict</span><span class="p">(</span><span class="n">filename_list</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads all files into a dictionary.</span>
+
+<span class="sd">    :param filename_list: List of names of paths to files to get contents of.</span>
+<span class="sd">    :param log_printer:   The logger which logs errors.</span>
+<span class="sd">    :return:              Reads the content of each file into a dictionary</span>
+<span class="sd">                          with filenames as keys.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filename_list</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">_file</span><span class="p">:</span>
+                <span class="n">file_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+            <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Failed to read file &#39;</span><span class="si">{}</span><span class="s2">&#39;. It seems to contain &quot;</span>
+                             <span class="s1">&#39;non-unicode characters. Leaving it &#39;</span>
+                             <span class="s1">&#39;out.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="n">log_printer</span><span class="o">.</span><span class="n">log_exception</span><span class="p">(</span><span class="s2">&quot;Failed to read file &#39;</span><span class="si">{}</span><span class="s2">&#39; because of &quot;</span>
+                                      <span class="s1">&#39;an unknown error. Leaving it &#39;</span>
+                                      <span class="s1">&#39;out.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span>
+                                      <span class="n">exception</span><span class="p">,</span>
+                                      <span class="n">log_level</span><span class="o">=</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+
+    <span class="n">log_printer</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Files that will be checked:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+                      <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">file_dict</span></div>
+
+
+<div class="viewcode-block" id="filter_raising_callables"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.filter_raising_callables">[docs]</a><span class="k">def</span> <span class="nf">filter_raising_callables</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filters all callable items inside the given iterator that raise the</span>
+<span class="sd">    given exceptions.</span>
+
+<span class="sd">    :param it:        The iterator to filter.</span>
+<span class="sd">    :param exception: The (tuple of) exception(s) to filter for.</span>
+<span class="sd">    :param args:      Positional arguments to pass to the callable.</span>
+<span class="sd">    :param kwargs:    Keyword arguments to pass to the callable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">elem</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">exception</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="instantiate_bears"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.instantiate_bears">[docs]</a><span class="k">def</span> <span class="nf">instantiate_bears</span><span class="p">(</span><span class="n">section</span><span class="p">,</span>
+                      <span class="n">local_bear_list</span><span class="p">,</span>
+                      <span class="n">global_bear_list</span><span class="p">,</span>
+                      <span class="n">file_dict</span><span class="p">,</span>
+                      <span class="n">message_queue</span><span class="p">,</span>
+                      <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Instantiates each bear with the arguments it needs.</span>
+
+<span class="sd">    :param section:          The section the bears belong to.</span>
+<span class="sd">    :param local_bear_list:  List of local bear classes to instantiate.</span>
+<span class="sd">    :param global_bear_list: List of global bear classes to instantiate.</span>
+<span class="sd">    :param file_dict:        Dictionary containing filenames and their</span>
+<span class="sd">                             contents.</span>
+<span class="sd">    :param message_queue:    Queue responsible to maintain the messages</span>
+<span class="sd">                             delivered by the bears.</span>
+<span class="sd">    :param console_printer:  Object to print messages on the console.</span>
+<span class="sd">    :return:                 The local and global bear instance lists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">local_bear_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">bear</span>
+                       <span class="k">for</span> <span class="n">bear</span> <span class="ow">in</span> <span class="n">filter_raising_callables</span><span class="p">(</span>
+                           <span class="n">local_bear_list</span><span class="p">,</span>
+                           <span class="ne">RuntimeError</span><span class="p">,</span>
+                           <span class="n">section</span><span class="p">,</span>
+                           <span class="n">message_queue</span><span class="p">,</span>
+                           <span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span>
+
+    <span class="n">global_bear_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">bear</span>
+                        <span class="k">for</span> <span class="n">bear</span> <span class="ow">in</span> <span class="n">filter_raising_callables</span><span class="p">(</span>
+                            <span class="n">global_bear_list</span><span class="p">,</span>
+                            <span class="ne">RuntimeError</span><span class="p">,</span>
+                            <span class="n">file_dict</span><span class="p">,</span>
+                            <span class="n">section</span><span class="p">,</span>
+                            <span class="n">message_queue</span><span class="p">,</span>
+                            <span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)]</span>
+
+    <span class="k">return</span> <span class="n">local_bear_list</span><span class="p">,</span> <span class="n">global_bear_list</span></div>
+
+
+<div class="viewcode-block" id="instantiate_processes"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.instantiate_processes">[docs]</a><span class="k">def</span> <span class="nf">instantiate_processes</span><span class="p">(</span><span class="n">section</span><span class="p">,</span>
+                          <span class="n">local_bear_list</span><span class="p">,</span>
+                          <span class="n">global_bear_list</span><span class="p">,</span>
+                          <span class="n">job_count</span><span class="p">,</span>
+                          <span class="n">cache</span><span class="p">,</span>
+                          <span class="n">log_printer</span><span class="p">,</span>
+                          <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Instantiate the number of processes that will run bears which will be</span>
+<span class="sd">    responsible for running bears in a multiprocessing environment.</span>
+
+<span class="sd">    :param section:          The section the bears belong to.</span>
+<span class="sd">    :param local_bear_list:  List of local bears belonging to the section.</span>
+<span class="sd">    :param global_bear_list: List of global bears belonging to the section.</span>
+<span class="sd">    :param job_count:        Max number of processes to create.</span>
+<span class="sd">    :param cache:            An instance of ``misc.Caching.FileCache`` to use as</span>
+<span class="sd">                             a file cache buffer.</span>
+<span class="sd">    :param log_printer:      The log printer to warn to.</span>
+<span class="sd">    :param console_printer:  Object to print messages on the console.</span>
+<span class="sd">    :return:                 A tuple containing a list of processes,</span>
+<span class="sd">                             and the arguments passed to each process which are</span>
+<span class="sd">                             the same for each object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filename_list</span> <span class="o">=</span> <span class="n">collect_files</span><span class="p">(</span>
+        <span class="n">glob_list</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;files&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)),</span>
+        <span class="n">log_printer</span><span class="p">,</span>
+        <span class="n">ignored_file_paths</span><span class="o">=</span><span class="n">glob_list</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)),</span>
+        <span class="n">limit_file_paths</span><span class="o">=</span><span class="n">glob_list</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;limit_files&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)))</span>
+
+    <span class="c1"># This stores all matched files irrespective of whether coala is run</span>
+    <span class="c1"># only on changed files or not. Global bears require all the files</span>
+    <span class="n">complete_filename_list</span> <span class="o">=</span> <span class="n">filename_list</span>
+    <span class="n">complete_file_dict</span> <span class="o">=</span> <span class="n">get_file_dict</span><span class="p">(</span><span class="n">complete_filename_list</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">)</span>
+
+    <span class="n">manager</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
+    <span class="n">global_bear_queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="n">filename_queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="n">local_result_dict</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+    <span class="n">global_result_dict</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+    <span class="n">message_queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="n">control_queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+    <span class="n">loaded_local_bears_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_bear_list</span><span class="p">)</span>
+    <span class="n">local_bear_list</span><span class="p">[:],</span> <span class="n">global_bear_list</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">instantiate_bears</span><span class="p">(</span>
+        <span class="n">section</span><span class="p">,</span>
+        <span class="n">local_bear_list</span><span class="p">,</span>
+        <span class="n">global_bear_list</span><span class="p">,</span>
+        <span class="n">complete_file_dict</span><span class="p">,</span>
+        <span class="n">message_queue</span><span class="p">,</span>
+        <span class="n">console_printer</span><span class="o">=</span><span class="n">console_printer</span><span class="p">)</span>
+    <span class="n">loaded_valid_local_bears_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">local_bear_list</span><span class="p">)</span>
+    <span class="c1"># Note: the complete file dict is given as the file dict to bears and</span>
+    <span class="c1"># the whole project is accessible to every bear. However, local bears are</span>
+    <span class="c1"># run only for the changed files if caching is enabled.</span>
+
+    <span class="c1"># Start tracking all the files</span>
+    <span class="k">if</span> <span class="n">cache</span> <span class="ow">and</span> <span class="n">loaded_valid_local_bears_count</span> <span class="o">==</span> <span class="n">loaded_local_bears_count</span><span class="p">:</span>
+        <span class="n">cache</span><span class="o">.</span><span class="n">track_files</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">complete_filename_list</span><span class="p">))</span>
+        <span class="n">changed_files</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">get_uncached_files</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">(</span><span class="n">filename_list</span><span class="p">))</span> <span class="k">if</span> <span class="n">cache</span> <span class="k">else</span> <span class="n">filename_list</span>
+
+        <span class="c1"># If caching is enabled then the local bears should process only the</span>
+        <span class="c1"># changed files.</span>
+        <span class="n">log_printer</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;coala is run only on changed files, bears&#39; log &quot;</span>
+                          <span class="s1">&#39;messages from previous runs may not appear. You may &#39;</span>
+                          <span class="s1">&#39;use the `--flush-cache` flag to see them.&#39;</span><span class="p">)</span>
+        <span class="n">filename_list</span> <span class="o">=</span> <span class="n">changed_files</span>
+
+    <span class="c1"># Note: the complete file dict is given as the file dict to bears and</span>
+    <span class="c1"># the whole project is accessible to every bear. However, local bears are</span>
+    <span class="c1"># run only for the changed files if caching is enabled.</span>
+    <span class="n">file_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">filename</span><span class="p">:</span> <span class="n">complete_file_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+                 <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filename_list</span>
+                 <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">complete_file_dict</span><span class="p">}</span>
+
+    <span class="n">bear_runner_args</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;file_name_queue&#39;</span><span class="p">:</span> <span class="n">filename_queue</span><span class="p">,</span>
+                        <span class="s1">&#39;local_bear_list&#39;</span><span class="p">:</span> <span class="n">local_bear_list</span><span class="p">,</span>
+                        <span class="s1">&#39;global_bear_list&#39;</span><span class="p">:</span> <span class="n">global_bear_list</span><span class="p">,</span>
+                        <span class="s1">&#39;global_bear_queue&#39;</span><span class="p">:</span> <span class="n">global_bear_queue</span><span class="p">,</span>
+                        <span class="s1">&#39;file_dict&#39;</span><span class="p">:</span> <span class="n">file_dict</span><span class="p">,</span>
+                        <span class="s1">&#39;local_result_dict&#39;</span><span class="p">:</span> <span class="n">local_result_dict</span><span class="p">,</span>
+                        <span class="s1">&#39;global_result_dict&#39;</span><span class="p">:</span> <span class="n">global_result_dict</span><span class="p">,</span>
+                        <span class="s1">&#39;message_queue&#39;</span><span class="p">:</span> <span class="n">message_queue</span><span class="p">,</span>
+                        <span class="s1">&#39;control_queue&#39;</span><span class="p">:</span> <span class="n">control_queue</span><span class="p">,</span>
+                        <span class="s1">&#39;timeout&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">}</span>
+
+    <span class="n">fill_queue</span><span class="p">(</span><span class="n">filename_queue</span><span class="p">,</span> <span class="n">file_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">fill_queue</span><span class="p">(</span><span class="n">global_bear_queue</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">global_bear_list</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="p">([</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">run</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="n">bear_runner_args</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">job_count</span><span class="p">)],</span>
+            <span class="n">bear_runner_args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_ignore_scope"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.get_ignore_scope">[docs]</a><span class="k">def</span> <span class="nf">get_ignore_scope</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">keyword</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves the bears that are to be ignored defined in the given line.</span>
+
+<span class="sd">    :param line:    The line containing the ignore declaration.</span>
+<span class="sd">    :param keyword: The keyword that was found. Everything after the rightmost</span>
+<span class="sd">                    occurrence of it will be considered for the scope.</span>
+<span class="sd">    :return:        A list of lower cased bearnames or an empty list (-&gt; &quot;all&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">toignore</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="n">keyword</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">keyword</span><span class="p">):]</span>
+    <span class="k">if</span> <span class="n">toignore</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">StringConverter</span><span class="p">(</span><span class="n">toignore</span><span class="p">,</span> <span class="n">list_delimiters</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="yield_ignore_ranges"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.yield_ignore_ranges">[docs]</a><span class="k">def</span> <span class="nf">yield_ignore_ranges</span><span class="p">(</span><span class="n">file_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Yields tuples of affected bears and a SourceRange that shall be ignored for</span>
+<span class="sd">    those.</span>
+
+<span class="sd">    :param file_dict: The file dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">file_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">bears</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">stop_ignoring</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">line_number</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c1"># Before lowering all lines ever read, first look for the biggest</span>
+            <span class="c1"># common substring, case sensitive: I*gnor*e, start i*gnor*ing,</span>
+            <span class="c1"># N*oqa*.</span>
+            <span class="k">if</span> <span class="s1">&#39;gnor&#39;</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">or</span> <span class="s1">&#39;oqa&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="s1">&#39;start ignoring &#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="n">start</span> <span class="o">=</span> <span class="n">line_number</span>
+                    <span class="n">bears</span> <span class="o">=</span> <span class="n">get_ignore_scope</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="s1">&#39;start ignoring &#39;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="s1">&#39;stop ignoring&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="n">stop_ignoring</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="n">start</span><span class="p">:</span>
+                        <span class="k">yield</span> <span class="p">(</span><span class="n">bears</span><span class="p">,</span>
+                               <span class="n">SourceRange</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span>
+                                   <span class="n">filename</span><span class="p">,</span>
+                                   <span class="n">start</span><span class="p">,</span>
+                                   <span class="mi">1</span><span class="p">,</span>
+                                   <span class="n">line_number</span><span class="p">,</span>
+                                   <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="n">line_number</span><span class="o">-</span><span class="mi">1</span><span class="p">])))</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">ignore_stmt</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;ignore &#39;</span><span class="p">,</span> <span class="s1">&#39;noqa &#39;</span><span class="p">,</span> <span class="s1">&#39;noqa&#39;</span><span class="p">]:</span>
+                        <span class="k">if</span> <span class="n">ignore_stmt</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                            <span class="n">end_line</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">line_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">))</span>
+                            <span class="k">yield</span> <span class="p">(</span><span class="n">get_ignore_scope</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">ignore_stmt</span><span class="p">),</span>
+                                   <span class="n">SourceRange</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span>
+                                       <span class="n">filename</span><span class="p">,</span>
+                                       <span class="n">line_number</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                                       <span class="n">end_line</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="n">end_line</span><span class="o">-</span><span class="mi">1</span><span class="p">])))</span>
+                            <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">stop_ignoring</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="p">(</span><span class="n">bears</span><span class="p">,</span>
+                   <span class="n">SourceRange</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                           <span class="n">start</span><span class="p">,</span>
+                                           <span class="mi">1</span><span class="p">,</span>
+                                           <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">),</span>
+                                           <span class="nb">len</span><span class="p">(</span><span class="n">file</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])))</span></div>
+
+
+<div class="viewcode-block" id="get_file_list"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.get_file_list">[docs]</a><span class="k">def</span> <span class="nf">get_file_list</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the set of files that are affected in the given results.</span>
+
+<span class="sd">    :param results: A list of results from which the list of files is to be</span>
+<span class="sd">                    extracted.</span>
+<span class="sd">    :return:        A set of file paths containing the mentioned list of</span>
+<span class="sd">                    files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">code</span><span class="o">.</span><span class="n">file</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">for</span> <span class="n">code</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">affected_code</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="process_queues"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.process_queues">[docs]</a><span class="k">def</span> <span class="nf">process_queues</span><span class="p">(</span><span class="n">processes</span><span class="p">,</span>
+                   <span class="n">control_queue</span><span class="p">,</span>
+                   <span class="n">local_result_dict</span><span class="p">,</span>
+                   <span class="n">global_result_dict</span><span class="p">,</span>
+                   <span class="n">file_dict</span><span class="p">,</span>
+                   <span class="n">print_results</span><span class="p">,</span>
+                   <span class="n">section</span><span class="p">,</span>
+                   <span class="n">cache</span><span class="p">,</span>
+                   <span class="n">log_printer</span><span class="p">,</span>
+                   <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterate the control queue and send the results received to the print_result</span>
+<span class="sd">    method so that they can be presented to the user.</span>
+
+<span class="sd">    :param processes:          List of processes which can be used to run</span>
+<span class="sd">                               Bears.</span>
+<span class="sd">    :param control_queue:      Containing control elements that indicate</span>
+<span class="sd">                               whether there is a result available and which</span>
+<span class="sd">                               bear it belongs to.</span>
+<span class="sd">    :param local_result_dict:  Dictionary containing results respective to</span>
+<span class="sd">                               local bears. It is modified by the processes</span>
+<span class="sd">                               i.e. results are added to it by multiple</span>
+<span class="sd">                               processes.</span>
+<span class="sd">    :param global_result_dict: Dictionary containing results respective to</span>
+<span class="sd">                               global bears. It is modified by the processes</span>
+<span class="sd">                               i.e. results are added to it by multiple</span>
+<span class="sd">                               processes.</span>
+<span class="sd">    :param file_dict:          Dictionary containing file contents with</span>
+<span class="sd">                               filename as keys.</span>
+<span class="sd">    :param print_results:      Prints all given results appropriate to the</span>
+<span class="sd">                               output medium.</span>
+<span class="sd">    :param cache:              An instance of ``misc.Caching.FileCache`` to use</span>
+<span class="sd">                               as a file cache buffer.</span>
+<span class="sd">    :return:                   Return True if all bears execute successfully and</span>
+<span class="sd">                               Results were delivered to the user. Else False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_diff_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">retval</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># Number of processes working on local/global bears. They are count down</span>
+    <span class="c1"># when the last queue element of that process is processed which may be</span>
+    <span class="c1"># *after* the process has ended!</span>
+    <span class="n">local_processes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span>
+    <span class="n">global_processes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span>
+    <span class="n">global_result_buffer</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">result_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">ignore_ranges</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">yield_ignore_ranges</span><span class="p">(</span><span class="n">file_dict</span><span class="p">))</span>
+
+    <span class="c1"># One process is the logger thread</span>
+    <span class="k">while</span> <span class="n">local_processes</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">control_elem</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">control_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">control_elem</span> <span class="o">==</span> <span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">LOCAL_FINISHED</span><span class="p">:</span>
+                <span class="n">local_processes</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">control_elem</span> <span class="o">==</span> <span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">GLOBAL_FINISHED</span><span class="p">:</span>
+                <span class="n">global_processes</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">control_elem</span> <span class="o">==</span> <span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">local_processes</span> <span class="o">!=</span> <span class="mi">0</span>
+                <span class="n">result_files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">local_result_dict</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span>
+                <span class="n">retval</span><span class="p">,</span> <span class="n">res</span> <span class="o">=</span> <span class="n">print_result</span><span class="p">(</span><span class="n">local_result_dict</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
+                                           <span class="n">file_dict</span><span class="p">,</span>
+                                           <span class="n">retval</span><span class="p">,</span>
+                                           <span class="n">print_results</span><span class="p">,</span>
+                                           <span class="n">section</span><span class="p">,</span>
+                                           <span class="n">log_printer</span><span class="p">,</span>
+                                           <span class="n">file_diff_dict</span><span class="p">,</span>
+                                           <span class="n">ignore_ranges</span><span class="p">,</span>
+                                           <span class="n">console_printer</span><span class="o">=</span><span class="n">console_printer</span><span class="p">)</span>
+                <span class="n">local_result_dict</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">control_elem</span> <span class="o">==</span> <span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">GLOBAL</span>
+                <span class="n">global_result_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">get_running_processes</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="c1"># Recover silently, those branches are only</span>
+                <span class="c1"># nondeterministically covered.</span>
+                <span class="k">break</span>
+
+    <span class="c1"># Flush global result buffer</span>
+    <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">global_result_buffer</span><span class="p">:</span>
+        <span class="n">result_files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">global_result_dict</span><span class="p">[</span><span class="n">elem</span><span class="p">]))</span>
+        <span class="n">retval</span><span class="p">,</span> <span class="n">res</span> <span class="o">=</span> <span class="n">print_result</span><span class="p">(</span><span class="n">global_result_dict</span><span class="p">[</span><span class="n">elem</span><span class="p">],</span>
+                                   <span class="n">file_dict</span><span class="p">,</span>
+                                   <span class="n">retval</span><span class="p">,</span>
+                                   <span class="n">print_results</span><span class="p">,</span>
+                                   <span class="n">section</span><span class="p">,</span>
+                                   <span class="n">log_printer</span><span class="p">,</span>
+                                   <span class="n">file_diff_dict</span><span class="p">,</span>
+                                   <span class="n">ignore_ranges</span><span class="p">,</span>
+                                   <span class="n">console_printer</span><span class="o">=</span><span class="n">console_printer</span><span class="p">)</span>
+        <span class="n">global_result_dict</span><span class="p">[</span><span class="n">elem</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+
+    <span class="c1"># One process is the logger thread</span>
+    <span class="k">while</span> <span class="n">global_processes</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">control_elem</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">control_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">control_elem</span> <span class="o">==</span> <span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">GLOBAL</span><span class="p">:</span>
+                <span class="n">result_files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">get_file_list</span><span class="p">(</span><span class="n">global_result_dict</span><span class="p">[</span><span class="n">index</span><span class="p">]))</span>
+                <span class="n">retval</span><span class="p">,</span> <span class="n">res</span> <span class="o">=</span> <span class="n">print_result</span><span class="p">(</span><span class="n">global_result_dict</span><span class="p">[</span><span class="n">index</span><span class="p">],</span>
+                                           <span class="n">file_dict</span><span class="p">,</span>
+                                           <span class="n">retval</span><span class="p">,</span>
+                                           <span class="n">print_results</span><span class="p">,</span>
+                                           <span class="n">section</span><span class="p">,</span>
+                                           <span class="n">log_printer</span><span class="p">,</span>
+                                           <span class="n">file_diff_dict</span><span class="p">,</span>
+                                           <span class="n">ignore_ranges</span><span class="p">,</span>
+                                           <span class="n">console_printer</span><span class="p">)</span>
+                <span class="n">global_result_dict</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">control_elem</span> <span class="o">==</span> <span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">GLOBAL_FINISHED</span>
+                <span class="n">global_processes</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">get_running_processes</span><span class="p">(</span><span class="n">processes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="c1"># Recover silently, those branches are only</span>
+                <span class="c1"># nondeterministically covered.</span>
+                <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">cache</span><span class="p">:</span>
+        <span class="n">cache</span><span class="o">.</span><span class="n">untrack_files</span><span class="p">(</span><span class="n">result_files</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="simplify_section_result"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.simplify_section_result">[docs]</a><span class="k">def</span> <span class="nf">simplify_section_result</span><span class="p">(</span><span class="n">section_result</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes in a section&#39;s result from ``execute_section`` and simplifies it</span>
+<span class="sd">    for easy usage in other functions.</span>
+
+<span class="sd">    :param section_result: The result of a section which was executed.</span>
+<span class="sd">    :return:               Tuple containing:</span>
+<span class="sd">                            - bool - True if results were yielded</span>
+<span class="sd">                            - bool - True if unfixed results were yielded</span>
+<span class="sd">                            - list - Results from all bears (local and global)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">section_yielded_result</span> <span class="o">=</span> <span class="n">section_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">results_for_section</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="n">section_result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span>
+                       <span class="n">section_result</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">results_for_section</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="n">section_yielded_unfixed_results</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results_for_section</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">section_yielded_result</span><span class="p">,</span>
+            <span class="n">section_yielded_unfixed_results</span><span class="p">,</span>
+            <span class="n">results_for_section</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="execute_section"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.Processing.execute_section">[docs]</a><span class="k">def</span> <span class="nf">execute_section</span><span class="p">(</span><span class="n">section</span><span class="p">,</span>
+                    <span class="n">global_bear_list</span><span class="p">,</span>
+                    <span class="n">local_bear_list</span><span class="p">,</span>
+                    <span class="n">print_results</span><span class="p">,</span>
+                    <span class="n">cache</span><span class="p">,</span>
+                    <span class="n">log_printer</span><span class="p">,</span>
+                    <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Executes the section with the given bears.</span>
+
+<span class="sd">    The execute_section method does the following things:</span>
+
+<span class="sd">    1. Prepare a Process</span>
+<span class="sd">       -  Load files</span>
+<span class="sd">       -  Create queues</span>
+<span class="sd">    2. Spawn up one or more Processes</span>
+<span class="sd">    3. Output results from the Processes</span>
+<span class="sd">    4. Join all processes</span>
+
+<span class="sd">    :param section:          The section to execute.</span>
+<span class="sd">    :param global_bear_list: List of global bears belonging to the section.</span>
+<span class="sd">                             Dependencies are already resolved.</span>
+<span class="sd">    :param local_bear_list:  List of local bears belonging to the section.</span>
+<span class="sd">                             Dependencies are already resolved.</span>
+<span class="sd">    :param print_results:    Prints all given results appropriate to the</span>
+<span class="sd">                             output medium.</span>
+<span class="sd">    :param cache:            An instance of ``misc.Caching.FileCache`` to use as</span>
+<span class="sd">                             a file cache buffer.</span>
+<span class="sd">    :param log_printer:      The log_printer to warn to.</span>
+<span class="sd">    :param console_printer:  Object to print messages on the console.</span>
+<span class="sd">    :return:                 Tuple containing a bool (True if results were</span>
+<span class="sd">                             yielded, False otherwise), a Manager.dict</span>
+<span class="sd">                             containing all local results(filenames are key)</span>
+<span class="sd">                             and a Manager.dict containing all global bear</span>
+<span class="sd">                             results (bear names are key) as well as the</span>
+<span class="sd">                             file dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">running_processes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">section</span><span class="p">[</span><span class="s1">&#39;jobs&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Unable to convert setting &#39;jobs&#39; into a number. &quot;</span>
+                         <span class="s1">&#39;Falling back to CPU count.&#39;</span><span class="p">)</span>
+        <span class="n">running_processes</span> <span class="o">=</span> <span class="n">get_cpu_count</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="n">running_processes</span> <span class="o">=</span> <span class="n">get_cpu_count</span><span class="p">()</span>
+
+    <span class="n">processes</span><span class="p">,</span> <span class="n">arg_dict</span> <span class="o">=</span> <span class="n">instantiate_processes</span><span class="p">(</span><span class="n">section</span><span class="p">,</span>
+                                                <span class="n">local_bear_list</span><span class="p">,</span>
+                                                <span class="n">global_bear_list</span><span class="p">,</span>
+                                                <span class="n">running_processes</span><span class="p">,</span>
+                                                <span class="n">cache</span><span class="p">,</span>
+                                                <span class="n">log_printer</span><span class="p">,</span>
+                                                <span class="n">console_printer</span><span class="o">=</span><span class="n">console_printer</span><span class="p">)</span>
+
+    <span class="n">logger_thread</span> <span class="o">=</span> <span class="n">LogPrinterThread</span><span class="p">(</span><span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;message_queue&#39;</span><span class="p">],</span>
+                                     <span class="n">log_printer</span><span class="p">)</span>
+    <span class="c1"># Start and join the logger thread along with the processes to run bears</span>
+    <span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">logger_thread</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">runner</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+        <span class="n">runner</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">process_queues</span><span class="p">(</span><span class="n">processes</span><span class="p">,</span>
+                               <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;control_queue&#39;</span><span class="p">],</span>
+                               <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;local_result_dict&#39;</span><span class="p">],</span>
+                               <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;global_result_dict&#39;</span><span class="p">],</span>
+                               <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;file_dict&#39;</span><span class="p">],</span>
+                               <span class="n">print_results</span><span class="p">,</span>
+                               <span class="n">section</span><span class="p">,</span>
+                               <span class="n">cache</span><span class="p">,</span>
+                               <span class="n">log_printer</span><span class="p">,</span>
+                               <span class="n">console_printer</span><span class="o">=</span><span class="n">console_printer</span><span class="p">),</span>
+                <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;local_result_dict&#39;</span><span class="p">],</span>
+                <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;global_result_dict&#39;</span><span class="p">],</span>
+                <span class="n">arg_dict</span><span class="p">[</span><span class="s1">&#39;file_dict&#39;</span><span class="p">])</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">logger_thread</span><span class="o">.</span><span class="n">running</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">runner</span> <span class="ow">in</span> <span class="n">processes</span><span class="p">:</span>
+            <span class="n">runner</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

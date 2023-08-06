@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Adding CI to your Fork &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="Guide to Writing a Native Bear" href="Writing_Native_Bears.html" />
+    <link rel="prev" title="Development Setup Notes" href="Development_Setup.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="adding-ci-to-your-fork">
+<h1>Adding CI to your Fork<a class="headerlink" href="#adding-ci-to-your-fork" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial will help you add the CI tools, that are used in
+coala repositories to test the code, to your forked repository.
+We recommend you to add all the CI and test everything in your
+own repository before doing a PR.</p>
+<p>Before we start adding CI it&#8217;s important you have a GitHub account
+and know how to fork repositories. In case you don&#8217;t, you should
+have a look into our <a class="reference external" href="https://coala.io/gitbasics">Git Tutorial</a>.</p>
+<div class="section" id="travis-ci">
+<h2>Travis CI<a class="headerlink" href="#travis-ci" title="Permalink to this headline">¶</a></h2>
+<p>Travis is used to confirm that the tools install and build
+properly. It also runs the tests and confirms all test cases
+pass and have 100% coverage. These are examples of travis CI
+checks used in coala and coala-bears repository:
+<a class="reference external" href="https://travis-ci.org/coala/coala/">https://travis-ci.org/coala/coala/</a> and
+<a class="reference external" href="https://travis-ci.org/coala/coala-bears/">https://travis-ci.org/coala/coala-bears/</a>.
+To run identical CI checks in travis you will need to configure your
+forked repository and to do that follow the steps mentioned below.</p>
+<ol class="arabic simple">
+<li>Go to <a class="reference external" href="https://travis-ci.org/">travis-ci.org</a> and create
+an account. You can simply use your GitHub account for that.</li>
+<li>On the top left corner you will see a &#8220;+&#8221; icon beside
+&#8220;My Repositories&#8221;. Click on that, and it will take you to
+your travis-ci profile.</li>
+<li>Sync your account with github by clicking on the top right
+button saying &#8220;Sync account&#8221;.</li>
+<li>Find the forked coala repository in the list and enable builds
+for it.</li>
+<li>Travis CI requires a .travis.yml file containing the settings
+and build instructions, e.g <a class="reference external" href="https://github.com/coala/coala/blob/master/.travis.yml">coala&#8217;s .travis.yml</a>.
+Your forked repository from coala will already have that file.</li>
+<li>Watch the builds at
+travis-ci.org/&lt;username&gt;/&lt;repository&gt;/builds.</li>
+</ol>
+</div>
+<div class="section" id="appveyor-ci">
+<h2>AppVeyor CI<a class="headerlink" href="#appveyor-ci" title="Permalink to this headline">¶</a></h2>
+<p>To find out how coala acts in Microsoft Windows, we use
+AppVeyor which runs test and build commands in a
+Microsoft Windows box. Here are examples of CI build in AppVeyor :
+<a class="reference external" href="https://ci.appveyor.com/project/coala/coala/">https://ci.appveyor.com/project/coala/coala/</a> and
+<a class="reference external" href="https://ci.appveyor.com/project/coala/coala-bears/">https://ci.appveyor.com/project/coala/coala-bears/</a>.
+Now to add an indentical Appveyor CI to your forked repository,
+follow the following instructions.</p>
+<ol class="arabic simple">
+<li>Go to <a class="reference external" href="http://ci.appveyor.com">ci.appveyor.com</a> and login
+using your GitHub account.</li>
+<li>Click on &#8220;New Project&#8221; and find forked repository from the
+repositories listed under your username.</li>
+<li>On the right side, you will see an &#8220;Add&#8221; button, click on it
+and it will add it to your projects.</li>
+<li>AppVeyor CI requires appvyor.yml file that should have the
+settings and instructions for windows, e.g <a class="reference external" href="https://github.com/coala/coala/blob/master/.misc/appveyor.yml">coala&#8217;s appveyor.yml</a>.
+Your forked repository already has that file.</li>
+<li>In case it has a different name or not in the root directory you
+have to configure it in the settings which can be found at
+ci.appveyor.com/project/&lt;username&gt;/&lt;repository&gt;/settings.
+For coala&#8217;s repository the appveyor.yml file is inside the .misc
+directory. So you have to go to Settings and under
+&#8220;Custom configuration .yml file name&#8221;, enter
+<code class="code docutils literal"><span class="pre">.misc/appveyor.yml</span></code>. For coala-bears&#8217;s repository the
+the appveyor.yml file is in the .ci directory. So you have to
+enter <code class="code docutils literal"><span class="pre">.ci/appveyor.yml</span></code>. If you have forked a different
+repository, enter the right .yml file path for that.</li>
+<li>In coala, the appveyor.yml sets the setting to only build
+from the master branch, however in your fork you may want it
+to build other branches as well. You can do that by configuring
+&#8220;Branches to Build&#8221; in Settings, so there will be no need to
+change the file for that.</li>
+<li>From now on appveyor will run the builds for every commit you
+push, which you can watch at
+ci.appveyor.com/project/&lt;username&gt;/&lt;repository&gt;.
+You can also start a build by yourself by clicking on &#8220;New Build&#8221;</li>
+</ol>
+</div>
+<div class="section" id="circle-ci">
+<h2>Circle CI<a class="headerlink" href="#circle-ci" title="Permalink to this headline">¶</a></h2>
+<p>Circle CI is also used for the same purpose as travis, to
+check everything installs and builds properly, and also to run
+the tests. Here are examples of checks in circle CI :
+<a class="reference external" href="https://circleci.com/gh/coala/coala/">https://circleci.com/gh/coala/coala/</a> and
+<a class="reference external" href="https://circleci.com/gh/coala/coala-bears/">https://circleci.com/gh/coala/coala-bears/</a>. To add these CI builds
+to your forked repositories follow the instructions here.</p>
+<ol class="arabic simple">
+<li>Go to <a class="reference external" href="https://circleci.com">circleci.com</a> and sign up using
+your GitHub account.</li>
+<li>After signing up it will take you to the dashboard which lists
+the project that already use circle and which don&#8217;t. By default
+it selects all the repositories, but if you want you can deselect
+them and only choose the forked repository.</li>
+<li>Then click the &#8220;Follow and Build&#8221; button.</li>
+<li>In project settings go to Adjust Parallelism under Build Settings
+and enable a second container by clicking on the box with &#8220;2x&#8221;.</li>
+<li>Using a circle.yml file it runs the builds. e.g
+<a class="reference external" href="https://github.com/coala/coala/blob/master/circle.yml">coala&#8217;s circle.yml</a>.
+Your forked repository from coala will already have that file.</li>
+<li>You can then watch the builds at
+circleci.com/gh/&lt;username&gt;/&lt;repository&gt;.</li>
+<li>In project settings go to Build Environments under Build Settings.
+You will see by default the OS used for builds is Trusty one,
+however we recommend using Precise as its faster.</li>
+</ol>
+</div>
+<div class="section" id="codecov">
+<h2>Codecov<a class="headerlink" href="#codecov" title="Permalink to this headline">¶</a></h2>
+<p>We require 100% test coverage, and to test that we use
+<a class="reference external" href="https://codecov.io">codecov.io</a> which takes data from all other
+CI to confirm its coverage.
+Here are two example reports from coala and coala-bears repository :
+<a class="reference external" href="https://codecov.io/gh/coala/coala/">https://codecov.io/gh/coala/coala/</a> and
+<a class="reference external" href="https://codecov.io/gh/coala/coala-bears/">https://codecov.io/gh/coala/coala-bears/</a>. Once you follow the
+instructions here, you will have identical reports for your forked
+repository.</p>
+<ol class="arabic simple">
+<li>Go to <a class="reference external" href="https://codecov.io">codecov.io</a> and sign up using your
+GitHub account.</li>
+<li>Click on your username, and that will take you to a page where
+the repositories that use codecov are listed.</li>
+<li>Click on &#8220;Add new repository&#8221; and it will take you to a page that
+lists all your repositories. Choose the forked repository for
+which you want to enable codecov.</li>
+<li>Like other CI, this also has a configuration file, .codecov.yml
+file which your forked repository will already have. e.g
+<a class="reference external" href="https://github.com/coala/coala/blob/master/.codecov.yml">coala&#8217;s .codecov.yml</a>
+The CI uploads the test reports to codecov, which then creates
+an overall coverage report.</li>
+<li>You can watch the reports at codecov.io/gh/&lt;username&gt;/&lt;repository&gt;</li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Adding CI to your Fork</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#travis-ci">Travis CI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#appveyor-ci">AppVeyor CI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#circle-ci">Circle CI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#codecov">Codecov</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Development_Setup.html" title="previous chapter">Development Setup Notes</a></li>
+      <li>Next: <a href="Writing_Native_Bears.html" title="next chapter">Guide to Writing a Native Bear</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/Adding_CI.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

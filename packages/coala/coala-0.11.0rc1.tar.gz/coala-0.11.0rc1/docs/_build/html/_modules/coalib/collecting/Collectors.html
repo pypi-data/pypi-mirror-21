@@ -1,0 +1,462 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.collecting.Collectors &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.collecting.Collectors</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">from</span> <span class="nn">pyprint.NullPrinter</span> <span class="k">import</span> <span class="n">NullPrinter</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bears.BEAR_KIND</span> <span class="k">import</span> <span class="n">BEAR_KIND</span>
+<span class="kn">from</span> <span class="nn">coalib.collecting.Importers</span> <span class="k">import</span> <span class="n">iimport_objects</span>
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">yield_once</span>
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LOG_LEVEL</span> <span class="k">import</span> <span class="n">LOG_LEVEL</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.Globbing</span> <span class="k">import</span> <span class="n">fnmatch</span><span class="p">,</span> <span class="n">iglob</span><span class="p">,</span> <span class="n">glob_escape</span>
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LogPrinter</span> <span class="k">import</span> <span class="n">LogPrinter</span>
+
+
+<span class="k">def</span> <span class="nf">_get_kind</span><span class="p">(</span><span class="n">bear_class</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">bear_class</span><span class="o">.</span><span class="n">kind</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_import_bears</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">kinds</span><span class="p">):</span>
+    <span class="c1"># recursive imports:</span>
+    <span class="k">for</span> <span class="n">bear_list</span> <span class="ow">in</span> <span class="n">iimport_objects</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span>
+                                     <span class="n">names</span><span class="o">=</span><span class="s1">&#39;__additional_bears__&#39;</span><span class="p">,</span>
+                                     <span class="n">types</span><span class="o">=</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">bear_class</span> <span class="ow">in</span> <span class="n">bear_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_get_kind</span><span class="p">(</span><span class="n">bear_class</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kinds</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">bear_class</span>
+    <span class="c1"># normal import</span>
+    <span class="k">for</span> <span class="n">bear_class</span> <span class="ow">in</span> <span class="n">iimport_objects</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span>
+                                      <span class="n">attributes</span><span class="o">=</span><span class="s1">&#39;kind&#39;</span><span class="p">,</span>
+                                      <span class="n">local</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_get_kind</span><span class="p">(</span><span class="n">bear_class</span><span class="p">)</span> <span class="ow">in</span> <span class="n">kinds</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">bear_class</span>
+
+
+<span class="nd">@yield_once</span>
+<div class="viewcode-block" id="icollect"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.icollect">[docs]</a><span class="k">def</span> <span class="nf">icollect</span><span class="p">(</span><span class="n">file_paths</span><span class="p">,</span> <span class="n">ignored_globs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">match_cache</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate globs in file paths and return all matching files.</span>
+
+<span class="sd">    :param file_paths:    File path or list of such that can include globs</span>
+<span class="sd">    :param ignored_globs: List of globs to ignore when matching files</span>
+<span class="sd">    :param match_cache:   Dictionary to use for caching results</span>
+<span class="sd">    :return:              Iterator that yields tuple of path of a matching</span>
+<span class="sd">                          file, the glob where it was found</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file_paths</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">file_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">file_paths</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">file_paths</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match_cache</span><span class="p">:</span>
+            <span class="n">match_cache</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">iglob</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">match_cache</span><span class="p">[</span><span class="n">file_path</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ignored_globs</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">fnmatch</span><span class="p">(</span><span class="n">match</span><span class="p">,</span> <span class="n">ignored_globs</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">match</span><span class="p">,</span> <span class="n">file_path</span></div>
+
+
+<div class="viewcode-block" id="collect_files"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.collect_files">[docs]</a><span class="k">def</span> <span class="nf">collect_files</span><span class="p">(</span><span class="n">file_paths</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span> <span class="n">ignored_file_paths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">limit_file_paths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate globs in file paths and return all matching files</span>
+
+<span class="sd">    :param file_paths:         File path or list of such that can include globs</span>
+<span class="sd">    :param ignored_file_paths: List of globs that match to-be-ignored files</span>
+<span class="sd">    :param limit_file_paths:   List of globs that the files are limited to</span>
+<span class="sd">    :return:                   List of paths of all matching files</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">limit_fnmatch</span> <span class="o">=</span> <span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">fnmatch</span><span class="p">,</span> <span class="n">globs</span><span class="o">=</span><span class="n">limit_file_paths</span><span class="p">)</span>
+                     <span class="k">if</span> <span class="n">limit_file_paths</span> <span class="k">else</span> <span class="k">lambda</span> <span class="n">fname</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">valid_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">fname</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                              <span class="n">icollect</span><span class="p">(</span><span class="n">file_paths</span><span class="p">,</span> <span class="n">ignored_file_paths</span><span class="p">)))</span>
+
+    <span class="c1"># Find globs that gave no files and warn the user</span>
+    <span class="k">if</span> <span class="n">valid_files</span><span class="p">:</span>
+        <span class="n">collected_files</span><span class="p">,</span> <span class="n">file_globs_with_files</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">valid_files</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">collected_files</span><span class="p">,</span> <span class="n">file_globs_with_files</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="n">_warn_if_unused_glob</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">file_paths</span><span class="p">,</span> <span class="n">file_globs_with_files</span><span class="p">,</span>
+                         <span class="s2">&quot;No files matching &#39;</span><span class="si">{}</span><span class="s2">&#39; were found.&quot;</span><span class="p">)</span>
+    <span class="n">limited_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">limit_fnmatch</span><span class="p">,</span> <span class="n">collected_files</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">limited_files</span></div>
+
+
+<div class="viewcode-block" id="collect_dirs"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.collect_dirs">[docs]</a><span class="k">def</span> <span class="nf">collect_dirs</span><span class="p">(</span><span class="n">dir_paths</span><span class="p">,</span> <span class="n">ignored_dir_paths</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate globs in directory paths and return all matching directories</span>
+
+<span class="sd">    :param dir_paths:         File path or list of such that can include globs</span>
+<span class="sd">    :param ignored_dir_paths: List of globs that match to-be-ignored dirs</span>
+<span class="sd">    :return:                  List of paths of all matching directories</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid_dirs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">fname</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">fname</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                             <span class="n">icollect</span><span class="p">(</span><span class="n">dir_paths</span><span class="p">,</span> <span class="n">ignored_dir_paths</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">valid_dirs</span><span class="p">:</span>
+        <span class="n">collected_dirs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">valid_dirs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">collected_dirs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span></div>
+
+
+<span class="nd">@yield_once</span>
+<div class="viewcode-block" id="icollect_bears"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.icollect_bears">[docs]</a><span class="k">def</span> <span class="nf">icollect_bears</span><span class="p">(</span><span class="n">bear_dir_glob</span><span class="p">,</span> <span class="n">bear_globs</span><span class="p">,</span> <span class="n">kinds</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect all bears from bear directories that have a matching kind.</span>
+
+<span class="sd">    :param bear_dir_glob: Directory globs or list of such that can contain bears</span>
+<span class="sd">    :param bear_globs:    Globs of bears to collect</span>
+<span class="sd">    :param kinds:         List of bear kinds to be collected</span>
+<span class="sd">    :param log_printer:   Log_printer to handle logging</span>
+<span class="sd">    :return:              Iterator that yields a tuple with bear class and</span>
+<span class="sd">                          which bear_glob was used to find that bear class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">bear_dir</span><span class="p">,</span> <span class="n">dir_glob</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                     <span class="n">icollect</span><span class="p">(</span><span class="n">bear_dir_glob</span><span class="p">)):</span>
+        <span class="c1"># Since we get a real directory here and since we</span>
+        <span class="c1"># pass this later to iglob, we need to escape this.</span>
+        <span class="n">bear_dir</span> <span class="o">=</span> <span class="n">glob_escape</span><span class="p">(</span><span class="n">bear_dir</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">bear_glob</span> <span class="ow">in</span> <span class="n">bear_globs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">matching_file</span> <span class="ow">in</span> <span class="n">iglob</span><span class="p">(</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bear_dir</span><span class="p">,</span> <span class="n">bear_glob</span> <span class="o">+</span> <span class="s1">&#39;.py&#39;</span><span class="p">)):</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">bear</span> <span class="ow">in</span> <span class="n">_import_bears</span><span class="p">(</span><span class="n">matching_file</span><span class="p">,</span> <span class="n">kinds</span><span class="p">):</span>
+                        <span class="k">yield</span> <span class="n">bear</span><span class="p">,</span> <span class="n">bear_glob</span>
+                <span class="k">except</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">VersionConflict</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+                    <span class="n">log_printer</span><span class="o">.</span><span class="n">log_exception</span><span class="p">(</span>
+                        <span class="p">(</span><span class="s1">&#39;Unable to collect bears from </span><span class="si">{file}</span><span class="s1"> because there &#39;</span>
+                         <span class="s1">&#39;is a conflict with the version of a dependency &#39;</span>
+                         <span class="s1">&#39;you have installed. This may be resolved by &#39;</span>
+                         <span class="s1">&#39;creating a separate virtual environment for coala &#39;</span>
+                         <span class="s1">&#39;or running `pip install </span><span class="se">\&quot;</span><span class="si">{pkg}</span><span class="se">\&quot;</span><span class="s1">`. Be aware that &#39;</span>
+                         <span class="s1">&#39;the latter solution might break other python &#39;</span>
+                         <span class="s1">&#39;packages that depend on the currently installed &#39;</span>
+                         <span class="s1">&#39;version.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">matching_file</span><span class="p">,</span>
+                                            <span class="n">pkg</span><span class="o">=</span><span class="n">exception</span><span class="o">.</span><span class="n">req</span><span class="p">),</span>
+                        <span class="n">exception</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+                    <span class="n">log_printer</span><span class="o">.</span><span class="n">log_exception</span><span class="p">(</span>
+                        <span class="s1">&#39;Unable to collect bears from </span><span class="si">{file}</span><span class="s1">. Probably the &#39;</span>
+                        <span class="s1">&#39;file is malformed or the module code raises an &#39;</span>
+                        <span class="s1">&#39;exception.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">matching_file</span><span class="p">),</span>
+                        <span class="n">exception</span><span class="p">,</span>
+                        <span class="n">log_level</span><span class="o">=</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="collect_bears"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.collect_bears">[docs]</a><span class="k">def</span> <span class="nf">collect_bears</span><span class="p">(</span><span class="n">bear_dirs</span><span class="p">,</span> <span class="n">bear_globs</span><span class="p">,</span> <span class="n">kinds</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">,</span>
+                  <span class="n">warn_if_unused_glob</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect all bears from bear directories that have a matching kind</span>
+<span class="sd">    matching the given globs.</span>
+
+<span class="sd">    :param bear_dirs:           Directory name or list of such that can contain</span>
+<span class="sd">                                bears.</span>
+<span class="sd">    :param bear_globs:          Globs of bears to collect.</span>
+<span class="sd">    :param kinds:               List of bear kinds to be collected.</span>
+<span class="sd">    :param log_printer:         log_printer to handle logging.</span>
+<span class="sd">    :param warn_if_unused_glob: True if warning message should be shown if a</span>
+<span class="sd">                                glob didn&#39;t give any bears.</span>
+<span class="sd">    :return:                    Tuple of list of matching bear classes based on</span>
+<span class="sd">                                kind. The lists are in the same order as kinds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bears_found</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kinds</span><span class="p">)))</span>
+    <span class="n">bear_globs_with_bears</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">bear</span><span class="p">,</span> <span class="n">glob</span> <span class="ow">in</span> <span class="n">icollect_bears</span><span class="p">(</span><span class="n">bear_dirs</span><span class="p">,</span> <span class="n">bear_globs</span><span class="p">,</span> <span class="n">kinds</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">kinds</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">_get_kind</span><span class="p">(</span><span class="n">bear</span><span class="p">))</span>
+        <span class="n">bears_found</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bear</span><span class="p">)</span>
+        <span class="n">bear_globs_with_bears</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">glob</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">warn_if_unused_glob</span><span class="p">:</span>
+        <span class="n">_warn_if_unused_glob</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">bear_globs</span><span class="p">,</span> <span class="n">bear_globs_with_bears</span><span class="p">,</span>
+                             <span class="s2">&quot;No bears matching &#39;</span><span class="si">{}</span><span class="s2">&#39; were found. Make sure you &quot;</span>
+                             <span class="s1">&#39;have coala-bears installed or you have typed the &#39;</span>
+                             <span class="s1">&#39;name correctly.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bears_found</span></div>
+
+
+<div class="viewcode-block" id="filter_section_bears_by_languages"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.filter_section_bears_by_languages">[docs]</a><span class="k">def</span> <span class="nf">filter_section_bears_by_languages</span><span class="p">(</span><span class="n">bears</span><span class="p">,</span> <span class="n">languages</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filters the bears by languages.</span>
+
+<span class="sd">    :param bears:       The dictionary of the sections as keys and list of</span>
+<span class="sd">                        bears as values.</span>
+<span class="sd">    :param languages:   Languages that bears are being filtered on.</span>
+<span class="sd">    :return:            New dictionary with filtered out bears that don&#39;t match</span>
+<span class="sd">                        any language from languages.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_bears</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># All bears with &quot;all&quot; languages supported shall be shown</span>
+    <span class="n">languages</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">language</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">languages</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">bears</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">new_bears</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">bear</span> <span class="k">for</span> <span class="n">bear</span> <span class="ow">in</span> <span class="n">bears</span><span class="p">[</span><span class="n">section</span><span class="p">]</span>
+            <span class="k">if</span> <span class="p">{</span><span class="n">language</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">bear</span><span class="o">.</span><span class="n">LANGUAGES</span><span class="p">}</span> <span class="o">&amp;</span> <span class="n">languages</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_bears</span></div>
+
+
+<div class="viewcode-block" id="filter_capabilities_by_languages"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.filter_capabilities_by_languages">[docs]</a><span class="k">def</span> <span class="nf">filter_capabilities_by_languages</span><span class="p">(</span><span class="n">bears</span><span class="p">,</span> <span class="n">languages</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filters the bears capabilities by languages.</span>
+
+<span class="sd">    :param bears:       Dictionary with sections as keys and list of bears as</span>
+<span class="sd">                        values.</span>
+<span class="sd">    :param languages:   Languages that bears are being filtered on.</span>
+<span class="sd">    :return:            New dictionary with languages as keys and their bears</span>
+<span class="sd">                        capabilities as values. The capabilities are stored in a</span>
+<span class="sd">                        tuple of two elements where the first one represents</span>
+<span class="sd">                        what the bears can detect, and the second one what they</span>
+<span class="sd">                        can fix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">languages</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">language</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">languages</span><span class="p">)</span>
+    <span class="n">language_bears_capabilities</span> <span class="o">=</span> <span class="p">{</span><span class="n">language</span><span class="p">:</span> <span class="p">(</span>
+        <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">())</span> <span class="k">for</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">languages</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">section_bears</span> <span class="ow">in</span> <span class="n">bears</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">bear</span> <span class="ow">in</span> <span class="n">section_bears</span><span class="p">:</span>
+            <span class="n">bear_language</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">({</span><span class="n">language</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">bear</span><span class="o">.</span><span class="n">LANGUAGES</span><span class="p">}</span> <span class="o">|</span> <span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">})</span> <span class="o">&amp;</span>
+                <span class="n">languages</span><span class="p">)</span>
+            <span class="n">language</span> <span class="o">=</span> <span class="n">bear_language</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">if</span> <span class="n">bear_language</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">capabilities</span> <span class="o">=</span> <span class="p">(</span><span class="n">language_bears_capabilities</span><span class="p">[</span><span class="n">language</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="n">language</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">())</span>
+            <span class="n">language_bears_capabilities</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="n">language</span><span class="p">:</span> <span class="p">(</span><span class="n">capabilities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">|</span> <span class="n">bear</span><span class="o">.</span><span class="n">can_detect</span><span class="p">,</span>
+                            <span class="n">capabilities</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">|</span> <span class="n">bear</span><span class="o">.</span><span class="n">CAN_FIX</span><span class="p">)}</span>
+                <span class="k">if</span> <span class="n">language</span> <span class="k">else</span> <span class="p">{})</span>
+    <span class="k">return</span> <span class="n">language_bears_capabilities</span></div>
+
+
+<div class="viewcode-block" id="get_all_bears"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.get_all_bears">[docs]</a><span class="k">def</span> <span class="nf">get_all_bears</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a ``list`` of all available bears.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">coalib.settings.Section</span> <span class="k">import</span> <span class="n">Section</span>
+    <span class="n">printer</span> <span class="o">=</span> <span class="n">LogPrinter</span><span class="p">(</span><span class="n">NullPrinter</span><span class="p">())</span>
+    <span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span> <span class="o">=</span> <span class="n">collect_bears</span><span class="p">(</span>
+        <span class="n">Section</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">bear_dirs</span><span class="p">(),</span>
+        <span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">],</span>
+        <span class="p">[</span><span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">,</span> <span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">GLOBAL</span><span class="p">],</span>
+        <span class="n">printer</span><span class="p">,</span>
+        <span class="n">warn_if_unused_glob</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_all_bears_names"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.get_all_bears_names">[docs]</a><span class="k">def</span> <span class="nf">get_all_bears_names</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get a ``list`` of names of all available bears.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">bear</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">bear</span> <span class="ow">in</span> <span class="n">get_all_bears</span><span class="p">()]</span></div>
+
+
+<div class="viewcode-block" id="collect_all_bears_from_sections"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.collect_all_bears_from_sections">[docs]</a><span class="k">def</span> <span class="nf">collect_all_bears_from_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect all kinds of bears from bear directories given in the sections.</span>
+
+<span class="sd">    :param sections:    List of sections so bear_dirs are taken into account</span>
+<span class="sd">    :param log_printer: Log_printer to handle logging</span>
+<span class="sd">    :return:            Tuple of dictionaries of local and global bears.</span>
+<span class="sd">                        The dictionary key is section class and</span>
+<span class="sd">                        dictionary value is a list of Bear classes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">local_bears</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">global_bears</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+        <span class="n">bear_dirs</span> <span class="o">=</span> <span class="n">sections</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">bear_dirs</span><span class="p">()</span>
+        <span class="n">local_bears</span><span class="p">[</span><span class="n">section</span><span class="p">],</span> <span class="n">global_bears</span><span class="p">[</span><span class="n">section</span><span class="p">]</span> <span class="o">=</span> <span class="n">collect_bears</span><span class="p">(</span>
+            <span class="n">bear_dirs</span><span class="p">,</span>
+            <span class="p">[</span><span class="s1">&#39;**&#39;</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">,</span> <span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">GLOBAL</span><span class="p">],</span>
+            <span class="n">log_printer</span><span class="p">,</span>
+            <span class="n">warn_if_unused_glob</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span></div>
+
+
+<span class="k">def</span> <span class="nf">_warn_if_unused_glob</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">globs</span><span class="p">,</span> <span class="n">used_globs</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Warn if a glob has not been used.</span>
+
+<span class="sd">    :param log_printer: The log_printer to handle logging.</span>
+<span class="sd">    :param globs:       List of globs that were expected to be used.</span>
+<span class="sd">    :param used_globs:  List of globs that were actually used.</span>
+<span class="sd">    :param message:     Warning message to display if a glob is unused.</span>
+<span class="sd">                        The glob which was unused will be added using</span>
+<span class="sd">                        .format()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">unused_globs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">globs</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">used_globs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">glob</span> <span class="ow">in</span> <span class="n">unused_globs</span><span class="p">:</span>
+        <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">glob</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="collect_registered_bears_dirs"><a class="viewcode-back" href="../../../coalib.collecting.html#coalib.collecting.Collectors.collect_registered_bears_dirs">[docs]</a><span class="k">def</span> <span class="nf">collect_registered_bears_dirs</span><span class="p">(</span><span class="n">entrypoint</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Searches setuptools for the entrypoint and returns the bear</span>
+<span class="sd">    directories given by the module.</span>
+
+<span class="sd">    :param entrypoint: The entrypoint to find packages with.</span>
+<span class="sd">    :return:           List of bear directories.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">collected_dirs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ep</span> <span class="ow">in</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">iter_entry_points</span><span class="p">(</span><span class="n">entrypoint</span><span class="p">):</span>
+        <span class="n">registered_package</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">registered_package</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">DistributionNotFound</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">collected_dirs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">registered_package</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">collected_dirs</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

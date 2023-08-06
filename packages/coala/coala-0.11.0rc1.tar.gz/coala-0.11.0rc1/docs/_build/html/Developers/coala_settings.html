@@ -1,0 +1,368 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coala settings &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="Bear Installation Tool" href="Bear_Installation_Tool.html" />
+    <link rel="prev" title="Welcome to the Newcomers Guide!" href="Newcomers_Guide.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="coala-settings">
+<h1>coala settings<a class="headerlink" href="#coala-settings" title="Permalink to this headline">¶</a></h1>
+<p><p>coala provides a common command-line interface for linting and fixing all your
+code, regardless of the programming languages you use.</p>
+<p>To find out what kind of analysis coala offers for the languages you use, visit
+<a class="reference external" href="http://coala.io/languages">http://coala.io/languages</a>, or run:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala --show-bears --filter-by-language C Python
+</pre></div>
+</div>
+<p>To perform code analysis, simply specify the analysis routines (bears) and the
+files you want it to run on, for example:</p>
+<blockquote>
+<div><p>spaceBear:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala --bears SpaceConsistencyBear --files **.py
+</pre></div>
+</div>
+</div></blockquote>
+<p>coala can also automatically fix your code:</p>
+<blockquote>
+<div><p>spacePatchBear:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ coala --bears SpaceConsistencyBear --files **.py --apply-patches
+</pre></div>
+</div>
+</div></blockquote>
+<p>To run coala without user interaction, run the <cite>coala &#8211;non-interactive</cite>,
+<cite>coala &#8211;json</cite> and <cite>coala &#8211;format</cite> commands.</p>
+</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">coala</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">C</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">ci</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">json</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="nb">format</span> <span class="p">[</span><span class="n">STR</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">F</span><span class="p">]</span>
+             <span class="p">[</span><span class="o">-</span><span class="n">I</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="p">[</span><span class="n">FILE</span><span class="p">]]</span> <span class="p">[</span><span class="o">--</span><span class="n">disable</span><span class="o">-</span><span class="n">caching</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">flush</span><span class="o">-</span><span class="n">cache</span><span class="p">]</span>
+             <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">autoapply</span><span class="o">-</span><span class="n">warn</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="n">NAME</span> <span class="p">[</span><span class="n">NAME</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]]</span>
+             <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">--</span><span class="n">limit</span><span class="o">-</span><span class="n">files</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]]</span>
+             <span class="p">[</span><span class="o">-</span><span class="n">d</span> <span class="n">DIR</span> <span class="p">[</span><span class="n">DIR</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">V</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">L</span> <span class="n">ENUM</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">ENUM</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">N</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">B</span><span class="p">]</span>
+             <span class="p">[</span><span class="o">-</span><span class="n">l</span> <span class="n">LANG</span> <span class="p">[</span><span class="n">LANG</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">LANG</span> <span class="p">[</span><span class="n">LANG</span> <span class="o">...</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">D</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">details</span><span class="p">]</span>
+             <span class="p">[</span><span class="o">--</span><span class="n">log</span><span class="o">-</span><span class="n">json</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">FILE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span> <span class="p">[</span><span class="n">RELPATH</span><span class="p">]]</span> <span class="p">[</span><span class="o">-</span><span class="n">S</span> <span class="n">SETTING</span> <span class="p">[</span><span class="n">SETTING</span> <span class="o">...</span><span class="p">]]</span>
+             <span class="p">[</span><span class="o">-</span><span class="n">a</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">j</span> <span class="n">JOBS</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
+             <span class="p">[</span><span class="n">TARGETS</span> <span class="p">[</span><span class="n">TARGETS</span> <span class="o">...</span><span class="p">]]</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Required Arguments</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">TARGETS</span></kbd></td>
+<td>sections to be executed exclusively</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Info</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-v=&quot;==SUPPRESS==&quot;</span>, <span class="option">--version=&quot;==SUPPRESS==&quot;</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>show program&#8217;s version number and exit</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Mode</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-C</span>, <span class="option">--non-interactive</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>run coala in non interactive mode</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--ci</span></kbd></td>
+<td>continuous integration run, alias for `&#8211;non-interactive`</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--json</span></kbd></td>
+<td>mode in which coala will display output as json</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--format</span></kbd></td>
+<td>output results with a custom format string, e.g. &#8220;Message: {message}&#8221;; possible placeholders: id, origin, file, line, end_line, column, end_column, severity, severity_str, message, message_base, message_arguments, affected_code, source_lines</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Configuration</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-c</span>, <span class="option">--config</span></kbd></td>
+<td>configuration file to be used, defaults to .coafile</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-F</span>, <span class="option">--find-config</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>find .coafile in ancestors of the working directory</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-I</span>, <span class="option">--no-config</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>run without using any config file</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-s</span>, <span class="option">--save</span></kbd></td>
+<td>save used arguments to a config file to a .coafile, the given path, or at the value of -c</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--disable-caching</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>run on all files even if unchanged</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--flush-cache</span></kbd></td>
+<td>rebuild the file cache</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">--no-autoapply-warn</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>turn off warning about patches not being auto applicable</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Inputs</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-b</span>, <span class="option">--bears</span></kbd></td>
+<td>names of bears to use</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-f</span>, <span class="option">--files</span></kbd></td>
+<td>files that should be checked</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-i</span>, <span class="option">--ignore</span></kbd></td>
+<td>files that should be ignored</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--limit-files</span></kbd></td>
+<td>filter the `&#8211;files` argument&#8217;s matches further</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-d</span>, <span class="option">--bear-dirs</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>additional directories which may contain bears</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Outputs</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-V</span>, <span class="option">--verbose</span></kbd></td>
+<td>alias for `-L DEBUG`</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-L</span>, <span class="option">--log-level</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">set log output level to DEBUG/INFO/WARNING/ERROR, defaults to INFO</p>
+<p class="last">Possible choices: ERROR, INFO, WARNING, DEBUG</p>
+</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-m</span>, <span class="option">--min-severity</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td><p class="first">set minimal result severity to INFO/NORMAL/MAJOR</p>
+<p class="last">Possible choices: INFO, NORMAL, MAJOR</p>
+</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-N</span>, <span class="option">--no-color</span></kbd></td>
+<td>display output without coloring (excluding logs)</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-B</span>, <span class="option">--show-bears</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>list all bears</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-l</span>, <span class="option">--filter-by-language</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>filters `&#8211;show-bears` by the given languages</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-p</span>, <span class="option">--show-capabilities</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>show what coala can fix and detect for the given languages</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-D</span>, <span class="option">--show-description</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>show bear descriptions for `&#8211;show-bears`</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--show-details</span></kbd></td>
+<td>show bear details for `&#8211;show-bears`</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">--log-json</span></kbd></td>
+<td>output logs as json along with results (must be called with &#8211;json)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-o</span>, <span class="option">--output</span></kbd></td>
+<td>write results to the given file (must be called with &#8211;json)</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-r</span>, <span class="option">--relpath</span></kbd></td>
+<td>return relative paths for files (must be called with &#8211;json)</td></tr>
+</tbody>
+</table>
+</dd>
+<dt>Miscellaneous</dt>
+<dd><table class="first last docutils option-list" frame="void" rules="none">
+<col class="option" />
+<col class="description" />
+<tbody valign="top">
+<tr><td class="option-group">
+<kbd><span class="option">-S</span>, <span class="option">--settings</span></kbd></td>
+<td>arbitrary settings in the form of section.key=value</td></tr>
+<tr><td class="option-group" colspan="2">
+<kbd><span class="option">-a</span>, <span class="option">--apply-patches</span></kbd></td>
+</tr>
+<tr><td>&nbsp;</td><td>apply all patches automatically if possible</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-j</span>, <span class="option">--jobs</span></kbd></td>
+<td>number of jobs to use in parallel</td></tr>
+<tr><td class="option-group">
+<kbd><span class="option">-n</span>, <span class="option">--no-orig</span></kbd></td>
+<td>don&#8217;t create .orig backup files before patching</td></tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Newcomers_Guide.html" title="previous chapter">Welcome to the Newcomers Guide!</a></li>
+      <li>Next: <a href="Bear_Installation_Tool.html" title="next chapter">Bear Installation Tool</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/coala_settings.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

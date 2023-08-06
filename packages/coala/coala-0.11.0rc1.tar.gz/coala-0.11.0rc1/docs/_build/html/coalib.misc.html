@@ -1,0 +1,785 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.misc package &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="index.html" />
+    <link rel="up" title="coalib package" href="coalib.html" />
+    <link rel="next" title="coalib.output package" href="coalib.output.html" />
+    <link rel="prev" title="coalib.core package" href="coalib.core.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="coalib-misc-package">
+<h1>coalib.misc package<a class="headerlink" href="#coalib-misc-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coalib.misc.BuildManPage">
+<span id="coalib-misc-buildmanpage-module"></span><h2>coalib.misc.BuildManPage module<a class="headerlink" href="#module-coalib.misc.BuildManPage" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.misc.BuildManPage.BuildManPage">
+<em class="property">class </em><code class="descclassname">coalib.misc.BuildManPage.</code><code class="descname">BuildManPage</code><span class="sig-paren">(</span><em>dist</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/BuildManPage.html#BuildManPage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.BuildManPage.BuildManPage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">distutils.cmd.Command</span></code></p>
+<p>Add a <code class="docutils literal"><span class="pre">build_manpage</span></code> command  to your setup.py.
+To use this Command class add a command to call this class:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># For setuptools</span>
+<span class="n">setup</span><span class="p">(</span>
+      <span class="n">entry_points</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;distutils.commands&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;build_manpage = coalib.misc.BuildManPage:BuildManPage&quot;</span>
+        <span class="p">]</span>
+      <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># For distutils</span>
+<span class="kn">from</span> <span class="nn">coalib.misc.BuildManPage</span> <span class="k">import</span> <span class="n">BuildManPage</span>
+<span class="n">setup</span><span class="p">(</span>
+      <span class="n">cmdclass</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;build_manpage&#39;</span><span class="p">:</span> <span class="n">BuildManPage</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>You can then use the following setup command to produce a man page:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ python setup.py build_manpage --output=coala.1             --parser=coalib.parsing.DefaultArgParser:default_arg_parser
+</pre></div>
+</div>
+<p>If automatically want to build the man page every time you invoke
+your build, add to your <code class="docutils literal"><span class="pre">setup.cfg</span></code> the following:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">build_manpage</span><span class="p">]</span>
+<span class="n">output</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">appname</span><span class="o">&gt;.</span><span class="mi">1</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">path_to_your_parser</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="coalib.misc.BuildManPage.BuildManPage.finalize_options">
+<code class="descname">finalize_options</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/BuildManPage.html#BuildManPage.finalize_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.BuildManPage.BuildManPage.finalize_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.misc.BuildManPage.BuildManPage.initialize_options">
+<code class="descname">initialize_options</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/BuildManPage.html#BuildManPage.initialize_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.BuildManPage.BuildManPage.initialize_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.misc.BuildManPage.BuildManPage.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/BuildManPage.html#BuildManPage.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.BuildManPage.BuildManPage.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.misc.BuildManPage.BuildManPage.user_options">
+<code class="descname">user_options</code><em class="property"> = [('output=', 'O', 'output file'), ('parser=', None, 'module path to an ArgumentParser instance(e.g. mymod:func, where func is a method or function which returnan arparse.ArgumentParser instance.')]</em><a class="headerlink" href="#coalib.misc.BuildManPage.BuildManPage.user_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="coalib.misc.BuildManPage.ManPageFormatter">
+<em class="property">class </em><code class="descclassname">coalib.misc.BuildManPage.</code><code class="descname">ManPageFormatter</code><span class="sig-paren">(</span><em>prog</em>, <em>indent_increment=2</em>, <em>max_help_position=24</em>, <em>width=None</em>, <em>desc=None</em>, <em>long_desc=None</em>, <em>ext_sections=None</em>, <em>parser=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/BuildManPage.html#ManPageFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.BuildManPage.ManPageFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">argparse.HelpFormatter</span></code></p>
+<dl class="method">
+<dt id="coalib.misc.BuildManPage.ManPageFormatter.format_man_page">
+<code class="descname">format_man_page</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/BuildManPage.html#ManPageFormatter.format_man_page"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.BuildManPage.ManPageFormatter.format_man_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.misc.Caching">
+<span id="coalib-misc-caching-module"></span><h2>coalib.misc.Caching module<a class="headerlink" href="#module-coalib.misc.Caching" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.misc.Caching.FileCache">
+<em class="property">class </em><code class="descclassname">coalib.misc.Caching.</code><code class="descname">FileCache</code><span class="sig-paren">(</span><em>log_printer: coalib.output.printers.LogPrinter.LogPrinterMixin</em>, <em>project_dir: str</em>, <em>flush_cache: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Caching.html#FileCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Caching.FileCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This object is a file cache that helps in collecting only the changed
+and new files since the last run. Example/Tutorial:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyprint.NullPrinter</span> <span class="k">import</span> <span class="n">NullPrinter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coalib.output.printers.LogPrinter</span> <span class="k">import</span> <span class="n">LogPrinter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log_printer</span> <span class="o">=</span> <span class="n">LogPrinter</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log_printer</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span>
+</pre></div>
+</div>
+<p>To initialize the cache create an instance for the project:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span> <span class="o">=</span> <span class="n">FileCache</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">flush_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we can track new files by running:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">track_files</span><span class="p">([</span><span class="s2">&quot;a.c&quot;</span><span class="p">,</span> <span class="s2">&quot;b.c&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Since all cache operations are lazy (for performance), we need to
+explicitly write the cache to disk for persistence in future uses:
+(Note: The cache will automatically figure out the write location)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Let&#8217;s go into the future:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let&#8217;s create a new instance to simulate a separate run:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span> <span class="o">=</span> <span class="n">FileCache</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">flush_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">old_data</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">cache</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can mark a file as changed by doing:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">untrack_files</span><span class="p">({</span><span class="s2">&quot;a.c&quot;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Again write to disk after calculating the new cache times for each file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cache</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_data</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">data</span>
+</pre></div>
+</div>
+<p>Since we marked &#8216;a.c&#8217; as a changed file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="s2">&quot;a.c&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="o">.</span><span class="n">data</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">&quot;a.c&quot;</span> <span class="ow">in</span> <span class="n">old_data</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Since &#8216;b.c&#8217; was untouched after the second run, its time was updated
+to the latest value:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">old_data</span><span class="p">[</span><span class="s2">&quot;b.c&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">new_data</span><span class="p">[</span><span class="s2">&quot;b.c&quot;</span><span class="p">]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="coalib.misc.Caching.FileCache.flush_cache">
+<code class="descname">flush_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Caching.html#FileCache.flush_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Caching.FileCache.flush_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flushes the cache and deletes the relevant file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.misc.Caching.FileCache.get_uncached_files">
+<code class="descname">get_uncached_files</code><span class="sig-paren">(</span><em>files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Caching.html#FileCache.get_uncached_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Caching.FileCache.get_uncached_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the set of files that are not in the cache yet or have been
+untracked.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>files</strong> &#8211; The list of collected files.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A set of files that are uncached.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.misc.Caching.FileCache.track_files">
+<code class="descname">track_files</code><span class="sig-paren">(</span><em>files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Caching.html#FileCache.track_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Caching.FileCache.track_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start tracking files given in <code class="docutils literal"><span class="pre">files</span></code> by adding them to the
+database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>files</strong> &#8211; A set of files that need to be tracked.
+These files are initialized with their last
+modified tag as -1.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.misc.Caching.FileCache.untrack_files">
+<code class="descname">untrack_files</code><span class="sig-paren">(</span><em>files</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Caching.html#FileCache.untrack_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Caching.FileCache.untrack_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the given files from the cache so that they are no longer
+considered cached for this and the next run.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>files</strong> &#8211; A set of files to remove from cache.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.misc.Caching.FileCache.write">
+<code class="descname">write</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Caching.html#FileCache.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Caching.FileCache.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the last run time on the project for each file
+to the current time. Using this object as a contextmanager is
+preferred (that will automatically call this method on exit).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.misc.CachingUtilities">
+<span id="coalib-misc-cachingutilities-module"></span><h2>coalib.misc.CachingUtilities module<a class="headerlink" href="#module-coalib.misc.CachingUtilities" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.delete_files">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">delete_files</code><span class="sig-paren">(</span><em>log_printer</em>, <em>identifiers</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#delete_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.delete_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the given identifiers from the user&#8217;s coala data directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>log_printer</strong> &#8211; A LogPrinter object to use for logging.</li>
+<li><strong>identifiers</strong> &#8211; The list of files to be deleted.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if all the given files were successfully deleted.
+False otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.get_data_path">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">get_data_path</code><span class="sig-paren">(</span><em>log_printer</em>, <em>identifier</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#get_data_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.get_data_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the full path of <code class="docutils literal"><span class="pre">identifier</span></code> present in the user&#8217;s data directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>log_printer</strong> &#8211; A LogPrinter object to use for logging.</li>
+<li><strong>identifier</strong> &#8211; The file whose path needs to be expanded.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Full path of the file, assuming it&#8217;s present in the
+user&#8217;s config directory.
+Returns <code class="docutils literal"><span class="pre">None</span></code> if there is a <code class="docutils literal"><span class="pre">PermissionError</span></code>
+in creating the directory.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.get_settings_hash">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">get_settings_hash</code><span class="sig-paren">(</span><em>sections, targets=[], ignore_settings: list = ['disable_caching']</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#get_settings_hash"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.get_settings_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute and return a unique hash for the settings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sections</strong> &#8211; A dict containing the settings for each section.</li>
+<li><strong>targets</strong> &#8211; The list of sections that are enabled.</li>
+<li><strong>ignore_settings</strong> &#8211; Setting keys to remove from sections before
+hashing.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A MD5 hash that is unique to the settings used.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.hash_id">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">hash_id</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#hash_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.hash_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hashes the given text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> &#8211; String to to be hashed</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A MD5 hash of the given string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.pickle_dump">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">pickle_dump</code><span class="sig-paren">(</span><em>log_printer</em>, <em>identifier</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#pickle_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.pickle_dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write <code class="docutils literal"><span class="pre">data</span></code> into the file <code class="docutils literal"><span class="pre">filename</span></code> present in the user
+config directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>log_printer</strong> &#8211; A LogPrinter object to use for logging.</li>
+<li><strong>identifier</strong> &#8211; The name of the file present in the user config
+directory.</li>
+<li><strong>data</strong> &#8211; Data to be serialized and written to the file using
+pickle.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if the write was successful.
+False if there was a permission error in writing.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.pickle_load">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">pickle_load</code><span class="sig-paren">(</span><em>log_printer</em>, <em>identifier</em>, <em>fallback=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#pickle_load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.pickle_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the data stored in <code class="docutils literal"><span class="pre">filename</span></code> present in the user
+config directory. Example usage:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyprint.NullPrinter</span> <span class="k">import</span> <span class="n">NullPrinter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coalib.output.printers.LogPrinter</span> <span class="k">import</span> <span class="n">LogPrinter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log_printer</span> <span class="o">=</span> <span class="n">LogPrinter</span><span class="p">(</span><span class="n">NullPrinter</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;answer&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pickle_dump</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="s2">&quot;test_project&quot;</span><span class="p">,</span> <span class="n">test_data</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pickle_load</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="s2">&quot;test_project&quot;</span><span class="p">)</span>
+<span class="go">{&#39;answer&#39;: 42}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pickle_load</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="s2">&quot;nonexistent_project&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pickle_load</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="s2">&quot;nonexistent_project&quot;</span><span class="p">,</span> <span class="n">fallback</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="go">42</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>log_printer</strong> &#8211; A LogPrinter object to use for logging.</li>
+<li><strong>identifier</strong> &#8211; The name of the file present in the user config
+directory.</li>
+<li><strong>fallback</strong> &#8211; Return value to fallback to in case the file doesn&#8217;t
+exist.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Data that is present in the file, if the file exists.
+Otherwise the <code class="docutils literal"><span class="pre">default</span></code> value is returned.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.settings_changed">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">settings_changed</code><span class="sig-paren">(</span><em>log_printer</em>, <em>settings_hash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#settings_changed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.settings_changed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine if the settings have changed since the last run with caching.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>log_printer</strong> &#8211; A LogPrinter object to use for logging.</li>
+<li><strong>settings_hash</strong> &#8211; A MD5 hash that is unique to the settings used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Return True if the settings hash has changed
+Return False otherwise.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.CachingUtilities.update_settings_db">
+<code class="descclassname">coalib.misc.CachingUtilities.</code><code class="descname">update_settings_db</code><span class="sig-paren">(</span><em>log_printer</em>, <em>settings_hash</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/CachingUtilities.html#update_settings_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.CachingUtilities.update_settings_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the config file last modification date.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>log_printer</strong> &#8211; A LogPrinter object to use for logging.</li>
+<li><strong>settings_hash</strong> &#8211; A MD5 hash that is unique to the settings used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.misc.Compatibility">
+<span id="coalib-misc-compatibility-module"></span><h2>coalib.misc.Compatibility module<a class="headerlink" href="#module-coalib.misc.Compatibility" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coalib.misc.Constants">
+<span id="coalib-misc-constants-module"></span><h2>coalib.misc.Constants module<a class="headerlink" href="#module-coalib.misc.Constants" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coalib.misc.DictUtilities">
+<span id="coalib-misc-dictutilities-module"></span><h2>coalib.misc.DictUtilities module<a class="headerlink" href="#module-coalib.misc.DictUtilities" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.misc.DictUtilities.inverse_dicts">
+<code class="descclassname">coalib.misc.DictUtilities.</code><code class="descname">inverse_dicts</code><span class="sig-paren">(</span><em>*dicts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/DictUtilities.html#inverse_dicts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.DictUtilities.inverse_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inverts the dicts, e.g. {1: 2, 3: 4} and {2: 3, 4: 4} will be inverted
+{2: [1], 3: [2], 4: [3, 4]}. This also handles dictionaries
+with Iterable items as values e.g. {1: [1, 2, 3], 2: [3, 4, 5]} and
+{2: [1], 3: [2], 4: [3, 4]} will be inverted to
+{1: [1, 2], 2: [1, 3], 3: [1, 2, 4], 4: [2, 4], 5: [2]}.
+No order is preserved.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dicts</strong> (<em>dict</em>) &#8211; The dictionaries to invert.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The inversed dictionary which merges all dictionaries into
+one.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">defaultdict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.DictUtilities.update_ordered_dict_key">
+<code class="descclassname">coalib.misc.DictUtilities.</code><code class="descname">update_ordered_dict_key</code><span class="sig-paren">(</span><em>dictionary</em>, <em>old_key</em>, <em>new_key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/DictUtilities.html#update_ordered_dict_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.DictUtilities.update_ordered_dict_key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-coalib.misc.Enum">
+<span id="coalib-misc-enum-module"></span><h2>coalib.misc.Enum module<a class="headerlink" href="#module-coalib.misc.Enum" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.misc.Enum.enum">
+<code class="descclassname">coalib.misc.Enum.</code><code class="descname">enum</code><span class="sig-paren">(</span><em>*sequential</em>, <em>**named</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Enum.html#enum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Enum.enum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-coalib.misc.Exceptions">
+<span id="coalib-misc-exceptions-module"></span><h2>coalib.misc.Exceptions module<a class="headerlink" href="#module-coalib.misc.Exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.misc.Exceptions.get_exitcode">
+<code class="descclassname">coalib.misc.Exceptions.</code><code class="descname">get_exitcode</code><span class="sig-paren">(</span><em>exception</em>, <em>log_printer=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Exceptions.html#get_exitcode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Exceptions.get_exitcode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-coalib.misc.Shell">
+<span id="coalib-misc-shell-module"></span><h2>coalib.misc.Shell module<a class="headerlink" href="#module-coalib.misc.Shell" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.misc.Shell.ShellCommandResult">
+<em class="property">class </em><code class="descclassname">coalib.misc.Shell.</code><code class="descname">ShellCommandResult</code><span class="sig-paren">(</span><em>code</em>, <em>stdout</em>, <em>stderr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Shell.html#ShellCommandResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Shell.ShellCommandResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<p>The result of a <code class="xref py py-func docutils literal"><span class="pre">coalib.misc.run_shell_command()</span></code> call.</p>
+<p>It is based on a <code class="docutils literal"><span class="pre">(stdout,</span> <span class="pre">stderr)</span></code> string tuple like it is returned
+form <code class="docutils literal"><span class="pre">subprocess.Popen.communicate</span></code> and was originally returned from
+<code class="xref py py-func docutils literal"><span class="pre">coalib.misc.run_shell_command()</span></code>. So it is backwards-compatible.</p>
+<p>It additionally stores the return <code class="docutils literal"><span class="pre">.code</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">process</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">([</span><span class="s1">&#39;python&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                 <span class="s1">&#39;import sys; print(sys.stdin.readline().strip() +&#39;</span>
+<span class="gp">... </span>                 <span class="s1">&#39;                  &quot; processed&quot;)&#39;</span><span class="p">],</span>
+<span class="gp">... </span>                <span class="n">stdin</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span>
+<span class="gp">... </span>                <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stderr</span>
+<span class="go">&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">ShellCommandResult</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&#39;data processed\n&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">code</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.Shell.get_shell_type">
+<code class="descclassname">coalib.misc.Shell.</code><code class="descname">get_shell_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Shell.html#get_shell_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Shell.get_shell_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the current shell type based on the outputs of common pre-defined
+variables in them. This is useful to identify which sort of escaping
+is required for strings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The shell type. This can be either &#8220;powershell&#8221; if Windows
+Powershell is detected, &#8220;cmd&#8221; if command prompt is been
+detected or &#8220;sh&#8221; if it&#8217;s neither of these.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.Shell.run_interactive_shell_command">
+<code class="descclassname">coalib.misc.Shell.</code><code class="descname">run_interactive_shell_command</code><span class="sig-paren">(</span><em>command</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Shell.html#run_interactive_shell_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Shell.run_interactive_shell_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a single command in shell and provides stdout, stderr and stdin
+streams.</p>
+<p>This function creates a context manager that sets up the process (using
+<code class="docutils literal"><span class="pre">subprocess.Popen()</span></code>), returns to caller and waits for process to exit on
+leaving.</p>
+<p>By default the process is opened in <code class="docutils literal"><span class="pre">universal_newlines</span></code> mode and creates
+pipes for all streams (stdout, stderr and stdin) using <code class="docutils literal"><span class="pre">subprocess.PIPE</span></code>
+special value. These pipes are closed automatically, so if you want to get
+the contents of the streams you should retrieve them before the context
+manager exits.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">run_interactive_shell_command</span><span class="p">([</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span> <span class="s2">&quot;TEXT&quot;</span><span class="p">])</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">stdout</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">stdout</span>
+<span class="gp">... </span>    <span class="n">stdout_text</span> <span class="o">=</span> <span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stdout_text</span>
+<span class="go">&#39;TEXT\n&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stdout</span><span class="o">.</span><span class="n">closed</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Custom streams provided are not closed except of <code class="docutils literal"><span class="pre">subprocess.PIPE</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tempfile</span> <span class="k">import</span> <span class="n">TemporaryFile</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stream</span> <span class="o">=</span> <span class="n">TemporaryFile</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">run_interactive_shell_command</span><span class="p">([</span><span class="s2">&quot;echo&quot;</span><span class="p">,</span> <span class="s2">&quot;TEXT&quot;</span><span class="p">],</span>
+<span class="gp">... </span>                                   <span class="n">stdout</span><span class="o">=</span><span class="n">stream</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">stderr</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">stderr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stderr</span><span class="o">.</span><span class="n">closed</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stream</span><span class="o">.</span><span class="n">closed</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>command</strong> &#8211; The command to run on shell. This parameter can either
+be a sequence of arguments that are directly passed to
+the process or a string. A string gets splitted beforehand
+using <code class="docutils literal"><span class="pre">shlex.split()</span></code>. If providing <code class="docutils literal"><span class="pre">shell=True</span></code> as a
+keyword-argument, no <code class="docutils literal"><span class="pre">shlex.split()</span></code> is performed and the
+command string goes directly to <code class="docutils literal"><span class="pre">subprocess.Popen()</span></code>.</li>
+<li><strong>kwargs</strong> &#8211; Additional keyword arguments to pass to
+<code class="docutils literal"><span class="pre">subprocess.Popen</span></code> that are used to spawn the process.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A context manager yielding the process started from the
+command.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.misc.Shell.run_shell_command">
+<code class="descclassname">coalib.misc.Shell.</code><code class="descname">run_shell_command</code><span class="sig-paren">(</span><em>command</em>, <em>stdin=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/misc/Shell.html#run_shell_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.misc.Shell.run_shell_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a single command in shell and returns the read stdout and stderr data.</p>
+<p>This function waits for the process (created using <code class="docutils literal"><span class="pre">subprocess.Popen()</span></code>)
+to exit. Effectively it wraps <code class="docutils literal"><span class="pre">run_interactive_shell_command()</span></code> and uses
+<code class="docutils literal"><span class="pre">communicate()</span></code> on the process.</p>
+<p>See also <code class="docutils literal"><span class="pre">run_interactive_shell_command()</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>command</strong> &#8211; The command to run on shell. This parameter can either
+be a sequence of arguments that are directly passed to
+the process or a string. A string gets splitted beforehand
+using <code class="docutils literal"><span class="pre">shlex.split()</span></code>.</li>
+<li><strong>stdin</strong> &#8211; Initial input to send to the process.</li>
+<li><strong>kwargs</strong> &#8211; Additional keyword arguments to pass to
+<code class="docutils literal"><span class="pre">subprocess.Popen</span></code> that is used to spawn the process.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple with <code class="docutils literal"><span class="pre">(stdoutstring,</span> <span class="pre">stderrstring)</span></code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.misc">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-coalib.misc" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coalib.html">coalib package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="coalib.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coalib.bearlib.html">coalib.bearlib package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.bears.html">coalib.bears package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.collecting.html">coalib.collecting package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.core.html">coalib.core package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">coalib.misc package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.BuildManPage">coalib.misc.BuildManPage module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.Caching">coalib.misc.Caching module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.CachingUtilities">coalib.misc.CachingUtilities module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.Compatibility">coalib.misc.Compatibility module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.Constants">coalib.misc.Constants module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.DictUtilities">coalib.misc.DictUtilities module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.Enum">coalib.misc.Enum module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.Exceptions">coalib.misc.Exceptions module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc.Shell">coalib.misc.Shell module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.misc">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.output.html">coalib.output package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.parsing.html">coalib.parsing package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.processes.html">coalib.processes package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.results.html">coalib.results package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.settings.html">coalib.settings package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.testing.html">coalib.testing package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala">coalib.coala module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_ci">coalib.coala_ci module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_delete_orig">coalib.coala_delete_orig module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_format">coalib.coala_format module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_json">coalib.coala_json module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_main">coalib.coala_main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_modes">coalib.coala_modes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="coalib.html">coalib package</a><ul>
+      <li>Previous: <a href="coalib.core.html" title="previous chapter">coalib.core package</a></li>
+      <li>Next: <a href="coalib.output.html" title="next chapter">coalib.output package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/coalib.misc.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

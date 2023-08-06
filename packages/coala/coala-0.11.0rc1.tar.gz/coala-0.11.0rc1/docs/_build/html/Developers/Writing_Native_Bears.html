@@ -1,0 +1,565 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Guide to Writing a Native Bear &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="Linter Bears" href="Writing_Linter_Bears.html" />
+    <link rel="prev" title="Adding CI to your Fork" href="Adding_CI.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="guide-to-writing-a-native-bear">
+<h1>Guide to Writing a Native Bear<a class="headerlink" href="#guide-to-writing-a-native-bear" title="Permalink to this headline">¶</a></h1>
+<p>Welcome. This document presents information on how to write a bear for
+coala. It assumes you know how to use coala. If not, please read our
+<a class="reference external" href="https://docs.coala.io/en/latest/Users/Tutorial.html">main tutorial</a></p>
+<p>The sample sources for this tutorial lie at our coala-tutorial
+repository, go clone it with:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">coala</span><span class="o">/</span><span class="n">coala</span><span class="o">-</span><span class="n">tutorial</span>
+</pre></div>
+</div>
+<p>All paths and commands given here are meant to be executed from the root
+directory of the coala-tutorial repository.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you want to wrap an already existing tool, please refer to
+<a class="reference internal" href="Writing_Linter_Bears.html"><span class="doc">this tutorial instead</span></a>.</p>
+</div>
+<div class="section" id="what-is-a-bear">
+<h2>What is a bear?<a class="headerlink" href="#what-is-a-bear" title="Permalink to this headline">¶</a></h2>
+<p>A bear is meant to do some analysis on source code. The source code will
+be provided by coala so the bear doesn&#8217;t have to care where it comes from
+or where it goes.</p>
+<p>There are two kinds of bears:</p>
+<ul class="simple">
+<li>LocalBears, which only perform analysis on each file itself</li>
+<li>GlobalBears, which are project wide, like the GitCommitBear</li>
+</ul>
+<p>A bear can communicate with the user via two ways:</p>
+<ul class="simple">
+<li>Via log messages</li>
+<li>Via results</li>
+</ul>
+<p>Log messages will be logged according to the users settings and are
+usually used if something goes wrong. However you can use debug for
+providing development related debug information since it will not be
+shown to the user by default. If error/failure messages are used, the
+bear is expected not to continue analysis.</p>
+</div>
+<div class="section" id="a-hello-world-bear">
+<h2>A Hello World Bear<a class="headerlink" href="#a-hello-world-bear" title="Permalink to this headline">¶</a></h2>
+<p>Below is the code given for a simple bear that sends a debug message for
+each file:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coalib.bears.LocalBear</span> <span class="k">import</span> <span class="n">LocalBear</span>
+
+
+<span class="k">class</span> <span class="nc">HelloWorldBear</span><span class="p">(</span><span class="n">LocalBear</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">file</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Hello World! Checking file&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This bear is stored at <code class="docutils literal"><span class="pre">./bears/HelloWorldBear.py</span></code></p>
+<p>In order to let coala execute this bear you need to let coala know where
+to find it. We can do that with the <code class="docutils literal"><span class="pre">-d</span></code> (<code class="docutils literal"><span class="pre">--bear-dirs</span></code>) argument:</p>
+<p><code class="docutils literal"><span class="pre">coala</span> <span class="pre">-f</span> <span class="pre">src/*.c</span> <span class="pre">-d</span> <span class="pre">bears</span> <span class="pre">-b</span> <span class="pre">HelloWorldBear</span> <span class="pre">-L</span> <span class="pre">DEBUG</span> <span class="pre">--flush-cache</span></code></p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The given bear directories must not have any glob expressions in them. Any
+character that could be interpreted as a part of a glob expression will be
+escaped. Please use comma separated values to give several such
+directories instead. Do not forget to flush the cache (by adding the
+argument <code class="docutils literal"><span class="pre">--flush-cache</span></code> when running coala) if you run a new bear on a
+file which has been previously analyzed (by coala).</p>
+</div>
+<p>You should now see the debug message for our sample file.</p>
+<p>The Bear class also supports <code class="docutils literal"><span class="pre">warn</span></code> and <code class="docutils literal"><span class="pre">err</span></code>.</p>
+</div>
+<div class="section" id="communicating-with-the-user">
+<h2>Communicating with the User<a class="headerlink" href="#communicating-with-the-user" title="Permalink to this headline">¶</a></h2>
+<p>Now we can send messages through the queue, we can do the real work.
+Let&#8217;s say:</p>
+<ul class="simple">
+<li>We want some information from the user (e.g. the tab width if we rely
+on indentation).</li>
+<li>We&#8217;ve got some useful information for the user and want to show it to
+them. This might be some issue with their code or just an information
+like the number of lines.</li>
+</ul>
+<p>So let&#8217;s extend our HelloWorldBear a bit, I&#8217;ve named the new bear with
+the creative name CommunicationBear:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coalib.bears.LocalBear</span> <span class="k">import</span> <span class="n">LocalBear</span>
+
+<span class="k">class</span> <span class="nc">CommunicationBear</span><span class="p">(</span><span class="n">LocalBear</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">filename</span><span class="p">,</span>
+            <span class="n">file</span><span class="p">,</span>
+            <span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Communicates with the user.</span>
+
+<span class="sd">        :param user_input: Arbitrary user input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Got &#39;</span><span class="si">{ui}</span><span class="s2">&#39; as user input of type </span><span class="si">{type}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">ui</span><span class="o">=</span><span class="n">user_input</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="n">user_input</span><span class="p">)))</span>
+
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_result</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;A hello world result.&quot;</span><span class="p">,</span>
+                              <span class="n">file</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Try executing it:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">coala</span> <span class="o">-</span><span class="n">f</span><span class="o">=</span><span class="n">src</span><span class="o">/</span>\<span class="o">*.</span><span class="n">c</span> <span class="o">-</span><span class="n">d</span><span class="o">=</span><span class="n">bears</span> <span class="o">-</span><span class="n">b</span><span class="o">=</span><span class="n">CommunicationBear</span> <span class="o">-</span><span class="n">L</span><span class="o">=</span><span class="n">DEBUG</span> <span class="o">--</span><span class="n">flush</span><span class="o">-</span><span class="n">cache</span>
+</pre></div>
+</div>
+<p>Hey, we&#8217;ll get asked for the user_input! Wasn&#8217;t that easy? Go ahead,
+enter something and observe the output.</p>
+<p>So, what did coala do here?</p>
+<p>First, coala looked at the parameters of the run method and found that
+we need some value named user_input. Then it parsed our documentation
+comment and found a description for the parameter which was shown to us
+to help us choose the right value. After the needed values are provided,
+coala converts us the value into a string because we&#8217;ve provided the
+<code class="docutils literal"><span class="pre">str</span></code> annotation for this parameter. If no annotation is given or the
+value isn&#8217;t convertible into the desired data type, you will get a
+<code class="docutils literal"><span class="pre">coalib.settings.Setting.Setting</span></code>.</p>
+<p>Your docstring can also be used to tell the user what exactly your bear
+does.</p>
+<p>Try executing</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">coala</span> <span class="o">-</span><span class="n">d</span> <span class="n">bears</span> <span class="o">-</span><span class="n">b</span> <span class="n">CommunicationBear</span> <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">bears</span> <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">description</span>
+</pre></div>
+</div>
+<p>This will show the user a bunch of information related to the bear like:
+- A description of what the bear does - The sections which uses it - The
+settings it uses (optional and required)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The bears are not yet installed. We still have to specify
+the bear directory using <code class="docutils literal"><span class="pre">-d</span></code> or <code class="docutils literal"><span class="pre">--bear-dirs</span></code> flag.</p>
+</div>
+<div class="section" id="install-locally-written-bears">
+<h3>Install locally Written Bears<a class="headerlink" href="#install-locally-written-bears" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s say that we wrote a file NewBear.py that contain our NewBear and
+we want to run it locally. To install our NewBear:</p>
+<ul class="simple">
+<li>Move the <code class="docutils literal"><span class="pre">NewBear.py</span></code> to our clone of coala-bears in
+<code class="docutils literal"><span class="pre">coala-bear/bears/&lt;some_directory&gt;</span></code>.</li>
+<li>Update all bears from source with:</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="o">&lt;</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">coala</span><span class="o">-</span><span class="n">bears</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Our NewBear is installed.</p>
+<p>Try Executing:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">coala</span> <span class="o">--</span><span class="n">show</span><span class="o">-</span><span class="n">bears</span>
+</pre></div>
+</div>
+<p>This shows a list of all installed bears. We can find our NewBear in the list.</p>
+</div>
+<div class="section" id="what-data-types-are-supported">
+<h3>What Data Types are Supported?<a class="headerlink" href="#what-data-types-are-supported" title="Permalink to this headline">¶</a></h3>
+<p>The Setting does support some very basic types:</p>
+<ul class="simple">
+<li>String (<code class="docutils literal"><span class="pre">str</span></code>)</li>
+<li>Float (<code class="docutils literal"><span class="pre">float</span></code>)</li>
+<li>Int (<code class="docutils literal"><span class="pre">int</span></code>)</li>
+<li>Boolean (<code class="docutils literal"><span class="pre">bool</span></code>, will accept values like <code class="docutils literal"><span class="pre">true</span></code>, <code class="docutils literal"><span class="pre">yes</span></code>,
+<code class="docutils literal"><span class="pre">yeah</span></code>, <code class="docutils literal"><span class="pre">no</span></code>, <code class="docutils literal"><span class="pre">nope</span></code>, <code class="docutils literal"><span class="pre">false</span></code>)</li>
+<li>List of strings (<code class="docutils literal"><span class="pre">list</span></code>, values will be split by comma)</li>
+<li>Dict of strings (<code class="docutils literal"><span class="pre">dict</span></code>, values will be split by comma and colon)</li>
+</ul>
+<p>If you need another type, you can write the conversion function yourself
+and use this function as the annotation (if you cannot convert value, be
+sure to throw <code class="docutils literal"><span class="pre">TypeError</span></code> or <code class="docutils literal"><span class="pre">ValueError</span></code>). We&#8217;ve provided a few
+advanced conversions for you:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">coalib.settings.Setting.path</span></code>, converts to an absolute file path
+relative to the file/command where the setting was set</li>
+<li><code class="docutils literal"><span class="pre">coalib.settings.Setting.path_list</span></code>, converts to a list of absolute
+file paths relative to the file/command where the setting was set</li>
+<li><code class="docutils literal"><span class="pre">coalib.settings.Setting.typed_list(typ)</span></code>, converts to a list and
+applies the given conversion (<code class="docutils literal"><span class="pre">typ</span></code>) to each element.</li>
+<li><code class="docutils literal"><span class="pre">coalib.settings.Setting.typed_ordered_dict(key_type,</span> <span class="pre">value_type,</span>
+<span class="pre">default)</span></code>, converts to a dict while applying the <code class="docutils literal"><span class="pre">key_type</span></code>
+conversion to all keys, the <code class="docutils literal"><span class="pre">value_type</span></code> conversion to all values
+and uses the <code class="docutils literal"><span class="pre">default</span></code> value for all unset keys. Use <code class="docutils literal"><span class="pre">typed_dict</span></code>
+if the order is irrelevant for you.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="results">
+<h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<p>In the end we&#8217;ve got a result. If a file is provided, coala will show
+the file, if a line is provided, coala will also show a few lines before
+the affecting line. There are a few parameters to the Result
+constructor, so you can e.g. create a result that proposes a code change
+to the user. If the user likes it, coala will apply it automatically -
+you don&#8217;t need to care.</p>
+<p>Your function needs to return an iterable of <code class="docutils literal"><span class="pre">Result</span></code> objects: that
+means you can either return a <code class="docutils literal"><span class="pre">list</span></code> of <code class="docutils literal"><span class="pre">Result</span></code> objects or simply
+yield them and write the method as a generator.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>We are currently planning to simplify Bears for bear writers and us.
+In order to make your Bear future proof, we recommend writing your
+method in generator style.</p>
+<p class="last">Don&#8217;t worry: in order to migrate your Bears to our new API, you will
+likely only need to change two lines of code. For more information
+about how bears will look in the future, please read up on
+<a class="reference external" href="https://github.com/coala/coala/issues/725">https://github.com/coala/coala/issues/725</a> or ask us on
+<a class="reference external" href="https://coala.io/chat">https://coala.io/chat</a>.</p>
+</div>
+</div>
+<div class="section" id="bears-depending-on-other-bears">
+<h2>Bears Depending on Other Bears<a class="headerlink" href="#bears-depending-on-other-bears" title="Permalink to this headline">¶</a></h2>
+<p>So we&#8217;ve got a result, but what if we need our Bear to depend on results from
+a different Bear?</p>
+<p>Well coala has an efficient dependency management system that would run the
+other Bear before your Bear and get its results for you. All you need to do is
+to tell coala which Bear(s) you want to run before your Bear.</p>
+<p>So let&#8217;s see how you could tell coala which Bears to run before yours:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coalib.bears.LocalBear</span> <span class="k">import</span> <span class="n">LocalBear</span>
+<span class="kn">from</span> <span class="nn">bears.somePathTo.OtherBear</span> <span class="k">import</span> <span class="n">OtherBear</span>
+
+<span class="k">class</span> <span class="nc">DependentBear</span><span class="p">(</span><span class="n">LocalBear</span><span class="p">):</span>
+
+    <span class="n">BEAR_DEPS</span> <span class="o">=</span> <span class="p">{</span><span class="n">OtherBear</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">dependency_results</span><span class="p">):</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">dependency_results</span><span class="p">[</span><span class="n">OtherBear</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>As you can see we have a <a class="reference internal" href="../coalib.bears.html#coalib.bears.Bear.Bear.BEAR_DEPS" title="coalib.bears.Bear.Bear.BEAR_DEPS"><code class="xref py py-attr docutils literal"><span class="pre">BEAR_DEPS</span></code></a>
+set which contains a list of bears we wish to depend on.
+In this case it is a set with 1 item: &#8220;OtherBear&#8221;.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <cite>BEAR_DEPS</cite> set must have classes of the bear itself,
+not the name as a string.</p>
+</div>
+<p>coala gets the <code class="docutils literal"><span class="pre">BEAR_DEPS</span></code> before executing the <code class="docutils literal"><span class="pre">DependentBear</span></code>
+and runs all the Bears in there first.</p>
+<p>After running these bears, coala gives all the results returned by the Bears
+in the <code class="docutils literal"><span class="pre">dependency_results</span></code> dictionary, which has the Bear&#8217;s name as a key
+and a list of results as the value. E.g. in this case, we would have
+<code class="docutils literal"><span class="pre">dependency_results</span> <span class="pre">==</span>
+<span class="pre">{'OtherBear'</span> <span class="pre">:</span> <span class="pre">[list</span> <span class="pre">containing</span> <span class="pre">results</span> <span class="pre">of</span> <span class="pre">OtherBear]]}</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><code class="docutils literal"><span class="pre">dependency_results</span></code> is a keyword here and it cannot be called by
+any other name.</p>
+</div>
+</div>
+<div class="section" id="hidden-results">
+<h2>Hidden Results<a class="headerlink" href="#hidden-results" title="Permalink to this headline">¶</a></h2>
+<p>Apart from regular Results, coala provides HiddenResults, which are used
+to share data between Bears as well as giving results which are not shown to
+the user. This feature is specifically for Bears that are dependencies of other
+Bears, and do not want to return Results which would be displayed when the
+bear is run.</p>
+<p>Let&#8217;s see how we can use HiddenResults in our Bear:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coalib.bears.LocalBear</span> <span class="k">import</span> <span class="n">LocalBear</span>
+<span class="kn">from</span> <span class="nn">coalib.results.HiddenResult</span> <span class="k">import</span> <span class="n">HiddenResult</span>
+
+<span class="k">class</span> <span class="nc">OtherBear</span><span class="p">(</span><span class="n">LocalBear</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">HiddenResult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Some Content&quot;</span><span class="p">,</span> <span class="s2">&quot;Some Other Content&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Here we see that this Bear (unlike normal Bears) yields a
+<a class="reference internal" href="../coalib.results.html#module-coalib.results.HiddenResult" title="coalib.results.HiddenResult"><code class="xref py py-class docutils literal"><span class="pre">HiddenResult</span></code></a> instead of a <code class="docutils literal"><span class="pre">Result</span></code>. The first
+parameter in <code class="docutils literal"><span class="pre">HiddenResult</span></code> should be the instance of the Bear that yields
+this result (in this case <code class="docutils literal"><span class="pre">self</span></code>), and second argument should be the content
+we want to transfer between the Bears. Here we use a list of strings as content
+but it can be any object.</p>
+</div>
+<div class="section" id="more-configuration-options">
+<h2>More Configuration Options<a class="headerlink" href="#more-configuration-options" title="Permalink to this headline">¶</a></h2>
+<p>coala provides metadata to further configure your bear according to your needs.
+Here is the list of all the metadata you can supply:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#languages">LANGUAGES</a></li>
+<li><a class="reference internal" href="#requirements">REQUIREMENTS</a></li>
+<li><a class="reference internal" href="#include-local-files">INCLUDE_LOCAL_FILES</a></li>
+<li><a class="reference internal" href="#can-detect-and-can-fix">CAN_DETECT and CAN_FIX</a></li>
+<li><a class="reference internal" href="#bear-deps">BEAR_DEPS</a></li>
+<li><a class="reference internal" href="#other-metadata">Other Metadata</a></li>
+</ul>
+<div class="section" id="languages">
+<h3>LANGUAGES<a class="headerlink" href="#languages" title="Permalink to this headline">¶</a></h3>
+<p>To indicate which languages your bear supports, you need to give it a <cite>set</cite> of
+strings as a value:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+    <span class="n">LANGUAGES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;CPP&#39;</span><span class="p">,</span><span class="s1">&#39;C#&#39;</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="requirements">
+<h3>REQUIREMENTS<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h3>
+<p>To indicate the requirements of the bear, assign <code class="docutils literal"><span class="pre">REQUIREMENTS</span></code> a set with
+instances of subclass of <code class="docutils literal"><span class="pre">PackageRequirement</span></code> such as:</p>
+<ul class="simple">
+<li>PipRequirement</li>
+<li>NpmRequirement</li>
+<li>CondaRequirement</li>
+<li>DistributionRequirement</li>
+<li>GemRequirement</li>
+<li>GoRequirement</li>
+<li>JuliaRequirement</li>
+<li>RscriptRequirement</li>
+</ul>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">PipRequirement</span><span class="p">(</span><span class="s1">&#39;coala_decorators&#39;</span><span class="p">,</span> <span class="s1">&#39;0.2.1&#39;</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>To specify multiple requirements you can use the multiple method.
+This can receive both tuples of strings, in case you want a specific version,
+or a simple string, in case you want the latest version to be specified.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+    <span class="n">REQUIREMENTS</span> <span class="o">=</span> <span class="n">PipRequirement</span><span class="o">.</span><span class="n">multiple</span><span class="p">(</span>
+        <span class="p">(</span><span class="s1">&#39;colorama&#39;</span><span class="p">,</span> <span class="s1">&#39;0.1&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;coala_decorators&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="include-local-files">
+<h3>INCLUDE_LOCAL_FILES<a class="headerlink" href="#include-local-files" title="Permalink to this headline">¶</a></h3>
+<p>If your bear needs to include local files, then specify it by giving strings
+containing file paths, relative to the file containing the bear, to the
+<code class="docutils literal"><span class="pre">INCLUDE_LOCAL_FILES</span></code>.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+    <span class="n">INCLUDE_LOCAL_FILES</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;checkstyle.jar&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;google_checks.xml&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="can-detect-and-can-fix">
+<h3>CAN_DETECT and CAN_FIX<a class="headerlink" href="#can-detect-and-can-fix" title="Permalink to this headline">¶</a></h3>
+<p>To easily keep track of what a bear can do, you can set the value of
+<cite>CAN_FIX</cite> and <cite>CAN_DETECT</cite> sets.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+    <span class="n">CAN_DETECT</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Unused Code&#39;</span><span class="p">,</span> <span class="s1">&#39;Spelling&#39;</span><span class="p">}</span>
+
+    <span class="n">CAN_FIX</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Syntax&#39;</span><span class="p">,</span> <span class="s1">&#39;Formatting&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>To view a full list of possible values, check this list:</p>
+<ul class="simple">
+<li><cite>Syntax</cite></li>
+<li><cite>Formatting</cite></li>
+<li><cite>Security</cite></li>
+<li><cite>Complexity</cite></li>
+<li><cite>Smell</cite></li>
+<li><cite>Unused Code</cite></li>
+<li><cite>Redundancy</cite></li>
+<li><cite>Variable Misuse</cite></li>
+<li><cite>Spelling</cite></li>
+<li><cite>Memory Leak</cite></li>
+<li><cite>Documentation</cite></li>
+<li><cite>Duplication</cite></li>
+<li><cite>Commented Code</cite></li>
+<li><cite>Grammar</cite></li>
+<li><cite>Missing Import</cite></li>
+<li><cite>Unreachable Code</cite></li>
+<li><cite>Undefined Element</cite></li>
+<li><cite>Code Simplification</cite></li>
+</ul>
+<p>Specifying something to <cite>CAN_FIX</cite> makes it obvious that it can be detected too,
+so it may be omitted from <cite>CAN_DETECT</cite></p>
+</div>
+<div class="section" id="bear-deps">
+<h3>BEAR_DEPS<a class="headerlink" href="#bear-deps" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal"><span class="pre">BEAR_DEPS</span></code> contains bear classes that are to be executed before this bear
+gets executed. The results of these bears will then be passed to the run method
+as a dict via the <cite>dependency_results</cite> argument. The dict will have the name of
+the Bear as key and the list of its results as value:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeOtherBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+    <span class="n">BEAR_DEPS</span> <span class="o">=</span> <span class="p">{</span><span class="n">SomeBear</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>For more detail see <a class="reference internal" href="#bears-depending-on-other-bears">Bears Depending on Other Bears</a>.</p>
+</div>
+<div class="section" id="other-metadata">
+<h3>Other Metadata<a class="headerlink" href="#other-metadata" title="Permalink to this headline">¶</a></h3>
+<p>Other metadata such as <code class="docutils literal"><span class="pre">AUTHORS</span></code>, <code class="docutils literal"><span class="pre">AUTHORS_EMAILS</span></code>, <code class="docutils literal"><span class="pre">MAINTAINERS</span></code>,
+<code class="docutils literal"><span class="pre">MAINTAINERS_EMAILS</span></code>, <code class="docutils literal"><span class="pre">LICENSE</span></code>, <code class="docutils literal"><span class="pre">ASCIINEMA_URL</span></code>, <code class="docutils literal"><span class="pre">SEE_MORE</span></code>
+can be used as follows:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SomeBear</span><span class="p">(</span><span class="n">Bear</span><span class="p">):</span>
+    <span class="n">AUTHORS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Jon Snow&#39;</span><span class="p">}</span>
+    <span class="n">AUTHORS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;jon_snow@gmail.com&#39;</span><span class="p">}</span>
+    <span class="n">MAINTAINERS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Catelyn Stark&#39;</span><span class="p">}</span>
+    <span class="n">MAINTAINERS_EMAILS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;catelyn_stark@gmail.com&#39;</span><span class="p">}</span>
+    <span class="n">LICENSE</span> <span class="o">=</span> <span class="s1">&#39;AGPL-3.0&#39;</span>
+    <span class="n">ASCIINEMA_URL</span> <span class="o">=</span> <span class="s1">&#39;https://asciinema.org/a/80761&#39;</span>
+    <span class="n">SEE_MORE</span> <span class="o">=</span> <span class="s1">&#39;https://www.pylint.org&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Writing Native Bears</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-a-bear">What is a bear?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-hello-world-bear">A Hello World Bear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#communicating-with-the-user">Communicating with the User</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#install-locally-written-bears">Install locally Written Bears</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#what-data-types-are-supported">What Data Types are Supported?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#results">Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bears-depending-on-other-bears">Bears Depending on Other Bears</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hidden-results">Hidden Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#more-configuration-options">More Configuration Options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#languages">LANGUAGES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">REQUIREMENTS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#include-local-files">INCLUDE_LOCAL_FILES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#can-detect-and-can-fix">CAN_DETECT and CAN_FIX</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bear-deps">BEAR_DEPS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-metadata">Other Metadata</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Adding_CI.html" title="previous chapter">Adding CI to your Fork</a></li>
+      <li>Next: <a href="Writing_Linter_Bears.html" title="next chapter">Linter Bears</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/Writing_Native_Bears.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

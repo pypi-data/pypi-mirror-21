@@ -1,0 +1,616 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.languages.Language &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.languages.Language</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">isclass</span><span class="p">,</span> <span class="n">getmembers</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
+
+<span class="kn">from</span> <span class="nn">coalib.settings.Annotations</span> <span class="k">import</span> <span class="n">typechain</span>
+
+
+<div class="viewcode-block" id="LanguageUberMeta"><a class="viewcode-back" href="../../../../coalib.bearlib.languages.html#coalib.bearlib.languages.Language.LanguageUberMeta">[docs]</a><span class="k">class</span> <span class="nc">LanguageUberMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is used to hide the `all` attribute from the Language class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">all</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<span class="n">convert_int_float</span> <span class="o">=</span> <span class="n">typechain</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="parse_lang_str"><a class="viewcode-back" href="../../../../coalib.bearlib.languages.html#coalib.bearlib.languages.Language.parse_lang_str">[docs]</a><span class="k">def</span> <span class="nf">parse_lang_str</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses any given language string into name</span>
+<span class="sd">    and a list of float versions (ignores leading whitespace):</span>
+
+<span class="sd">    &gt;&gt;&gt; parse_lang_str(&quot;Python&quot;)</span>
+<span class="sd">    (&#39;Python&#39;, [])</span>
+<span class="sd">    &gt;&gt;&gt; parse_lang_str(&quot;Python 3.3&quot;)</span>
+<span class="sd">    (&#39;Python&#39;, [3.3])</span>
+<span class="sd">    &gt;&gt;&gt; parse_lang_str(&quot;Python 3.6, 3.3&quot;)</span>
+<span class="sd">    (&#39;Python&#39;, [3.6, 3.3])</span>
+<span class="sd">    &gt;&gt;&gt; parse_lang_str(&quot;Objective C 3.6, 3.3&quot;)</span>
+<span class="sd">    (&#39;Objective C&#39;, [3.6, 3.3])</span>
+<span class="sd">    &gt;&gt;&gt; parse_lang_str(&quot;               Objective C 3.6, 3.3&quot;)</span>
+<span class="sd">    (&#39;Objective C&#39;, [3.6, 3.3])</span>
+<span class="sd">    &gt;&gt;&gt; parse_lang_str(&quot;Cobol, stupid!&quot;)  # +ELLIPSIS</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">     ...</span>
+<span class="sd">    ValueError: Couldn&#39;t convert value &#39;stupid!&#39; ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="n">str_versions</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;,\s*&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">string</span><span class="p">))</span>
+    <span class="n">versions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">convert_int_float</span><span class="p">,</span> <span class="n">str_versions</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">version</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">convert_int_float</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">versions</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">(),</span> <span class="n">versions</span></div>
+
+
+<div class="viewcode-block" id="LanguageMeta"><a class="viewcode-back" href="../../../../coalib.bearlib.languages.html#coalib.bearlib.languages.Language.LanguageMeta">[docs]</a><span class="k">class</span> <span class="nc">LanguageMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">LanguageUberMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metaclass for :class:`coalib.bearlib.languages.Language.Language`.</span>
+
+<span class="sd">    Allows it being used as a decorator as well as implements the</span>
+<span class="sd">    `__contains__` operation and stores all languages created with the</span>
+<span class="sd">    decorator.</span>
+
+<span class="sd">    The operators are defined on the class as well, so you can do the</span>
+<span class="sd">    following:</span>
+
+<span class="sd">    &gt;&gt;&gt; @Language</span>
+<span class="sd">    ... class SomeLang:</span>
+<span class="sd">    ...     versions = 2.7, 3.3, 3.4, 3.5, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language.SomeLang &gt; 3.4</span>
+<span class="sd">    SomeLang 3.5, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language.SomeLang &lt; 3.4</span>
+<span class="sd">    SomeLang 2.7, 3.3</span>
+<span class="sd">    &gt;&gt;&gt; Language.SomeLang &gt;= 3.4</span>
+<span class="sd">    SomeLang 3.4, 3.5, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language.SomeLang &lt;= 3.4</span>
+<span class="sd">    SomeLang 2.7, 3.3, 3.4</span>
+<span class="sd">    &gt;&gt;&gt; Language.SomeLang == 3.4</span>
+<span class="sd">    SomeLang 3.4</span>
+<span class="sd">    &gt;&gt;&gt; Language.SomeLang != 3.4</span>
+<span class="sd">    SomeLang 2.7, 3.3, 3.5, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language.SomeLang == 1.0</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">     ...</span>
+<span class="sd">    ValueError: No versions left</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">clsname</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">clsattrs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">Language</span><span class="p">)</span> <span class="ow">and</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Language</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">base</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">clsattrs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">type</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">mcs</span><span class="p">,</span> <span class="n">clsname</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">clsattrs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; isinstance(hash(Language), int)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__dir__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__dir__</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="n">lang</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">lang</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">all</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">lang</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">item</span>
+        <span class="k">if</span> <span class="n">isclass</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">item</span><span class="p">()</span>
+
+        <span class="n">name</span><span class="p">,</span> <span class="n">versions</span> <span class="o">=</span> <span class="n">parse_lang_str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="n">language</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">versions</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">language</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">language</span><span class="p">(</span><span class="o">*</span><span class="nb">set</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="p">((</span><span class="n">language</span> <span class="o">==</span> <span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">versions</span>
+                                     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">versions</span><span class="p">))))</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="n">Language</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">assert</span> <span class="n">isclass</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> \
+                <span class="s1">&#39;This decorator is made for classes. Did you mean to use &#39;</span> \
+                <span class="s1">&#39;`Language[</span><span class="si">%s</span><span class="s1">]`?&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">]),)</span>
+
+            <span class="k">class</span> <span class="nc">SubLanguageMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">cls</span><span class="p">)):</span>
+                <span class="c1"># Override __getattr__ of the LanguageMeta to get a dict with</span>
+                <span class="c1"># the attributes</span>
+
+                <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">OrderedDict</span><span class="p">(</span>
+                            <span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="n">item</span><span class="p">])</span>
+                            <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+            <span class="n">forbidden_attributes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+                <span class="n">chain</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">getmembers</span><span class="p">(</span><span class="n">Language</span><span class="p">)),</span>
+                      <span class="p">(</span><span class="s1">&#39;versions&#39;</span><span class="p">,</span> <span class="s1">&#39;aliases&#39;</span><span class="p">)))</span>
+
+            <span class="k">class</span> <span class="nc">Sub</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">SubLanguageMeta</span><span class="p">):</span>
+                <span class="vm">__qualname__</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="vm">__qualname__</span>
+                <span class="n">versions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s1">&#39;versions&#39;</span><span class="p">,</span> <span class="p">())))</span>
+                <span class="n">aliases</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s1">&#39;aliases&#39;</span><span class="p">,</span> <span class="p">())))</span>
+                <span class="n">_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">member</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">getmembers</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                               <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+                               <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">forbidden_attributes</span><span class="p">}</span>
+
+            <span class="n">Sub</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Sub</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Sub</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">versions</span> <span class="o">=</span> <span class="n">parse_lang_str</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span>
+            <span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">chain</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">aliases</span><span class="p">,</span> <span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__qualname__</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">])</span>
+        <span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">versions</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="n">version</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">versions</span>
+                                   <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">versions</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Language</span> <span class="ow">and</span> <span class="bp">cls</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Language</span> <span class="ow">and</span> <span class="bp">cls</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__ge__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Language</span> <span class="ow">and</span> <span class="bp">cls</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Language</span> <span class="ow">and</span> <span class="bp">cls</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Language</span> <span class="ow">and</span> <span class="bp">cls</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Language</span> <span class="ow">and</span> <span class="bp">cls</span><span class="p">()</span> <span class="o">!=</span> <span class="n">other</span></div>
+
+
+<div class="viewcode-block" id="Language"><a class="viewcode-back" href="../../../../coalib.bearlib.languages.html#coalib.bearlib.languages.Language.Language">[docs]</a><span class="k">class</span> <span class="nc">Language</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">LanguageMeta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class defines programming languages and their versions.</span>
+
+<span class="sd">    You can define a new programming language as follows:</span>
+
+<span class="sd">    &gt;&gt;&gt; @Language</span>
+<span class="sd">    ... class TrumpScript:</span>
+<span class="sd">    ...     __qualname__ = &quot;America is great.&quot;</span>
+<span class="sd">    ...     aliases = &#39;ts&#39;,</span>
+<span class="sd">    ...     versions = 2.7, 3.3, 3.4, 3.5, 3.6</span>
+<span class="sd">    ...     comment_delimiter = &#39;#&#39;</span>
+<span class="sd">    ...     string_delimiter = {&quot;&#39;&quot;: &quot;&#39;&quot;}</span>
+
+<span class="sd">    From a bear, you can simply parse the user given language string to get</span>
+<span class="sd">    the instance of the Language you desire:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language[&#39;trumpscript&#39;]</span>
+<span class="sd">    America is great. 2.7, 3.3, 3.4, 3.5, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language[&#39;ts 3.4, 3.6&#39;]</span>
+<span class="sd">    America is great. 3.4, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language[&#39;TS 3&#39;]</span>
+<span class="sd">    America is great. 3.3, 3.4, 3.5, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language[&#39;tS 1&#39;]</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">     ...</span>
+<span class="sd">    ValueError: No versions left</span>
+
+<span class="sd">    The attributes are not accessible unless you have selected one - and only</span>
+<span class="sd">    one - version of your language:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript(3.3, 3.4).comment_delimiter</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">     ...</span>
+<span class="sd">    AttributeError: You have to specify ONE version ...</span>
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript(3.3).comment_delimiter</span>
+<span class="sd">    &#39;#&#39;</span>
+
+<span class="sd">    If you don&#39;t know which version is the right one, just use this:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript().get_default_version()</span>
+<span class="sd">    America is great. 3.6</span>
+
+<span class="sd">    To see which attributes are available, use the ``attributes`` property:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript(3.3).attributes</span>
+<span class="sd">    [&#39;comment_delimiter&#39;, &#39;string_delimiter&#39;]</span>
+
+<span class="sd">    You can access a dictionary of the attribute values for every version from</span>
+<span class="sd">    the class:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript.comment_delimiter</span>
+<span class="sd">    OrderedDict([(2.7, &#39;#&#39;), (3.3, &#39;#&#39;), (3.4, &#39;#&#39;), (3.5, &#39;#&#39;), (3.6, &#39;#&#39;)])</span>
+
+<span class="sd">    Any nonexistent item will of course not be served:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript.unknown_delimiter</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">     ...</span>
+<span class="sd">    AttributeError</span>
+
+<span class="sd">    **You now know the most important parts for writing a bear using languages.</span>
+<span class="sd">    Read ahead if you want to know more about working with multiple versions of</span>
+<span class="sd">    programming languages as well as derivative languages!**</span>
+
+<span class="sd">    We can define derivative languages as follows:</span>
+
+<span class="sd">    &gt;&gt;&gt; @Language</span>
+<span class="sd">    ... class TrumpScriptDerivative(Language.TrumpScript):</span>
+<span class="sd">    ...     __qualname__ = &#39;Shorter&#39;</span>
+<span class="sd">    ...     comment_delimiter = &#39;//&#39;</span>
+<span class="sd">    ...     keywords = None</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScriptDerivative()</span>
+<span class="sd">    Shorter 2.7, 3.3, 3.4, 3.5, 3.6</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScriptDerivative().get_default_version().attributes</span>
+<span class="sd">    [&#39;comment_delimiter&#39;, &#39;keywords&#39;, &#39;string_delimiter&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScriptDerivative().get_default_version().keywords</span>
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScriptDerivative().get_default_version().comment_delimiter</span>
+<span class="sd">    &#39;//&#39;</span>
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScriptDerivative().get_default_version().string_delimiter</span>
+<span class="sd">    {&quot;&#39;&quot;: &quot;&#39;&quot;}</span>
+
+<span class="sd">    We can get an instance via this syntax as well:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language[Language.TrumpScript]</span>
+<span class="sd">    America is great. 2.7, 3.3, 3.4, 3.5, 3.6</span>
+<span class="sd">    &gt;&gt;&gt; Language[Language.TrumpScript(3.6)]</span>
+<span class="sd">    America is great. 3.6</span>
+
+<span class="sd">    As you see, you can use the `__qualname__` property. This will also affect</span>
+<span class="sd">    the string representation and work as an implicit alias:</span>
+
+<span class="sd">    &gt;&gt;&gt; str(Language.TrumpScript(3.4))</span>
+<span class="sd">    &#39;America is great. 3.4&#39;</span>
+
+<span class="sd">    We can specify the version by instantiating the TrumpScript class now:</span>
+
+<span class="sd">    &gt;&gt;&gt; str(Language.TrumpScript(3.6))</span>
+<span class="sd">    &#39;America is great. 3.6&#39;</span>
+
+<span class="sd">    You can also define ranges of versions of languages:</span>
+
+<span class="sd">    &gt;&gt;&gt; (Language.TrumpScript &gt; 3.3) &lt;= 3.5</span>
+<span class="sd">    America is great. 3.4, 3.5</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript == 3</span>
+<span class="sd">    America is great. 3.3, 3.4, 3.5, 3.6</span>
+
+<span class="sd">    Those can be combined by the or operator:</span>
+
+<span class="sd">    &gt;&gt;&gt; (Language.TrumpScript == 3.6) | (Language.TrumpScript == 2)</span>
+<span class="sd">    America is great. 2.7, 3.6</span>
+
+<span class="sd">    The `__contains__` operator of the class is defined as well for strings</span>
+<span class="sd">    and instances. This is case insensitive and aliases are allowed:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript(3.6) in Language.TrumpScript</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; &#39;ts 3.6, 3.5&#39; in Language.TrumpScript</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; &#39;TrumpScript 2.6&#39; in Language.TrumpScript</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; &#39;TrumpScript&#39; in Language.TrumpScript</span>
+<span class="sd">    True</span>
+
+<span class="sd">    This also works on instances:</span>
+
+<span class="sd">    &gt;&gt;&gt; &#39;ts 3.6, 3.5&#39; in (Language.TrumpScript == 3)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; &#39;ts 3.6,3.5&#39; in ((Language.TrumpScript == 2)</span>
+<span class="sd">    ...                  | Language.TrumpScript(3.5))</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript(2.7, 3.5) in (Language.TrumpScript == 3)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; Language.TrumpScript(3.5) in (Language.TrumpScript == 3)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Any undefined language will obviously not be available:</span>
+
+<span class="sd">    &gt;&gt;&gt; Language.Cobol</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">     ...</span>
+<span class="sd">    AttributeError</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">versions</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">version</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">versions</span> <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">versions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">versions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">versions</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">versions</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">versions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">versions</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;You have to specify ONE version of your &#39;</span>
+                                 <span class="s1">&#39;language to retrieve attributes for it.&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="s1">&#39;There are no available attributes for this language.&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;This is not a valid attribute! &#39;</span>
+                           <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">The following attributes are available:&#39;</span><span class="p">)</span>
+                <span class="n">message</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__qualname__</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">limit_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">gt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">limit_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">lt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">limit_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">ge</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">limit_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">le</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">limit_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">eq</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">limit_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">.</span><span class="n">ne</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="o">*</span><span class="n">chain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">versions</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">Language</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">versions</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the names of all attributes that are available for this</span>
+<span class="sd">        language.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<div class="viewcode-block" id="Language.get_default_version"><a class="viewcode-back" href="../../../../coalib.bearlib.languages.html#coalib.bearlib.languages.Language.Language.get_default_version">[docs]</a>    <span class="k">def</span> <span class="nf">get_default_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the latest version the user would want to choose from the</span>
+<span class="sd">        given versions in self.</span>
+
+<span class="sd">        (At a later point this might also retrieve a default version</span>
+<span class="sd">        specifiable by the language definition, so keep using this!)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">versions</span> <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)()</span></div></div>
+
+
+<div class="viewcode-block" id="limit_versions"><a class="viewcode-back" href="../../../../coalib.bearlib.languages.html#coalib.bearlib.languages.Language.limit_versions">[docs]</a><span class="k">def</span> <span class="nf">limit_versions</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="n">operator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Limits given languages with the given operator:</span>
+
+<span class="sd">    :param language:</span>
+<span class="sd">        A `Language` instance.</span>
+<span class="sd">    :param limit:</span>
+<span class="sd">        A number to limit the versions.</span>
+<span class="sd">    :param operator:</span>
+<span class="sd">        The operator to use for the limiting.</span>
+<span class="sd">    :return:</span>
+<span class="sd">        A new `Language` instance with limited versions.</span>
+<span class="sd">    :raises ValueError:</span>
+<span class="sd">        If no version is left anymore.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">versions</span> <span class="o">=</span> <span class="p">[</span><span class="n">version</span> <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">language</span><span class="o">.</span><span class="n">versions</span>
+                    <span class="k">if</span> <span class="n">operator</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">version</span><span class="p">),</span> <span class="n">limit</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+
+        <span class="n">versions</span> <span class="o">=</span> <span class="p">[</span><span class="n">version</span> <span class="k">for</span> <span class="n">version</span> <span class="ow">in</span> <span class="n">language</span><span class="o">.</span><span class="n">versions</span>
+                    <span class="k">if</span> <span class="n">operator</span><span class="p">(</span><span class="n">version</span><span class="p">,</span> <span class="n">limit</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">versions</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No versions left&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">language</span><span class="p">)(</span><span class="o">*</span><span class="n">versions</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Languages"><a class="viewcode-back" href="../../../../coalib.bearlib.languages.html#coalib.bearlib.languages.Language.Languages">[docs]</a><span class="k">class</span> <span class="nc">Languages</span><span class="p">(</span><span class="nb">tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A ``tuple``-based container for :class:`coalib.bearlib.languages.Language`</span>
+<span class="sd">    instances. It supports language identifiers in any format accepted by</span>
+<span class="sd">    ``Language[...]``:</span>
+
+<span class="sd">    &gt;&gt;&gt; Languages([&#39;C#&#39;, Language.Python == 3])</span>
+<span class="sd">    (C#, Python 3.3, 3.4, 3.5, 3.6)</span>
+
+<span class="sd">    It provides :meth:`.__contains__` for checking if a given language</span>
+<span class="sd">    identifier is included:</span>
+
+<span class="sd">    &gt;&gt;&gt; &#39;Python 2.7, 3.5&#39; in Languages([Language.Python()])</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; &#39;Py 3.3&#39; in Languages([&#39;Python 2&#39;])</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; &#39;csharp&#39; in Languages([&#39;C#&#39;, Language.Python == 3])</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="p">(</span><span class="n">Language</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">item</span> <span class="ow">in</span> <span class="n">lang</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  <li><a href="../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

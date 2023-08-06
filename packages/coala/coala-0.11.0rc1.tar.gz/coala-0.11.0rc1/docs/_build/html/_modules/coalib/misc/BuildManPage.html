@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.misc.BuildManPage &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.misc.BuildManPage</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">distutils.core</span> <span class="k">import</span> <span class="n">Command</span>
+<span class="kn">from</span> <span class="nn">distutils.errors</span> <span class="k">import</span> <span class="n">DistutilsOptionError</span>
+
+
+<div class="viewcode-block" id="BuildManPage"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.BuildManPage.BuildManPage">[docs]</a><span class="k">class</span> <span class="nc">BuildManPage</span><span class="p">(</span><span class="n">Command</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a ``build_manpage`` command  to your setup.py.</span>
+<span class="sd">    To use this Command class add a command to call this class::</span>
+
+<span class="sd">        # For setuptools</span>
+<span class="sd">        setup(</span>
+<span class="sd">              entry_points={</span>
+<span class="sd">                &quot;distutils.commands&quot;: [</span>
+<span class="sd">                    &quot;build_manpage = coalib.misc.BuildManPage:BuildManPage&quot;</span>
+<span class="sd">                ]</span>
+<span class="sd">              }</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # For distutils</span>
+<span class="sd">        from coalib.misc.BuildManPage import BuildManPage</span>
+<span class="sd">        setup(</span>
+<span class="sd">              cmdclass={&#39;build_manpage&#39;: BuildManPage}</span>
+<span class="sd">        )</span>
+
+<span class="sd">    You can then use the following setup command to produce a man page::</span>
+
+<span class="sd">        $ python setup.py build_manpage --output=coala.1 \</span>
+<span class="sd">            --parser=coalib.parsing.DefaultArgParser:default_arg_parser</span>
+
+<span class="sd">    If automatically want to build the man page every time you invoke</span>
+<span class="sd">    your build, add to your ``setup.cfg`` the following::</span>
+
+<span class="sd">        [build_manpage]</span>
+<span class="sd">        output = &lt;appname&gt;.1</span>
+<span class="sd">        parser = &lt;path_to_your_parser&gt;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_options</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;output=&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;output file&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;parser=&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;module path to an ArgumentParser instance&#39;</span>
+         <span class="s1">&#39;(e.g. mymod:func, where func is a method or function which return&#39;</span>
+         <span class="s1">&#39;an arparse.ArgumentParser instance.&#39;</span><span class="p">),</span>
+    <span class="p">]</span>
+
+<div class="viewcode-block" id="BuildManPage.initialize_options"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.BuildManPage.BuildManPage.initialize_options">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="BuildManPage.finalize_options"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.BuildManPage.BuildManPage.finalize_options">[docs]</a>    <span class="k">def</span> <span class="nf">finalize_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DistutilsOptionError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">output</span><span class="se">\&#39;</span><span class="s1"> option is required&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DistutilsOptionError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">parser</span><span class="se">\&#39;</span><span class="s1"> option is required&#39;</span><span class="p">)</span>
+        <span class="n">mod_name</span><span class="p">,</span> <span class="n">func_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+        <span class="n">fromlist</span> <span class="o">=</span> <span class="n">mod_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">mod_name</span><span class="p">,</span> <span class="n">fromlist</span><span class="o">=</span><span class="n">fromlist</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">func_name</span><span class="p">)(</span><span class="n">formatter_class</span><span class="o">=</span><span class="n">ManPageFormatter</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">announce</span><span class="p">(</span><span class="s1">&#39;Writing man page </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_today</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BuildManPage.run"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.BuildManPage.BuildManPage.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span>
+        <span class="n">homepage</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">get_url</span><span class="p">()</span>
+        <span class="n">maintainer</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">get_maintainer</span><span class="p">()</span>
+        <span class="n">_license</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">get_license</span><span class="p">()</span>
+        <span class="n">appname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">prog</span>
+
+        <span class="n">sections</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;see also&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Online documentation: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">homepage</span><span class="p">)),</span>
+                    <span class="s1">&#39;maintainer(s)&#39;</span><span class="p">:</span> <span class="n">maintainer</span><span class="p">,</span>
+                    <span class="s1">&#39;license&#39;</span><span class="p">:</span> <span class="n">_license</span><span class="p">}</span>
+
+        <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span>
+        <span class="n">mpf</span> <span class="o">=</span> <span class="n">ManPageFormatter</span><span class="p">(</span><span class="n">appname</span><span class="p">,</span>
+                               <span class="n">desc</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">get_description</span><span class="p">(),</span>
+                               <span class="n">long_desc</span><span class="o">=</span><span class="n">dist</span><span class="o">.</span><span class="n">get_long_description</span><span class="p">(),</span>
+                               <span class="n">ext_sections</span><span class="o">=</span><span class="n">sections</span><span class="p">,</span>
+                               <span class="n">parser</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="p">)</span>
+
+        <span class="n">formatted_man_page</span> <span class="o">=</span> <span class="n">mpf</span><span class="o">.</span><span class="n">format_man_page</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">man_file</span><span class="p">:</span>
+            <span class="n">man_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">formatted_man_page</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ManPageFormatter"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.BuildManPage.ManPageFormatter">[docs]</a><span class="k">class</span> <span class="nc">ManPageFormatter</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">HelpFormatter</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">prog</span><span class="p">,</span>
+                 <span class="n">indent_increment</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                 <span class="n">max_help_position</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+                 <span class="n">width</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">desc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">long_desc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">ext_sections</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">argparse</span><span class="o">.</span><span class="n">HelpFormatter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prog</span> <span class="o">=</span> <span class="n">prog</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_section</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_today</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y</span><span class="se">\\</span><span class="s1">-%m</span><span class="se">\\</span><span class="s1">-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_desc</span> <span class="o">=</span> <span class="n">desc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_long_desc</span> <span class="o">=</span> <span class="n">long_desc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ext_sections</span> <span class="o">=</span> <span class="n">ext_sections</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span> <span class="o">=</span> <span class="n">parser</span>
+
+    <span class="k">def</span> <span class="nf">_format_action_invocation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">action</span><span class="o">.</span><span class="n">option_strings</span><span class="p">:</span>
+            <span class="n">metavar</span><span class="p">,</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metavar_formatter</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">action</span><span class="o">.</span><span class="n">dest</span><span class="p">)(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">metavar</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># if the Optional doesn&#39;t take a value, format is:</span>
+            <span class="c1">#    -s, --long</span>
+            <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">nargs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">ManPageFormatter</span><span class="o">.</span><span class="n">_bold</span><span class="p">(</span><span class="n">action_str</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">action_str</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">option_strings</span><span class="p">]</span>
+
+            <span class="c1"># if the Optional takes a value, format is:</span>
+            <span class="c1">#    -s ARGS, --long ARGS</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">default</span> <span class="o">=</span> <span class="n">ManPageFormatter</span><span class="o">.</span><span class="n">_underline</span><span class="p">(</span><span class="n">action</span><span class="o">.</span><span class="n">dest</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+                <span class="n">args_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_args</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bold</span><span class="p">(</span><span class="n">option_string</span><span class="p">),</span> <span class="n">args_string</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">option_string</span> <span class="ow">in</span> <span class="n">action</span><span class="o">.</span><span class="n">option_strings</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_markup</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">-&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_add_format</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="n">front</span><span class="p">,</span> <span class="n">back</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">front</span><span class="p">):</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="n">front</span> <span class="o">+</span> <span class="n">string</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">back</span><span class="p">):</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="n">string</span> <span class="o">+</span> <span class="n">back</span>
+        <span class="k">return</span> <span class="n">string</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_underline</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ManPageFormatter</span><span class="o">.</span><span class="n">_add_format</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">fI&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">fR&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_bold</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ManPageFormatter</span><span class="o">.</span><span class="n">_add_format</span><span class="p">(</span><span class="n">string</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">fB&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">fR&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_mk_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;.TH </span><span class="si">{0}</span><span class="s1"> </span><span class="si">{1}</span><span class="s1"> </span><span class="si">{2}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prog</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">_section</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">_today</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_mk_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;.SH NAME</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">prog</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_mk_synopsis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_usage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">usage</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_actions</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_mutually_exclusive_groups</span><span class="p">,</span>
+                       <span class="n">prefix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">usage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_usage</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_actions</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_mutually_exclusive_groups</span><span class="p">,</span>
+                                   <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">usage</span> <span class="o">=</span> <span class="n">usage</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> &#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prog</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">usage</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;.SH SYNOPSIS</span><span class="se">\n</span><span class="s1"> </span><span class="se">\\</span><span class="s1">fB</span><span class="si">%s</span><span class="se">\\</span><span class="s1">fR </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span>
+                 <span class="o">%</span> <span class="p">(</span><span class="n">ManPageFormatter</span><span class="o">.</span><span class="n">_markup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prog</span><span class="p">),</span> <span class="n">usage</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">usage</span>
+
+    <span class="k">def</span> <span class="nf">_mk_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_long_desc</span><span class="p">:</span>
+            <span class="n">long_desc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_long_desc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">.br</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;.SH DESCRIPTION</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_markup</span><span class="p">(</span><span class="n">long_desc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_mk_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_get_formatter</span><span class="p">()</span>
+
+        <span class="c1"># positionals, optionals and user-defined groups</span>
+        <span class="k">for</span> <span class="n">action_group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">_action_groups</span><span class="p">:</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">start_section</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">add_arguments</span><span class="p">(</span><span class="n">action_group</span><span class="o">.</span><span class="n">_group_actions</span><span class="p">)</span>
+            <span class="n">formatter</span><span class="o">.</span><span class="n">end_section</span><span class="p">()</span>
+
+        <span class="c1"># epilog</span>
+        <span class="n">formatter</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parser</span><span class="o">.</span><span class="n">epilog</span><span class="p">)</span>
+
+        <span class="c1"># determine help from format above</span>
+        <span class="k">return</span> <span class="s1">&#39;.SH OPTIONS</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">formatter</span><span class="o">.</span><span class="n">format_help</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_mk_footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sections</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ext_sections</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">footer</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sections</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">part</span> <span class="o">=</span> <span class="s1">&#39;.SH </span><span class="si">{}</span><span class="se">\n</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">sections</span><span class="p">[</span><span class="n">section</span><span class="p">])</span>
+            <span class="n">footer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">footer</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ManPageFormatter.format_man_page"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.BuildManPage.ManPageFormatter.format_man_page">[docs]</a>    <span class="k">def</span> <span class="nf">format_man_page</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mk_title</span><span class="p">())</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mk_name</span><span class="p">())</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mk_synopsis</span><span class="p">())</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mk_description</span><span class="p">())</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mk_options</span><span class="p">())</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mk_footer</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">page</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

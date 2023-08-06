@@ -1,0 +1,696 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.processes.BearRunning &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.processes.BearRunning</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">queue</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bears.BEAR_KIND</span> <span class="k">import</span> <span class="n">BEAR_KIND</span>
+<span class="kn">from</span> <span class="nn">coalib.bears.GlobalBear</span> <span class="k">import</span> <span class="n">GlobalBear</span>
+<span class="kn">from</span> <span class="nn">coalib.bears.LocalBear</span> <span class="k">import</span> <span class="n">LocalBear</span>
+<span class="kn">from</span> <span class="nn">coalib.misc</span> <span class="k">import</span> <span class="n">Constants</span>
+<span class="kn">from</span> <span class="nn">coalib.processes.communication.LogMessage</span> <span class="k">import</span> <span class="n">LOG_LEVEL</span><span class="p">,</span> <span class="n">LogMessage</span>
+<span class="kn">from</span> <span class="nn">coalib.processes.CONTROL_ELEMENT</span> <span class="k">import</span> <span class="n">CONTROL_ELEMENT</span>
+<span class="kn">from</span> <span class="nn">coalib.results.Result</span> <span class="k">import</span> <span class="n">Result</span>
+
+
+<div class="viewcode-block" id="send_msg"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.send_msg">[docs]</a><span class="k">def</span> <span class="nf">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Puts message into message queue for a LogPrinter to present to the user.</span>
+
+<span class="sd">    :param message_queue: The queue to put the message into and which the</span>
+<span class="sd">                          LogPrinter reads.</span>
+<span class="sd">    :param timeout:       The queue blocks at most timeout seconds for a free</span>
+<span class="sd">                          slot to execute the put operation on. After the</span>
+<span class="sd">                          timeout it returns queue Full exception.</span>
+<span class="sd">    :param log_level:     The log_level i.e Error,Debug or Warning.It is sent</span>
+<span class="sd">                          to the LogPrinter depending on the message.</span>
+<span class="sd">    :param args:          This includes the elements of the message.</span>
+<span class="sd">    :param delimiter:     It is the value placed between each arg. By default</span>
+<span class="sd">                          it is a &#39; &#39;.</span>
+<span class="sd">    :param end:           It is the value placed at the end of the message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+    <span class="n">message_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">LogMessage</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span> <span class="n">output</span><span class="p">),</span>
+                      <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="validate_results"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.validate_results">[docs]</a><span class="k">def</span> <span class="nf">validate_results</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">result_list</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validates if the result_list passed to it contains valid set of results.</span>
+<span class="sd">    That is the result_list must itself be a list and contain objects of the</span>
+<span class="sd">    instance of Result object. If any irregularity is found a message is put in</span>
+<span class="sd">    the message_queue to present the irregularity to the user. Each result_list</span>
+<span class="sd">    belongs to an execution of a bear.</span>
+
+<span class="sd">    :param message_queue: A queue that contains messages of type</span>
+<span class="sd">                          errors/warnings/debug statements to be printed in the</span>
+<span class="sd">                          Log.</span>
+<span class="sd">    :param timeout:       The queue blocks at most timeout seconds for a free</span>
+<span class="sd">                          slot to execute the put operation on. After the</span>
+<span class="sd">                          timeout it returns queue Full exception.</span>
+<span class="sd">    :param result_list:   The list of results to validate.</span>
+<span class="sd">    :param name:          The name of the bear executed.</span>
+<span class="sd">    :param args:          The args with which the bear was executed.</span>
+<span class="sd">    :param kwargs:        The kwargs with which the bear was executed.</span>
+<span class="sd">    :return:              Returns None if the result_list is invalid. Else it</span>
+<span class="sd">                          returns the result_list itself.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">result_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">result_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Result</span><span class="p">):</span>
+            <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                     <span class="n">timeout</span><span class="p">,</span>
+                     <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+                     <span class="s1">&#39;The results from the bear </span><span class="si">{bear}</span><span class="s1"> could only be &#39;</span>
+                     <span class="s1">&#39;partially processed with arguments </span><span class="si">{arglist}</span><span class="s1">, &#39;</span>
+                     <span class="s1">&#39;</span><span class="si">{kwarglist}</span><span class="s1">&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bear</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">arglist</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwarglist</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                     <span class="n">timeout</span><span class="p">,</span>
+                     <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                     <span class="s1">&#39;One of the results in the list for the bear </span><span class="si">{bear}</span><span class="s1"> is &#39;</span>
+                     <span class="s1">&#39;an instance of </span><span class="si">{ret}</span><span class="s1"> but it should be an instance of &#39;</span>
+                     <span class="s1">&#39;Result&#39;</span>
+                     <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bear</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">ret</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="vm">__class__</span><span class="p">))</span>
+            <span class="n">result_list</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result_list</span></div>
+
+
+<div class="viewcode-block" id="run_bear"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.run_bear">[docs]</a><span class="k">def</span> <span class="nf">run_bear</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">bear_instance</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method is responsible for executing the instance of a bear. It also</span>
+<span class="sd">    reports or logs errors if any occur during the execution of that bear</span>
+<span class="sd">    instance.</span>
+
+<span class="sd">    :param message_queue: A queue that contains messages of type</span>
+<span class="sd">                          errors/warnings/debug statements to be printed in the</span>
+<span class="sd">                          Log.</span>
+<span class="sd">    :param timeout:       The queue blocks at most timeout seconds for a free</span>
+<span class="sd">                          slot to execute the put operation on. After the</span>
+<span class="sd">                          timeout it returns queue Full exception.</span>
+<span class="sd">    :param bear_instance: The instance of the bear to be executed.</span>
+<span class="sd">    :param args:          The arguments that are to be passed to the bear.</span>
+<span class="sd">    :param kwargs:        The keyword arguments that are to be passed to the</span>
+<span class="sd">                          bear.</span>
+<span class="sd">    :return:              Returns a valid list of objects of the type Result</span>
+<span class="sd">                          if the bear executed successfully. None otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dependency_results&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;dependency_results&#39;</span><span class="p">]</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">bear_instance</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result_list</span> <span class="o">=</span> <span class="n">bear_instance</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">,</span> <span class="ne">SystemExit</span><span class="p">):</span>
+        <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="p">,</span>
+                 <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+                 <span class="s1">&#39;The bear </span><span class="si">{bear}</span><span class="s1"> failed to run with the arguments &#39;</span>
+                 <span class="s1">&#39;</span><span class="si">{arglist}</span><span class="s1">, </span><span class="si">{kwarglist}</span><span class="s1">. Skipping bear...&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bear</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">arglist</span><span class="o">=</span><span class="n">args</span><span class="p">,</span> <span class="n">kwarglist</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="p">,</span>
+                 <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                 <span class="s1">&#39;Traceback for error in bear </span><span class="si">{}</span><span class="s1">:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                 <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">(),</span>
+                 <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">validate_results</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                            <span class="n">timeout</span><span class="p">,</span>
+                            <span class="n">result_list</span><span class="p">,</span>
+                            <span class="n">name</span><span class="p">,</span>
+                            <span class="n">args</span><span class="p">,</span>
+                            <span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_local_dependency_results"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.get_local_dependency_results">[docs]</a><span class="k">def</span> <span class="nf">get_local_dependency_results</span><span class="p">(</span><span class="n">local_result_list</span><span class="p">,</span> <span class="n">bear_instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets all the results originating from the dependencies of a</span>
+<span class="sd">    bear_instance. Each bear_instance may or may not have dependencies.</span>
+
+<span class="sd">    :param local_result_list: The list of results out of which the dependency</span>
+<span class="sd">                              results are picked.</span>
+<span class="sd">    :param bear_instance:     The instance of a local bear to get the</span>
+<span class="sd">                              dependencies from.</span>
+<span class="sd">    :return:                  Return none if there are no dependencies for the</span>
+<span class="sd">                              bear. Else return a dictionary containing</span>
+<span class="sd">                              dependency results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="n">bear_instance</span><span class="o">.</span><span class="n">BEAR_DEPS</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">dependency_results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dep_strings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">dep_strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">local_result_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">origin</span> <span class="ow">in</span> <span class="n">dep_strings</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">dependency_results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="n">dependency_results</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span>
+
+    <span class="k">return</span> <span class="n">dependency_results</span></div>
+
+
+<div class="viewcode-block" id="run_local_bear"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.run_local_bear">[docs]</a><span class="k">def</span> <span class="nf">run_local_bear</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                   <span class="n">timeout</span><span class="p">,</span>
+                   <span class="n">local_result_list</span><span class="p">,</span>
+                   <span class="n">file_dict</span><span class="p">,</span>
+                   <span class="n">bear_instance</span><span class="p">,</span>
+                   <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs an instance of a local bear. Checks if bear_instance is of type</span>
+<span class="sd">    LocalBear and then passes it to the run_bear to execute.</span>
+
+<span class="sd">    :param message_queue:     A queue that contains messages of type</span>
+<span class="sd">                              errors/warnings/debug statements to be printed in</span>
+<span class="sd">                              the Log.</span>
+<span class="sd">    :param timeout:           The queue blocks at most timeout seconds for a</span>
+<span class="sd">                              free slot to execute the put operation on. After</span>
+<span class="sd">                              the timeout it returns queue Full exception.</span>
+<span class="sd">    :param local_result_list: Its a list that stores the results of all local</span>
+<span class="sd">                              bears.</span>
+<span class="sd">    :param file_dict:         Dictionary containing contents of file.</span>
+<span class="sd">    :param bear_instance:     Instance of LocalBear the run.</span>
+<span class="sd">    :param filename:          Name of the file to run it on.</span>
+<span class="sd">    :return:                  Returns a list of results generated by the passed</span>
+<span class="sd">                              bear_instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bear_instance</span><span class="p">,</span> <span class="n">LocalBear</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">bear_instance</span><span class="o">.</span><span class="n">kind</span><span class="p">()</span> <span class="o">!=</span> <span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">):</span>
+        <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="p">,</span>
+                 <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                 <span class="s1">&#39;A given local bear (</span><span class="si">{}</span><span class="s1">) is not valid. Leaving &#39;</span>
+                 <span class="s1">&#39;it out...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bear_instance</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">),</span>
+                 <span class="n">Constants</span><span class="o">.</span><span class="n">THIS_IS_A_BUG</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;dependency_results&#39;</span><span class="p">:</span>
+              <span class="n">get_local_dependency_results</span><span class="p">(</span><span class="n">local_result_list</span><span class="p">,</span>
+                                           <span class="n">bear_instance</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="n">run_bear</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="p">,</span>
+                    <span class="n">bear_instance</span><span class="p">,</span>
+                    <span class="n">filename</span><span class="p">,</span>
+                    <span class="n">file_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">],</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="run_global_bear"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.run_global_bear">[docs]</a><span class="k">def</span> <span class="nf">run_global_bear</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="p">,</span>
+                    <span class="n">global_bear_instance</span><span class="p">,</span>
+                    <span class="n">dependency_results</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs an instance of a global bear. Checks if bear_instance is of type</span>
+<span class="sd">    GlobalBear and then passes it to the run_bear to execute.</span>
+
+<span class="sd">    :param message_queue:        A queue that contains messages of type</span>
+<span class="sd">                                 errors/warnings/debug statements to be printed</span>
+<span class="sd">                                 in the Log.</span>
+<span class="sd">    :param timeout:              The queue blocks at most timeout seconds for a</span>
+<span class="sd">                                 free slot to execute the put operation on.</span>
+<span class="sd">                                 After the timeout it returns queue Full</span>
+<span class="sd">                                 exception.</span>
+<span class="sd">    :param global_bear_instance: Instance of GlobalBear to run.</span>
+<span class="sd">    :param dependency_results:   The results of all the bears on which the</span>
+<span class="sd">                                 instance of the passed bear to be run depends</span>
+<span class="sd">                                 on.</span>
+<span class="sd">    :return:                     Returns a list of results generated by the</span>
+<span class="sd">                                 passed bear_instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">global_bear_instance</span><span class="p">,</span> <span class="n">GlobalBear</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">global_bear_instance</span><span class="o">.</span><span class="n">kind</span><span class="p">()</span> <span class="o">!=</span> <span class="n">BEAR_KIND</span><span class="o">.</span><span class="n">GLOBAL</span><span class="p">):</span>
+        <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="p">,</span>
+                 <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                 <span class="s1">&#39;A given global bear (</span><span class="si">{}</span><span class="s1">) is not valid. Leaving it &#39;</span>
+                 <span class="s1">&#39;out...&#39;</span>
+                 <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">global_bear_instance</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">),</span>
+                 <span class="n">Constants</span><span class="o">.</span><span class="n">THIS_IS_A_BUG</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;dependency_results&#39;</span><span class="p">:</span> <span class="n">dependency_results</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">run_bear</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="p">,</span>
+                    <span class="n">global_bear_instance</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="run_local_bears_on_file"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.run_local_bears_on_file">[docs]</a><span class="k">def</span> <span class="nf">run_local_bears_on_file</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                            <span class="n">timeout</span><span class="p">,</span>
+                            <span class="n">file_dict</span><span class="p">,</span>
+                            <span class="n">local_bear_list</span><span class="p">,</span>
+                            <span class="n">local_result_dict</span><span class="p">,</span>
+                            <span class="n">control_queue</span><span class="p">,</span>
+                            <span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method runs a list of local bears on one file.</span>
+
+<span class="sd">    :param message_queue:     A queue that contains messages of type</span>
+<span class="sd">                              errors/warnings/debug statements to be printed</span>
+<span class="sd">                              in the Log.</span>
+<span class="sd">    :param timeout:           The queue blocks at most timeout seconds for a</span>
+<span class="sd">                              free slot to execute the put operation on. After</span>
+<span class="sd">                              the timeout it returns queue Full exception.</span>
+<span class="sd">    :param file_dict:         Dictionary that contains contents of files.</span>
+<span class="sd">    :param local_bear_list:   List of local bears to run on file.</span>
+<span class="sd">    :param local_result_dict: A Manager.dict that will be used to store local</span>
+<span class="sd">                              bear results. A list of all local bear results</span>
+<span class="sd">                              will be stored with the filename as key.</span>
+<span class="sd">    :param control_queue:     If any result gets written to the result_dict a</span>
+<span class="sd">                              tuple containing a CONTROL_ELEMENT (to indicate</span>
+<span class="sd">                              what kind of event happened) and either a bear</span>
+<span class="sd">                              name(for global results) or a file name to</span>
+<span class="sd">                              indicate the result will be put to the queue.</span>
+<span class="sd">    :param filename:          The name of file on which to run the bears.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_dict</span><span class="p">:</span>
+        <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="p">,</span>
+                 <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+                 <span class="s1">&#39;An internal error occurred.&#39;</span><span class="p">,</span>
+                 <span class="n">Constants</span><span class="o">.</span><span class="n">THIS_IS_A_BUG</span><span class="p">)</span>
+        <span class="n">send_msg</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                 <span class="n">timeout</span><span class="p">,</span>
+                 <span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                 <span class="s1">&#39;The given file through the queue is not in the file &#39;</span>
+                 <span class="s1">&#39;dictionary.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span>
+
+    <span class="n">local_result_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bear_instance</span> <span class="ow">in</span> <span class="n">local_bear_list</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">run_local_bear</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                                <span class="n">timeout</span><span class="p">,</span>
+                                <span class="n">local_result_list</span><span class="p">,</span>
+                                <span class="n">file_dict</span><span class="p">,</span>
+                                <span class="n">bear_instance</span><span class="p">,</span>
+                                <span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">local_result_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="n">local_result_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="n">local_result_list</span>
+    <span class="n">control_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_global_dependency_results"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.get_global_dependency_results">[docs]</a><span class="k">def</span> <span class="nf">get_global_dependency_results</span><span class="p">(</span><span class="n">global_result_dict</span><span class="p">,</span> <span class="n">bear_instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets all the results originating from the dependencies of a</span>
+<span class="sd">    bear_instance. Each bear_instance may or may not have dependencies.</span>
+
+<span class="sd">    :param global_result_dict: The list of results out of which the dependency</span>
+<span class="sd">                               results are picked.</span>
+<span class="sd">    :return:                   None if bear has no dependencies, False if</span>
+<span class="sd">                               dependencies are not met, the dependency dict</span>
+<span class="sd">                               otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">deps</span> <span class="o">=</span> <span class="n">bear_instance</span><span class="o">.</span><span class="n">BEAR_DEPS</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="c1"># When this occurs we have an invalid bear and a warning will be</span>
+        <span class="c1"># emitted later.</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">dependency_results</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">depname</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">if</span> <span class="n">depname</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">global_result_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">dependency_results</span><span class="p">[</span><span class="n">depname</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_result_dict</span><span class="p">[</span><span class="n">depname</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">dependency_results</span></div>
+
+
+<div class="viewcode-block" id="get_next_global_bear"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.get_next_global_bear">[docs]</a><span class="k">def</span> <span class="nf">get_next_global_bear</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span>
+                         <span class="n">global_bear_queue</span><span class="p">,</span>
+                         <span class="n">global_bear_list</span><span class="p">,</span>
+                         <span class="n">global_result_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves the next global bear.</span>
+
+<span class="sd">    :param timeout:            The queue blocks at most timeout seconds for a</span>
+<span class="sd">                               free slot to execute the put operation on. After</span>
+<span class="sd">                               the timeout it returns queue Full exception.</span>
+<span class="sd">    :param global_bear_queue:  queue (read, write) of indexes of global bear</span>
+<span class="sd">                               instances in the global_bear_list.</span>
+<span class="sd">    :param global_bear_list:   A list containing all global bears to be</span>
+<span class="sd">                               executed.</span>
+<span class="sd">    :param global_result_dict: A Manager.dict that will be used to store global</span>
+<span class="sd">                               results. The list of results of one global bear</span>
+<span class="sd">                               will be stored with the bear name as key.</span>
+<span class="sd">    :return:                   (bear, bearname, dependency_results)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dependency_results</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">while</span> <span class="n">dependency_results</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="n">bear_id</span> <span class="o">=</span> <span class="n">global_bear_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">bear</span> <span class="o">=</span> <span class="n">global_bear_list</span><span class="p">[</span><span class="n">bear_id</span><span class="p">]</span>
+
+        <span class="n">dependency_results</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">get_global_dependency_results</span><span class="p">(</span><span class="n">global_result_dict</span><span class="p">,</span> <span class="n">bear</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">dependency_results</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="n">global_bear_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">bear_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bear</span><span class="p">,</span> <span class="n">dependency_results</span></div>
+
+
+<div class="viewcode-block" id="task_done"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.task_done">[docs]</a><span class="k">def</span> <span class="nf">task_done</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Invokes task_done if the given queue provides this operation. Otherwise</span>
+<span class="sd">    passes silently.</span>
+
+<span class="sd">    :param obj: Any object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;task_done&#39;</span><span class="p">):</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="run_local_bears"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.run_local_bears">[docs]</a><span class="k">def</span> <span class="nf">run_local_bears</span><span class="p">(</span><span class="n">filename_queue</span><span class="p">,</span>
+                    <span class="n">message_queue</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="p">,</span>
+                    <span class="n">file_dict</span><span class="p">,</span>
+                    <span class="n">local_bear_list</span><span class="p">,</span>
+                    <span class="n">local_result_dict</span><span class="p">,</span>
+                    <span class="n">control_queue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run local bears on all the files given.</span>
+
+<span class="sd">    :param filename_queue:    queue (read) of file names to check with</span>
+<span class="sd">                              local bears.</span>
+<span class="sd">    :param message_queue:     A queue that contains messages of type</span>
+<span class="sd">                              errors/warnings/debug statements to be printed</span>
+<span class="sd">                              in the Log.</span>
+<span class="sd">    :param timeout:           The queue blocks at most timeout seconds for a</span>
+<span class="sd">                              free slot to execute the put operation on. After</span>
+<span class="sd">                              the timeout it returns queue Full exception.</span>
+<span class="sd">    :param file_dict:         Dictionary that contains contents of files.</span>
+<span class="sd">    :param local_bear_list:   List of local bears to run.</span>
+<span class="sd">    :param local_result_dict: A Manager.dict that will be used to store local</span>
+<span class="sd">                              bear results. A list of all local bear results</span>
+<span class="sd">                              will be stored with the filename as key.</span>
+<span class="sd">    :param control_queue:     If any result gets written to the result_dict a</span>
+<span class="sd">                              tuple containing a CONTROL_ELEMENT (to indicate</span>
+<span class="sd">                              what kind of event happened) and either a bear</span>
+<span class="sd">                              name(for global results) or a file name to</span>
+<span class="sd">                              indicate the result will be put to the queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">filename_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="n">run_local_bears_on_file</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                                    <span class="n">timeout</span><span class="p">,</span>
+                                    <span class="n">file_dict</span><span class="p">,</span>
+                                    <span class="n">local_bear_list</span><span class="p">,</span>
+                                    <span class="n">local_result_dict</span><span class="p">,</span>
+                                    <span class="n">control_queue</span><span class="p">,</span>
+                                    <span class="n">filename</span><span class="p">)</span>
+            <span class="n">task_done</span><span class="p">(</span><span class="n">filename_queue</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="run_global_bears"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.run_global_bears">[docs]</a><span class="k">def</span> <span class="nf">run_global_bears</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                     <span class="n">timeout</span><span class="p">,</span>
+                     <span class="n">global_bear_queue</span><span class="p">,</span>
+                     <span class="n">global_bear_list</span><span class="p">,</span>
+                     <span class="n">global_result_dict</span><span class="p">,</span>
+                     <span class="n">control_queue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run all global bears.</span>
+
+<span class="sd">    :param message_queue:      A queue that contains messages of type</span>
+<span class="sd">                               errors/warnings/debug statements to be printed</span>
+<span class="sd">                               in the Log.</span>
+<span class="sd">    :param timeout:            The queue blocks at most timeout seconds for a</span>
+<span class="sd">                               free slot to execute the put operation on. After</span>
+<span class="sd">                               the timeout it returns queue Full exception.</span>
+<span class="sd">    :param global_bear_queue:  queue (read, write) of indexes of global bear</span>
+<span class="sd">                               instances in the global_bear_list.</span>
+<span class="sd">    :param global_bear_list:   list of global bear instances</span>
+<span class="sd">    :param global_result_dict: A Manager.dict that will be used to store global</span>
+<span class="sd">                               results. The list of results of one global bear</span>
+<span class="sd">                               will be stored with the bear name as key.</span>
+<span class="sd">    :param control_queue:      If any result gets written to the result_dict a</span>
+<span class="sd">                               tuple containing a CONTROL_ELEMENT (to indicate</span>
+<span class="sd">                               what kind of event happened) and either a bear</span>
+<span class="sd">                               name(for global results) or a file name to</span>
+<span class="sd">                               indicate the result will be put to the queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">bear</span><span class="p">,</span> <span class="n">dep_results</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">get_next_global_bear</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span>
+                                     <span class="n">global_bear_queue</span><span class="p">,</span>
+                                     <span class="n">global_bear_list</span><span class="p">,</span>
+                                     <span class="n">global_result_dict</span><span class="p">))</span>
+            <span class="n">bearname</span> <span class="o">=</span> <span class="n">bear</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">run_global_bear</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">bear</span><span class="p">,</span> <span class="n">dep_results</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                <span class="n">global_result_dict</span><span class="p">[</span><span class="n">bearname</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+                <span class="n">control_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">GLOBAL</span><span class="p">,</span> <span class="n">bearname</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">global_result_dict</span><span class="p">[</span><span class="n">bearname</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">task_done</span><span class="p">(</span><span class="n">global_bear_queue</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../../coalib.processes.html#coalib.processes.BearRunning.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">file_name_queue</span><span class="p">,</span>
+        <span class="n">local_bear_list</span><span class="p">,</span>
+        <span class="n">global_bear_list</span><span class="p">,</span>
+        <span class="n">global_bear_queue</span><span class="p">,</span>
+        <span class="n">file_dict</span><span class="p">,</span>
+        <span class="n">local_result_dict</span><span class="p">,</span>
+        <span class="n">global_result_dict</span><span class="p">,</span>
+        <span class="n">message_queue</span><span class="p">,</span>
+        <span class="n">control_queue</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the method that is actually runs by processes.</span>
+
+<span class="sd">    If parameters type is &#39;queue (read)&#39; this means it has to implement the</span>
+<span class="sd">    get(timeout=TIMEOUT) method and it shall raise queue.Empty if the queue</span>
+<span class="sd">    is empty up until the end of the timeout. If the queue has the</span>
+<span class="sd">    (optional!) task_done() attribute, the run method will call it after</span>
+<span class="sd">    processing each item.</span>
+
+<span class="sd">    If parameters type is &#39;queue (write)&#39; it shall implement the</span>
+<span class="sd">    put(object, timeout=TIMEOUT) method.</span>
+
+<span class="sd">    If the queues raise any exception not specified here the user will get</span>
+<span class="sd">    an &#39;unknown error&#39; message. So beware of that.</span>
+
+<span class="sd">    :param file_name_queue:    queue (read) of file names to check with local</span>
+<span class="sd">                               bears. Each invocation of the run method needs</span>
+<span class="sd">                               one such queue which it checks with all the</span>
+<span class="sd">                               local bears. The queue could be empty.</span>
+<span class="sd">                               (Repeat until queue empty.)</span>
+<span class="sd">    :param local_bear_list:    List of local bear instances.</span>
+<span class="sd">    :param global_bear_list:   List of global bear instances.</span>
+<span class="sd">    :param global_bear_queue:  queue (read, write) of indexes of global bear</span>
+<span class="sd">                               instances in the global_bear_list.</span>
+<span class="sd">    :param file_dict:          dict of all files as {filename:file}, file as in</span>
+<span class="sd">                               file.readlines().</span>
+<span class="sd">    :param local_result_dict:  A Manager.dict that will be used to store local</span>
+<span class="sd">                               results. A list of all local results.</span>
+<span class="sd">                               will be stored with the filename as key.</span>
+<span class="sd">    :param global_result_dict: A Manager.dict that will be used to store global</span>
+<span class="sd">                               results. The list of results of one global bear</span>
+<span class="sd">                               will be stored with the bear name as key.</span>
+<span class="sd">    :param message_queue:      queue (write) for debug/warning/error</span>
+<span class="sd">                               messages (type LogMessage)</span>
+<span class="sd">    :param control_queue:      queue (write). If any result gets written to the</span>
+<span class="sd">                               result_dict a tuple containing a CONTROL_ELEMENT</span>
+<span class="sd">                               (to indicate what kind of event happened) and</span>
+<span class="sd">                               either a bear name (for global results) or a</span>
+<span class="sd">                               file name to indicate the result will be put to</span>
+<span class="sd">                               the queue. If the run method finished all its</span>
+<span class="sd">                               local bears it will put</span>
+<span class="sd">                               (CONTROL_ELEMENT.LOCAL_FINISHED, None) to the</span>
+<span class="sd">                               queue, if it finished all global ones,</span>
+<span class="sd">                               (CONTROL_ELEMENT.GLOBAL_FINISHED, None) will</span>
+<span class="sd">                               be put there.</span>
+<span class="sd">    :param timeout:            The queue blocks at most timeout seconds for a</span>
+<span class="sd">                               free slot to execute the put operation on. After</span>
+<span class="sd">                               the timeout it returns queue Full exception.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">run_local_bears</span><span class="p">(</span><span class="n">file_name_queue</span><span class="p">,</span>
+                        <span class="n">message_queue</span><span class="p">,</span>
+                        <span class="n">timeout</span><span class="p">,</span>
+                        <span class="n">file_dict</span><span class="p">,</span>
+                        <span class="n">local_bear_list</span><span class="p">,</span>
+                        <span class="n">local_result_dict</span><span class="p">,</span>
+                        <span class="n">control_queue</span><span class="p">)</span>
+        <span class="n">control_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">LOCAL_FINISHED</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="n">run_global_bears</span><span class="p">(</span><span class="n">message_queue</span><span class="p">,</span>
+                         <span class="n">timeout</span><span class="p">,</span>
+                         <span class="n">global_bear_queue</span><span class="p">,</span>
+                         <span class="n">global_bear_list</span><span class="p">,</span>
+                         <span class="n">global_result_dict</span><span class="p">,</span>
+                         <span class="n">control_queue</span><span class="p">)</span>
+        <span class="n">control_queue</span><span class="o">.</span><span class="n">put</span><span class="p">((</span><span class="n">CONTROL_ELEMENT</span><span class="o">.</span><span class="n">GLOBAL_FINISHED</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

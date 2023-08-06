@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.abstractions.SectionCreatable &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.abstractions.SectionCreatable</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">coalib.settings.FunctionMetadata</span> <span class="k">import</span> <span class="n">FunctionMetadata</span>
+
+
+<div class="viewcode-block" id="SectionCreatable"><a class="viewcode-back" href="../../../../coalib.bearlib.abstractions.html#coalib.bearlib.abstractions.SectionCreatable.SectionCreatable">[docs]</a><span class="k">class</span> <span class="nc">SectionCreatable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A SectionCreatable is an object that is creatable out of a section object.</span>
+<span class="sd">    Thus this is the class for many helper objects provided by the bearlib.</span>
+
+<span class="sd">    If you want to use an object that inherits from this class the following</span>
+<span class="sd">    approach is recommended: Instantiate it via the from_section method. You</span>
+<span class="sd">    can provide default arguments via the lower case keyword arguments.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        SpacingHelper.from_section(section, tabwidth=8)</span>
+
+<span class="sd">    creates a SpacingHelper and if the &quot;tabwidth&quot; setting is needed and not</span>
+<span class="sd">    contained in section, 8 will be taken.</span>
+
+<span class="sd">    It is recommended to write the prototype of the __init__ method according</span>
+<span class="sd">    to this example:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        def __init__(self, setting_one: int, setting_two: bool=False):</span>
+<span class="sd">            pass  # Implementation</span>
+
+<span class="sd">    This way the get_optional_settings and the get_non_optional_settings method</span>
+<span class="sd">    will extract automatically that:</span>
+
+<span class="sd">    -  setting_one should be an integer</span>
+<span class="sd">    -  setting_two should be a bool and defaults to False</span>
+
+<span class="sd">    If you write a documentation comment, you can use :param to add</span>
+<span class="sd">    descriptions to your parameters. These will be available too automatically.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>  <span class="c1"># Method needs to be available</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SectionCreatable.from_section"><a class="viewcode-back" href="../../../../coalib.bearlib.abstractions.html#coalib.bearlib.abstractions.SectionCreatable.SectionCreatable.from_section">[docs]</a>    <span class="k">def</span> <span class="nf">from_section</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the object from a section object.</span>
+
+<span class="sd">        :param section: A section object containing at least the settings</span>
+<span class="sd">                        specified by get_non_optional_settings()</span>
+<span class="sd">        :param kwargs:  Additional keyword arguments</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">create_params_from_section</span><span class="p">(</span><span class="n">section</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SectionCreatable.get_metadata"><a class="viewcode-back" href="../../../../coalib.bearlib.abstractions.html#coalib.bearlib.abstractions.SectionCreatable.SectionCreatable.get_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">get_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="p">,</span> <span class="n">omit</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;self&#39;</span><span class="p">})</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SectionCreatable.get_non_optional_settings"><a class="viewcode-back" href="../../../../coalib.bearlib.abstractions.html#coalib.bearlib.abstractions.SectionCreatable.SectionCreatable.get_non_optional_settings">[docs]</a>    <span class="k">def</span> <span class="nf">get_non_optional_settings</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the minimal set of settings that need to be defined in order</span>
+<span class="sd">        to use this object.</span>
+
+<span class="sd">        :return: a dictionary of needed settings as keys and help texts as</span>
+<span class="sd">                 values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">non_optional_params</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SectionCreatable.get_optional_settings"><a class="viewcode-back" href="../../../../coalib.bearlib.abstractions.html#coalib.bearlib.abstractions.SectionCreatable.SectionCreatable.get_optional_settings">[docs]</a>    <span class="k">def</span> <span class="nf">get_optional_settings</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the settings needed IN ADDITION to the ones of</span>
+<span class="sd">        get_non_optional_settings to use this object without internal defaults.</span>
+
+<span class="sd">        :return: a dictionary of needed settings as keys and help texts as</span>
+<span class="sd">                 values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span><span class="o">.</span><span class="n">optional_params</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  <li><a href="../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

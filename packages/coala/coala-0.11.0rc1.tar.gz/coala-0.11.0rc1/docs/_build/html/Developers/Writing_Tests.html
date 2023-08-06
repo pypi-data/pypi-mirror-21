@@ -1,0 +1,357 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="Writing Documentation" href="Writing_Documentation.html" />
+    <link rel="prev" title="How to use LocalBearTestHelper to test your bears" href="Testing_Bears.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>Tests are an essential element to check if your written components in
+coala really do work like they should. Even when you think &#8220;I really
+looked over my code, no need for tests&#8221; you are wrong! Bugs introduced
+when not writing tests are often the most horrible ones, they have the
+characteristic to be undiscoverable (or only discoverable after dozens
+of hours of searching). Try to test as much as possible! The more tests
+you write the more you can be sure you did everything correctly.
+Especially if someone else modifies your component, they can be sure with
+your tests that they don&#8217;t introduce a bug. Keep these points in your mind
+when you&#8217;re writing a test:</p>
+<ul class="simple">
+<li>100% test-coverage</li>
+<li>zero redundancy</li>
+</ul>
+<p>A patch will not be accepted unless there is a 100% branch coverage.
+Redundant tests are a waste of effort because you are testing the same piece
+of code again and again, which is unnecessary.</p>
+<div class="section" id="actually-writing-a-test">
+<h2>Actually Writing a Test<a class="headerlink" href="#actually-writing-a-test" title="Permalink to this headline">¶</a></h2>
+<p>So how do you implement a test in coala? First up, tests are placed into
+the <code class="docutils literal"><span class="pre">coala-bears/tests</span></code> (if you want to write a test for a bear) or
+<code class="docutils literal"><span class="pre">coala/tests</span></code> (if you test a component written for the coalib)
+directory. They are also written in Python (version 3) and get
+automatically executed by running:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>$ py.test
+</pre></div>
+</div>
+<p>There&#8217;s only one constraint:
+The name of the test file has to end with <code class="docutils literal"><span class="pre">Test.py</span></code> (for example
+<code class="docutils literal"><span class="pre">MyCustomTest.py</span></code>, but not <code class="docutils literal"><span class="pre">MyCustomTestSuite.py</span></code>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If <code class="docutils literal"><span class="pre">py.test</span></code> seems to give errors, try running <code class="docutils literal"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">pytest</span></code>
+instead.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Often you don&#8217;t want to run all available tests. To run your
+specific one, type (in the coala root folder):</p>
+<div class="code shell highlight-default"><div class="highlight"><pre><span></span>$ py.test -k &lt;your-test&gt;
+</pre></div>
+</div>
+<p class="last">You can even give partial names or queries like &#8220;not MyCustomTest&#8221;
+to not run a specific test. More information can be got with
+<code class="docutils literal"><span class="pre">py.test</span> <span class="pre">-h</span></code></p>
+</div>
+<p>Coming to the test file structure. Every test script starts with your
+imports. According to the coala code style (and pep8 style) we first do
+system imports (like <code class="docutils literal"><span class="pre">re</span></code> or <code class="docutils literal"><span class="pre">subprocessing</span></code>), followed by first party
+imports (like <code class="docutils literal"><span class="pre">coalib.result.Result</span></code>).</p>
+<p>Then the actual test suite class follows, that contains the tests. Each
+test suite is made up of test cases, where the test suite checks the
+overall functionality of your component by invoking each test case.</p>
+<p>The basic declaration for a test suite class is as follows:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">YourComponentTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="c1"># Your test cases.</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>You should derive your test suite from <code class="docutils literal"><span class="pre">unittest.TestCase</span></code> to have
+access to the <code class="docutils literal"><span class="pre">setUp()</span></code> and <code class="docutils literal"><span class="pre">tearDown()</span></code> functions (covered in
+section below: <strong>``setUp()`` and ``tearDown()``</strong>) and also to the
+assertion functions.</p>
+<p>Now to the test cases: To implement a test case, just declare a class
+member function without parameters, starting with <code class="docutils literal"><span class="pre">test_</span></code>. Easy, isn&#8217;t
+it?</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">YourComponentTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="c1"># Tests somethin&#39;.</span>
+    <span class="k">def</span> <span class="nf">test_case1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Doesn&#39;t test, this is just a member function, since the function name</span>
+    <span class="c1"># does not start with &#39;test_&#39;.</span>
+    <span class="k">def</span> <span class="nf">not_testing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>But how do you actually test if your component is correct? For that
+purpose you have asserts. Asserts check whether a condition is fulfilled
+and pass the result to the overall test-suite-invoking-instance, that
+manages all tests in coala. The result is processed and you get a
+message if something went wrong in your test.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference external" href="https://docs.python.org/3/library/unittest.html#assert-methods">unittest assert-methods</a></dt>
+<dd>Documentation on the assert functions from python&#8217;s inbuilt unittest.</dd>
+</dl>
+</div>
+<p>So an example test that succeeds would be:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># The sys import and setup is not needed here because this example doesn&#39;t</span>
+<span class="c1"># use coala components.</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+
+<span class="k">class</span> <span class="nc">YourComponentTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="c1"># Tests somethin&#39;.</span>
+    <span class="k">def</span> <span class="nf">test_case1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Does &#39;1&#39; equal &#39;1&#39;? Interestingly it does... mysterious...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Hm yeah, True is True.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Tests in coala are evaluated against their coverage, means how many
+statements will be executed from your component when invoking your
+test cases. A branch coverage of 100% is needed for any commit in
+order to be pushed to master - please ask us on gitter if you need
+help raising your coverage!</p>
+<p>The branch coverage can be measured locally with the
+<code class="docutils literal"><span class="pre">py.test</span> <span class="pre">--cov</span></code> command.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt>Module <a class="reference internal" href="Executing_Tests.html"><span class="doc">Executing Tests</span></a></dt>
+<dd>Documentation of running Tests with coverage</dd>
+</dl>
+</div>
+<p>As our coverage is measured across builds against several python
+versions (we need version specific branches here and there) you will
+not get the full coverage locally! Simply make a pull request to get
+the coverage measured automatically.</p>
+<p>If some code is untestable, you need to mark your component code
+with <code class="docutils literal"><span class="pre">#</span> <span class="pre">pragma:</span> <span class="pre">no</span> <span class="pre">cover</span></code>. Important: Provide a reason why your
+code is untestable. Code coverage is measured using python 3.4 and
+3.5 on linux.</p>
+<div class="code python last highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Reason why this function is untestable.</span>
+<span class="k">def</span> <span class="nf">untestable_func</span><span class="p">():</span> <span class="c1"># pragma: no cover</span>
+    <span class="c1"># Untestable code.</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="setup-and-teardown">
+<h2><code class="docutils literal"><span class="pre">setUp()</span></code> and <code class="docutils literal"><span class="pre">tearDown()</span></code><a class="headerlink" href="#setup-and-teardown" title="Permalink to this headline">¶</a></h2>
+<p>Often you reuse components or need to make an inital setup for your
+tests. For that purpose the function <code class="docutils literal"><span class="pre">setUp()</span></code> exists. Just declare it
+inside your test suite and it is invoked automatically once at test
+suite startup:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">YourComponentTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Your initialization of constants, operating system API calls etc.</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The opposite from this is the <code class="docutils literal"><span class="pre">tearDown()</span></code> function. It gets invoked
+when the test suite finished running all test cases. Declare it like
+<code class="docutils literal"><span class="pre">setUp()</span></code> before:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">YourComponentTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Deinitialization, release calls etc.</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="kickstart">
+<h2>Kickstart<a class="headerlink" href="#kickstart" title="Permalink to this headline">¶</a></h2>
+<p>This section contains a concluding and simple example that you can use
+as a kickstart for test-writing.</p>
+<p>Put the code under the desired folder inside <code class="docutils literal"><span class="pre">tests</span></code>,
+modify it to let it test your stuff and run the test from
+the coala root folder <code class="docutils literal"><span class="pre">py.test</span></code>.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Import here your needed system components.</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="c1"># Import here your needed coala components.</span>
+
+
+<span class="c1"># Your test unit. The name of this class is displayed in the test</span>
+<span class="c1"># evaluation.</span>
+<span class="k">class</span> <span class="nc">YourTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Here you can set up your stuff. For example constant values,</span>
+        <span class="c1"># initializations etc.</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Here you clean up your stuff initialized in setUp(). For example</span>
+        <span class="c1"># deleting arrays, call operating system API etc.</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">test_case1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># A test method. Put your test code here.</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="glossary">
+<h2>Glossary<a class="headerlink" href="#glossary" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">uut</span></code> - Unit Under Test</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Writing Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#actually-writing-a-test">Actually Writing a Test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setup-and-teardown"><code class="docutils literal"><span class="pre">setUp()</span></code> and <code class="docutils literal"><span class="pre">tearDown()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kickstart">Kickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glossary">Glossary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Testing_Bears.html" title="previous chapter">How to use LocalBearTestHelper to test your bears</a></li>
+      <li>Next: <a href="Writing_Documentation.html" title="next chapter">Writing Documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/Writing_Tests.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

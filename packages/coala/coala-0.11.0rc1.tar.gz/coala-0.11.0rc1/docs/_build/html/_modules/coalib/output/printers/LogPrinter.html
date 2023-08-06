@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.output.printers.LogPrinter &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib" href="../../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.output.printers.LogPrinter</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">coalib.output.printers.LOG_LEVEL</span> <span class="k">import</span> <span class="n">LOG_LEVEL</span>
+<span class="kn">from</span> <span class="nn">coalib.processes.communication.LogMessage</span> <span class="k">import</span> <span class="n">LogMessage</span>
+
+
+<div class="viewcode-block" id="LogPrinterMixin"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin">[docs]</a><span class="k">class</span> <span class="nc">LogPrinterMixin</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Provides access to the logging interfaces (e.g. err, warn, info) by routing</span>
+<span class="sd">    them to the log_message method, which should be implemented by descendants</span>
+<span class="sd">    of this class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LogPrinterMixin.debug"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin.debug">[docs]</a>    <span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">messages</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_message</span><span class="p">(</span><span class="n">LogMessage</span><span class="p">(</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                                    <span class="o">*</span><span class="n">messages</span><span class="p">,</span>
+                                    <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                                    <span class="n">timestamp</span><span class="o">=</span><span class="n">timestamp</span><span class="p">),</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LogPrinterMixin.info"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">messages</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_message</span><span class="p">(</span><span class="n">LogMessage</span><span class="p">(</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                                    <span class="o">*</span><span class="n">messages</span><span class="p">,</span>
+                                    <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                                    <span class="n">timestamp</span><span class="o">=</span><span class="n">timestamp</span><span class="p">),</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LogPrinterMixin.warn"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin.warn">[docs]</a>    <span class="k">def</span> <span class="nf">warn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">messages</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_message</span><span class="p">(</span><span class="n">LogMessage</span><span class="p">(</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                                    <span class="o">*</span><span class="n">messages</span><span class="p">,</span>
+                                    <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                                    <span class="n">timestamp</span><span class="o">=</span><span class="n">timestamp</span><span class="p">),</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LogPrinterMixin.err"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin.err">[docs]</a>    <span class="k">def</span> <span class="nf">err</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">messages</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_message</span><span class="p">(</span><span class="n">LogMessage</span><span class="p">(</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+                                    <span class="o">*</span><span class="n">messages</span><span class="p">,</span>
+                                    <span class="n">delimiter</span><span class="o">=</span><span class="n">delimiter</span><span class="p">,</span>
+                                    <span class="n">timestamp</span><span class="o">=</span><span class="n">timestamp</span><span class="p">),</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LogPrinterMixin.log"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_level</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_message</span><span class="p">(</span><span class="n">LogMessage</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span>
+                                    <span class="n">message</span><span class="p">,</span>
+                                    <span class="n">timestamp</span><span class="o">=</span><span class="n">timestamp</span><span class="p">),</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LogPrinterMixin.log_exception"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin.log_exception">[docs]</a>    <span class="k">def</span> <span class="nf">log_exception</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                      <span class="n">message</span><span class="p">,</span>
+                      <span class="n">exception</span><span class="p">,</span>
+                      <span class="n">log_level</span><span class="o">=</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+                      <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                      <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If the log_level of the printer is greater than DEBUG, it prints</span>
+<span class="sd">        only the message. If it is DEBUG or lower, it shows the message</span>
+<span class="sd">        along with the traceback of the exception.</span>
+
+<span class="sd">        :param message:   The message to print.</span>
+<span class="sd">        :param exception: The exception to print.</span>
+<span class="sd">        :param log_level: The log_level of this message (not used when</span>
+<span class="sd">                          logging the traceback. Tracebacks always have</span>
+<span class="sd">                          a level of DEBUG).</span>
+<span class="sd">        :param timestamp: The time at which this log occurred. Defaults to</span>
+<span class="sd">                          the current time.</span>
+<span class="sd">        :param kwargs:    Keyword arguments to be passed when logging the</span>
+<span class="sd">                          message (not used when logging the traceback).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="ne">BaseException</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;log_exception can only log derivatives of &#39;</span>
+                            <span class="s1">&#39;BaseException.&#39;</span><span class="p">)</span>
+
+        <span class="n">traceback_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">format_exception</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">exception</span><span class="p">),</span>
+                                       <span class="n">exception</span><span class="p">,</span>
+                                       <span class="n">exception</span><span class="o">.</span><span class="n">__traceback__</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">log_level</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="n">timestamp</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_message</span><span class="p">(</span>
+            <span class="n">LogMessage</span><span class="p">(</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                       <span class="s1">&#39;Exception was:&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">traceback_str</span><span class="p">,</span>
+                       <span class="n">timestamp</span><span class="o">=</span><span class="n">timestamp</span><span class="p">),</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LogPrinterMixin.log_message"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinterMixin.log_message">[docs]</a>    <span class="k">def</span> <span class="nf">log_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_message</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        It is your reponsibility to implement this method, if you&#39;re using this</span>
+<span class="sd">        mixin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="LogPrinter"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinter">[docs]</a><span class="k">class</span> <span class="nc">LogPrinter</span><span class="p">(</span><span class="n">LogPrinterMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is deprecated and will be soon removed. To get logger use</span>
+<span class="sd">    logging.getLogger(__name__). Make sure that you&#39;re getting it when the</span>
+<span class="sd">    logging configuration is loaded.</span>
+
+<span class="sd">    The LogPrinter class allows to print log messages to an underlying Printer.</span>
+
+<span class="sd">    This class is an adapter, means you can create a LogPrinter from every</span>
+<span class="sd">    existing Printer instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">printer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">log_level</span><span class="o">=</span><span class="n">LOG_LEVEL</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
+                 <span class="n">timestamp_format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%X</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new log printer from an existing Printer.</span>
+
+<span class="sd">        :param printer:          The underlying Printer where log messages</span>
+<span class="sd">                                 shall be written to. If you inherit from</span>
+<span class="sd">                                 LogPrinter, set it to self.</span>
+<span class="sd">        :param log_level:        The minimum log level, everything below will</span>
+<span class="sd">                                 not be logged.</span>
+<span class="sd">        :param timestamp_format: The format string for the</span>
+<span class="sd">                                 datetime.today().strftime(format) method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_printer</span> <span class="o">=</span> <span class="n">printer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">log_level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_format</span> <span class="o">=</span> <span class="n">timestamp_format</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">log_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns current log_level used in logger.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">()</span>
+
+    <span class="nd">@log_level</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">log_level</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_level</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets log_level for logger.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">printer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the underlying printer where logs are printed to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_printer</span>
+
+<div class="viewcode-block" id="LogPrinter.log_message"><a class="viewcode-back" href="../../../../coalib.output.printers.html#coalib.output.printers.LogPrinter.LogPrinter.log_message">[docs]</a>    <span class="k">def</span> <span class="nf">log_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_message</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">log_message</span><span class="p">,</span> <span class="n">LogMessage</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;log_message should be of type LogMessage.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">log_message</span><span class="o">.</span><span class="n">log_level</span><span class="p">,</span> <span class="n">log_message</span><span class="o">.</span><span class="n">message</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># on Windows there are problems with serializing loggers, so omit it</span>
+        <span class="n">oldict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">del</span> <span class="n">oldict</span><span class="p">[</span><span class="s1">&#39;logger&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">oldict</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">newdict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">newdict</span><span class="p">)</span>
+        <span class="c1"># restore logger by name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

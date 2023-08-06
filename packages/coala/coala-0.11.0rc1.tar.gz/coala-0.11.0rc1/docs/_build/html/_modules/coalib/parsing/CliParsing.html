@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.parsing.CliParsing &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.parsing.CliParsing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="k">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">coalib.parsing.DefaultArgParser</span> <span class="k">import</span> <span class="n">default_arg_parser</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.LineParser</span> <span class="k">import</span> <span class="n">LineParser</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Section</span> <span class="k">import</span> <span class="n">Section</span><span class="p">,</span> <span class="n">append_to_sections</span>
+
+
+<div class="viewcode-block" id="parse_cli"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.CliParsing.parse_cli">[docs]</a><span class="k">def</span> <span class="nf">parse_cli</span><span class="p">(</span><span class="n">arg_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">origin</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span>
+              <span class="n">arg_parser</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+              <span class="n">key_value_delimiters</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">),</span>
+              <span class="n">comment_seperators</span><span class="o">=</span><span class="p">(),</span>
+              <span class="n">key_delimiters</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,),</span>
+              <span class="n">section_override_delimiters</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,),</span>
+              <span class="n">key_value_append_delimiters</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;+=&#39;</span><span class="p">,)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses the CLI arguments and creates sections out of it.</span>
+
+<span class="sd">    :param arg_list:                    The CLI argument list.</span>
+<span class="sd">    :param origin:                      Directory used to interpret relative</span>
+<span class="sd">                                        paths given as argument.</span>
+<span class="sd">    :param arg_parser:                  Instance of ArgParser that is used to</span>
+<span class="sd">                                        parse none-setting arguments.</span>
+<span class="sd">    :param key_value_delimiters:        Delimiters to separate key and value</span>
+<span class="sd">                                        in setting arguments where settings are</span>
+<span class="sd">                                        being defined.</span>
+<span class="sd">    :param comment_seperators:          Allowed prefixes for comments.</span>
+<span class="sd">    :param key_delimiters:              Delimiter to separate multiple keys of</span>
+<span class="sd">                                        a setting argument.</span>
+<span class="sd">    :param section_override_delimiters: The delimiter to delimit the section</span>
+<span class="sd">                                        from the key name (e.g. the &#39;.&#39; in</span>
+<span class="sd">                                        sect.key = value).</span>
+<span class="sd">    :param key_value_append_delimiters: Delimiters to separate key and value</span>
+<span class="sd">                                        in setting arguments where settings are</span>
+<span class="sd">                                        being appended.</span>
+<span class="sd">    :return:                            A dictionary holding section names</span>
+<span class="sd">                                        as keys and the sections themselves</span>
+<span class="sd">                                        as value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arg_parser</span> <span class="o">=</span> <span class="n">default_arg_parser</span><span class="p">()</span> <span class="k">if</span> <span class="n">arg_parser</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">arg_parser</span>
+    <span class="n">origin</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span>
+    <span class="n">sections</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">cli</span><span class="o">=</span><span class="n">Section</span><span class="p">(</span><span class="s1">&#39;cli&#39;</span><span class="p">))</span>
+    <span class="n">line_parser</span> <span class="o">=</span> <span class="n">LineParser</span><span class="p">(</span><span class="n">key_value_delimiters</span><span class="p">,</span>
+                             <span class="n">comment_seperators</span><span class="p">,</span>
+                             <span class="n">key_delimiters</span><span class="p">,</span>
+                             <span class="p">{},</span>
+                             <span class="n">section_override_delimiters</span><span class="p">,</span>
+                             <span class="n">key_value_append_delimiters</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">arg_key</span><span class="p">,</span> <span class="n">arg_value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+            <span class="nb">vars</span><span class="p">(</span><span class="n">arg_parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">arg_list</span><span class="p">))</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">arg_key</span> <span class="o">==</span> <span class="s1">&#39;settings&#39;</span> <span class="ow">and</span> <span class="n">arg_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parse_custom_settings</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+                                  <span class="n">arg_value</span><span class="p">,</span>
+                                  <span class="n">origin</span><span class="p">,</span>
+                                  <span class="n">line_parser</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">arg_value</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">arg_value</span><span class="p">])</span>
+
+            <span class="n">append_to_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+                               <span class="n">arg_key</span><span class="p">,</span>
+                               <span class="n">arg_value</span><span class="p">,</span>
+                               <span class="n">origin</span><span class="p">,</span>
+                               <span class="n">section_name</span><span class="o">=</span><span class="s1">&#39;cli&#39;</span><span class="p">,</span>
+                               <span class="n">from_cli</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sections</span></div>
+
+
+<div class="viewcode-block" id="parse_custom_settings"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.CliParsing.parse_custom_settings">[docs]</a><span class="k">def</span> <span class="nf">parse_custom_settings</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+                          <span class="n">custom_settings_list</span><span class="p">,</span>
+                          <span class="n">origin</span><span class="p">,</span>
+                          <span class="n">line_parser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses the custom settings given to coala via ``-S something=value``.</span>
+
+<span class="sd">    :param sections:             The Section dictionary to add to (mutable).</span>
+<span class="sd">    :param custom_settings_list: The list of settings strings.</span>
+<span class="sd">    :param origin:               The originating directory.</span>
+<span class="sd">    :param line_parser:          The LineParser to use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">setting_definition</span> <span class="ow">in</span> <span class="n">custom_settings_list</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">key_tuples</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">append</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">line_parser</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span>
+            <span class="n">setting_definition</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key_tuple</span> <span class="ow">in</span> <span class="n">key_tuples</span><span class="p">:</span>
+            <span class="n">append_to_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+                               <span class="n">key</span><span class="o">=</span><span class="n">key_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                               <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+                               <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span>
+                               <span class="n">to_append</span><span class="o">=</span><span class="n">append</span><span class="p">,</span>
+                               <span class="n">section_name</span><span class="o">=</span><span class="p">(</span><span class="n">key_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;cli&#39;</span><span class="p">),</span>
+                               <span class="n">from_cli</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="check_conflicts"><a class="viewcode-back" href="../../../coalib.parsing.html#coalib.parsing.CliParsing.check_conflicts">[docs]</a><span class="k">def</span> <span class="nf">check_conflicts</span><span class="p">(</span><span class="n">sections</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if there are any conflicting arguments passed.</span>
+
+<span class="sd">    :param sections:    The ``{section_name: section_object}`` dictionary to</span>
+<span class="sd">                        check conflicts for.</span>
+<span class="sd">    :return:            True if no conflicts occur.</span>
+<span class="sd">    :raises SystemExit: If there are conflicting arguments (exit code: 2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">sections</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span>
+                <span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;no_config&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;save&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">or</span>
+                 <span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_config&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))):</span>
+            <span class="n">ArgumentParser</span><span class="p">()</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;no_config&#39; cannot be set together &#39;save&#39; or &#39;find_config&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span> <span class="ow">or</span>
+                 <span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;relpath&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">))):</span>
+            <span class="n">ArgumentParser</span><span class="p">()</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;&#39;output&#39; or &#39;relpath&#39; cannot be used without `--json`.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

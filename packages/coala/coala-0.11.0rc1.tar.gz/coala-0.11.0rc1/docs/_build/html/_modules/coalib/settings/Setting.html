@@ -1,0 +1,395 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.settings.Setting &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.settings.Setting</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">generate_repr</span>
+<span class="kn">from</span> <span class="nn">coala_utils.string_processing.StringConverter</span> <span class="k">import</span> <span class="n">StringConverter</span>
+<span class="kn">from</span> <span class="nn">coalib.parsing.Globbing</span> <span class="k">import</span> <span class="n">glob_escape</span>
+
+
+<div class="viewcode-block" id="path"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.path">[docs]</a><span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">__path__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="path_list"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.path_list">[docs]</a><span class="k">def</span> <span class="nf">path_list</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">__path_list__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="url"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.url">[docs]</a><span class="k">def</span> <span class="nf">url</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">__url__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="glob"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.glob">[docs]</a><span class="k">def</span> <span class="nf">glob</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a path in which all special glob characters in all the</span>
+<span class="sd">    parent directories in the given setting are properly escaped.</span>
+
+<span class="sd">    :param obj: The ``Setting`` object from which the key is obtained.</span>
+<span class="sd">    :return:    Returns a path in which special glob characters are escaped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">__glob__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="glob_list"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.glob_list">[docs]</a><span class="k">def</span> <span class="nf">glob_list</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a list of paths in which all special glob characters in all the</span>
+<span class="sd">    parent directories of all paths in the given setting are properly escaped.</span>
+
+<span class="sd">    :param obj: The ``Setting`` object from which the key is obtained.</span>
+<span class="sd">    :return:    Returns a list of paths in which special glob characters are</span>
+<span class="sd">                escaped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">__glob_list__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="typed_list"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.typed_list">[docs]</a><span class="k">def</span> <span class="nf">typed_list</span><span class="p">(</span><span class="n">conversion_func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a function that converts a setting into a list of elements each</span>
+<span class="sd">    converted with the given conversion function.</span>
+
+<span class="sd">    :param conversion_func: The conversion function that converts a string into</span>
+<span class="sd">                            your desired list item object.</span>
+<span class="sd">    :return:                A conversion function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">setting</span><span class="p">:</span> <span class="p">[</span>
+        <span class="n">conversion_func</span><span class="p">(</span><span class="n">StringConverter</span><span class="p">(</span><span class="n">elem</span><span class="p">))</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">setting</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="typed_dict"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.typed_dict">[docs]</a><span class="k">def</span> <span class="nf">typed_dict</span><span class="p">(</span><span class="n">key_type</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a function that converts a setting into a dict with the given</span>
+<span class="sd">    types.</span>
+
+<span class="sd">    :param key_type:   The type conversion function for the keys.</span>
+<span class="sd">    :param value_type: The type conversion function for the values.</span>
+<span class="sd">    :param default:    The default value to use if no one is given by the user.</span>
+<span class="sd">    :return:           A conversion function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">setting</span><span class="p">:</span> <span class="p">{</span>
+        <span class="n">key_type</span><span class="p">(</span><span class="n">StringConverter</span><span class="p">(</span><span class="n">key</span><span class="p">)):</span>
+        <span class="n">value_type</span><span class="p">(</span><span class="n">StringConverter</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="k">else</span> <span class="n">default</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">setting</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+
+
+<div class="viewcode-block" id="typed_ordered_dict"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.typed_ordered_dict">[docs]</a><span class="k">def</span> <span class="nf">typed_ordered_dict</span><span class="p">(</span><span class="n">key_type</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a function that converts a setting into an ordered dict with the</span>
+<span class="sd">    given types.</span>
+
+<span class="sd">    :param key_type:   The type conversion function for the keys.</span>
+<span class="sd">    :param value_type: The type conversion function for the values.</span>
+<span class="sd">    :param default:    The default value to use if no one is given by the user.</span>
+<span class="sd">    :return:           A conversion function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">setting</span><span class="p">:</span> <span class="n">OrderedDict</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">key_type</span><span class="p">(</span><span class="n">StringConverter</span><span class="p">(</span><span class="n">key</span><span class="p">)),</span>
+         <span class="n">value_type</span><span class="p">(</span><span class="n">StringConverter</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="k">if</span> <span class="n">value</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="k">else</span> <span class="n">default</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">setting</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+
+<span class="nd">@generate_repr</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;origin&#39;</span><span class="p">,</span> <span class="s1">&#39;from_cli&#39;</span><span class="p">,</span> <span class="s1">&#39;to_append&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="Setting"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.Setting.Setting">[docs]</a><span class="k">class</span> <span class="nc">Setting</span><span class="p">(</span><span class="n">StringConverter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Setting consists mainly of a key and a value. It mainly offers many</span>
+<span class="sd">    conversions into common data types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">key</span><span class="p">,</span>
+                 <span class="n">value</span><span class="p">,</span>
+                 <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">strip_whitespaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">list_delimiters</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;;&#39;</span><span class="p">),</span>
+                 <span class="n">from_cli</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">remove_empty_iter_elements</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">to_append</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes a new Setting,</span>
+
+<span class="sd">        :param key:                        The key of the Setting.</span>
+<span class="sd">        :param value:                      The value, if you apply conversions</span>
+<span class="sd">                                           to this object these will be applied</span>
+<span class="sd">                                           to this value.</span>
+<span class="sd">        :param origin:                     The originating file. This will be</span>
+<span class="sd">                                           used for path conversions and the</span>
+<span class="sd">                                           last part will be stripped of. If</span>
+<span class="sd">                                           you want to specify a directory as</span>
+<span class="sd">                                           origin be sure to end it with a</span>
+<span class="sd">                                           directory separator.</span>
+<span class="sd">        :param strip_whitespaces:          Whether to strip whitespaces from</span>
+<span class="sd">                                           the value or not</span>
+<span class="sd">        :param list_delimiters:            Delimiters for list conversion</span>
+<span class="sd">        :param from_cli:                   True if this setting was read by the</span>
+<span class="sd">                                           CliParser.</span>
+<span class="sd">        :param remove_empty_iter_elements: Whether to remove empty elements in</span>
+<span class="sd">                                           iterable values.</span>
+<span class="sd">        :param to_append:                  The boolean value if setting value</span>
+<span class="sd">                                           needs to be appended to a setting in</span>
+<span class="sd">                                           the defaults of a section.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">from_cli</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;from_cli needs to be a boolean value.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">to_append</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;to_append needs to be a boolean value.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_append</span> <span class="o">=</span> <span class="n">to_append</span>
+
+        <span class="n">StringConverter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">value</span><span class="p">,</span>
+            <span class="n">strip_whitespaces</span><span class="o">=</span><span class="n">strip_whitespaces</span><span class="p">,</span>
+            <span class="n">list_delimiters</span><span class="o">=</span><span class="n">list_delimiters</span><span class="p">,</span>
+            <span class="n">remove_empty_iter_elements</span><span class="o">=</span><span class="n">remove_empty_iter_elements</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">from_cli</span> <span class="o">=</span> <span class="n">from_cli</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__path__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">glob_escape_origin</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determines the path of this setting.</span>
+
+<span class="sd">        Note: You can also use this function on strings, in that case the</span>
+<span class="sd">        origin argument will be taken in every case.</span>
+
+<span class="sd">        :param origin:             The origin file to take if no origin is</span>
+<span class="sd">                                   specified for the given setting. If you</span>
+<span class="sd">                                   want to provide a directory, make sure it</span>
+<span class="sd">                                   ends with a directory separator.</span>
+<span class="sd">        :param glob_escape_origin: When this is set to true, the origin of</span>
+<span class="sd">                                   this setting will be escaped with</span>
+<span class="sd">                                   ``glob_escape``.</span>
+<span class="sd">        :return:                   An absolute path.</span>
+<span class="sd">        :raises ValueError:        If no origin is specified in the setting</span>
+<span class="sd">                                   nor the given origin parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">strrep</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isabs</span><span class="p">(</span><span class="n">strrep</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">strrep</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;origin&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span>
+
+        <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Cannot determine path without origin.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># We need to get full path before escaping since the full path</span>
+        <span class="c1"># may introduce unintended glob characters</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">origin</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">glob_escape_origin</span><span class="p">:</span>
+            <span class="n">origin</span> <span class="o">=</span> <span class="n">glob_escape</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">strrep</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__glob__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determines the path of this setting with proper escaping of its</span>
+<span class="sd">        parent directories.</span>
+
+<span class="sd">        :param origin:      The origin file to take if no origin is specified</span>
+<span class="sd">                            for the given setting. If you want to provide a</span>
+<span class="sd">                            directory, make sure it ends with a directory</span>
+<span class="sd">                            separator.</span>
+<span class="sd">        :return:            An absolute path in which the parent directories</span>
+<span class="sd">                            are escaped.</span>
+<span class="sd">        :raises ValueError: If no origin is specified in the setting nor the</span>
+<span class="sd">                            given origin parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Setting</span><span class="o">.</span><span class="n">__path__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">glob_escape_origin</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__path_list__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Splits the value into a list and creates a path out of each item taking</span>
+<span class="sd">        the origin of the setting into account.</span>
+
+<span class="sd">        :return: A list of absolute paths.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Setting</span><span class="o">.</span><span class="n">__path__</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__glob_list__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Splits the value into a list and creates a path out of each item in</span>
+<span class="sd">        which the special glob characters in origin are escaped.</span>
+
+<span class="sd">        :return: A list of absolute paths in which the special characters in</span>
+<span class="sd">                 the parent directories of the setting are escaped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Setting</span><span class="o">.</span><span class="n">__glob__</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_backslashes</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_append</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Iteration on this object is invalid because the &#39;</span>
+                             <span class="s1">&#39;value is incomplete. Please access the value of &#39;</span>
+                             <span class="s1">&#39;the setting in a section to iterate through it.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">StringConverter</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_backslashes</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span>
+
+    <span class="nd">@key</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">newkey</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">newkey</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;An empty key is not allowed for a setting.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">newkey</span>
+
+    <span class="nd">@StringConverter</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">getter</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_append</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;This property is invalid because the value is &#39;</span>
+                             <span class="s1">&#39;incomplete. Please access the value of the &#39;</span>
+                             <span class="s1">&#39;setting in a section to get the complete value.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

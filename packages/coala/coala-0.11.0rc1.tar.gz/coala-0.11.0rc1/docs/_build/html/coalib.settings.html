@@ -1,0 +1,1153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.settings package &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="index.html" />
+    <link rel="up" title="coalib package" href="coalib.html" />
+    <link rel="next" title="coalib.testing package" href="coalib.testing.html" />
+    <link rel="prev" title="coalib.results.result_actions package" href="coalib.results.result_actions.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="coalib-settings-package">
+<h1>coalib.settings package<a class="headerlink" href="#coalib-settings-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-coalib.settings.Annotations">
+<span id="coalib-settings-annotations-module"></span><h2>coalib.settings.Annotations module<a class="headerlink" href="#module-coalib.settings.Annotations" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.settings.Annotations.typechain">
+<code class="descclassname">coalib.settings.Annotations.</code><code class="descname">typechain</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Annotations.html#typechain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Annotations.typechain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns function which applies the first transformation it can from args
+and returns transformed value, or the value itself if it is in args.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">function</span> <span class="o">=</span> <span class="n">typechain</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="nb">ord</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function</span><span class="p">(</span><span class="s2">&quot;10&quot;</span><span class="p">)</span>
+<span class="go">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">)</span>
+<span class="go">98</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+<span class="go">&#39;a&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="go">&lt;class &#39;int&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function</span><span class="p">(</span><span class="s2">&quot;str&quot;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">ValueError</span>: <span class="n">Couldn&#39;t convert value &#39;str&#39; to any specified type or find it in specified values.</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>TypeError</strong> &#8211; Raises when either no functions are specified for
+checking.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.settings.ConfigurationGathering">
+<span id="coalib-settings-configurationgathering-module"></span><h2>coalib.settings.ConfigurationGathering module<a class="headerlink" href="#module-coalib.settings.ConfigurationGathering" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.find_user_config">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">find_user_config</code><span class="sig-paren">(</span><em>file_path</em>, <em>max_trials=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#find_user_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.find_user_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses the filepath to find the most suitable user config file for the file
+by going down one directory at a time and finding config files there.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_path</strong> &#8211; The path of the file whose user config needs to be found</li>
+<li><strong>max_trials</strong> &#8211; The maximum number of directories to go down to.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The config file&#8217;s path, empty string if none was found</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.gather_configuration">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">gather_configuration</code><span class="sig-paren">(</span><em>acquire_settings</em>, <em>log_printer</em>, <em>arg_list=None</em>, <em>arg_parser=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#gather_configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.gather_configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads all configuration files, retrieves bears and all needed
+settings, saves back if needed and warns about non-existent targets.</p>
+<p>This function:</p>
+<ul class="simple">
+<li>Reads and merges all settings in sections from<ul>
+<li>Default config</li>
+<li>User config</li>
+<li>Configuration file</li>
+<li>CLI</li>
+</ul>
+</li>
+<li>Collects all the bears</li>
+<li>Fills up all needed settings</li>
+<li>Writes back the new sections to the configuration file if needed</li>
+<li>Gives all information back to caller</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>acquire_settings</strong> &#8211; The method to use for requesting settings. It will
+get a parameter which is a dictionary with the
+settings name as key and a list containing a
+description in [0] and the names of the bears
+who need this setting in all following indexes.</li>
+<li><strong>log_printer</strong> &#8211; The log printer to use for logging. The log level
+will be adjusted to the one given by the section.</li>
+<li><strong>arg_list</strong> &#8211; CLI args to use</li>
+<li><strong>arg_parser</strong> &#8211; Instance of ArgParser that is used to parse
+none-setting arguments.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>A tuple with the following contents:</p>
+<ul class="simple">
+<li>A dictionary with the sections</li>
+<li>Dictionary of list of local bears for each
+section</li>
+<li>Dictionary of list of global bears for each
+section</li>
+<li>The targets list</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.get_config_directory">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">get_config_directory</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#get_config_directory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.get_config_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the configuration directory for the given section.</p>
+<p>Given an empty section:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="n">Section</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The configuration directory is not defined and will therefore fallback to
+the current directory:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_config_directory</span><span class="p">(</span><span class="n">section</span><span class="p">)</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If the <code class="docutils literal"><span class="pre">files</span></code> setting is given with an originating coafile, the directory
+of the coafile will be assumed the configuration directory:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Setting</span><span class="p">(</span><span class="s2">&quot;files&quot;</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;/tmp/.coafile&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_config_directory</span><span class="p">(</span><span class="n">section</span><span class="p">)</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;/tmp/&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>However if its origin is already a directory this will be preserved:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">files</span> <span class="o">=</span> <span class="n">section</span><span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">files</span><span class="o">.</span><span class="n">origin</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;/tmp/dir/&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">section</span><span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_config_directory</span><span class="p">(</span><span class="n">section</span><span class="p">)</span> <span class="o">==</span> <span class="n">section</span><span class="p">[</span><span class="s1">&#39;files&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">origin</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The user can manually set a project directory with the <code class="docutils literal"><span class="pre">project_dir</span></code>
+setting:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">section</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Setting</span><span class="p">(</span><span class="s1">&#39;project_dir&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;/tmp&#39;</span><span class="p">),</span> <span class="s1">&#39;/&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_config_directory</span><span class="p">(</span><span class="n">section</span><span class="p">)</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;/tmp&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If no section is given, the current directory is returned:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_config_directory</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>To summarize, the config directory will be chosen by the following
+priorities if possible in that order:</p>
+<ul class="simple">
+<li>the <code class="docutils literal"><span class="pre">project_dir</span></code> setting</li>
+<li>the origin of the <code class="docutils literal"><span class="pre">files</span></code> setting, if it&#8217;s a directory</li>
+<li>the directory of the origin of the <code class="docutils literal"><span class="pre">files</span></code> setting</li>
+<li>the current directory</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>section</strong> &#8211; The section to inspect.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The directory where the project is lying.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.get_filtered_bears">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">get_filtered_bears</code><span class="sig-paren">(</span><em>languages</em>, <em>log_printer</em>, <em>arg_parser=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#get_filtered_bears"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.get_filtered_bears" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetch bears and filter them based on given list of languages.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>languages</strong> &#8211; List of languages.</li>
+<li><strong>log_printer</strong> &#8211; The log_printer to handle logging.</li>
+<li><strong>arg_parser</strong> &#8211; An <code class="docutils literal"><span class="pre">ArgParser</span></code> object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Tuple containing dictionaries of local bears
+and global bears.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.load_config_file">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">load_config_file</code><span class="sig-paren">(</span><em>filename</em>, <em>log_printer</em>, <em>silent=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#load_config_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.load_config_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads sections from a config file. Prints an appropriate warning if
+it doesn&#8217;t exist and returns a section dict containing an empty
+default section in that case.</p>
+<p>It assumes that the cli_sections are available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; The file to load settings from.</li>
+<li><strong>log_printer</strong> &#8211; The log printer to log the warning/error to (in case).</li>
+<li><strong>silent</strong> &#8211; Whether or not to warn the user/exit if the file
+doesn&#8217;t exist.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>SystemExit</strong> &#8211; Exits when the given filename is invalid and is not the
+default coafile. Only raised when <code class="docutils literal"><span class="pre">silent</span></code> is
+<code class="docutils literal"><span class="pre">False</span></code>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.load_configuration">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">load_configuration</code><span class="sig-paren">(</span><em>arg_list</em>, <em>log_printer</em>, <em>arg_parser=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#load_configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.load_configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the CLI args and loads the config file accordingly, taking
+default_coafile and the users .coarc into account.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arg_list</strong> &#8211; The list of command line arguments.</li>
+<li><strong>log_printer</strong> &#8211; The LogPrinter object for logging.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple holding (log_printer: LogPrinter, sections:
+dict(str, Section), targets: list(str)). (Types
+indicated after colon.)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.merge_section_dicts">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">merge_section_dicts</code><span class="sig-paren">(</span><em>lower</em>, <em>higher</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#merge_section_dicts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.merge_section_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges the section dictionaries. The values of higher will take
+precedence over the ones of lower. Lower will hold the modified dict in
+the end.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lower</strong> &#8211; A section.</li>
+<li><strong>higher</strong> &#8211; A section which values will take precedence over the ones
+from the other.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The merged dict.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.save_sections">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">save_sections</code><span class="sig-paren">(</span><em>sections</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#save_sections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.save_sections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the given sections if they are to be saved.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sections</strong> &#8211; A section dict.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.warn_config_absent">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">warn_config_absent</code><span class="sig-paren">(</span><em>sections</em>, <em>argument</em>, <em>log_printer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#warn_config_absent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.warn_config_absent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given argument is present somewhere in the sections and emits
+a warning that code analysis can not be run without it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sections</strong> &#8211; A dictionary of sections.</li>
+<li><strong>argument</strong> &#8211; The argument to check for, e.g. &#8220;files&#8221;.</li>
+<li><strong>log_printer</strong> &#8211; A log printer to emit the warning to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.ConfigurationGathering.warn_nonexistent_targets">
+<code class="descclassname">coalib.settings.ConfigurationGathering.</code><code class="descname">warn_nonexistent_targets</code><span class="sig-paren">(</span><em>targets</em>, <em>sections</em>, <em>log_printer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/ConfigurationGathering.html#warn_nonexistent_targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.ConfigurationGathering.warn_nonexistent_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints out a warning on the given log printer for all targets that are
+not existent within the given sections.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>targets</strong> &#8211; The targets to check.</li>
+<li><strong>sections</strong> &#8211; The sections to search. (Dict.)</li>
+<li><strong>log_printer</strong> &#8211; The log printer to warn to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.settings.DocstringMetadata">
+<span id="coalib-settings-docstringmetadata-module"></span><h2>coalib.settings.DocstringMetadata module<a class="headerlink" href="#module-coalib.settings.DocstringMetadata" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.settings.DocstringMetadata.DocstringMetadata">
+<em class="property">class </em><code class="descclassname">coalib.settings.DocstringMetadata.</code><code class="descname">DocstringMetadata</code><span class="sig-paren">(</span><em>desc</em>, <em>param_dict</em>, <em>retval_desc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/DocstringMetadata.html#DocstringMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.DocstringMetadata.DocstringMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="classmethod">
+<dt id="coalib.settings.DocstringMetadata.DocstringMetadata.from_docstring">
+<em class="property">classmethod </em><code class="descname">from_docstring</code><span class="sig-paren">(</span><em>docstring</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/DocstringMetadata.html#DocstringMetadata.from_docstring"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.DocstringMetadata.DocstringMetadata.from_docstring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a python docstring. Usable attributes are:
+:param
+&#64;param
+:return
+&#64;return</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.settings.FunctionMetadata">
+<span id="coalib-settings-functionmetadata-module"></span><h2>coalib.settings.FunctionMetadata module<a class="headerlink" href="#module-coalib.settings.FunctionMetadata" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata">
+<em class="property">class </em><code class="descclassname">coalib.settings.FunctionMetadata.</code><code class="descname">FunctionMetadata</code><span class="sig-paren">(</span><em>name: str</em>, <em>desc: str = ''</em>, <em>retval_desc: str = ''</em>, <em>non_optional_params: (&lt;class 'dict'&gt;</em>, <em>None) = None</em>, <em>optional_params: (&lt;class 'dict'&gt;</em>, <em>None) = None</em>, <em>omit: (&lt;class 'set'&gt;</em>, <em>&lt;class 'tuple'&gt;</em>, <em>&lt;class 'list'&gt;</em>, <em>&lt;class 'frozenset'&gt;) = frozenset()</em>, <em>deprecated_params: (&lt;class 'set'&gt;</em>, <em>&lt;class 'tuple'&gt;</em>, <em>&lt;class 'list'&gt;</em>, <em>&lt;class 'frozenset'&gt;) = frozenset()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/FunctionMetadata.html#FunctionMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.add_deprecated_param">
+<code class="descname">add_deprecated_param</code><span class="sig-paren">(</span><em>original</em>, <em>alias</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/FunctionMetadata.html#FunctionMetadata.add_deprecated_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.add_deprecated_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an alias for the original setting. The alias setting will have
+the same metadata as the original one. If the original setting is not
+optional, the alias will default to <code class="docutils literal"><span class="pre">None</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>original</strong> &#8211; The name of the original setting.</li>
+<li><strong>alias</strong> &#8211; The name of the alias for the original.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>KeyError</strong> &#8211; If the new setting doesn&#8217;t exist in the metadata.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.create_params_from_section">
+<code class="descname">create_params_from_section</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/FunctionMetadata.html#FunctionMetadata.create_params_from_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.create_params_from_section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a params dictionary for this function that holds all values the
+function needs plus optional ones that are available.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>section</strong> &#8211; The section to retrieve the values from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The params dictionary.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.desc">
+<code class="descname">desc</code><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.desc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns description of the function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.filter_parameters">
+<code class="descname">filter_parameters</code><span class="sig-paren">(</span><em>dct</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/FunctionMetadata.html#FunctionMetadata.filter_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.filter_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters the given dict for keys that are declared as parameters inside
+this metadata (either optional or non-optional).</p>
+<p>You can use this function to safely pass parameters from a given
+dictionary:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="n">multiply</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">args</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">filter_parameters</span><span class="p">({</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>You can safely pass the arguments to the function now:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">multiply</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># 10 * 20</span>
+<span class="go">200</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dct</strong> &#8211; The dict to filter.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A new dict containing the filtered items.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.from_function">
+<em class="property">classmethod </em><code class="descname">from_function</code><span class="sig-paren">(</span><em>func</em>, <em>omit=frozenset()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/FunctionMetadata.html#FunctionMetadata.from_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.from_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a FunctionMetadata object from a function. Please note that any
+variable argument lists are not supported. If you do not want the
+first (usual named &#8216;self&#8217;) argument to appear please pass the method of
+an actual INSTANCE of a class; passing the method of the class isn&#8217;t
+enough. Alternatively you can add &#8220;self&#8221; to the omit set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> &#8211; The function. If __metadata__ of the unbound function is
+present it will be copied and used, otherwise it will be
+generated.</li>
+<li><strong>omit</strong> &#8211; A set of parameter names that are to be ignored.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The FunctionMetadata object corresponding to the given
+function.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.merge">
+<em class="property">classmethod </em><code class="descname">merge</code><span class="sig-paren">(</span><em>*metadatas</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/FunctionMetadata.html#FunctionMetadata.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merges signatures of <code class="docutils literal"><span class="pre">FunctionMetadata</span></code> objects.</p>
+<p>Parameter (either optional or non-optional) and non-parameter
+descriptions are merged from left to right, meaning the right hand
+metadata overrides the left hand one.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="sd">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="sd">    desc of *a*</span>
+<span class="gp">... </span><span class="sd">    :param x: x of a</span>
+<span class="gp">... </span><span class="sd">    :param y: y of a</span>
+<span class="gp">... </span><span class="sd">    :return:  5*x*y</span>
+<span class="gp">... </span><span class="sd">    &#39;&#39;&#39;</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">b</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="sd">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="sd">    desc of *b*</span>
+<span class="gp">... </span><span class="sd">    :param x: x of b</span>
+<span class="gp">... </span><span class="sd">    :return:  100*x</span>
+<span class="gp">... </span><span class="sd">    &#39;&#39;&#39;</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata1</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metadata2</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">metadata1</span><span class="p">,</span> <span class="n">metadata2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&quot;&lt;Merged signature of &#39;a&#39;, &#39;b&#39;&gt;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span><span class="o">.</span><span class="n">desc</span>
+<span class="go">&#39;desc of *b*&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span><span class="o">.</span><span class="n">retval_desc</span>
+<span class="go">&#39;100*x&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span><span class="o">.</span><span class="n">non_optional_params</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&#39;x of b&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">merged</span><span class="o">.</span><span class="n">non_optional_params</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">&#39;y of a&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>metadatas</strong> &#8211; The sequence of metadatas to merge.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A <code class="docutils literal"><span class="pre">FunctionMetadata</span></code> object containing the merged signature of
+all given metadatas.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.non_optional_params">
+<code class="descname">non_optional_params</code><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.non_optional_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a dict containing the name of non optional parameters as the
+key and a tuple of a description and the python annotation. Values that
+are present in self.omit will be omitted.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.optional_params">
+<code class="descname">optional_params</code><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.optional_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a dict containing the name of optional parameters as the key
+and a tuple of a description, the python annotation and the default
+value. Values that are present in self.omit will be omitted.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.str_nodesc">
+<code class="descname">str_nodesc</code><em class="property"> = 'No description given.'</em><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.str_nodesc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.settings.FunctionMetadata.FunctionMetadata.str_optional">
+<code class="descname">str_optional</code><em class="property"> = &quot;Optional, defaults to '{}'.&quot;</em><a class="headerlink" href="#coalib.settings.FunctionMetadata.FunctionMetadata.str_optional" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.settings.Section">
+<span id="coalib-settings-section-module"></span><h2>coalib.settings.Section module<a class="headerlink" href="#module-coalib.settings.Section" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.settings.Section.Section">
+<em class="property">class </em><code class="descclassname">coalib.settings.Section.</code><code class="descname">Section</code><span class="sig-paren">(</span><em>name</em>, <em>defaults=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This class holds a set of settings.</p>
+<p>To add settings and sections to a dictionary of sections we can use
+<code class="docutils literal"><span class="pre">append_to_sections</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sections</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">append_to_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="s1">&#39;test1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="s1">&#39;val&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="s1">&#39;origin&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">section_name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;all&#39;</span> <span class="ow">in</span> <span class="n">sections</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+<span class="go">&quot;{&#39;all&#39;: &lt;Section object(contents=OrderedDict([(&#39;test1&#39;, ...&quot;</span>
+</pre></div>
+</div>
+<p>We can also add settings that can be appended to other settings. Basically
+it takes the default value of the setting which resides in the defaults of
+the section and appends the value of the setting in the second and returns
+the value of the setting:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">append_to_sections</span><span class="p">(</span><span class="n">sections</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="s1">&#39;test1&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="s1">&#39;val2&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="s1">&#39;origin&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">section_name</span><span class="o">=</span><span class="s1">&#39;all.python&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                   <span class="n">to_append</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When the section has no defaults:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">sections</span><span class="p">[</span><span class="s1">&#39;all.python&#39;</span><span class="p">][</span><span class="s1">&#39;test1&#39;</span><span class="p">])</span>
+<span class="go">&#39;val2&#39;</span>
+</pre></div>
+</div>
+<p>After assigning defaults:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sections</span><span class="p">[</span><span class="s1">&#39;all.python&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_default_section</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span><span class="n">sections</span><span class="p">[</span><span class="s1">&#39;all.python&#39;</span><span class="p">][</span><span class="s1">&#39;test1&#39;</span><span class="p">])</span>
+<span class="go">&#39;val, val2&#39;</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="coalib.settings.Section.Section.add_or_create_setting">
+<code class="descname">add_or_create_setting</code><span class="sig-paren">(</span><em>setting</em>, <em>custom_key=None</em>, <em>allow_appending=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.add_or_create_setting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.add_or_create_setting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the value of the setting to an existing setting if there is
+already a setting  with the key. Otherwise creates a new setting.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.append">
+<code class="descname">append</code><span class="sig-paren">(</span><em>setting</em>, <em>custom_key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.bear_dirs">
+<code class="descname">bear_dirs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.bear_dirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.bear_dirs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.copy" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a deep copy of this object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.delete_setting">
+<code class="descname">delete_setting</code><span class="sig-paren">(</span><em>key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.delete_setting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.delete_setting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a setting
+:param key: The key of the setting to be deleted</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>key</em>, <em>default=''</em>, <em>ignore_defaults=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the item without raising an exception. If the item is not
+available an appropriate Setting will be generated from your provided
+default value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key</strong> &#8211; The key of the setting to return.</li>
+<li><strong>default</strong> &#8211; The default value</li>
+<li><strong>ignore_defaults</strong> &#8211; Whether or not to ignore the default section.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The setting.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.is_enabled">
+<code class="descname">is_enabled</code><span class="sig-paren">(</span><em>targets</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.is_enabled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.is_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if this section is enabled or, if targets is not empty, if it is
+included in the targets list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>targets</strong> &#8211; List of target section names, all lower case.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True or False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.set_default_section">
+<code class="descname">set_default_section</code><span class="sig-paren">(</span><em>sections</em>, <em>section_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.set_default_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.set_default_section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find and set the defaults of a section from a dictionary of sections.
+The defaults are found on the basis of &#8216;.&#8217; in section names:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sections</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;all&#39;</span><span class="p">:</span> <span class="n">Section</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="n">Section</span><span class="p">(</span><span class="s1">&#39;all.python&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section</span><span class="o">.</span><span class="n">set_default_section</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;all&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section</span> <span class="o">=</span> <span class="n">Section</span><span class="p">(</span><span class="s1">&#39;all.python.syntax&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section</span><span class="o">.</span><span class="n">set_default_section</span><span class="p">(</span><span class="n">sections</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">section</span><span class="o">.</span><span class="n">defaults</span><span class="o">.</span><span class="n">name</span>
+<span class="go">&#39;all&#39;</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sections</strong> &#8211; A dictionary of sections.</li>
+<li><strong>section_name</strong> &#8211; Optional section name argument to find the default
+section for. If not given then use member section
+name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>other_section</em>, <em>ignore_defaults=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Incorporates all keys and values from the other section into this one.
+Values from the other section override the ones from this one.</p>
+<p>Default values from the other section override the default values from
+this only.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>other_section</strong> &#8211; Another Section</li>
+<li><strong>ignore_defaults</strong> &#8211; If set to true, do not take default values from
+other</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">self</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coalib.settings.Section.Section.update_setting">
+<code class="descname">update_setting</code><span class="sig-paren">(</span><em>key</em>, <em>new_key=None</em>, <em>new_value=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#Section.update_setting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.Section.update_setting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates a setting with new values.
+:param key:       The old key string.
+:param new_key:   The new key string.
+:param new_value: The new value for the setting</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Section.append_to_sections">
+<code class="descclassname">coalib.settings.Section.</code><code class="descname">append_to_sections</code><span class="sig-paren">(</span><em>sections</em>, <em>key</em>, <em>value</em>, <em>origin</em>, <em>section_name=None</em>, <em>from_cli=False</em>, <em>to_append=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Section.html#append_to_sections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Section.append_to_sections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends the given data as a Setting to a Section with the given name. If
+the Section does not exist before it will be created empty.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sections</strong> &#8211; The sections dictionary to add to.</li>
+<li><strong>key</strong> &#8211; The key of the setting to add.</li>
+<li><strong>value</strong> &#8211; The value of the setting to add.</li>
+<li><strong>origin</strong> &#8211; The origin value of the setting to add.</li>
+<li><strong>section_name</strong> &#8211; The name of the section to add to.</li>
+<li><strong>from_cli</strong> &#8211; Whether or not this data comes from the CLI.</li>
+<li><strong>to_append</strong> &#8211; The boolean value if setting value needs to be
+appended to a setting in the defaults of a section.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.settings.SectionFilling">
+<span id="coalib-settings-sectionfilling-module"></span><h2>coalib.settings.SectionFilling module<a class="headerlink" href="#module-coalib.settings.SectionFilling" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="coalib.settings.SectionFilling.fill_section">
+<code class="descclassname">coalib.settings.SectionFilling.</code><code class="descname">fill_section</code><span class="sig-paren">(</span><em>section</em>, <em>acquire_settings</em>, <em>log_printer</em>, <em>bears</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/SectionFilling.html#fill_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.SectionFilling.fill_section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves needed settings from given bears and asks the user for
+missing values.</p>
+<p>If a setting is requested by several bears, the help text from the
+latest bear will be taken.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>section</strong> &#8211; A section containing available settings. Settings
+will be added if some are missing.</li>
+<li><strong>acquire_settings</strong> &#8211; The method to use for requesting settings. It will
+get a parameter which is a dictionary with the
+settings name as key and a list containing a
+description in [0] and the names of the bears
+who need this setting in all following indexes.</li>
+<li><strong>log_printer</strong> &#8211; The log printer for logging.</li>
+<li><strong>bears</strong> &#8211; All bear classes or instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The new section.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.SectionFilling.fill_settings">
+<code class="descclassname">coalib.settings.SectionFilling.</code><code class="descname">fill_settings</code><span class="sig-paren">(</span><em>sections</em>, <em>acquire_settings</em>, <em>log_printer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/SectionFilling.html#fill_settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.SectionFilling.fill_settings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves all bears and requests missing settings via the given
+acquire_settings method.</p>
+<p>This will retrieve all bears and their dependencies.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sections</strong> &#8211; The sections to fill up, modified in place.</li>
+<li><strong>acquire_settings</strong> &#8211; The method to use for requesting settings. It will
+get a parameter which is a dictionary with the
+settings name as key and a list containing a
+description in [0] and the names of the bears
+who need this setting in all following indexes.</li>
+<li><strong>log_printer</strong> &#8211; The log printer to use for logging.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A tuple containing (local_bears, global_bears),
+each of them being a dictionary with the section
+name as key and as value the bears as a list.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coalib.settings.Setting">
+<span id="coalib-settings-setting-module"></span><h2>coalib.settings.Setting module<a class="headerlink" href="#module-coalib.settings.Setting" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="coalib.settings.Setting.Setting">
+<em class="property">class </em><code class="descclassname">coalib.settings.Setting.</code><code class="descname">Setting</code><span class="sig-paren">(</span><em>key</em>, <em>value</em>, <em>origin=''</em>, <em>strip_whitespaces=True</em>, <em>list_delimiters=('</em>, <em>'</em>, <em>';')</em>, <em>from_cli=False</em>, <em>remove_empty_iter_elements=True</em>, <em>to_append=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#Setting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.Setting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">coala_utils.string_processing.StringConverter.StringConverter</span></code></p>
+<p>A Setting consists mainly of a key and a value. It mainly offers many
+conversions into common data types.</p>
+<dl class="attribute">
+<dt id="coalib.settings.Setting.Setting.key">
+<code class="descname">key</code><a class="headerlink" href="#coalib.settings.Setting.Setting.key" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="coalib.settings.Setting.Setting.value">
+<code class="descname">value</code><a class="headerlink" href="#coalib.settings.Setting.Setting.value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.glob">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">glob</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#glob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.glob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a path in which all special glob characters in all the
+parent directories in the given setting are properly escaped.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; The <code class="docutils literal"><span class="pre">Setting</span></code> object from which the key is obtained.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Returns a path in which special glob characters are escaped.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.glob_list">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">glob_list</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#glob_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.glob_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a list of paths in which all special glob characters in all the
+parent directories of all paths in the given setting are properly escaped.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> &#8211; The <code class="docutils literal"><span class="pre">Setting</span></code> object from which the key is obtained.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Returns a list of paths in which special glob characters are
+escaped.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.path">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">path</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.path_list">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">path_list</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#path_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.path_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.typed_dict">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">typed_dict</code><span class="sig-paren">(</span><em>key_type</em>, <em>value_type</em>, <em>default</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#typed_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.typed_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a function that converts a setting into a dict with the given
+types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key_type</strong> &#8211; The type conversion function for the keys.</li>
+<li><strong>value_type</strong> &#8211; The type conversion function for the values.</li>
+<li><strong>default</strong> &#8211; The default value to use if no one is given by the user.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A conversion function.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.typed_list">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">typed_list</code><span class="sig-paren">(</span><em>conversion_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#typed_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.typed_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a function that converts a setting into a list of elements each
+converted with the given conversion function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conversion_func</strong> &#8211; The conversion function that converts a string into
+your desired list item object.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A conversion function.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.typed_ordered_dict">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">typed_ordered_dict</code><span class="sig-paren">(</span><em>key_type</em>, <em>value_type</em>, <em>default</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#typed_ordered_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.typed_ordered_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a function that converts a setting into an ordered dict with the
+given types.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>key_type</strong> &#8211; The type conversion function for the keys.</li>
+<li><strong>value_type</strong> &#8211; The type conversion function for the values.</li>
+<li><strong>default</strong> &#8211; The default value to use if no one is given by the user.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A conversion function.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coalib.settings.Setting.url">
+<code class="descclassname">coalib.settings.Setting.</code><code class="descname">url</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coalib/settings/Setting.html#url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#coalib.settings.Setting.url" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-coalib.settings">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-coalib.settings" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coalib.html">coalib package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="coalib.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coalib.bearlib.html">coalib.bearlib package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.bears.html">coalib.bears package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.collecting.html">coalib.collecting package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.core.html">coalib.core package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.misc.html">coalib.misc package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.output.html">coalib.output package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.parsing.html">coalib.parsing package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.processes.html">coalib.processes package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.results.html">coalib.results package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">coalib.settings package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings.Annotations">coalib.settings.Annotations module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings.ConfigurationGathering">coalib.settings.ConfigurationGathering module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings.DocstringMetadata">coalib.settings.DocstringMetadata module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings.FunctionMetadata">coalib.settings.FunctionMetadata module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings.Section">coalib.settings.Section module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings.SectionFilling">coalib.settings.SectionFilling module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings.Setting">coalib.settings.Setting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-coalib.settings">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="coalib.testing.html">coalib.testing package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala">coalib.coala module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_ci">coalib.coala_ci module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_delete_orig">coalib.coala_delete_orig module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_format">coalib.coala_format module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_json">coalib.coala_json module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_main">coalib.coala_main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib.coala_modes">coalib.coala_modes module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coalib.html#module-coalib">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="coalib.html">coalib package</a><ul>
+      <li>Previous: <a href="coalib.results.result_actions.html" title="previous chapter">coalib.results.result_actions package</a></li>
+      <li>Next: <a href="coalib.testing.html" title="next chapter">coalib.testing package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/coalib.settings.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

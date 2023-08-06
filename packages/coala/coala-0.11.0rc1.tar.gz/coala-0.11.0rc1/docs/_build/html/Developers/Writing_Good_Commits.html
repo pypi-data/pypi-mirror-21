@@ -1,0 +1,356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>How To Write a Good Commit Message &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="Codestyle for coala" href="Codestyle.html" />
+    <link rel="prev" title="Bear Installation Tool" href="Bear_Installation_Tool.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="how-to-write-a-good-commit-message">
+<h1>How To Write a Good Commit Message<a class="headerlink" href="#how-to-write-a-good-commit-message" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quick-reference">
+<h2>Quick reference<a class="headerlink" href="#quick-reference" title="Permalink to this headline">¶</a></h2>
+<p>Example of a good commit:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>setup.py: Change bears&#39; entrypoint
+
+This entrypoint ensures that coala discovers
+the bears correctly.
+It helps not writing more functions inside
+``coalib`` for this.
+
+Closes https://github.com/coala/coala/issues/5861
+</pre></div>
+</div>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><cite>setup.py: Change bears&#8217; entrypoint</cite>: Describe the change in</dt>
+<dd>maximum of 50 characters.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>This entrypoint.. ..for this</cite>: Describe the reasoning of your changes</dt>
+<dd>in maximum of 72 characters per line.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><cite>Closes https://github.com/coala/coala/issues/5861</cite>: Mention the URL</dt>
+<dd>of the issue it closes or fixes.</dd>
+</dl>
+</li>
+</ul>
+<p>At coala we are looking heavily at the maintainability of the code.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Code is more often read than written!</p>
+</div>
+<p>We need good code. In order to do that we are verifying that every
+change to our code (i.e. the commits) is making it better.</p>
+</div>
+<div class="section" id="what-makes-a-good-commit">
+<h2>What Makes a Good Commit<a class="headerlink" href="#what-makes-a-good-commit" title="Permalink to this headline">¶</a></h2>
+<p>A good commit is atomic. It should describe one change and not more.</p>
+<p>Why? Because we may create more bugs if we had more changes per commit.</p>
+</div>
+<div class="section" id="how-to-write-good-commit-messages">
+<h2>How to Write Good Commit Messages<a class="headerlink" href="#how-to-write-good-commit-messages" title="Permalink to this headline">¶</a></h2>
+<p>A commit message consists of 3 parts:</p>
+<ul class="simple">
+<li>shortlog</li>
+<li>commit body</li>
+<li>issue reference</li>
+</ul>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>setup.py: Change bears&#39; entrypoint
+
+This entrypoint ensures that coala discovers the bears correctly.
+It helps not writing more functions inside ``coalib`` for this.
+
+Closes https://github.com/coala/coala/issues/5861
+</pre></div>
+</div>
+<div class="section" id="shortlog">
+<h3>Shortlog<a class="headerlink" href="#shortlog" title="Permalink to this headline">¶</a></h3>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">setup</span><span class="o">.</span><span class="n">py</span><span class="p">:</span> <span class="n">Change</span> <span class="n">bears</span><span class="s1">&#39; entrypoint</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Maximum of 50 characters.</li>
+<li>Should describe the <em>change</em> - the action being done in the commit.</li>
+<li>Should have a tag and a short description separated by a colon (<code class="docutils literal"><span class="pre">:</span></code>)<ul>
+<li><strong>Tag</strong><ul>
+<li>The file or class or package being modified.</li>
+<li>Not mandatory.</li>
+</ul>
+</li>
+<li><strong>Short Description</strong><ul>
+<li>Starts with a capital letter.</li>
+<li>Written in imperative present tense (i.e. <code class="docutils literal"><span class="pre">Add</span> <span class="pre">something</span></code>, not
+<code class="docutils literal"><span class="pre">Adding</span> <span class="pre">something</span></code> or <code class="docutils literal"><span class="pre">Added</span> <span class="pre">something</span></code>).</li>
+<li>No trailing period.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="commit-body">
+<h3>Commit Body<a class="headerlink" href="#commit-body" title="Permalink to this headline">¶</a></h3>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>This entrypoint ensures that coala discovers the bears correctly.
+It helps not writing more functions inside ``coalib`` for this.
+</pre></div>
+</div>
+<ul class="simple">
+<li>Maximum of 72 chars excluding newline for <em>each</em> line.</li>
+<li>Not mandatory - but helps explain what you&#8217;re doing.</li>
+<li>Should describe the reasoning for your changes. This is especially
+important for complex changes that are not self explanatory. This is also
+the right place to write about related bugs.</li>
+<li>First person should not be used here.</li>
+</ul>
+</div>
+<div class="section" id="issue-reference">
+<h3>Issue reference<a class="headerlink" href="#issue-reference" title="Permalink to this headline">¶</a></h3>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Fixes</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">coala</span><span class="o">/</span><span class="n">coala</span><span class="o">/</span><span class="n">issues</span><span class="o">/</span><span class="mi">5861</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Should use the <code class="docutils literal"><span class="pre">Fixes</span></code> keyword if your commit fixes a bug, or <code class="docutils literal"><span class="pre">Closes</span></code>
+if it adds a feature/enhancement.</li>
+<li>In some situations, e.g. bugs overcome in documents, the difference
+between <code class="docutils literal"><span class="pre">Fixes</span></code> and <code class="docutils literal"><span class="pre">Closes</span></code> may be very small and subjective.
+If a specific issue may lead to an unintended behaviour from the user
+or from the program it should be considered a bug, and should be
+addresed with <code class="docutils literal"><span class="pre">Fixes</span></code>.</li>
+<li>Should use full URL to the issue.</li>
+<li>There should be a single space between the <code class="docutils literal"><span class="pre">Fixes</span></code> or <code class="docutils literal"><span class="pre">Closes</span></code> and the
+URL.</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ul class="last simple">
+<li>The issue reference will automatically add the link of the commit in
+the issue.</li>
+<li>It will also automatically close the issue when the commit is
+accepted into coala.</li>
+</ul>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference external" href="https://wiki.gnome.org/Git/CommitMessages">https://wiki.gnome.org/Git/CommitMessages</a></p>
+</div>
+</div>
+<div class="section" id="more-examples">
+<h3>More Examples<a class="headerlink" href="#more-examples" title="Permalink to this headline">¶</a></h3>
+<p>Example 1 (fixed bug):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">setup</span><span class="p">:</span> <span class="n">Install</span> <span class="o">.</span><span class="n">coafile</span> <span class="n">via</span> <span class="n">package_data</span>
+
+<span class="n">When</span> <span class="n">installing</span> <span class="n">the</span> <span class="o">.</span><span class="n">coafile</span> <span class="n">to</span> <span class="n">distutils</span><span class="o">.</span><span class="n">sysconfig</span><span class="o">.</span><span class="n">get_python_lib</span><span class="p">,</span> <span class="n">we</span>
+<span class="n">ignore</span> <span class="n">that</span> <span class="n">this</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">the</span> <span class="n">installation</span> <span class="n">directory</span> <span class="ow">in</span> <span class="n">every</span> <span class="n">case</span><span class="o">.</span> <span class="n">Thus</span>
+<span class="n">it</span> <span class="ow">is</span> <span class="n">easier</span><span class="p">,</span> <span class="n">more</span> <span class="n">reliable</span> <span class="ow">and</span> <span class="n">platform</span> <span class="n">independent</span> <span class="n">to</span> <span class="n">let</span> <span class="n">distutils</span>
+<span class="n">install</span> <span class="n">it</span> <span class="n">by</span> <span class="n">itself</span><span class="o">.</span>
+
+<span class="n">Fixes</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">coala</span><span class="o">/</span><span class="n">coala</span><span class="o">/</span><span class="n">issues</span><span class="o">/</span><span class="mi">269</span>
+</pre></div>
+</div>
+<p>Example 2 (implemented feature):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Linter</span><span class="p">:</span> <span class="n">Output</span> <span class="n">command</span> <span class="n">on</span> <span class="n">debug</span>
+
+<span class="n">This</span> <span class="n">massively</span> <span class="n">helps</span> <span class="n">debugging</span> <span class="n">linters</span><span class="o">.</span>
+
+<span class="n">Closes</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">coala</span><span class="o">/</span><span class="n">coala</span><span class="o">/</span><span class="n">issues</span><span class="o">/</span><span class="mi">2060</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="editing-commit-messages">
+<h2>Editing Commit Messages<a class="headerlink" href="#editing-commit-messages" title="Permalink to this headline">¶</a></h2>
+<p>If you have previously made a commit and update it on a later date,
+it is advisable to also update the commit message accordingly.</p>
+<p>In order to do this one can use the amend function as is described <a class="reference external" href="http://api.coala.io/en/latest/Developers/Git_Basics.html#follow-up">here.</a></p>
+</div>
+<div class="section" id="why-do-we-need-good-commits">
+<h2>Why Do We Need Good Commits?<a class="headerlink" href="#why-do-we-need-good-commits" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>An atomic commit is way easier to review. The reviewer thus will be
+able to review faster and find more bugs due to the lower complexity
+of the change.</li>
+<li>Atomic commits are like good objects in object oriented programming -
+you can split up a bigger thing into many small objects. Reducing
+complexity is the key to developing good software and finding its bug
+before they occur.</li>
+<li>Good commit messages make it easy to check at a glance what happened
+in a time range.</li>
+<li>It is way easier to revert single changes without side effects.
+Reverting multiple commits at a time is easy, reverting a part of a
+commit is not.</li>
+<li><code class="docutils literal"><span class="pre">git</span> <span class="pre">blame</span></code> will be much more effective. It is the best
+documentation you can get. The older your code is, the more
+documentation it has. The better the commit messages are, the better
+is your hidden documentation. Your commit messages document the
+reason for every single change you did to any line.</li>
+<li><code class="docutils literal"><span class="pre">git</span> <span class="pre">bisect</span></code> will be much more effective. If you bisect through
+atomic commits to find the commit which caused a bug, you should be
+able to identify the real cause of the bug fastly. Good commit
+messages and atomicity of commits are key to that ability.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Writing Good Commit Messages</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#quick-reference">Quick reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-makes-a-good-commit">What Makes a Good Commit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-write-good-commit-messages">How to Write Good Commit Messages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#shortlog">Shortlog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#commit-body">Commit Body</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#issue-reference">Issue reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#more-examples">More Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#editing-commit-messages">Editing Commit Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-do-we-need-good-commits">Why Do We Need Good Commits?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Bear_Installation_Tool.html" title="previous chapter">Bear Installation Tool</a></li>
+      <li>Next: <a href="Codestyle.html" title="next chapter">Codestyle for coala</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/Writing_Good_Commits.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

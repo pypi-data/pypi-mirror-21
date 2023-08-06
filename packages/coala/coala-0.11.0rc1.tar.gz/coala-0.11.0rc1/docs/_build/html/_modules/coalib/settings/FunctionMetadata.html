@@ -1,0 +1,455 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.settings.FunctionMetadata &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.settings.FunctionMetadata</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+<span class="kn">from</span> <span class="nn">inspect</span> <span class="k">import</span> <span class="n">getfullargspec</span><span class="p">,</span> <span class="n">ismethod</span>
+
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">enforce_signature</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.DocstringMetadata</span> <span class="k">import</span> <span class="n">DocstringMetadata</span>
+
+
+<div class="viewcode-block" id="FunctionMetadata"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.FunctionMetadata.FunctionMetadata">[docs]</a><span class="k">class</span> <span class="nc">FunctionMetadata</span><span class="p">:</span>
+    <span class="n">str_nodesc</span> <span class="o">=</span> <span class="s1">&#39;No description given.&#39;</span>
+    <span class="n">str_optional</span> <span class="o">=</span> <span class="s2">&quot;Optional, defaults to &#39;</span><span class="si">{}</span><span class="s2">&#39;.&quot;</span>
+
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">desc</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">retval_desc</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="n">non_optional_params</span><span class="p">:</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">optional_params</span><span class="p">:</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">omit</span><span class="p">:</span> <span class="p">(</span><span class="nb">set</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">)</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">(),</span>
+                 <span class="n">deprecated_params</span><span class="p">:</span> <span class="p">(</span><span class="nb">set</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">)</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the FunctionMetadata object.</span>
+
+<span class="sd">        :param name:                The name of the function.</span>
+<span class="sd">        :param desc:                The description of the function.</span>
+<span class="sd">        :param retval_desc:         The retval description of the function.</span>
+<span class="sd">        :param non_optional_params: A dict containing the name of non optional</span>
+<span class="sd">                                    parameters as the key and a tuple of a</span>
+<span class="sd">                                    description and the python annotation. To</span>
+<span class="sd">                                    preserve the order, use OrderedDict.</span>
+<span class="sd">        :param optional_params:     A dict containing the name of optional</span>
+<span class="sd">                                    parameters as the key and a tuple</span>
+<span class="sd">                                    of a description, the python annotation and</span>
+<span class="sd">                                    the default value. To preserve the order,</span>
+<span class="sd">                                    use OrderedDict.</span>
+<span class="sd">        :param omit:                A set of parameters to omit.</span>
+<span class="sd">        :param deprecared_params:   A list of params that are deprecated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">non_optional_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">non_optional_params</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">optional_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">optional_params</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_desc</span> <span class="o">=</span> <span class="n">desc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retval_desc</span> <span class="o">=</span> <span class="n">retval_desc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_non_optional_params</span> <span class="o">=</span> <span class="n">non_optional_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optional_params</span> <span class="o">=</span> <span class="n">optional_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omit</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">omit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deprecated_params</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">deprecated_params</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">desc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns description of the function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_desc</span>
+
+    <span class="nd">@desc</span><span class="o">.</span><span class="n">setter</span>
+    <span class="nd">@enforce_signature</span>
+    <span class="k">def</span> <span class="nf">desc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_desc</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set&#39;s the description to the new_desc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_desc</span> <span class="o">=</span> <span class="n">new_desc</span>
+
+    <span class="k">def</span> <span class="nf">_filter_out_omitted</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filters out parameters that are to omit. This is a helper method for</span>
+<span class="sd">        the param related properties.</span>
+
+<span class="sd">        :param params: The parameter dictionary to filter.</span>
+<span class="sd">        :return:       The filtered dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">omit</span><span class="p">,</span>
+                                  <span class="nb">tuple</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">non_optional_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves a dict containing the name of non optional parameters as the</span>
+<span class="sd">        key and a tuple of a description and the python annotation. Values that</span>
+<span class="sd">        are present in self.omit will be omitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_out_omitted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_non_optional_params</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">optional_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves a dict containing the name of optional parameters as the key</span>
+<span class="sd">        and a tuple of a description, the python annotation and the default</span>
+<span class="sd">        value. Values that are present in self.omit will be omitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_out_omitted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_params</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FunctionMetadata.add_deprecated_param"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.FunctionMetadata.FunctionMetadata.add_deprecated_param">[docs]</a>    <span class="k">def</span> <span class="nf">add_deprecated_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">alias</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds an alias for the original setting. The alias setting will have</span>
+<span class="sd">        the same metadata as the original one. If the original setting is not</span>
+<span class="sd">        optional, the alias will default to ``None``.</span>
+
+<span class="sd">        :param original:  The name of the original setting.</span>
+<span class="sd">        :param alias:     The name of the alias for the original.</span>
+<span class="sd">        :raises KeyError: If the new setting doesn&#39;t exist in the metadata.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deprecated_params</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">alias</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optional_params</span><span class="p">[</span><span class="n">alias</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_optional_params</span><span class="p">[</span><span class="n">original</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">original</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional_params</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_non_optional_params</span><span class="p">[</span><span class="n">original</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">))</span></div>
+
+<div class="viewcode-block" id="FunctionMetadata.create_params_from_section"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.FunctionMetadata.FunctionMetadata.create_params_from_section">[docs]</a>    <span class="k">def</span> <span class="nf">create_params_from_section</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a params dictionary for this function that holds all values the</span>
+<span class="sd">        function needs plus optional ones that are available.</span>
+
+<span class="sd">        :param section:    The section to retrieve the values from.</span>
+<span class="sd">        :return:           The params dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_optional_params</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">annotation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_optional_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+            <span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_param</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">annotation</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">optional_params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">section</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optional_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
+                <span class="n">params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_param</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">annotation</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">params</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_param</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">return_arg</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span>
+        <span class="k">if</span> <span class="n">annotation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">annotation</span> <span class="o">=</span> <span class="n">return_arg</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">annotation</span><span class="p">(</span><span class="n">section</span><span class="p">[</span><span class="n">param</span><span class="p">])</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unable to convert parameter </span><span class="si">{!r}</span><span class="s1"> into type &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">annotation</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FunctionMetadata.from_function"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.FunctionMetadata.FunctionMetadata.from_function">[docs]</a>    <span class="k">def</span> <span class="nf">from_function</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">omit</span><span class="o">=</span><span class="nb">frozenset</span><span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a FunctionMetadata object from a function. Please note that any</span>
+<span class="sd">        variable argument lists are not supported. If you do not want the</span>
+<span class="sd">        first (usual named &#39;self&#39;) argument to appear please pass the method of</span>
+<span class="sd">        an actual INSTANCE of a class; passing the method of the class isn&#39;t</span>
+<span class="sd">        enough. Alternatively you can add &quot;self&quot; to the omit set.</span>
+
+<span class="sd">        :param func: The function. If __metadata__ of the unbound function is</span>
+<span class="sd">                     present it will be copied and used, otherwise it will be</span>
+<span class="sd">                     generated.</span>
+<span class="sd">        :param omit: A set of parameter names that are to be ignored.</span>
+<span class="sd">        :return:     The FunctionMetadata object corresponding to the given</span>
+<span class="sd">                     function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="s1">&#39;__metadata__&#39;</span><span class="p">):</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">__metadata__</span><span class="p">)</span>
+            <span class="n">metadata</span><span class="o">.</span><span class="n">omit</span> <span class="o">=</span> <span class="n">omit</span>
+            <span class="k">return</span> <span class="n">metadata</span>
+
+        <span class="n">doc</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">doc_comment</span> <span class="o">=</span> <span class="n">DocstringMetadata</span><span class="o">.</span><span class="n">from_docstring</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+
+        <span class="n">non_optional_params</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">optional_params</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="n">argspec</span> <span class="o">=</span> <span class="n">getfullargspec</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">argspec</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">defaults</span> <span class="o">=</span> <span class="p">()</span> <span class="k">if</span> <span class="n">argspec</span><span class="o">.</span><span class="n">defaults</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">argspec</span><span class="o">.</span><span class="n">defaults</span>
+        <span class="n">num_non_defaults</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">defaults</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="c1"># Implicit self argument or omitted explicitly</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ismethod</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_non_defaults</span><span class="p">:</span>
+                <span class="n">non_optional_params</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">doc_comment</span><span class="o">.</span><span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">str_nodesc</span><span class="p">),</span>
+                    <span class="n">argspec</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">optional_params</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">doc_comment</span><span class="o">.</span><span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">str_nodesc</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; (&#39;</span> <span class="o">+</span>
+                    <span class="bp">cls</span><span class="o">.</span><span class="n">str_optional</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">defaults</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">num_non_defaults</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">,</span>
+                    <span class="n">argspec</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+                    <span class="n">defaults</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="n">num_non_defaults</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                   <span class="n">desc</span><span class="o">=</span><span class="n">doc_comment</span><span class="o">.</span><span class="n">desc</span><span class="p">,</span>
+                   <span class="n">retval_desc</span><span class="o">=</span><span class="n">doc_comment</span><span class="o">.</span><span class="n">retval_desc</span><span class="p">,</span>
+                   <span class="n">non_optional_params</span><span class="o">=</span><span class="n">non_optional_params</span><span class="p">,</span>
+                   <span class="n">optional_params</span><span class="o">=</span><span class="n">optional_params</span><span class="p">,</span>
+                   <span class="n">omit</span><span class="o">=</span><span class="n">omit</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FunctionMetadata.filter_parameters"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.FunctionMetadata.FunctionMetadata.filter_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">filter_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dct</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filters the given dict for keys that are declared as parameters inside</span>
+<span class="sd">        this metadata (either optional or non-optional).</span>
+
+<span class="sd">        You can use this function to safely pass parameters from a given</span>
+<span class="sd">        dictionary:</span>
+
+<span class="sd">        &gt;&gt;&gt; def multiply(a, b=2, c=0):</span>
+<span class="sd">        ...     return a * b + c</span>
+<span class="sd">        &gt;&gt;&gt; metadata = FunctionMetadata.from_function(multiply)</span>
+<span class="sd">        &gt;&gt;&gt; args = metadata.filter_parameters({&#39;a&#39;: 10, &#39;b&#39;: 20, &#39;d&#39;: 30})</span>
+
+<span class="sd">        You can safely pass the arguments to the function now:</span>
+
+<span class="sd">        &gt;&gt;&gt; multiply(**args)  # 10 * 20</span>
+<span class="sd">        200</span>
+
+<span class="sd">        :param dct:</span>
+<span class="sd">            The dict to filter.</span>
+<span class="sd">        :return:</span>
+<span class="sd">            A new dict containing the filtered items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">dct</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">non_optional_params</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">|</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">optional_params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">}</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FunctionMetadata.merge"><a class="viewcode-back" href="../../../coalib.settings.html#coalib.settings.FunctionMetadata.FunctionMetadata.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">metadatas</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Merges signatures of ``FunctionMetadata`` objects.</span>
+
+<span class="sd">        Parameter (either optional or non-optional) and non-parameter</span>
+<span class="sd">        descriptions are merged from left to right, meaning the right hand</span>
+<span class="sd">        metadata overrides the left hand one.</span>
+
+<span class="sd">        &gt;&gt;&gt; def a(x, y):</span>
+<span class="sd">        ...     &#39;&#39;&#39;</span>
+<span class="sd">        ...     desc of *a*</span>
+<span class="sd">        ...     :param x: x of a</span>
+<span class="sd">        ...     :param y: y of a</span>
+<span class="sd">        ...     :return:  5*x*y</span>
+<span class="sd">        ...     &#39;&#39;&#39;</span>
+<span class="sd">        ...     return 5 * x * y</span>
+<span class="sd">        &gt;&gt;&gt; def b(x):</span>
+<span class="sd">        ...     &#39;&#39;&#39;</span>
+<span class="sd">        ...     desc of *b*</span>
+<span class="sd">        ...     :param x: x of b</span>
+<span class="sd">        ...     :return:  100*x</span>
+<span class="sd">        ...     &#39;&#39;&#39;</span>
+<span class="sd">        ...     return 100 * x</span>
+<span class="sd">        &gt;&gt;&gt; metadata1 = FunctionMetadata.from_function(a)</span>
+<span class="sd">        &gt;&gt;&gt; metadata2 = FunctionMetadata.from_function(b)</span>
+<span class="sd">        &gt;&gt;&gt; merged = FunctionMetadata.merge(metadata1, metadata2)</span>
+<span class="sd">        &gt;&gt;&gt; merged.name</span>
+<span class="sd">        &quot;&lt;Merged signature of &#39;a&#39;, &#39;b&#39;&gt;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; merged.desc</span>
+<span class="sd">        &#39;desc of *b*&#39;</span>
+<span class="sd">        &gt;&gt;&gt; merged.retval_desc</span>
+<span class="sd">        &#39;100*x&#39;</span>
+<span class="sd">        &gt;&gt;&gt; merged.non_optional_params[&#39;x&#39;][0]</span>
+<span class="sd">        &#39;x of b&#39;</span>
+<span class="sd">        &gt;&gt;&gt; merged.non_optional_params[&#39;y&#39;][0]</span>
+<span class="sd">        &#39;y of a&#39;</span>
+
+<span class="sd">        :param metadatas:</span>
+<span class="sd">            The sequence of metadatas to merge.</span>
+<span class="sd">        :return:</span>
+<span class="sd">            A ``FunctionMetadata`` object containing the merged signature of</span>
+<span class="sd">            all given metadatas.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Collect the metadatas, as we operate on them more often and we want</span>
+        <span class="c1"># to support arbitrary sequences.</span>
+        <span class="n">metadatas</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">metadatas</span><span class="p">)</span>
+
+        <span class="n">merged_name</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&lt;Merged signature of &#39;</span> <span class="o">+</span>
+                       <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                                 <span class="k">for</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">metadatas</span><span class="p">)</span> <span class="o">+</span>
+                       <span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>
+
+        <span class="n">merged_desc</span> <span class="o">=</span> <span class="nb">next</span><span class="p">((</span><span class="n">m</span><span class="o">.</span><span class="n">desc</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">metadatas</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">desc</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">merged_retval_desc</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">retval_desc</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">metadatas</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">retval_desc</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">merged_non_optional_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">merged_optional_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">metadatas</span><span class="p">:</span>
+            <span class="c1"># Use the fields and not the properties to get also omitted</span>
+            <span class="c1"># parameters.</span>
+            <span class="n">merged_non_optional_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">_non_optional_params</span><span class="p">)</span>
+            <span class="n">merged_optional_params</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">_optional_params</span><span class="p">)</span>
+
+        <span class="n">merged_omit</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">omit</span> <span class="k">for</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">metadatas</span><span class="p">))</span>
+        <span class="n">merged_deprecated_params</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
+            <span class="n">metadata</span><span class="o">.</span><span class="n">deprecated_params</span> <span class="k">for</span> <span class="n">metadata</span> <span class="ow">in</span> <span class="n">metadatas</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">merged_name</span><span class="p">,</span>
+                   <span class="n">merged_desc</span><span class="p">,</span>
+                   <span class="n">merged_retval_desc</span><span class="p">,</span>
+                   <span class="n">merged_non_optional_params</span><span class="p">,</span>
+                   <span class="n">merged_optional_params</span><span class="p">,</span>
+                   <span class="n">merged_omit</span><span class="p">,</span>
+                   <span class="n">merged_deprecated_params</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

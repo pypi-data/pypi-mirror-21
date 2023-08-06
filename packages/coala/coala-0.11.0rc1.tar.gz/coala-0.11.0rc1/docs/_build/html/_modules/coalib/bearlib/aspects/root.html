@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.aspects.root &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.aspects.root</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">aspectbase</span>
+<span class="kn">from</span> <span class="nn">.meta</span> <span class="k">import</span> <span class="n">aspectclass</span>
+
+
+<div class="viewcode-block" id="Root"><a class="viewcode-back" href="../../../../coalib.bearlib.aspects.html#coalib.bearlib.aspects.Metadata.Root">[docs]</a><span class="k">class</span> <span class="nc">Root</span><span class="p">(</span><span class="n">aspectbase</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">aspectclass</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The root aspectclass.</span>
+
+<span class="sd">    Define sub-aspectclasses with class-bound ``.subaspect`` decorator.</span>
+<span class="sd">    Definition string is taken from doc-string of decorated class.</span>
+<span class="sd">    Remaining docs are taken from a nested ``docs`` class.</span>
+<span class="sd">    Tastes are defined as class attributes that are instances of</span>
+<span class="sd">    :class:`coalib.bearlib.aspects.Taste`.</span>
+
+<span class="sd">    &gt;&gt;&gt; from coalib.bearlib.aspects import Taste</span>
+
+<span class="sd">    &gt;&gt;&gt; @Root.subaspect</span>
+<span class="sd">    ... class Formatting:</span>
+<span class="sd">    ...     \&quot;&quot;&quot;</span>
+    <span class="o">...</span>     <span class="n">A</span> <span class="n">parent</span> <span class="n">aspect</span> <span class="k">for</span> <span class="n">code</span> <span class="n">formatting</span> <span class="n">aspects</span><span class="o">...</span>
+    <span class="o">...</span>     \<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="s2">    We can now create subaspects like this:</span>
+
+<span class="s2">    &gt;&gt;&gt; @Formatting.subaspect</span>
+<span class="s2">    ... class LineLength:</span>
+<span class="s2">    ...     </span><span class="se">\&quot;</span><span class="s2">&quot;&quot;</span>
+<span class="s2">    ...     This aspect controls the length of a line...</span>
+<span class="s2">    ...     </span><span class="se">\&quot;</span><span class="s2">&quot;&quot;</span>
+<span class="s2">    ...     class docs:</span>
+<span class="s2">    ...        example = &quot;...&quot;</span>
+<span class="s2">    ...        example_language = &quot;...&quot;</span>
+<span class="s2">    ...        importance_reason = &quot;...&quot;</span>
+<span class="s2">    ...        fix_suggestions = &quot;...&quot;</span>
+<span class="s2">    ...</span>
+<span class="s2">    ...     max_line_length = Taste[int](</span>
+<span class="s2">    ...         &quot;Maximum length allowed for a line.&quot;,</span>
+<span class="s2">    ...         (80, 90, 120), default=80)</span>
+
+<span class="s2">    The representation will show the full &quot;path&quot; to the leaf of the tree:</span>
+
+<span class="s2">    &gt;&gt;&gt; Root.Formatting.LineLength</span>
+<span class="s2">    &lt;aspectclass &#39;Root.Formatting.LineLength&#39;&gt;</span>
+
+<span class="s2">    We can see, which settings are availables:</span>
+
+<span class="s2">    &gt;&gt;&gt; Formatting.tastes</span>
+<span class="s2">    </span><span class="si">{}</span><span class="s2"></span>
+<span class="s2">    &gt;&gt;&gt; LineLength.tastes</span>
+<span class="s2">    {&#39;max_line_length&#39;: &lt;....Taste[int] object at ...&gt;}</span>
+
+<span class="s2">    And instantiate the aspect with the values, they will be automatically</span>
+<span class="s2">    converted:</span>
+
+<span class="s2">    &gt;&gt;&gt; Formatting(&#39;Python&#39;)</span>
+<span class="s2">    &lt;....Root.Formatting object at 0x...&gt;</span>
+<span class="s2">    &gt;&gt;&gt; LineLength(&#39;Python&#39;, max_line_length=&quot;100&quot;).tastes</span>
+<span class="s2">    {&#39;max_line_length&#39;: 100}</span>
+
+<span class="s2">    If no settings are given, the defaults will be taken:</span>
+
+<span class="s2">    &gt;&gt;&gt; LineLength(&#39;Python&#39;).tastes</span>
+<span class="s2">    {&#39;max_line_length&#39;: 80}</span>
+
+<span class="s2">    Tastes can also be made available for only specific languages:</span>
+
+<span class="s2">    &gt;&gt;&gt; from coalib.bearlib.languages import Language</span>
+<span class="s2">    &gt;&gt;&gt; @Language</span>
+<span class="s2">    ... class GreaterTrumpScript:</span>
+<span class="s2">    ...     pass</span>
+
+<span class="s2">    &gt;&gt;&gt; @Formatting.subaspect</span>
+<span class="s2">    ... class Greatness:</span>
+<span class="s2">    ...     </span><span class="se">\&quot;</span><span class="s2">&quot;&quot;</span>
+<span class="s2">    ...     This aspect controls the greatness of a file...</span>
+<span class="s2">    ...     </span><span class="se">\&quot;</span><span class="s2">&quot;&quot;</span>
+<span class="s2">    ...</span>
+<span class="s2">    ...     min_greatness = Taste[int](</span>
+<span class="s2">    ...         &quot;Minimum greatness factor needed for a TrumpScript file. &quot;</span>
+<span class="s2">    ...         &quot;This is fact.&quot;,</span>
+<span class="s2">    ...         (1000000, 1000000000, 1000000000000), default=1000000,</span>
+<span class="s2">    ...         languages=(&#39;GreaterTrumpScript&#39; ,))</span>
+
+<span class="s2">    &gt;&gt;&gt; Greatness.tastes</span>
+<span class="s2">    {&#39;min_greatness&#39;: &lt;....Taste[int] object at ...&gt;}</span>
+<span class="s2">    &gt;&gt;&gt; Greatness(&#39;GreaterTrumpScript&#39;).tastes</span>
+<span class="s2">    {&#39;min_greatness&#39;: 1000000}</span>
+<span class="s2">    &gt;&gt;&gt; Greatness(&#39;GreaterTrumpScript&#39;, min_greatness=1000000000000).tastes</span>
+<span class="s2">    {&#39;min_greatness&#39;: 1000000000000}</span>
+
+<span class="s2">    &gt;&gt;&gt; Greatness(&#39;Python&#39;).tastes</span>
+<span class="s2">    </span><span class="si">{}</span><span class="s2"></span>
+
+<span class="s2">    &gt;&gt;&gt; Greatness(&#39;Python&#39;, min_greatness=1000000000)</span>
+<span class="s2">    ... # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="s2">    Traceback (most recent call last):</span>
+<span class="s2">      ...</span>
+<span class="s2">    coalib.bearlib.aspects.taste.TasteError:</span>
+<span class="s2">    Root.Formatting.Greatness.min_greatness is not available ...</span>
+
+<span class="s2">    &gt;&gt;&gt; Greatness(&#39;Python&#39;).min_greatness</span>
+<span class="s2">    ... # doctest: +NORMALIZE_WHITESPACE</span>
+<span class="s2">    Traceback (most recent call last):</span>
+<span class="s2">      ...</span>
+<span class="s2">    coalib.bearlib.aspects.taste.TasteError:</span>
+<span class="s2">    Root.Formatting.Greatness.min_greatness is not available ...</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">_tastes</span> <span class="o">=</span> <span class="p">{}</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  <li><a href="../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

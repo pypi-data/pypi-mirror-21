@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.spacing.SpacingHelper &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.spacing.SpacingHelper</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">coalib.bearlib.abstractions.SectionCreatable</span> <span class="k">import</span> <span class="n">SectionCreatable</span>
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">enforce_signature</span>
+
+
+<div class="viewcode-block" id="SpacingHelper"><a class="viewcode-back" href="../../../../coalib.bearlib.spacing.html#coalib.bearlib.spacing.SpacingHelper.SpacingHelper">[docs]</a><span class="k">class</span> <span class="nc">SpacingHelper</span><span class="p">(</span><span class="n">SectionCreatable</span><span class="p">):</span>
+    <span class="n">DEFAULT_TAB_WIDTH</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tab_width</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="n">DEFAULT_TAB_WIDTH</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a helper object for spacing operations.</span>
+
+<span class="sd">        :param tab_width: The number of spaces which visually equals a tab.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">SectionCreatable</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tab_width</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;The &#39;tab_width&#39; parameter should be an integer.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span> <span class="o">=</span> <span class="n">tab_width</span>
+
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="SpacingHelper.get_indentation"><a class="viewcode-back" href="../../../../coalib.bearlib.spacing.html#coalib.bearlib.spacing.SpacingHelper.SpacingHelper.get_indentation">[docs]</a>    <span class="k">def</span> <span class="nf">get_indentation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks the lines indentation.</span>
+
+<span class="sd">        :param line: A string to check for indentation.</span>
+<span class="sd">        :return:     The indentation count in spaces.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">:</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span> <span class="o">-</span> <span class="p">(</span><span class="n">count</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">count</span></div>
+
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="SpacingHelper.replace_tabs_with_spaces"><a class="viewcode-back" href="../../../../coalib.bearlib.spacing.html#coalib.bearlib.spacing.SpacingHelper.SpacingHelper.replace_tabs_with_spaces">[docs]</a>    <span class="k">def</span> <span class="nf">replace_tabs_with_spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replaces tabs in this line with the appropriate number of spaces.</span>
+
+<span class="sd">        Example: &quot; \t&quot; will be converted to &quot;    &quot;, assuming the tab_width is</span>
+<span class="sd">        set to 4.</span>
+
+<span class="sd">        :param line: The string with tabs to replace.</span>
+<span class="sd">        :return:     A string with no tabs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">t_position</span><span class="p">,</span> <span class="n">t_length</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yield_tab_lengths</span><span class="p">(</span><span class="n">line</span><span class="p">),</span>
+                                           <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">t_position</span><span class="p">]</span> <span class="o">+</span> <span class="n">t_length</span> <span class="o">*</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">line</span><span class="p">[</span><span class="n">t_position</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">return</span> <span class="n">line</span></div>
+
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="SpacingHelper.yield_tab_lengths"><a class="viewcode-back" href="../../../../coalib.bearlib.spacing.html#coalib.bearlib.spacing.SpacingHelper.SpacingHelper.yield_tab_lengths">[docs]</a>    <span class="k">def</span> <span class="nf">yield_tab_lengths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Yields position and size of tabs in a input string.</span>
+
+<span class="sd">        :param input: The string with tabs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tabless_position</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">char</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">input</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">space_count</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span> <span class="o">-</span> <span class="n">tabless_position</span>
+                               <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">index</span><span class="p">,</span> <span class="n">space_count</span>
+                <span class="n">tabless_position</span> <span class="o">+=</span> <span class="n">space_count</span>
+                <span class="k">continue</span>
+
+            <span class="n">tabless_position</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+    <span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="SpacingHelper.replace_spaces_with_tabs"><a class="viewcode-back" href="../../../../coalib.bearlib.spacing.html#coalib.bearlib.spacing.SpacingHelper.SpacingHelper.replace_spaces_with_tabs">[docs]</a>    <span class="k">def</span> <span class="nf">replace_spaces_with_tabs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replaces spaces with tabs where possible. However in no case only one</span>
+<span class="sd">        space will be replaced by a tab.</span>
+
+<span class="sd">        Example: &quot; \t   a_text   another&quot; will be converted to</span>
+<span class="sd">        &quot;\t   a_text\tanother&quot;, assuming the tab_width is set to 4.</span>
+
+<span class="sd">        :param line: The string with spaces to replace.</span>
+<span class="sd">        :return:     The converted string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">currspaces</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># Tracking the index of the string isnt enough because tabs are</span>
+        <span class="c1"># spanning over multiple columns</span>
+        <span class="n">tabless_position</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">:</span>
+                <span class="n">currspaces</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">tabless_position</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">space_count</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span> <span class="o">-</span> <span class="n">tabless_position</span>
+                               <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span><span class="p">)</span>
+                <span class="n">currspaces</span> <span class="o">+=</span> <span class="n">space_count</span>
+                <span class="n">tabless_position</span> <span class="o">+=</span> <span class="n">space_count</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">currspaces</span><span class="o">*</span><span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">char</span>
+                <span class="n">currspaces</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">tabless_position</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># tabless_position is now incremented to point _after_ the current</span>
+            <span class="c1"># char</span>
+            <span class="k">if</span> <span class="n">tabless_position</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab_width</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">currspaces</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">currspaces</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">char</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span>
+
+                <span class="n">currspaces</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">currspaces</span><span class="o">*</span><span class="s1">&#39; &#39;</span>
+
+        <span class="k">return</span> <span class="n">result</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  <li><a href="../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

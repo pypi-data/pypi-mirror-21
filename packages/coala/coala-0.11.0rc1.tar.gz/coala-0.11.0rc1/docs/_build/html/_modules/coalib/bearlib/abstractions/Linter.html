@@ -1,0 +1,1115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.bearlib.abstractions.Linter &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../../index.html" />
+    <link rel="up" title="coalib.bearlib" href="../../bearlib.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.bearlib.abstractions.Linter</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span><span class="p">,</span> <span class="n">partialmethod</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">compress</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">check_call</span><span class="p">,</span> <span class="n">CalledProcessError</span><span class="p">,</span> <span class="n">DEVNULL</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="k">import</span> <span class="n">MappingProxyType</span>
+
+<span class="kn">from</span> <span class="nn">coalib.bears.LocalBear</span> <span class="k">import</span> <span class="n">LocalBear</span>
+<span class="kn">from</span> <span class="nn">coalib.bears.GlobalBear</span> <span class="k">import</span> <span class="n">GlobalBear</span>
+<span class="kn">from</span> <span class="nn">coala_utils.ContextManagers</span> <span class="k">import</span> <span class="n">make_temp</span>
+<span class="kn">from</span> <span class="nn">coala_utils.decorators</span> <span class="k">import</span> <span class="n">assert_right_type</span><span class="p">,</span> <span class="n">enforce_signature</span>
+<span class="kn">from</span> <span class="nn">coalib.misc.Shell</span> <span class="k">import</span> <span class="n">run_shell_command</span>
+<span class="kn">from</span> <span class="nn">coalib.results.Diff</span> <span class="k">import</span> <span class="n">Diff</span>
+<span class="kn">from</span> <span class="nn">coalib.results.Result</span> <span class="k">import</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">coalib.results.SourceRange</span> <span class="k">import</span> <span class="n">SourceRange</span>
+<span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="n">RESULT_SEVERITY</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.FunctionMetadata</span> <span class="k">import</span> <span class="n">FunctionMetadata</span>
+
+
+<span class="k">def</span> <span class="nf">_prepare_options</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">bear_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prepares options for ``linter`` for a given options dict in-place.</span>
+
+<span class="sd">    :param options:</span>
+<span class="sd">        The options dict that contains user/developer inputs.</span>
+<span class="sd">    :param bear_class:</span>
+<span class="sd">        The Bear ``class`` which is being decorated by ``linter``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;executable&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;output_format&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;use_stdin&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;use_stdout&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;use_stderr&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;config_suffix&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;executable_check_fail_info&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;prerequisite_check_command&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;global_bear&#39;</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stdout&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stderr&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No output streams provided at all.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;corrected&#39;</span> <span class="ow">or</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unified-diff&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+                <span class="s1">&#39;diff_severity&#39;</span> <span class="ow">in</span> <span class="n">options</span> <span class="ow">and</span>
+                <span class="n">options</span><span class="p">[</span><span class="s1">&#39;diff_severity&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">reverse</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Invalid value for `diff_severity`: &#39;</span> <span class="o">+</span>
+                            <span class="nb">repr</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;diff_severity&#39;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="s1">&#39;result_message&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">assert_right_type</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;result_message&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;result_message&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;diff_distance&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">assert_right_type</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;diff_distance&#39;</span><span class="p">],</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;diff_distance&#39;</span><span class="p">)</span>
+
+        <span class="n">allowed_options</span> <span class="o">|=</span> <span class="p">{</span><span class="s1">&#39;diff_severity&#39;</span><span class="p">,</span> <span class="s1">&#39;result_message&#39;</span><span class="p">,</span> <span class="s1">&#39;diff_distance&#39;</span><span class="p">}</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;regex&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;output_regex&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`output_regex` needed when specified &#39;</span>
+                             <span class="s2">&quot;output-format &#39;regex&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_regex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_regex&#39;</span><span class="p">])</span>
+
+        <span class="n">supported_names</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;origin&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;message&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;severity&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;filename&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;line&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;column&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;end_line&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;end_column&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;additional_info&#39;</span>
+        <span class="p">}</span>
+        <span class="n">no_of_non_named_groups</span> <span class="o">=</span> <span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_regex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">groups</span>
+                                  <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_regex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">groupindex</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">no_of_non_named_groups</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">: Using unnecessary capturing groups &#39;</span>
+                            <span class="s1">&#39;affects the performance of coala. &#39;</span>
+                            <span class="s2">&quot;You should use &#39;(?:&lt;pattern&gt;)&#39; instead of &quot;</span>
+                            <span class="s2">&quot;&#39;(&lt;pattern&gt;)&#39; for your regex.&quot;</span>
+                            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bear_class</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">capture_group_name</span> <span class="ow">in</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_regex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">groupindex</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">capture_group_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_names</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: Superfluous capturing group &#39;</span><span class="si">{}</span><span class="s2">&#39; used. &quot;</span>
+                                <span class="s1">&#39;Is this a typo? If not, consider removing &#39;</span>
+                                <span class="s2">&quot;the capturing group to improve coala&#39;s &quot;</span>
+                                <span class="s1">&#39;performance.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bear_class</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                                      <span class="n">capture_group_name</span><span class="p">))</span>
+
+        <span class="c1"># Don&#39;t setup severity_map if one is provided by user or if it&#39;s not</span>
+        <span class="c1"># used inside the output_regex. If one is manually provided but not</span>
+        <span class="c1"># used in the output_regex, throw an exception.</span>
+        <span class="k">if</span> <span class="s1">&#39;severity_map&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;severity&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_regex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">groupindex</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Provided `severity_map` but named group &#39;</span>
+                                 <span class="s1">&#39;`severity` is not used in `output_regex`.&#39;</span><span class="p">)</span>
+            <span class="n">assert_right_type</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;severity_map&#39;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">,</span> <span class="s1">&#39;severity_map&#39;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;severity_map&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">assert_right_type</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;severity_map key&#39;</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">assert_right_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;&lt;severity_map dict-value&gt;&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s1">&#39;The value </span><span class="si">{!r}</span><span class="s1"> for key </span><span class="si">{!r}</span><span class="s1"> inside given &#39;</span>
+                        <span class="s1">&#39;severity-map is no valid severity value.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">reverse</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s1">&#39;Invalid severity value </span><span class="si">{!r}</span><span class="s1"> for key </span><span class="si">{!r}</span><span class="s1"> inside &#39;</span>
+                        <span class="s1">&#39;given severity-map.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">))</span>
+
+            <span class="c1"># Auto-convert keys to lower-case. This creates automatically a new</span>
+            <span class="c1"># dict which prevents runtime-modifications.</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;severity_map&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">value</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;severity_map&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="k">if</span> <span class="s1">&#39;result_message&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">assert_right_type</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;result_message&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;result_message&#39;</span><span class="p">)</span>
+
+        <span class="n">allowed_options</span> <span class="o">|=</span> <span class="p">{</span><span class="s1">&#39;output_regex&#39;</span><span class="p">,</span> <span class="s1">&#39;severity_map&#39;</span><span class="p">,</span> <span class="s1">&#39;result_message&#39;</span><span class="p">}</span>
+    <span class="k">elif</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid `output_format` specified.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;prerequisite_check_command&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s1">&#39;prerequisite_check_fail_message&#39;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">assert_right_type</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;prerequisite_check_fail_message&#39;</span><span class="p">],</span>
+                              <span class="nb">str</span><span class="p">,</span>
+                              <span class="s1">&#39;prerequisite_check_fail_message&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s1">&#39;prerequisite_check_fail_message&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;Prerequisite check failed.&#39;</span><span class="p">)</span>
+
+        <span class="n">allowed_options</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;prerequisite_check_fail_message&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;global_bear&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stdin&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Incompatible arguments provided:&#39;</span>
+                         <span class="s2">&quot;&#39;use_stdin&#39; and &#39;global_bear&#39; can&#39;t both be True.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check for illegal superfluous options.</span>
+    <span class="n">superfluous_options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">allowed_options</span>
+    <span class="k">if</span> <span class="n">superfluous_options</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;Invalid keyword arguments provided: &#39;</span> <span class="o">+</span>
+            <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">superfluous_options</span><span class="p">)))</span>
+
+
+<span class="k">def</span> <span class="nf">_create_linter</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+
+    <span class="n">_prepare_options</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">klass</span><span class="p">)</span>
+
+    <span class="k">class</span> <span class="nc">LinterMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">{}</span><span class="s1"> linter class (wrapping </span><span class="si">{!r}</span><span class="s1">)&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;executable&#39;</span><span class="p">])</span>
+
+    <span class="k">class</span> <span class="nc">LinterBase</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">LinterMeta</span><span class="p">):</span>
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Generates the content of a config-file the linter-tool might need.</span>
+
+<span class="sd">            The contents generated from this function are written to a</span>
+<span class="sd">            temporary file and the path is provided inside</span>
+<span class="sd">            ``create_arguments()``.</span>
+
+<span class="sd">            By default no configuration is generated.</span>
+
+<span class="sd">            You can provide additional keyword arguments and defaults. These</span>
+<span class="sd">            will be interpreted as required settings that need to be provided</span>
+<span class="sd">            through a coafile-section.</span>
+
+<span class="sd">            :param filename:</span>
+<span class="sd">                The name of the file currently processed.</span>
+<span class="sd">            :param file:</span>
+<span class="sd">                The contents of the file currently processed.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                The config-file-contents as a string or ``None``.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span> <span class="nf">get_executable</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Returns the executable of this class.</span>
+
+<span class="sd">            :return:</span>
+<span class="sd">                The executable name.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;executable&#39;</span><span class="p">]</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">check_prerequisites</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Checks whether the linter-tool the bear uses is operational.</span>
+
+<span class="sd">            :return:</span>
+<span class="sd">                True if operational, otherwise a string containing more info.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">get_executable</span><span class="p">())</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">get_executable</span><span class="p">())</span> <span class="o">+</span> <span class="s1">&#39; is not installed.&#39;</span> <span class="o">+</span>
+                        <span class="p">(</span><span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;executable_check_fail_info&#39;</span><span class="p">]</span>
+                         <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;executable_check_fail_info&#39;</span><span class="p">]</span> <span class="k">else</span>
+                         <span class="s1">&#39;&#39;</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;prerequisite_check_command&#39;</span><span class="p">]:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">check_call</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;prerequisite_check_command&#39;</span><span class="p">],</span>
+                                   <span class="n">stdout</span><span class="o">=</span><span class="n">DEVNULL</span><span class="p">,</span>
+                                   <span class="n">stderr</span><span class="o">=</span><span class="n">DEVNULL</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="n">CalledProcessError</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;prerequisite_check_fail_message&#39;</span><span class="p">]</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">_get_create_arguments_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">create_arguments</span><span class="p">,</span>
+                <span class="n">omit</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;self&#39;</span><span class="p">,</span> <span class="s1">&#39;filename&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">,</span> <span class="s1">&#39;config_file&#39;</span><span class="p">})</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">_get_generate_config_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">generate_config</span><span class="p">,</span>
+                <span class="n">omit</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;filename&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">})</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">_get_process_output_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">from_function</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">process_output</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">omitted</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;self&#39;</span><span class="p">,</span> <span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="s1">&#39;filename&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If a specific output format is provided, function signatures</span>
+                <span class="c1"># from process_output functions should not appear in the help.</span>
+                <span class="n">omitted</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">chain</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">non_optional_params</span><span class="p">,</span>
+                                    <span class="n">metadata</span><span class="o">.</span><span class="n">optional_params</span><span class="p">))</span>
+
+            <span class="n">metadata</span><span class="o">.</span><span class="n">omit</span> <span class="o">=</span> <span class="n">omitted</span>
+            <span class="k">return</span> <span class="n">metadata</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="k">def</span> <span class="nf">get_metadata</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="n">merged_metadata</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">_get_process_output_metadata</span><span class="p">(),</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">_get_generate_config_metadata</span><span class="p">(),</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">_get_create_arguments_metadata</span><span class="p">())</span>
+            <span class="n">merged_metadata</span><span class="o">.</span><span class="n">desc</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getdoc</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">merged_metadata</span>
+
+        <span class="k">def</span> <span class="nf">_convert_output_regex_match_to_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                                  <span class="n">match</span><span class="p">,</span>
+                                                  <span class="n">filename</span><span class="p">,</span>
+                                                  <span class="n">severity_map</span><span class="p">,</span>
+                                                  <span class="n">result_message</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Converts the matched named-groups of ``output_regex`` to an actual</span>
+<span class="sd">            ``Result``.</span>
+
+<span class="sd">            :param match:</span>
+<span class="sd">                The regex match object.</span>
+<span class="sd">            :param filename:</span>
+<span class="sd">                The name of the file this match belongs to or ``None`` for</span>
+<span class="sd">                project scope.</span>
+<span class="sd">            :param severity_map:</span>
+<span class="sd">                The dict to use to map the severity-match to an actual</span>
+<span class="sd">                ``RESULT_SEVERITY``.</span>
+<span class="sd">            :param result_message:</span>
+<span class="sd">                The static message to use for results instead of grabbing it</span>
+<span class="sd">                from the executable output via the ``message`` named regex</span>
+<span class="sd">                group.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># Pre process the groups</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="s1">&#39;severity&#39;</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;severity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">severity_map</span><span class="p">[</span>
+                        <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;severity&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="nb">repr</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="s1">&#39;severity&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39; not found in &#39;</span>
+                        <span class="s1">&#39;severity-map. Assuming `RESULT_SEVERITY.NORMAL`.&#39;</span><span class="p">)</span>
+                    <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;severity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;severity&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span>
+
+            <span class="k">for</span> <span class="n">variable</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;line&#39;</span><span class="p">,</span> <span class="s1">&#39;column&#39;</span><span class="p">,</span> <span class="s1">&#39;end_line&#39;</span><span class="p">,</span> <span class="s1">&#39;end_column&#39;</span><span class="p">):</span>
+                <span class="n">groups</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span>
+                                    <span class="k">if</span> <span class="n">groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span>
+                                    <span class="nb">int</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="n">variable</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="s1">&#39;origin&#39;</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;origin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> (</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">klass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                                    <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;origin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+            <span class="c1"># GlobalBears do not pass a filename to the function. But they can</span>
+            <span class="c1"># still give one through the regex</span>
+            <span class="k">if</span> <span class="n">filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;filename&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="c1"># Construct the result. If we have a filename, we</span>
+            <span class="c1"># use Result.from_values otherwise generate a project</span>
+            <span class="c1"># scope result.</span>
+            <span class="n">result_params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;origin&#39;</span><span class="p">:</span> <span class="n">groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;origin&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="p">),</span>
+                <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">result_message</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">result_message</span><span class="p">),</span>
+                <span class="s1">&#39;severity&#39;</span><span class="p">:</span> <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;severity&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;additional_info&#39;</span><span class="p">:</span> <span class="n">groups</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;additional_info&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+                <span class="nb">range</span> <span class="o">=</span> <span class="n">SourceRange</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                                <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;line&#39;</span><span class="p">],</span>
+                                                <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;column&#39;</span><span class="p">],</span>
+                                                <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;end_line&#39;</span><span class="p">],</span>
+                                                <span class="n">groups</span><span class="p">[</span><span class="s1">&#39;end_column&#39;</span><span class="p">])</span>
+                <span class="n">result_params</span><span class="p">[</span><span class="s1">&#39;affected_code&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">range</span><span class="p">,)</span>
+            <span class="k">return</span> <span class="n">Result</span><span class="p">(</span><span class="o">**</span><span class="n">result_params</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">process_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                         <span class="n">diff</span><span class="p">,</span>
+                         <span class="n">filename</span><span class="p">,</span>
+                         <span class="n">diff_severity</span><span class="p">,</span>
+                         <span class="n">result_message</span><span class="p">,</span>
+                         <span class="n">diff_distance</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Processes the given ``coalib.results.Diff`` object and yields</span>
+<span class="sd">            correction results.</span>
+
+<span class="sd">            :param diff:</span>
+<span class="sd">                An instance of ``coalib.results.Diff`` object containing</span>
+<span class="sd">                differences of the file named ``filename``.</span>
+<span class="sd">            :param filename:</span>
+<span class="sd">                The name of the file currently being corrected.</span>
+<span class="sd">            :param diff_severity:</span>
+<span class="sd">                The severity to use for generating results.</span>
+<span class="sd">            :param result_message:</span>
+<span class="sd">                The message to use for generating results.</span>
+<span class="sd">            :param diff_distance:</span>
+<span class="sd">                Number of unchanged lines that are allowed in between two</span>
+<span class="sd">                changed lines so they get yielded as one diff. If a negative</span>
+<span class="sd">                distance is given, every change will be yielded as an own diff,</span>
+<span class="sd">                even if they are right beneath each other.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                An iterator returning results containing patches for the</span>
+<span class="sd">                file to correct.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">splitted_diff</span> <span class="ow">in</span> <span class="n">diff</span><span class="o">.</span><span class="n">split_diff</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="n">diff_distance</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">Result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                             <span class="n">result_message</span><span class="p">,</span>
+                             <span class="n">affected_code</span><span class="o">=</span><span class="n">splitted_diff</span><span class="o">.</span><span class="n">affected_code</span><span class="p">(</span>
+                                 <span class="n">filename</span><span class="p">),</span>
+                             <span class="n">diffs</span><span class="o">=</span><span class="p">{</span><span class="n">filename</span><span class="p">:</span> <span class="n">splitted_diff</span><span class="p">},</span>
+                             <span class="n">severity</span><span class="o">=</span><span class="n">diff_severity</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">process_output_corrected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                     <span class="n">output</span><span class="p">,</span>
+                                     <span class="n">filename</span><span class="p">,</span>
+                                     <span class="n">file</span><span class="p">,</span>
+                                     <span class="n">diff_severity</span><span class="o">=</span><span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                                     <span class="n">result_message</span><span class="o">=</span><span class="s1">&#39;Inconsistency found.&#39;</span><span class="p">,</span>
+                                     <span class="n">diff_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Processes the executable&#39;s output as a corrected file.</span>
+
+<span class="sd">            :param output:</span>
+<span class="sd">                The output of the program as a string.</span>
+<span class="sd">            :param filename:</span>
+<span class="sd">                The filename of the file currently being corrected.</span>
+<span class="sd">            :param file:</span>
+<span class="sd">                The contents of the file currently being corrected.</span>
+<span class="sd">            :param diff_severity:</span>
+<span class="sd">                The severity to use for generating results.</span>
+<span class="sd">            :param result_message:</span>
+<span class="sd">                The message to use for generating results.</span>
+<span class="sd">            :param diff_distance:</span>
+<span class="sd">                Number of unchanged lines that are allowed in between two</span>
+<span class="sd">                changed lines so they get yielded as one diff. If a negative</span>
+<span class="sd">                distance is given, every change will be yielded as an own diff,</span>
+<span class="sd">                even if they are right beneath each other.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                An iterator returning results containing patches for the</span>
+<span class="sd">                file to correct.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_diff</span><span class="p">(</span>
+                <span class="n">Diff</span><span class="o">.</span><span class="n">from_string_arrays</span><span class="p">(</span>
+                    <span class="n">file</span><span class="p">,</span>
+                    <span class="n">output</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span>
+                <span class="n">filename</span><span class="p">,</span>
+                <span class="n">diff_severity</span><span class="p">,</span>
+                <span class="n">result_message</span><span class="p">,</span>
+                <span class="n">diff_distance</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">process_output_unified_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                                        <span class="n">output</span><span class="p">,</span>
+                                        <span class="n">filename</span><span class="p">,</span>
+                                        <span class="n">file</span><span class="p">,</span>
+                                        <span class="n">diff_severity</span><span class="o">=</span><span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                                        <span class="n">result_message</span><span class="o">=</span><span class="s1">&#39;Inconsistency found.&#39;</span><span class="p">,</span>
+                                        <span class="n">diff_distance</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Processes the executable&#39;s output as a unified diff.</span>
+
+<span class="sd">            :param output:</span>
+<span class="sd">                The output of the program as a string containing the</span>
+<span class="sd">                unified diff for correction.</span>
+<span class="sd">            :param filename:</span>
+<span class="sd">                The filename of the file currently being corrected.</span>
+<span class="sd">            :param file:</span>
+<span class="sd">                The contents of the file currently being corrected.</span>
+<span class="sd">            :param diff_severity:</span>
+<span class="sd">                The severity to use for generating results.</span>
+<span class="sd">            :param result_message:</span>
+<span class="sd">                The message-string to use for generating results.</span>
+<span class="sd">            :param diff_distance:</span>
+<span class="sd">                Number of unchanged lines that are allowed in between two</span>
+<span class="sd">                changed lines so they get yielded as one diff. If a negative</span>
+<span class="sd">                distance is given, every change will be yielded as an own diff,</span>
+<span class="sd">                even if they are right beneath each other.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                An iterator returning results containing patches for the</span>
+<span class="sd">                file to correct.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_diff</span><span class="p">(</span><span class="n">Diff</span><span class="o">.</span><span class="n">from_unified_diff</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">file</span><span class="p">),</span>
+                                     <span class="n">filename</span><span class="p">,</span>
+                                     <span class="n">diff_severity</span><span class="p">,</span>
+                                     <span class="n">result_message</span><span class="p">,</span>
+                                     <span class="n">diff_distance</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">process_output_regex</span><span class="p">(</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">output_regex</span><span class="p">,</span>
+                <span class="n">severity_map</span><span class="o">=</span><span class="n">MappingProxyType</span><span class="p">({</span>
+                    <span class="s1">&#39;critical&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;fatal&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;fail&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;err&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;e&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                    <span class="s1">&#39;warning&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                    <span class="s1">&#39;warn&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                    <span class="s1">&#39;w&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">NORMAL</span><span class="p">,</span>
+                    <span class="s1">&#39;information&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="s1">&#39;info&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="s1">&#39;note&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="s1">&#39;suggestion&#39;</span><span class="p">:</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="n">INFO</span><span class="p">}),</span>
+                <span class="n">result_message</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Processes the executable&#39;s output using a regex.</span>
+
+<span class="sd">            :param output:</span>
+<span class="sd">                The output of the program as a string.</span>
+<span class="sd">            :param filename:</span>
+<span class="sd">                The filename of the file currently being corrected.</span>
+<span class="sd">            :param file:</span>
+<span class="sd">                The contents of the file currently being corrected.</span>
+<span class="sd">            :param output_regex:</span>
+<span class="sd">                The regex to parse the output with. It should use as many</span>
+<span class="sd">                of the following named groups (via ``(?P&lt;name&gt;...)``) to</span>
+<span class="sd">                provide a good result:</span>
+
+<span class="sd">                - filename - The name of the linted file. This is relevant for</span>
+<span class="sd">                    global bears only.</span>
+<span class="sd">                - line - The line where the issue starts.</span>
+<span class="sd">                - column - The column where the issue starts.</span>
+<span class="sd">                - end_line - The line where the issue ends.</span>
+<span class="sd">                - end_column - The column where the issue ends.</span>
+<span class="sd">                - severity - The severity of the issue.</span>
+<span class="sd">                - message - The message of the result.</span>
+<span class="sd">                - origin - The origin of the issue.</span>
+<span class="sd">                - additional_info - Additional info provided by the issue.</span>
+
+<span class="sd">                The groups ``line``, ``column``, ``end_line`` and</span>
+<span class="sd">                ``end_column`` don&#39;t have to match numbers only, they can</span>
+<span class="sd">                also match nothing, the generated ``Result`` is filled</span>
+<span class="sd">                automatically with ``None`` then for the appropriate</span>
+<span class="sd">                properties.</span>
+<span class="sd">            :param severity_map:</span>
+<span class="sd">                A dict used to map a severity string (captured from the</span>
+<span class="sd">                ``output_regex`` with the named group ``severity``) to an</span>
+<span class="sd">                actual ``coalib.results.RESULT_SEVERITY`` for a result.</span>
+<span class="sd">            :param result_message:</span>
+<span class="sd">                The static message to use for results instead of grabbing it</span>
+<span class="sd">                from the executable output via the ``message`` named regex</span>
+<span class="sd">                group.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                An iterator returning results.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">output_regex</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_output_regex_match_to_result</span><span class="p">(</span>
+                    <span class="n">match</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">severity_map</span><span class="o">=</span><span class="n">severity_map</span><span class="p">,</span>
+                    <span class="n">result_message</span><span class="o">=</span><span class="n">result_message</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Check if user supplied a `process_output` override.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="s1">&#39;process_output&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;`process_output` not provided by given &#39;</span>
+                                 <span class="s1">&#39;class </span><span class="si">{!r}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">klass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+                <span class="c1"># No need to assign to `process_output` here, the class mixing</span>
+                <span class="c1"># below automatically does that.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Prevent people from accidentally defining `process_output`</span>
+            <span class="c1"># manually, as this would implicitly override the internally</span>
+            <span class="c1"># set-up `process_output`.</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="s1">&#39;process_output&#39;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Found `process_output` already defined &#39;</span>
+                                 <span class="s1">&#39;by class </span><span class="si">{!r}</span><span class="s1">, but </span><span class="si">{!r}</span><span class="s1"> output-format is &#39;</span>
+                                 <span class="s1">&#39;specified.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">klass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                                                     <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;corrected&#39;</span><span class="p">:</span>
+                <span class="n">_process_output_args</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;result_message&#39;</span><span class="p">,</span> <span class="s1">&#39;diff_severity&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;diff_distance&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">options</span><span class="p">}</span>
+
+                <span class="n">_processing_function</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span>
+                    <span class="n">process_output_corrected</span><span class="p">,</span> <span class="o">**</span><span class="n">_process_output_args</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unified-diff&#39;</span><span class="p">:</span>
+                <span class="n">_process_output_args</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;result_message&#39;</span><span class="p">,</span> <span class="s1">&#39;diff_severity&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;diff_distance&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">options</span><span class="p">}</span>
+
+                <span class="n">_processing_function</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span>
+                    <span class="n">process_output_unified_diff</span><span class="p">,</span> <span class="o">**</span><span class="n">_process_output_args</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;regex&#39;</span>
+
+                <span class="n">_process_output_args</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="n">options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;output_regex&#39;</span><span class="p">,</span> <span class="s1">&#39;severity_map&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;result_message&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">options</span><span class="p">}</span>
+
+                <span class="n">_processing_function</span> <span class="o">=</span> <span class="n">partialmethod</span><span class="p">(</span>
+                    <span class="n">process_output_regex</span><span class="p">,</span> <span class="o">**</span><span class="n">_process_output_args</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">process_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                Processes the output of the executable and yields results</span>
+<span class="sd">                accordingly.</span>
+
+<span class="sd">                :param output:</span>
+<span class="sd">                    The output of the executable. This can be either a string</span>
+<span class="sd">                    or a tuple depending on the usage of ``use_stdout`` and</span>
+<span class="sd">                    ``use_stderr`` parameters of ``@linter``. If only one of</span>
+<span class="sd">                    these arguments is ``True``, a string is placed (containing</span>
+<span class="sd">                    the selected output stream). If both are ``True``, a tuple</span>
+<span class="sd">                    is placed with ``(stdout, stderr)``.</span>
+<span class="sd">                :param filename:</span>
+<span class="sd">                    The name of the file currently processed or ``None`` for</span>
+<span class="sd">                    project scope.</span>
+<span class="sd">                :param file:</span>
+<span class="sd">                    The contents of the file (line-splitted) or ``None`` for</span>
+<span class="sd">                    project scope.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="p">(</span><span class="n">output</span><span class="p">,)</span>
+
+                <span class="k">for</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                    <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">_processing_function</span><span class="p">(</span>
+                        <span class="n">string</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+        <span class="nd">@classmethod</span>
+        <span class="nd">@contextmanager</span>
+        <span class="k">def</span> <span class="nf">_create_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Provides a context-manager that creates the config file if the</span>
+<span class="sd">            user provides one and cleans it up when done with linting.</span>
+
+<span class="sd">            :param filename:</span>
+<span class="sd">                The filename of the file being linted. ``None`` for project</span>
+<span class="sd">                scope.</span>
+<span class="sd">            :param file:</span>
+<span class="sd">                The content of the file being linted. ``None`` for project</span>
+<span class="sd">                scope.</span>
+<span class="sd">            :param kwargs:</span>
+<span class="sd">                Section settings passed from ``run()``.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                A context-manager handling the config-file.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">generate_config</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">content</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">make_temp</span><span class="p">(</span>
+                        <span class="n">suffix</span><span class="o">=</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;config_suffix&#39;</span><span class="p">])</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fl</span><span class="p">:</span>
+                        <span class="n">fl</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="n">config_file</span>
+
+        <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Runs the wrapped tool.</span>
+
+<span class="sd">            :param filename:</span>
+<span class="sd">                The filename of the file being linted. ``None`` for project</span>
+<span class="sd">                scope.</span>
+<span class="sd">            :param file:</span>
+<span class="sd">                The content of the file being linted. ``None`` for project</span>
+<span class="sd">                scope.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># Get the **kwargs params to forward to `generate_config()`</span>
+            <span class="c1"># (from `_create_config()`).</span>
+            <span class="n">generate_config_kwargs</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">filter_parameters</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_generate_config_metadata</span><span class="p">(),</span> <span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_config</span><span class="p">(</span>
+                    <span class="n">filename</span><span class="p">,</span>
+                    <span class="n">file</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">generate_config_kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
+                <span class="c1"># And now retrieve the **kwargs for `create_arguments()`.</span>
+                <span class="n">create_arguments_kwargs</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">filter_parameters</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_get_create_arguments_metadata</span><span class="p">(),</span> <span class="n">kwargs</span><span class="p">))</span>
+
+                <span class="c1"># The interface of create_arguments is different for local</span>
+                <span class="c1"># and global bears, therefore we must check here, what kind</span>
+                <span class="c1"># of bear we have.</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">LocalBear</span><span class="p">):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                                 <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span>
+                                                 <span class="o">**</span><span class="n">create_arguments_kwargs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_arguments</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span>
+                                                 <span class="o">**</span><span class="n">create_arguments_kwargs</span><span class="p">)</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">err</span><span class="p">(</span><span class="s1">&#39;The given arguments &#39;</span>
+                             <span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> are not iterable.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+                    <span class="k">return</span>
+
+                <span class="n">arguments</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_executable</span><span class="p">(),)</span> <span class="o">+</span> <span class="n">args</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Running &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arguments</span><span class="p">)))</span>
+
+                <span class="n">output</span> <span class="o">=</span> <span class="n">run_shell_command</span><span class="p">(</span>
+                    <span class="n">arguments</span><span class="p">,</span>
+                    <span class="n">stdin</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stdin&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_config_dir</span><span class="p">())</span>
+
+                <span class="n">output</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">compress</span><span class="p">(</span>
+                    <span class="n">output</span><span class="p">,</span>
+                    <span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stdout&#39;</span><span class="p">],</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stderr&#39;</span><span class="p">])))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">process_output_kwargs</span> <span class="o">=</span> <span class="n">FunctionMetadata</span><span class="o">.</span><span class="n">filter_parameters</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_get_process_output_metadata</span><span class="p">(),</span> <span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_output</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="n">process_output_kwargs</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s1">&#39;&lt;</span><span class="si">{}</span><span class="s1"> linter object (wrapping </span><span class="si">{!r}</span><span class="s1">) at </span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_executable</span><span class="p">(),</span> <span class="nb">hex</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+
+    <span class="k">class</span> <span class="nc">LocalLinterMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">LinterBase</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">LocalBear</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solving base metaclasses conflict for ``LocalLinterBase``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">LocalLinterBase</span><span class="p">(</span><span class="n">LinterBase</span><span class="p">,</span> <span class="n">LocalBear</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">LocalLinterMeta</span><span class="p">):</span>
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Creates the arguments for the linter.</span>
+
+<span class="sd">            You can provide additional keyword arguments and defaults. These</span>
+<span class="sd">            will be interpreted as required settings that need to be provided</span>
+<span class="sd">            through a coafile-section.</span>
+
+<span class="sd">            :param filename:</span>
+<span class="sd">                The name of the file the linter-tool shall process.</span>
+<span class="sd">            :param file:</span>
+<span class="sd">                The contents of the file.</span>
+<span class="sd">            :param config_file:</span>
+<span class="sd">                The path of the config-file if used. ``None`` if unused.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                A sequence of arguments to feed the linter-tool with.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">class</span> <span class="nc">GlobalLinterMeta</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">LinterBase</span><span class="p">),</span> <span class="nb">type</span><span class="p">(</span><span class="n">GlobalBear</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solving base metaclasses conflict for ``GlobalLinterBase``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+    <span class="k">class</span> <span class="nc">GlobalLinterBase</span><span class="p">(</span><span class="n">LinterBase</span><span class="p">,</span> <span class="n">GlobalBear</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">GlobalLinterMeta</span><span class="p">):</span>
+
+        <span class="nd">@staticmethod</span>
+        <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">config_file</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Creates the arguments for the linter.</span>
+
+<span class="sd">            You can provide additional keyword arguments and defaults. These</span>
+<span class="sd">            will be interpreted as required settings that need to be provided</span>
+<span class="sd">            through a coafile-section. This is the file agnostic version for</span>
+<span class="sd">            global bears.</span>
+
+<span class="sd">            :param config_file:</span>
+<span class="sd">                The path of the config-file if used. ``None`` if unused.</span>
+<span class="sd">            :return:</span>
+<span class="sd">                A sequence of arguments to feed the linter-tool with.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="n">LinterBaseClass</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">GlobalLinterBase</span> <span class="k">if</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;global_bear&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="n">LocalLinterBase</span>
+    <span class="p">)</span>
+    <span class="c1"># Mixin the linter into the user-defined interface, otherwise</span>
+    <span class="c1"># `create_arguments` and other methods would be overridden by the</span>
+    <span class="c1"># default version.</span>
+    <span class="n">result_klass</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">klass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">LinterBaseClass</span><span class="p">),</span> <span class="p">{</span>
+        <span class="s1">&#39;__module__&#39;</span><span class="p">:</span> <span class="n">klass</span><span class="o">.</span><span class="vm">__module__</span><span class="p">})</span>
+    <span class="n">result_klass</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="n">klass</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">result_klass</span>
+
+
+<span class="nd">@enforce_signature</span>
+<div class="viewcode-block" id="linter"><a class="viewcode-back" href="../../../../coalib.bearlib.abstractions.html#coalib.bearlib.abstractions.Linter.linter">[docs]</a><span class="k">def</span> <span class="nf">linter</span><span class="p">(</span><span class="n">executable</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+           <span class="n">global_bear</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">use_stdin</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">use_stdout</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+           <span class="n">use_stderr</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+           <span class="n">config_suffix</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+           <span class="n">executable_check_fail_info</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+           <span class="n">prerequisite_check_command</span><span class="p">:</span> <span class="nb">tuple</span><span class="o">=</span><span class="p">(),</span>
+           <span class="n">output_format</span><span class="p">:</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator that creates a ``Bear`` that is able to process results from</span>
+<span class="sd">    an external linter tool. Depending on the value of ``global_bear`` this</span>
+<span class="sd">    can either be a ``LocalBear`` or a ``GlobalBear``.</span>
+
+<span class="sd">    The main functionality is achieved through the ``create_arguments()``</span>
+<span class="sd">    function that constructs the command-line-arguments that get passed to your</span>
+<span class="sd">    executable.</span>
+
+<span class="sd">    &gt;&gt;&gt; @linter(&quot;xlint&quot;, output_format=&quot;regex&quot;, output_regex=&quot;...&quot;)</span>
+<span class="sd">    ... class XLintBear:</span>
+<span class="sd">    ...     @staticmethod</span>
+<span class="sd">    ...     def create_arguments(filename, file, config_file):</span>
+<span class="sd">    ...         return &quot;--lint&quot;, filename</span>
+
+<span class="sd">    Or for a ``GlobalBear`` without the ``filename`` and ``file``:</span>
+
+<span class="sd">    &gt;&gt;&gt; @linter(&quot;ylint&quot;,</span>
+<span class="sd">    ...         global_bear=True,</span>
+<span class="sd">    ...         output_format=&quot;regex&quot;,</span>
+<span class="sd">    ...         output_regex=&quot;...&quot;)</span>
+<span class="sd">    ... class YLintBear:</span>
+<span class="sd">    ...     @staticmethod</span>
+<span class="sd">    ...     def create_arguments(config_file):</span>
+<span class="sd">    ...         return &quot;--lint&quot;, filename</span>
+
+<span class="sd">    Requiring settings is possible like in ``Bear.run()`` with supplying</span>
+<span class="sd">    additional keyword arguments (and if needed with defaults).</span>
+
+<span class="sd">    &gt;&gt;&gt; @linter(&quot;xlint&quot;, output_format=&quot;regex&quot;, output_regex=&quot;...&quot;)</span>
+<span class="sd">    ... class XLintBear:</span>
+<span class="sd">    ...     @staticmethod</span>
+<span class="sd">    ...     def create_arguments(filename,</span>
+<span class="sd">    ...                          file,</span>
+<span class="sd">    ...                          config_file,</span>
+<span class="sd">    ...                          lintmode: str,</span>
+<span class="sd">    ...                          enable_aggressive_lints: bool=False):</span>
+<span class="sd">    ...         arguments = (&quot;--lint&quot;, filename, &quot;--mode=&quot; + lintmode)</span>
+<span class="sd">    ...         if enable_aggressive_lints:</span>
+<span class="sd">    ...             arguments += (&quot;--aggressive&quot;,)</span>
+<span class="sd">    ...         return arguments</span>
+
+<span class="sd">    Sometimes your tool requires an actual file that contains configuration.</span>
+<span class="sd">    ``linter`` allows you to just define the contents the configuration shall</span>
+<span class="sd">    contain via ``generate_config()`` and handles everything else for you.</span>
+
+<span class="sd">    &gt;&gt;&gt; @linter(&quot;xlint&quot;, output_format=&quot;regex&quot;, output_regex=&quot;...&quot;)</span>
+<span class="sd">    ... class XLintBear:</span>
+<span class="sd">    ...     @staticmethod</span>
+<span class="sd">    ...     def generate_config(filename,</span>
+<span class="sd">    ...                         file,</span>
+<span class="sd">    ...                         lintmode,</span>
+<span class="sd">    ...                         enable_aggressive_lints):</span>
+<span class="sd">    ...         modestring = (&quot;aggressive&quot;</span>
+<span class="sd">    ...                       if enable_aggressive_lints else</span>
+<span class="sd">    ...                       &quot;non-aggressive&quot;)</span>
+<span class="sd">    ...         contents = (&quot;&lt;xlint&gt;&quot;,</span>
+<span class="sd">    ...                     &quot;    &lt;mode&gt;&quot; + lintmode + &quot;&lt;/mode&gt;&quot;,</span>
+<span class="sd">    ...                     &quot;    &lt;aggressive&gt;&quot; + modestring + &quot;&lt;/aggressive&gt;&quot;,</span>
+<span class="sd">    ...                     &quot;&lt;/xlint&gt;&quot;)</span>
+<span class="sd">    ...         return &quot;\\n&quot;.join(contents)</span>
+<span class="sd">    ...</span>
+<span class="sd">    ...     @staticmethod</span>
+<span class="sd">    ...     def create_arguments(filename,</span>
+<span class="sd">    ...                          file,</span>
+<span class="sd">    ...                          config_file):</span>
+<span class="sd">    ...         return &quot;--lint&quot;, filename, &quot;--config&quot;, config_file</span>
+
+<span class="sd">    As you can see you don&#39;t need to copy additional keyword-arguments you</span>
+<span class="sd">    introduced from ``create_arguments()`` to ``generate_config()`` and</span>
+<span class="sd">    vice-versa. ``linter`` takes care of forwarding the right arguments to the</span>
+<span class="sd">    right place, so you are able to avoid signature duplication.</span>
+
+<span class="sd">    If you override ``process_output``, you have the same feature like above</span>
+<span class="sd">    (auto-forwarding of the right arguments defined in your function</span>
+<span class="sd">    signature).</span>
+
+<span class="sd">    Note when overriding ``process_output``: Providing a single output stream</span>
+<span class="sd">    (via ``use_stdout`` or ``use_stderr``) puts the according string attained</span>
+<span class="sd">    from the stream into parameter ``output``, providing both output streams</span>
+<span class="sd">    inputs a tuple with ``(stdout, stderr)``. Providing ``use_stdout=False``</span>
+<span class="sd">    and ``use_stderr=False`` raises a ``ValueError``. By default ``use_stdout``</span>
+<span class="sd">    is ``True`` and ``use_stderr`` is ``False``.</span>
+
+<span class="sd">    Documentation:</span>
+<span class="sd">    Bear description shall be provided at class level.</span>
+<span class="sd">    If you document your additional parameters inside ``create_arguments``,</span>
+<span class="sd">    ``generate_config`` and ``process_output``, beware that conflicting</span>
+<span class="sd">    documentation between them may be overridden. Document duplicated</span>
+<span class="sd">    parameters inside ``create_arguments`` first, then in ``generate_config``</span>
+<span class="sd">    and after that inside ``process_output``.</span>
+
+<span class="sd">    For the tutorial see:</span>
+<span class="sd">    http://api.coala.io/en/latest/Developers/Writing_Linter_Bears.html</span>
+
+<span class="sd">    :param executable:</span>
+<span class="sd">        The linter tool.</span>
+<span class="sd">    :param use_stdin:</span>
+<span class="sd">        Whether the input file is sent via stdin instead of passing it over the</span>
+<span class="sd">        command-line-interface.</span>
+<span class="sd">    :param use_stdout:</span>
+<span class="sd">        Whether to use the stdout output stream.</span>
+<span class="sd">        Incompatible with ``global_bear=True``.</span>
+<span class="sd">    :param use_stderr:</span>
+<span class="sd">        Whether to use the stderr output stream.</span>
+<span class="sd">    :param config_suffix:</span>
+<span class="sd">        The suffix-string to append to the filename of the configuration file</span>
+<span class="sd">        created when ``generate_config`` is supplied. Useful if your executable</span>
+<span class="sd">        expects getting a specific file-type with specific file-ending for the</span>
+<span class="sd">        configuration file.</span>
+<span class="sd">    :param executable_check_fail_info:</span>
+<span class="sd">        Information that is provided together with the fail message from the</span>
+<span class="sd">        normal executable check. By default no additional info is printed.</span>
+<span class="sd">    :param prerequisite_check_command:</span>
+<span class="sd">        A custom command to check for when ``check_prerequisites`` gets</span>
+<span class="sd">        invoked (via ``subprocess.check_call()``). Must be an ``Iterable``.</span>
+<span class="sd">    :param prerequisite_check_fail_message:</span>
+<span class="sd">        A custom message that gets displayed when ``check_prerequisites``</span>
+<span class="sd">        fails while invoking ``prerequisite_check_command``. Can only be</span>
+<span class="sd">        provided together with ``prerequisite_check_command``.</span>
+<span class="sd">    :param global_bear:</span>
+<span class="sd">        Whether the created bear should be a ``GlobalBear`` or not. Global</span>
+<span class="sd">        bears will be run once on the whole project, instead of once per file.</span>
+<span class="sd">        Incompatible with ``use_stdin=True``.</span>
+<span class="sd">    :param output_format:</span>
+<span class="sd">        The output format of the underlying executable. Valid values are</span>
+
+<span class="sd">        - ``None``: Define your own format by overriding ``process_output``.</span>
+<span class="sd">          Overriding ``process_output`` is then mandatory, not specifying it</span>
+<span class="sd">          raises a ``ValueError``.</span>
+<span class="sd">        - ``&#39;regex&#39;``: Parse output using a regex. See parameter</span>
+<span class="sd">          ``output_regex``.</span>
+<span class="sd">        - ``&#39;corrected&#39;``: The output is the corrected of the given file. Diffs</span>
+<span class="sd">          are then generated to supply patches for results.</span>
+<span class="sd">        - ``&#39;unified_diff&#39;``: The output is the unified diff of the corrections.</span>
+<span class="sd">          Patches are then supplied for results using this output.</span>
+
+<span class="sd">        Passing something else raises a ``ValueError``.</span>
+<span class="sd">    :param output_regex:</span>
+<span class="sd">        The regex expression as a string that is used to parse the output</span>
+<span class="sd">        generated by the underlying executable. It should use as many of the</span>
+<span class="sd">        following named groups (via ``(?P&lt;name&gt;...)``) to provide a good</span>
+<span class="sd">        result:</span>
+
+<span class="sd">        - filename - The name of the linted file. This is relevant for</span>
+<span class="sd">            global bears only.</span>
+<span class="sd">        - line - The line where the issue starts.</span>
+<span class="sd">        - column - The column where the issue starts.</span>
+<span class="sd">        - end_line - The line where the issue ends.</span>
+<span class="sd">        - end_column - The column where the issue ends.</span>
+<span class="sd">        - severity - The severity of the issue.</span>
+<span class="sd">        - message - The message of the result.</span>
+<span class="sd">        - origin - The origin of the issue.</span>
+<span class="sd">        - additional_info - Additional info provided by the issue.</span>
+
+<span class="sd">        The groups ``line``, ``column``, ``end_line`` and ``end_column`` don&#39;t</span>
+<span class="sd">        have to match numbers only, they can also match nothing, the generated</span>
+<span class="sd">        ``Result`` is filled automatically with ``None`` then for the</span>
+<span class="sd">        appropriate properties.</span>
+
+<span class="sd">        Needs to be provided if ``output_format`` is ``&#39;regex&#39;``.</span>
+<span class="sd">    :param severity_map:</span>
+<span class="sd">        A dict used to map a severity string (captured from the</span>
+<span class="sd">        ``output_regex`` with the named group ``severity``) to an actual</span>
+<span class="sd">        ``coalib.results.RESULT_SEVERITY`` for a result. Severity strings are</span>
+<span class="sd">        mapped **case-insensitive**!</span>
+
+<span class="sd">        - ``RESULT_SEVERITY.MAJOR``: Mapped by ``critical``, ``c``,</span>
+<span class="sd">          ``fatal``, ``fail``, ``f``, ``error``, ``err`` or ``e``.</span>
+<span class="sd">        - ``RESULT_SEVERITY.NORMAL``: Mapped by ``warning``, ``warn`` or ``w``.</span>
+<span class="sd">        - ``RESULT_SEVERITY.INFO``: Mapped by ``information``, ``info``, ``i``,</span>
+<span class="sd">          ``note`` or ``suggestion``.</span>
+
+<span class="sd">        A ``ValueError`` is raised when the named group ``severity`` is not</span>
+<span class="sd">        used inside ``output_regex`` and this parameter is given.</span>
+<span class="sd">    :param diff_severity:</span>
+<span class="sd">        The severity to use for all results if ``output_format`` is</span>
+<span class="sd">        ``&#39;corrected&#39;`` or ``&#39;unified_diff&#39;``. By default this value is</span>
+<span class="sd">        ``coalib.results.RESULT_SEVERITY.NORMAL``. The given value needs to be</span>
+<span class="sd">        defined inside ``coalib.results.RESULT_SEVERITY``.</span>
+<span class="sd">    :param result_message:</span>
+<span class="sd">        The message-string to use for all results. Can be used only together</span>
+<span class="sd">        with ``corrected`` or ``unified_diff`` or ``regex`` output format.</span>
+<span class="sd">        When using ``corrected`` or ``unified_diff``, the default value is</span>
+<span class="sd">        ``&quot;Inconsistency found.&quot;``, while for ``regex`` this static message is</span>
+<span class="sd">        disabled and the message matched by ``output_regex`` is used instead.</span>
+<span class="sd">    :param diff_distance:</span>
+<span class="sd">        Number of unchanged lines that are allowed in between two changed lines</span>
+<span class="sd">        so they get yielded as one diff if ``corrected`` or ``unified_diff``</span>
+<span class="sd">        output-format is given. If a negative distance is given, every change</span>
+<span class="sd">        will be yielded as an own diff, even if they are right beneath each</span>
+<span class="sd">        other. By default this value is ``1``.</span>
+<span class="sd">    :raises ValueError:</span>
+<span class="sd">        Raised when invalid options are supplied.</span>
+<span class="sd">    :raises TypeError:</span>
+<span class="sd">        Raised when incompatible types are supplied.</span>
+<span class="sd">        See parameter documentations for allowed types.</span>
+<span class="sd">    :return:</span>
+<span class="sd">        A ``LocalBear`` derivation that lints code using an external tool.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;executable&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">executable</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;output_format&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_format</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stdin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">use_stdin</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stdout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">use_stdout</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;use_stderr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">use_stderr</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;config_suffix&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config_suffix</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;executable_check_fail_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">executable_check_fail_info</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;prerequisite_check_command&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prerequisite_check_command</span>
+    <span class="n">options</span><span class="p">[</span><span class="s1">&#39;global_bear&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">global_bear</span>
+
+    <span class="k">return</span> <span class="n">partial</span><span class="p">(</span><span class="n">_create_linter</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../../index.html">
+    <img class="logo" src="../../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../coalib.html">coalib</a><ul>
+  <li><a href="../../bearlib.html">coalib.bearlib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

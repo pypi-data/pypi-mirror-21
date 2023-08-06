@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Linter Bears - Advanced Feature Reference &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../index.html" />
+    <link rel="next" title="External Bears" href="External_Bears.html" />
+    <link rel="prev" title="Linter Bears" href="Writing_Linter_Bears.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="linter-bears-advanced-feature-reference">
+<h1>Linter Bears - Advanced Feature Reference<a class="headerlink" href="#linter-bears-advanced-feature-reference" title="Permalink to this headline">¶</a></h1>
+<p>Often linters are no easy tools. To squeeze out the last bit of functionality
+and efficiency, <code class="docutils literal"><span class="pre">&#64;linter</span></code> provides some advanced features ready for use.</p>
+<div class="section" id="supplying-configuration-files-with-generate-config">
+<h2>Supplying Configuration Files with <code class="docutils literal"><span class="pre">generate_config</span></code><a class="headerlink" href="#supplying-configuration-files-with-generate-config" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes tools require a configuration file to run. <code class="docutils literal"><span class="pre">&#64;linter</span></code> supports that
+easily by overriding <code class="docutils literal"><span class="pre">generate_config()</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MyBear</span><span class="p">:</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="n">config_file</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;value1 = 1</span><span class="se">\n</span><span class="s2">&quot;</span>
+                       <span class="s2">&quot;value=2 = 2&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config_file</span>
+</pre></div>
+</div>
+<p>The string returned by this method is written into a temporary file before
+invoking <code class="docutils literal"><span class="pre">create_arguments()</span></code>. If you return <code class="docutils literal"><span class="pre">None</span></code>, no configuration file
+is generated.</p>
+<p>The path of the temporary configuration file can be accessed inside
+<code class="docutils literal"><span class="pre">create_arguments()</span></code> via the <code class="docutils literal"><span class="pre">config_file</span></code> parameter:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;...&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MyBear</span><span class="p">:</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">generate_config</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="n">config_file</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;value1 = 1</span><span class="se">\n</span><span class="s2">&quot;</span>
+                       <span class="s2">&quot;value2 = 2&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config_file</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_arguments</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;--use-config&quot;</span><span class="p">,</span> <span class="n">config_file</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">By default, no configuration file is generated.</p>
+</div>
+</div>
+<div class="section" id="custom-processing-functions-with-process-output">
+<h2>Custom Processing Functions with <code class="docutils literal"><span class="pre">process_output</span></code><a class="headerlink" href="#custom-processing-functions-with-process-output" title="Permalink to this headline">¶</a></h2>
+<p>Inside <code class="docutils literal"><span class="pre">&#64;linter</span></code> only a few output formats are supported. And they can&#8217;t be
+combined for different output streams. To specify an own output
+parsing/processing behaviour, <code class="docutils literal"><span class="pre">process_output</span></code> can be overridden.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;my_tool&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MyBear</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">process_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">output</span></code> variable contains the string output from the executable.
+Depending on how you use the <code class="docutils literal"><span class="pre">use_stdout</span></code> and <code class="docutils literal"><span class="pre">use_stderr</span></code> parameters from
+<code class="docutils literal"><span class="pre">&#64;linter</span></code>, <code class="docutils literal"><span class="pre">output</span></code> can contain either a tuple or a plain string: If
+<code class="docutils literal"><span class="pre">use_stdout</span></code> and <code class="docutils literal"><span class="pre">use_stderr</span></code> are both <code class="docutils literal"><span class="pre">True</span></code>, a tuple is placed with
+<code class="docutils literal"><span class="pre">(stdout,</span> <span class="pre">stderr)</span></code>. If only one of them is <code class="docutils literal"><span class="pre">True</span></code>, a string is passed
+(containing the output stream chosen).</p>
+<p>Inside <code class="docutils literal"><span class="pre">process_output</span></code> you need to yield results according to the executable
+output. It is also possible to combine the built-in capabilities. There are
+several functions accessible with the naming scheme
+<code class="docutils literal"><span class="pre">process_output_&lt;output-format&gt;</span></code>.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">process_output_regex</span></code>: Extracts results using a regex.</li>
+<li><code class="docutils literal"><span class="pre">process_output_corrected</span></code>: Extracts results (with patches) by using a
+corrected version of the file processed.</li>
+</ul>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;my_tool&#39;</span><span class="p">,</span>
+        <span class="n">use_stdout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">use_stderr</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MyBear</span><span class="p">:</span>
+    <span class="c1"># Assuming the tool puts a corrected version of the file into stdout</span>
+    <span class="c1"># and additional issue messages (that can&#39;t be fixed automatically)</span>
+    <span class="c1"># into stderr, let&#39;s combine both streams!</span>
+    <span class="k">def</span> <span class="nf">process_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="c1"># output is now a tuple, as we activated both, stdout and stderr.</span>
+        <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">output</span>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_output_corrected</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="n">regex</span> <span class="o">=</span> <span class="s2">&quot;(?P&lt;message&gt;.*)&quot;</span>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_output_regex</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">regex</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>JSON output is also very common:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;my_tool&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MyBear</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">process_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">output</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_values</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                                 <span class="n">message</span><span class="o">=</span><span class="n">issue</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span>
+                                 <span class="n">file</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="additional-prerequisite-check">
+<h2>Additional Prerequisite Check<a class="headerlink" href="#additional-prerequisite-check" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">&#64;linter</span></code> supports doing an additional executable check before running the
+bear, together with the normal one (checking if the executable exists). For
+example, this is useful to test for the existence of external modules (like
+Java modules).</p>
+<p>To enable this additional check with your commands, use the
+<code class="docutils literal"><span class="pre">prerequisite_check_command</span></code> parameter of <code class="docutils literal"><span class="pre">&#64;linter</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;...&#39;</span>
+        <span class="n">prerequisite_check_command</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;python3&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;import my_module&#39;</span><span class="p">))</span>
+<span class="k">class</span> <span class="nc">MyBear</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>If the default error message does not suit you, you can also supply
+<code class="docutils literal"><span class="pre">prerequisite_check_fail_message</span></code> together with
+<code class="docutils literal"><span class="pre">prerequisite_check_command</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@linter</span><span class="p">(</span><span class="n">executable</span><span class="o">=</span><span class="s1">&#39;...&#39;</span>
+        <span class="n">prerequisite_check_command</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;python3&#39;</span><span class="p">,</span> <span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;import my_module&#39;</span><span class="p">),</span>
+        <span class="n">prerequisite_check_fail_message</span><span class="o">=</span><span class="s1">&#39;my_module does not exist.&#39;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MyBear</span><span class="p">:</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Linter Bears - Advanced</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#supplying-configuration-files-with-generate-config">Supplying Configuration Files with <code class="docutils literal"><span class="pre">generate_config</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-processing-functions-with-process-output">Custom Processing Functions with <code class="docutils literal"><span class="pre">process_output</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-prerequisite-check">Additional Prerequisite Check</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Writing_Linter_Bears.html" title="previous chapter">Linter Bears</a></li>
+      <li>Next: <a href="External_Bears.html" title="next chapter">External Bears</a></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../_sources/Developers/Linter_Bears_Advanced.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,985 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.output.ConsoleInteraction &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.output.ConsoleInteraction</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+
+<span class="kn">from</span> <span class="nn">termcolor</span> <span class="k">import</span> <span class="n">colored</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># This import has side effects and is needed to make input() behave nicely</span>
+    <span class="kn">import</span> <span class="nn">readline</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">pass</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="kn">from</span> <span class="nn">coalib.misc.DictUtilities</span> <span class="k">import</span> <span class="n">inverse_dicts</span>
+<span class="kn">from</span> <span class="nn">coalib.bearlib.spacing.SpacingHelper</span> <span class="k">import</span> <span class="n">SpacingHelper</span>
+<span class="kn">from</span> <span class="nn">coalib.results.Result</span> <span class="k">import</span> <span class="n">Result</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.ApplyPatchAction</span> <span class="k">import</span> <span class="n">ApplyPatchAction</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.OpenEditorAction</span> <span class="k">import</span> <span class="n">OpenEditorAction</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.IgnoreResultAction</span> <span class="k">import</span> <span class="n">IgnoreResultAction</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.PrintDebugMessageAction</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">PrintDebugMessageAction</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.PrintMoreInfoAction</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">PrintMoreInfoAction</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coalib.results.result_actions.ShowPatchAction</span> <span class="k">import</span> <span class="n">ShowPatchAction</span>
+<span class="kn">from</span> <span class="nn">coalib.results.RESULT_SEVERITY</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">RESULT_SEVERITY</span><span class="p">,</span> <span class="n">RESULT_SEVERITY_COLORS</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coalib.settings.Setting</span> <span class="k">import</span> <span class="n">Setting</span>
+<span class="kn">from</span> <span class="nn">coala_utils.string_processing.Core</span> <span class="k">import</span> <span class="n">join_names</span>
+
+<span class="kn">from</span> <span class="nn">pygments</span> <span class="k">import</span> <span class="n">highlight</span>
+<span class="kn">from</span> <span class="nn">pygments.formatters</span> <span class="k">import</span> <span class="p">(</span><span class="n">TerminalTrueColorFormatter</span><span class="p">,</span>
+                                 <span class="n">TerminalFormatter</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pygments.filters</span> <span class="k">import</span> <span class="n">VisibleWhitespaceFilter</span>
+<span class="kn">from</span> <span class="nn">pygments.lexers</span> <span class="k">import</span> <span class="n">TextLexer</span><span class="p">,</span> <span class="n">get_lexer_for_filename</span>
+<span class="kn">from</span> <span class="nn">pygments.style</span> <span class="k">import</span> <span class="n">Style</span>
+<span class="kn">from</span> <span class="nn">pygments.token</span> <span class="k">import</span> <span class="n">Token</span>
+<span class="kn">from</span> <span class="nn">pygments.util</span> <span class="k">import</span> <span class="n">ClassNotFound</span>
+
+
+<div class="viewcode-block" id="BackgroundSourceRangeStyle"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.BackgroundSourceRangeStyle">[docs]</a><span class="k">class</span> <span class="nc">BackgroundSourceRangeStyle</span><span class="p">(</span><span class="n">Style</span><span class="p">):</span>
+    <span class="n">styles</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">Token</span><span class="p">:</span> <span class="s1">&#39;bold bg:#BB4D3E #111&#39;</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="BackgroundMessageStyle"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.BackgroundMessageStyle">[docs]</a><span class="k">class</span> <span class="nc">BackgroundMessageStyle</span><span class="p">(</span><span class="n">Style</span><span class="p">):</span>
+    <span class="n">styles</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">Token</span><span class="p">:</span> <span class="s1">&#39;bold bg:#eee #111&#39;</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="NoColorStyle"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.NoColorStyle">[docs]</a><span class="k">class</span> <span class="nc">NoColorStyle</span><span class="p">(</span><span class="n">Style</span><span class="p">):</span>
+    <span class="n">styles</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">Token</span><span class="p">:</span> <span class="s1">&#39;noinherit&#39;</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="highlight_text"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.highlight_text">[docs]</a><span class="k">def</span> <span class="nf">highlight_text</span><span class="p">(</span><span class="n">no_color</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">lexer</span><span class="o">=</span><span class="n">TextLexer</span><span class="p">(),</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">style</span><span class="p">:</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">TerminalTrueColorFormatter</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="n">style</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">TerminalTrueColorFormatter</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">no_color</span><span class="p">:</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">TerminalTrueColorFormatter</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="n">NoColorStyle</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">highlight</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lexer</span><span class="p">,</span> <span class="n">formatter</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+<span class="n">STR_GET_VAL_FOR_SETTING</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Please enter a value for the setting </span><span class="se">\&quot;</span><span class="si">{}</span><span class="se">\&quot;</span><span class="s1"> (</span><span class="si">{}</span><span class="s1">) &#39;</span>
+                           <span class="s1">&#39;needed by </span><span class="si">{}</span><span class="s1"> for section </span><span class="se">\&quot;</span><span class="si">{}</span><span class="se">\&quot;</span><span class="s1">: &#39;</span><span class="p">)</span>
+<span class="n">STR_LINE_DOESNT_EXIST</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;The line belonging to the following result &#39;</span>
+                         <span class="s1">&#39;cannot be printed because it refers to a line &#39;</span>
+                         <span class="s2">&quot;that doesn&#39;t seem to exist in the given file.&quot;</span><span class="p">)</span>
+<span class="n">STR_PROJECT_WIDE</span> <span class="o">=</span> <span class="s1">&#39;Project wide:&#39;</span>
+<span class="n">STR_ENTER_NUMBER</span> <span class="o">=</span> <span class="s1">&#39;Enter number (Ctrl-</span><span class="si">{}</span><span class="s1"> to exit): &#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+    <span class="s1">&#39;Z&#39;</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span> <span class="k">else</span> <span class="s1">&#39;D&#39;</span><span class="p">)</span>
+<span class="n">FILE_NAME_COLOR</span> <span class="o">=</span> <span class="s1">&#39;blue&#39;</span>
+<span class="n">FILE_LINES_COLOR</span> <span class="o">=</span> <span class="s1">&#39;blue&#39;</span>
+<span class="n">CAPABILITY_COLOR</span> <span class="o">=</span> <span class="s1">&#39;green&#39;</span>
+<span class="n">HIGHLIGHTED_CODE_COLOR</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span>
+<span class="n">SUCCESS_COLOR</span> <span class="o">=</span> <span class="s1">&#39;green&#39;</span>
+<span class="n">REQUIRED_SETTINGS_COLOR</span> <span class="o">=</span> <span class="s1">&#39;green&#39;</span>
+<span class="n">CLI_ACTIONS</span> <span class="o">=</span> <span class="p">(</span><span class="n">OpenEditorAction</span><span class="p">(),</span>
+               <span class="n">ApplyPatchAction</span><span class="p">(),</span>
+               <span class="n">PrintDebugMessageAction</span><span class="p">(),</span>
+               <span class="n">PrintMoreInfoAction</span><span class="p">(),</span>
+               <span class="n">ShowPatchAction</span><span class="p">(),</span>
+               <span class="n">IgnoreResultAction</span><span class="p">())</span>
+<span class="n">DIFF_EXCERPT_MAX_SIZE</span> <span class="o">=</span> <span class="mi">4</span>
+
+
+<div class="viewcode-block" id="format_lines"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.format_lines">[docs]</a><span class="k">def</span> <span class="nf">format_lines</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">line_nr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;|</span><span class="si">{:&gt;4}</span><span class="s1">| </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line_nr</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="print_section_beginning"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_section_beginning">[docs]</a><span class="k">def</span> <span class="nf">print_section_beginning</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Will be called after initialization current_section in</span>
+<span class="sd">    begin_section()</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param section:         The section that will get executed now.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;Executing section </span><span class="si">{name}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">section</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="nothing_done"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.nothing_done">[docs]</a><span class="k">def</span> <span class="nf">nothing_done</span><span class="p">(</span><span class="n">log_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Will be called after processing a coafile when nothing had to be done,</span>
+<span class="sd">    i.e. no section was enabled/targeted.</span>
+
+<span class="sd">    :param log_printer: A LogPrinter object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No existent section was targeted or enabled. &#39;</span>
+                     <span class="s1">&#39;Nothing to do.&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="acquire_actions_and_apply"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.acquire_actions_and_apply">[docs]</a><span class="k">def</span> <span class="nf">acquire_actions_and_apply</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                              <span class="n">section</span><span class="p">,</span>
+                              <span class="n">file_diff_dict</span><span class="p">,</span>
+                              <span class="n">result</span><span class="p">,</span>
+                              <span class="n">file_dict</span><span class="p">,</span>
+                              <span class="n">cli_actions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Acquires applicable actions and applies them.</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param section:         Name of section to which the result belongs.</span>
+<span class="sd">    :param file_diff_dict:  Dictionary containing filenames as keys and Diff</span>
+<span class="sd">                            objects as values.</span>
+<span class="sd">    :param result:          A derivative of Result.</span>
+<span class="sd">    :param file_dict:       A dictionary containing all files with filename as</span>
+<span class="sd">                            key.</span>
+<span class="sd">    :param cli_actions:     The list of cli actions available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cli_actions</span> <span class="o">=</span> <span class="n">CLI_ACTIONS</span> <span class="k">if</span> <span class="n">cli_actions</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">cli_actions</span>
+    <span class="n">failed_actions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">cli_actions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">action</span><span class="o">.</span><span class="n">is_applicable</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">,</span> <span class="n">file_diff_dict</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">actions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">actions</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">return</span>
+
+        <span class="n">action_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">metadata_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+            <span class="n">action_dict</span><span class="p">[</span><span class="n">metadata</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span>
+            <span class="n">metadata_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
+
+        <span class="c1"># User can always choose no action which is guaranteed to succeed</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ask_for_action_and_apply</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                                        <span class="n">section</span><span class="p">,</span>
+                                        <span class="n">metadata_list</span><span class="p">,</span>
+                                        <span class="n">action_dict</span><span class="p">,</span>
+                                        <span class="n">failed_actions</span><span class="p">,</span>
+                                        <span class="n">result</span><span class="p">,</span>
+                                        <span class="n">file_diff_dict</span><span class="p">,</span>
+                                        <span class="n">file_dict</span><span class="p">):</span>
+            <span class="k">break</span></div>
+
+
+<div class="viewcode-block" id="print_lines"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_lines">[docs]</a><span class="k">def</span> <span class="nf">print_lines</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                <span class="n">file_dict</span><span class="p">,</span>
+                <span class="n">sourcerange</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints the lines between the current and the result line. If needed</span>
+<span class="sd">    they will be shortened.</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param file_dict:       A dictionary containing all files as values with</span>
+<span class="sd">                            filenames as key.</span>
+<span class="sd">    :param sourcerange:     The SourceRange object referring to the related</span>
+<span class="sd">                            lines to print.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">no_color</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">console_printer</span><span class="o">.</span><span class="n">print_colored</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="p">,</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Print affected file&#39;s line number in the sidebar.</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_lines</span><span class="p">(</span><span class="n">lines</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">line_nr</span><span class="o">=</span><span class="n">i</span><span class="p">),</span>
+                              <span class="n">color</span><span class="o">=</span><span class="n">FILE_LINES_COLOR</span><span class="p">,</span>
+                              <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">line</span> <span class="o">=</span> <span class="n">file_dict</span><span class="p">[</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span><span class="p">][</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">lexer</span> <span class="o">=</span> <span class="n">get_lexer_for_filename</span><span class="p">(</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ClassNotFound</span><span class="p">:</span>
+            <span class="n">lexer</span> <span class="o">=</span> <span class="n">TextLexer</span><span class="p">()</span>
+        <span class="n">lexer</span><span class="o">.</span><span class="n">add_filter</span><span class="p">(</span><span class="n">VisibleWhitespaceFilter</span><span class="p">(</span>
+            <span class="n">spaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tabs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">tabsize</span><span class="o">=</span><span class="n">SpacingHelper</span><span class="o">.</span><span class="n">DEFAULT_TAB_WIDTH</span><span class="p">))</span>
+        <span class="c1"># highlight() combines lexer and formatter to output a ``str``</span>
+        <span class="c1"># object.</span>
+        <span class="n">printed_chars</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="ow">and</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span><span class="p">:</span>
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">highlight_text</span><span class="p">(</span>
+                <span class="n">no_color</span><span class="p">,</span> <span class="n">line</span><span class="p">[:</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">lexer</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+            <span class="n">printed_chars</span> <span class="o">=</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span> <span class="ow">and</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span><span class="p">:</span>
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">highlight_text</span><span class="p">(</span>
+                <span class="n">no_color</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="n">printed_chars</span><span class="p">:</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span>
+                <span class="n">lexer</span><span class="p">,</span> <span class="n">BackgroundSourceRangeStyle</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">highlight_text</span><span class="p">(</span>
+               <span class="n">no_color</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:],</span> <span class="n">lexer</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">highlight_text</span><span class="p">(</span>
+                <span class="n">no_color</span><span class="p">,</span> <span class="n">line</span><span class="p">[</span><span class="n">printed_chars</span><span class="p">:],</span> <span class="n">lexer</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_result"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_result">[docs]</a><span class="k">def</span> <span class="nf">print_result</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                 <span class="n">section</span><span class="p">,</span>
+                 <span class="n">file_diff_dict</span><span class="p">,</span>
+                 <span class="n">result</span><span class="p">,</span>
+                 <span class="n">file_dict</span><span class="p">,</span>
+                 <span class="n">interactive</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints the result to console.</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param section:         Name of section to which the result belongs.</span>
+<span class="sd">    :param file_diff_dict:  Dictionary containing filenames as keys and Diff</span>
+<span class="sd">                            objects as values.</span>
+<span class="sd">    :param result:          A derivative of Result.</span>
+<span class="sd">    :param file_dict:       A dictionary containing all files with filename as</span>
+<span class="sd">                            key.</span>
+<span class="sd">    :param interactive:     Variable to check whether or not to</span>
+<span class="sd">                            offer the user actions interactively.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">no_color</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">console_printer</span><span class="o">.</span><span class="n">print_colored</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Result</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;One of the results can not be printed since it is &#39;</span>
+                        <span class="s1">&#39;not a valid derivative of the coala result &#39;</span>
+                        <span class="s1">&#39;class.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_lines</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">{sev}</span><span class="s1">] </span><span class="si">{bear}</span><span class="s1">:&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">sev</span><span class="o">=</span><span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="p">),</span> <span class="n">bear</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">origin</span><span class="p">)),</span>
+        <span class="n">color</span><span class="o">=</span><span class="n">RESULT_SEVERITY_COLORS</span><span class="p">[</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="p">])</span>
+    <span class="n">lexer</span> <span class="o">=</span> <span class="n">TextLexer</span><span class="p">()</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">highlight_text</span><span class="p">(</span><span class="n">no_color</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                    <span class="n">lexer</span><span class="p">,</span> <span class="n">BackgroundMessageStyle</span><span class="p">)</span>
+    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_lines</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
+        <span class="n">cli_actions</span> <span class="o">=</span> <span class="n">CLI_ACTIONS</span>
+        <span class="n">show_patch_action</span> <span class="o">=</span> <span class="n">ShowPatchAction</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">show_patch_action</span><span class="o">.</span><span class="n">is_applicable</span><span class="p">(</span>
+                <span class="n">result</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">,</span> <span class="n">file_diff_dict</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">diff_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">diffs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">diff_size</span> <span class="o">&lt;=</span> <span class="n">DIFF_EXCERPT_MAX_SIZE</span><span class="p">:</span>
+                <span class="n">show_patch_action</span><span class="o">.</span><span class="n">apply_from_section</span><span class="p">(</span><span class="n">result</span><span class="p">,</span>
+                                                     <span class="n">file_dict</span><span class="p">,</span>
+                                                     <span class="n">file_diff_dict</span><span class="p">,</span>
+                                                     <span class="n">section</span><span class="p">)</span>
+                <span class="n">cli_actions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">action</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">cli_actions</span>
+                                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">ShowPatchAction</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">print_diffs_info</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">diffs</span><span class="p">,</span> <span class="n">console_printer</span><span class="p">)</span>
+        <span class="n">acquire_actions_and_apply</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                                  <span class="n">section</span><span class="p">,</span>
+                                  <span class="n">file_diff_dict</span><span class="p">,</span>
+                                  <span class="n">result</span><span class="p">,</span>
+                                  <span class="n">file_dict</span><span class="p">,</span>
+                                  <span class="n">cli_actions</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_diffs_info"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_diffs_info">[docs]</a><span class="k">def</span> <span class="nf">print_diffs_info</span><span class="p">(</span><span class="n">diffs</span><span class="p">,</span> <span class="n">printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints diffs information (number of additions and deletions) to the console.</span>
+
+<span class="sd">    :param diffs:    List of Diff objects containing corresponding diff info.</span>
+<span class="sd">    :param printer:  Object responsible for printing diffs on console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">diff</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">diffs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="n">additions</span><span class="p">,</span> <span class="n">deletions</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">stats</span><span class="p">()</span>
+        <span class="n">printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+            <span class="n">format_lines</span><span class="p">(</span><span class="s1">&#39;+</span><span class="si">{additions}</span><span class="s1"> -</span><span class="si">{deletions}</span><span class="s1"> in </span><span class="si">{file}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">file</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+                <span class="n">additions</span><span class="o">=</span><span class="n">additions</span><span class="p">,</span>
+                <span class="n">deletions</span><span class="o">=</span><span class="n">deletions</span><span class="p">)),</span>
+            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_results_formatted"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_results_formatted">[docs]</a><span class="k">def</span> <span class="nf">print_results_formatted</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span>
+                            <span class="n">section</span><span class="p">,</span>
+                            <span class="n">result_list</span><span class="p">,</span>
+                            <span class="n">file_dict</span><span class="p">,</span>
+                            <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints results through the format string from the format setting done by</span>
+<span class="sd">    user.</span>
+
+<span class="sd">    :param log_printer:    Printer responsible for logging the messages.</span>
+<span class="sd">    :param section:        The section to which the results belong.</span>
+<span class="sd">    :param result_list:    List of Result objects containing the corresponding</span>
+<span class="sd">                           results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">default_format</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id:</span><span class="si">{id}</span><span class="s1">:origin:</span><span class="si">{origin}</span><span class="s1">:file:</span><span class="si">{file}</span><span class="s1">:line:</span><span class="si">{line}</span><span class="s1">:&#39;</span>
+                      <span class="s1">&#39;column:</span><span class="si">{column}</span><span class="s1">:end_line:</span><span class="si">{end_line}</span><span class="s1">:end_column:&#39;</span>
+                      <span class="s1">&#39;</span><span class="si">{end_column}</span><span class="s1">:severity:</span><span class="si">{severity}</span><span class="s1">:severity_str:&#39;</span>
+                      <span class="s1">&#39;</span><span class="si">{severity_str}</span><span class="s1">:message:</span><span class="si">{message}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">format_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">section</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;format&#39;</span><span class="p">,</span> <span class="n">default_format</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">format_str</span> <span class="o">==</span> <span class="s1">&#39;True&#39;</span><span class="p">:</span>
+        <span class="n">format_str</span> <span class="o">=</span> <span class="n">default_format</span>
+
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">result_list</span><span class="p">:</span>
+        <span class="n">severity_str</span> <span class="o">=</span> <span class="n">RESULT_SEVERITY</span><span class="o">.</span><span class="fm">__str__</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="p">)</span>
+        <span class="n">format_args</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">affected_code</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">format_args</span><span class="p">[</span><span class="s1">&#39;affected_code&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">format_str</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">line</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">end_line</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">end_column</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                        <span class="n">severity_str</span><span class="o">=</span><span class="n">severity_str</span><span class="p">,</span>
+                                        <span class="n">message</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="n">format_args</span><span class="p">))</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="nb">range</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">affected_code</span><span class="p">:</span>
+                <span class="n">format_args</span><span class="p">[</span><span class="s1">&#39;affected_code&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span>
+                <span class="n">format_args</span><span class="p">[</span><span class="s1">&#39;source_lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="o">.</span><span class="n">affected_source</span><span class="p">(</span><span class="n">file_dict</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="n">format_str</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="nb">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
+                                        <span class="n">line</span><span class="o">=</span><span class="nb">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="p">,</span>
+                                        <span class="n">end_line</span><span class="o">=</span><span class="nb">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="p">,</span>
+                                        <span class="n">column</span><span class="o">=</span><span class="nb">range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span><span class="p">,</span>
+                                        <span class="n">end_column</span><span class="o">=</span><span class="nb">range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span><span class="p">,</span>
+                                        <span class="n">severity_str</span><span class="o">=</span><span class="n">severity_str</span><span class="p">,</span>
+                                        <span class="n">message</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="n">format_args</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+            <span class="n">log_printer</span><span class="o">.</span><span class="n">log_exception</span><span class="p">(</span>
+                <span class="s1">&#39;Unable to print the result with the given format string.&#39;</span><span class="p">,</span>
+                <span class="n">exception</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_affected_files"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_affected_files">[docs]</a><span class="k">def</span> <span class="nf">print_affected_files</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                         <span class="n">log_printer</span><span class="p">,</span>
+                         <span class="n">result</span><span class="p">,</span>
+                         <span class="n">file_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints all the affected files and affected lines within them.</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param log_printer:     Printer responsible for logging the messages.</span>
+<span class="sd">    :param result:          The result to print the context for.</span>
+<span class="sd">    :param file_dict:       A dictionary containing all files with filename as</span>
+<span class="sd">                            key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">affected_code</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">STR_PROJECT_WIDE</span><span class="p">,</span>
+                              <span class="n">color</span><span class="o">=</span><span class="n">FILE_NAME_COLOR</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sourcerange</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">affected_code</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
+                    <span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">file_dict</span><span class="p">):</span>
+                <span class="n">log_printer</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The context for the result (</span><span class="si">{}</span><span class="s1">) cannot &#39;</span>
+                                 <span class="s1">&#39;be printed because it refers to a file &#39;</span>
+                                 <span class="s2">&quot;that doesn&#39;t seem to exist (</span><span class="si">{}</span><span class="s2">)&quot;</span>
+                                 <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">print_affected_lines</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                                     <span class="n">file_dict</span><span class="p">,</span>
+                                     <span class="n">sourcerange</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_results_no_input"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_results_no_input">[docs]</a><span class="k">def</span> <span class="nf">print_results_no_input</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span>
+                           <span class="n">section</span><span class="p">,</span>
+                           <span class="n">result_list</span><span class="p">,</span>
+                           <span class="n">file_dict</span><span class="p">,</span>
+                           <span class="n">file_diff_dict</span><span class="p">,</span>
+                           <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints all non interactive results in a section</span>
+
+<span class="sd">    :param log_printer:    Printer responsible for logging the messages.</span>
+<span class="sd">    :param section:        The section to which the results belong to.</span>
+<span class="sd">    :param result_list:    List containing the results</span>
+<span class="sd">    :param file_dict:      A dictionary containing all files with filename as</span>
+<span class="sd">                           key.</span>
+<span class="sd">    :param file_diff_dict: A dictionary that contains filenames as keys and</span>
+<span class="sd">                           diff objects as values.</span>
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">result_list</span><span class="p">:</span>
+
+        <span class="n">print_affected_files</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                             <span class="n">log_printer</span><span class="p">,</span>
+                             <span class="n">result</span><span class="p">,</span>
+                             <span class="n">file_dict</span><span class="p">)</span>
+
+        <span class="n">print_result</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                     <span class="n">section</span><span class="p">,</span>
+                     <span class="n">file_diff_dict</span><span class="p">,</span>
+                     <span class="n">result</span><span class="p">,</span>
+                     <span class="n">file_dict</span><span class="p">,</span>
+                     <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_results"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_results">[docs]</a><span class="k">def</span> <span class="nf">print_results</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span>
+                  <span class="n">section</span><span class="p">,</span>
+                  <span class="n">result_list</span><span class="p">,</span>
+                  <span class="n">file_dict</span><span class="p">,</span>
+                  <span class="n">file_diff_dict</span><span class="p">,</span>
+                  <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints all the results in a section.</span>
+
+<span class="sd">    :param log_printer:    Printer responsible for logging the messages.</span>
+<span class="sd">    :param section:        The section to which the results belong to.</span>
+<span class="sd">    :param result_list:    List containing the results</span>
+<span class="sd">    :param file_dict:      A dictionary containing all files with filename as</span>
+<span class="sd">                           key.</span>
+<span class="sd">    :param file_diff_dict: A dictionary that contains filenames as keys and</span>
+<span class="sd">                           diff objects as values.</span>
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">result_list</span><span class="p">):</span>
+
+        <span class="n">print_affected_files</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                             <span class="n">log_printer</span><span class="p">,</span>
+                             <span class="n">result</span><span class="p">,</span>
+                             <span class="n">file_dict</span><span class="p">)</span>
+
+        <span class="n">print_result</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                     <span class="n">section</span><span class="p">,</span>
+                     <span class="n">file_diff_dict</span><span class="p">,</span>
+                     <span class="n">result</span><span class="p">,</span>
+                     <span class="n">file_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_affected_lines"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_affected_lines">[docs]</a><span class="k">def</span> <span class="nf">print_affected_lines</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">,</span> <span class="n">sourcerange</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints the lines affected by the bears.</span>
+
+<span class="sd">    :param console_printer:    Object to print messages on the console.</span>
+<span class="sd">    :param file_dict:          A dictionary containing all files with filename</span>
+<span class="sd">                               as key.</span>
+<span class="sd">    :param sourcerange:        The SourceRange object referring to the related</span>
+<span class="sd">                               lines to print.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span><span class="p">),</span>
+                          <span class="n">color</span><span class="o">=</span><span class="n">FILE_NAME_COLOR</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_dict</span><span class="p">[</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">file</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">sourcerange</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="p">:</span>
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_lines</span><span class="p">(</span><span class="n">lines</span><span class="o">=</span><span class="n">STR_LINE_DOESNT_EXIST</span><span class="p">,</span>
+                                               <span class="n">line_nr</span><span class="o">=</span><span class="n">sourcerange</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">print_lines</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                        <span class="n">file_dict</span><span class="p">,</span>
+                        <span class="n">sourcerange</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="require_setting"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.require_setting">[docs]</a><span class="k">def</span> <span class="nf">require_setting</span><span class="p">(</span><span class="n">setting_name</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method is responsible for prompting a user about a missing setting and</span>
+<span class="sd">    taking its value as input from the user.</span>
+
+<span class="sd">    :param setting_name: Name of the setting missing</span>
+<span class="sd">    :param arr:          A list containing a description in [0] and the name</span>
+<span class="sd">                         of the bears who need this setting in [1] and</span>
+<span class="sd">                         following.</span>
+<span class="sd">    :param section:      The section the action corresponds to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">needed</span> <span class="o">=</span> <span class="n">join_names</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="c1"># Don&#39;t use input, it can&#39;t deal with escapes!</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">colored</span><span class="p">(</span><span class="n">STR_GET_VAL_FOR_SETTING</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">setting_name</span><span class="p">,</span> <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">needed</span><span class="p">,</span>
+                                                 <span class="n">section</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                  <span class="n">REQUIRED_SETTINGS_COLOR</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">input</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="acquire_settings"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.acquire_settings">[docs]</a><span class="k">def</span> <span class="nf">acquire_settings</span><span class="p">(</span><span class="n">log_printer</span><span class="p">,</span> <span class="n">settings_names_dict</span><span class="p">,</span> <span class="n">section</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method prompts the user for the given settings.</span>
+
+<span class="sd">    :param log_printer:</span>
+<span class="sd">        Printer responsible for logging the messages. This is needed to comply</span>
+<span class="sd">        with the interface.</span>
+<span class="sd">    :param settings_names_dict:</span>
+<span class="sd">        A dictionary with the settings name as key and a list containing a</span>
+<span class="sd">        description in [0] and the name of the bears who need this setting in</span>
+<span class="sd">        [1] and following.</span>
+
+<span class="sd">                        Example:</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        {&quot;UseTabs&quot;: [&quot;describes whether tabs should be used instead of spaces&quot;,</span>
+<span class="sd">                     &quot;SpaceConsistencyBear&quot;,</span>
+<span class="sd">                     &quot;SomeOtherBear&quot;]}</span>
+
+
+<span class="sd">    :param section:</span>
+<span class="sd">        The section the action corresponds to.</span>
+<span class="sd">    :return:</span>
+<span class="sd">        A dictionary with the settings name as key and the given value as</span>
+<span class="sd">        value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">settings_names_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;The settings_names_dict parameter has to be a &#39;</span>
+                        <span class="s1">&#39;dictionary.&#39;</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">setting_name</span><span class="p">,</span> <span class="n">arr</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">settings_names_dict</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+                                    <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">join_names</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">require_setting</span><span class="p">(</span><span class="n">setting_name</span><span class="p">,</span> <span class="n">arr</span><span class="p">,</span> <span class="n">section</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">setting_name</span><span class="p">:</span> <span class="n">value</span><span class="p">}</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{})</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="get_action_info"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.get_action_info">[docs]</a><span class="k">def</span> <span class="nf">get_action_info</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">failed_actions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets all the required Settings for an action. It updates the section with</span>
+<span class="sd">    the Settings.</span>
+
+<span class="sd">    :param section:         The section the action corresponds to.</span>
+<span class="sd">    :param action:          The action to get the info for.</span>
+<span class="sd">    :param failed_actions:  A set of all actions that have failed. A failed</span>
+<span class="sd">                            action remains in the list until it is successfully</span>
+<span class="sd">                            executed.</span>
+<span class="sd">    :return:                Action name and the updated section.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">non_optional_params</span>
+
+    <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">param_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">section</span> <span class="ow">or</span> <span class="n">action</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">failed_actions</span><span class="p">:</span>
+            <span class="n">question</span> <span class="o">=</span> <span class="n">format_lines</span><span class="p">(</span>
+                <span class="s2">&quot;Please enter a value for the parameter &#39;</span><span class="si">{}</span><span class="s2">&#39; (</span><span class="si">{}</span><span class="s2">): &quot;</span>
+                <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">param_name</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Setting</span><span class="p">(</span><span class="n">param_name</span><span class="p">,</span> <span class="nb">input</span><span class="p">(</span><span class="n">question</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">action</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">section</span></div>
+
+
+<div class="viewcode-block" id="choose_action"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.choose_action">[docs]</a><span class="k">def</span> <span class="nf">choose_action</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Presents the actions available to the user and takes as input the action</span>
+<span class="sd">    the user wants to choose.</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param actions:         Actions available to the user.</span>
+<span class="sd">    :return:                Return choice of action of user.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_lines</span><span class="p">(</span><span class="s1">&#39;*0: &#39;</span> <span class="o">+</span>
+                                           <span class="s1">&#39;Do nothing&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">actions</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_lines</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:&gt;2}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="n">action</span><span class="o">.</span><span class="n">desc</span><span class="p">)))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">format_lines</span><span class="p">(</span><span class="n">STR_ENTER_NUMBER</span><span class="p">)</span>
+
+            <span class="n">choice</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">choice</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="n">choice</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span>
+            <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">choice</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">choice</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">format_lines</span><span class="p">(</span><span class="s1">&#39;Please enter a valid number.&#39;</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="print_actions"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_actions">[docs]</a><span class="k">def</span> <span class="nf">print_actions</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span> <span class="n">actions</span><span class="p">,</span> <span class="n">failed_actions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Prints the given actions and lets the user choose.</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param actions:         A list of FunctionMetadata objects.</span>
+<span class="sd">    :param failed_actions:  A set of all actions that have failed. A failed</span>
+<span class="sd">                            action remains in the list until it is</span>
+<span class="sd">                            successfully executed.</span>
+<span class="sd">    :return:                A tuple with the name member of the</span>
+<span class="sd">                            FunctionMetadata object chosen by the user</span>
+<span class="sd">                            and a Section containing at least all needed</span>
+<span class="sd">                            values for the action. If the user did</span>
+<span class="sd">                            choose to do nothing, return (None, None).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">choice</span> <span class="o">=</span> <span class="n">choose_action</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span> <span class="n">actions</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">choice</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">get_action_info</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="n">actions</span><span class="p">[</span><span class="n">choice</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">failed_actions</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ask_for_action_and_apply"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.ask_for_action_and_apply">[docs]</a><span class="k">def</span> <span class="nf">ask_for_action_and_apply</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                             <span class="n">section</span><span class="p">,</span>
+                             <span class="n">metadata_list</span><span class="p">,</span>
+                             <span class="n">action_dict</span><span class="p">,</span>
+                             <span class="n">failed_actions</span><span class="p">,</span>
+                             <span class="n">result</span><span class="p">,</span>
+                             <span class="n">file_diff_dict</span><span class="p">,</span>
+                             <span class="n">file_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Asks the user for an action and applies it.</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param section:         Currently active section.</span>
+<span class="sd">    :param metadata_list:   Contains metadata for all the actions.</span>
+<span class="sd">    :param action_dict:     Contains the action names as keys and their</span>
+<span class="sd">                            references as values.</span>
+<span class="sd">    :param failed_actions:  A set of all actions that have failed. A failed</span>
+<span class="sd">                            action remains in the list until it is successfully</span>
+<span class="sd">                            executed.</span>
+<span class="sd">    :param result:          Result corresponding to the actions.</span>
+<span class="sd">    :param file_diff_dict:  If it is an action which applies a patch, this</span>
+<span class="sd">                            contains the diff of the patch to be applied to</span>
+<span class="sd">                            the file with filename as keys.</span>
+<span class="sd">    :param file_dict:       Dictionary with filename as keys and its contents</span>
+<span class="sd">                            as values.</span>
+<span class="sd">    :return:                Returns a boolean value. True will be returned, if</span>
+<span class="sd">                            it makes sense that the user may choose to execute</span>
+<span class="sd">                            another action, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">action_name</span><span class="p">,</span> <span class="n">section</span> <span class="o">=</span> <span class="n">print_actions</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span> <span class="n">section</span><span class="p">,</span>
+                                         <span class="n">metadata_list</span><span class="p">,</span> <span class="n">failed_actions</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">action_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">chosen_action</span> <span class="o">=</span> <span class="n">action_dict</span><span class="p">[</span><span class="n">action_name</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">chosen_action</span><span class="o">.</span><span class="n">apply_from_section</span><span class="p">(</span><span class="n">result</span><span class="p">,</span>
+                                         <span class="n">file_dict</span><span class="p">,</span>
+                                         <span class="n">file_diff_dict</span><span class="p">,</span>
+                                         <span class="n">section</span><span class="p">)</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+            <span class="n">format_lines</span><span class="p">(</span><span class="n">chosen_action</span><span class="o">.</span><span class="n">SUCCESS_MESSAGE</span><span class="p">),</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">SUCCESS_COLOR</span><span class="p">)</span>
+        <span class="n">failed_actions</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">action_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Failed to execute the action </span><span class="si">{}</span><span class="s1"> with error: </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">action_name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="n">failed_actions</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">action_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="show_enumeration"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.show_enumeration">[docs]</a><span class="k">def</span> <span class="nf">show_enumeration</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                     <span class="n">title</span><span class="p">,</span>
+                     <span class="n">items</span><span class="p">,</span>
+                     <span class="n">indentation</span><span class="p">,</span>
+                     <span class="n">no_items_text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function takes as input an iterable object (preferably a list or</span>
+<span class="sd">    a dict) and prints it in a stylized format. If the iterable object is</span>
+<span class="sd">    empty, it prints a specific statement given by the user. An e.g :</span>
+
+<span class="sd">    &lt;indentation&gt;Title:</span>
+<span class="sd">    &lt;indentation&gt; * Item 1</span>
+<span class="sd">    &lt;indentation&gt; * Item 2</span>
+
+<span class="sd">    :param console_printer: Object to print messages on the console.</span>
+<span class="sd">    :param title:           Title of the text to be printed</span>
+<span class="sd">    :param items:           The iterable object.</span>
+<span class="sd">    :param indentation:     Number of spaces to indent every line by.</span>
+<span class="sd">    :param no_items_text:   Text printed when iterable object is empty.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">items</span><span class="p">:</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">indentation</span> <span class="o">+</span> <span class="n">no_items_text</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">indentation</span> <span class="o">+</span> <span class="n">title</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">items</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">indentation</span> <span class="o">+</span> <span class="s1">&#39; * &#39;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s1">&#39;: &#39;</span> <span class="o">+</span>
+                                      <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">indentation</span> <span class="o">+</span> <span class="s1">&#39; * &#39;</span> <span class="o">+</span> <span class="n">item</span><span class="p">)</span>
+    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="show_bear"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.show_bear">[docs]</a><span class="k">def</span> <span class="nf">show_bear</span><span class="p">(</span><span class="n">bear</span><span class="p">,</span>
+              <span class="n">show_description</span><span class="p">,</span>
+              <span class="n">show_params</span><span class="p">,</span>
+              <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Displays all information about a bear.</span>
+
+<span class="sd">    :param bear:             The bear to be displayed.</span>
+<span class="sd">    :param show_description: True if the main description should be shown.</span>
+<span class="sd">    :param show_params:      True if the details should be shown.</span>
+<span class="sd">    :param console_printer:  Object to print messages on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">bear</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">show_description</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">show_params</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">bear</span><span class="o">.</span><span class="n">get_metadata</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">show_description</span><span class="p">:</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+            <span class="s1">&#39;  &#39;</span> <span class="o">+</span> <span class="n">metadata</span><span class="o">.</span><span class="n">desc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">  &#39;</span><span class="p">))</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>  <span class="c1"># Add a newline</span>
+
+    <span class="k">if</span> <span class="n">show_params</span><span class="p">:</span>
+        <span class="n">show_enumeration</span><span class="p">(</span>
+            <span class="n">console_printer</span><span class="p">,</span> <span class="s1">&#39;Supported languages:&#39;</span><span class="p">,</span>
+            <span class="n">bear</span><span class="o">.</span><span class="n">LANGUAGES</span><span class="p">,</span>
+            <span class="s1">&#39;  &#39;</span><span class="p">,</span>
+            <span class="s1">&#39;The bear does not provide information about which languages &#39;</span>
+            <span class="s1">&#39;it can analyze.&#39;</span><span class="p">)</span>
+        <span class="n">show_enumeration</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                         <span class="s1">&#39;Needed Settings:&#39;</span><span class="p">,</span>
+                         <span class="n">metadata</span><span class="o">.</span><span class="n">non_optional_params</span><span class="p">,</span>
+                         <span class="s1">&#39;  &#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;No needed settings.&#39;</span><span class="p">)</span>
+        <span class="n">show_enumeration</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                         <span class="s1">&#39;Optional Settings:&#39;</span><span class="p">,</span>
+                         <span class="n">metadata</span><span class="o">.</span><span class="n">optional_params</span><span class="p">,</span>
+                         <span class="s1">&#39;  &#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;No optional settings.&#39;</span><span class="p">)</span>
+        <span class="n">show_enumeration</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                         <span class="s1">&#39;Can detect:&#39;</span><span class="p">,</span>
+                         <span class="n">bear</span><span class="o">.</span><span class="n">can_detect</span><span class="p">,</span>
+                         <span class="s1">&#39;  &#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;This bear does not provide information about what &#39;</span>
+                         <span class="s1">&#39;categories it can detect.&#39;</span><span class="p">)</span>
+        <span class="n">show_enumeration</span><span class="p">(</span><span class="n">console_printer</span><span class="p">,</span>
+                         <span class="s1">&#39;Can fix:&#39;</span><span class="p">,</span>
+                         <span class="n">bear</span><span class="o">.</span><span class="n">CAN_FIX</span><span class="p">,</span>
+                         <span class="s1">&#39;  &#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;This bear cannot fix issues or does not provide &#39;</span>
+                         <span class="s1">&#39;information about what categories it can fix.&#39;</span><span class="p">)</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+            <span class="s1">&#39;  Path:</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;   &#39;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">bear</span><span class="o">.</span><span class="n">source_location</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="print_bears"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.print_bears">[docs]</a><span class="k">def</span> <span class="nf">print_bears</span><span class="p">(</span><span class="n">bears</span><span class="p">,</span>
+                <span class="n">show_description</span><span class="p">,</span>
+                <span class="n">show_params</span><span class="p">,</span>
+                <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Presents all bears being used in a stylized manner.</span>
+
+<span class="sd">    :param bears:            It&#39;s a dictionary with bears as keys and list of</span>
+<span class="sd">                             sections containing those bears as values.</span>
+<span class="sd">    :param show_description: True if the main description of the bears should</span>
+<span class="sd">                             be shown.</span>
+<span class="sd">    :param show_params:      True if the parameters and their description</span>
+<span class="sd">                             should be shown.</span>
+<span class="sd">    :param console_printer:  Object to print messages on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">bears</span><span class="p">:</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;No bears to show. Did you forget to install &#39;</span>
+                              <span class="s1">&#39;the `coala-bears` package? Try `pip3 install &#39;</span>
+                              <span class="s1">&#39;coala-bears`.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">bear</span><span class="p">,</span> <span class="n">sections</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">bears</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span>
+                                 <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">bear_tuple</span><span class="p">:</span>
+                                 <span class="n">bear_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+        <span class="n">show_bear</span><span class="p">(</span><span class="n">bear</span><span class="p">,</span>
+                  <span class="n">show_description</span><span class="p">,</span>
+                  <span class="n">show_params</span><span class="p">,</span>
+                  <span class="n">console_printer</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="show_bears"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.show_bears">[docs]</a><span class="k">def</span> <span class="nf">show_bears</span><span class="p">(</span><span class="n">local_bears</span><span class="p">,</span>
+               <span class="n">global_bears</span><span class="p">,</span>
+               <span class="n">show_description</span><span class="p">,</span>
+               <span class="n">show_params</span><span class="p">,</span>
+               <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts all the bears from each enabled section or the sections in the</span>
+<span class="sd">    targets and passes a dictionary to the show_bears_callback method.</span>
+
+<span class="sd">    :param local_bears:      Dictionary of local bears with section names</span>
+<span class="sd">                             as keys and bear list as values.</span>
+<span class="sd">    :param global_bears:     Dictionary of global bears with section</span>
+<span class="sd">                             names as keys and bear list as values.</span>
+<span class="sd">    :param show_description: True if the main description of the bears should</span>
+<span class="sd">                             be shown.</span>
+<span class="sd">    :param show_params:      True if the parameters and their description</span>
+<span class="sd">                             should be shown.</span>
+<span class="sd">    :param console_printer:  Object to print messages on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bears</span> <span class="o">=</span> <span class="n">inverse_dicts</span><span class="p">(</span><span class="n">local_bears</span><span class="p">,</span> <span class="n">global_bears</span><span class="p">)</span>
+
+    <span class="n">print_bears</span><span class="p">(</span><span class="n">bears</span><span class="p">,</span> <span class="n">show_description</span><span class="p">,</span> <span class="n">show_params</span><span class="p">,</span> <span class="n">console_printer</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="show_language_bears_capabilities"><a class="viewcode-back" href="../../../coalib.output.html#coalib.output.ConsoleInteraction.show_language_bears_capabilities">[docs]</a><span class="k">def</span> <span class="nf">show_language_bears_capabilities</span><span class="p">(</span><span class="n">language_bears_capabilities</span><span class="p">,</span>
+                                     <span class="n">console_printer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Displays what the bears can detect and fix.</span>
+
+<span class="sd">    :param language_bears_capabilities:</span>
+<span class="sd">        Dictionary with languages as keys and their bears&#39; capabilities as</span>
+<span class="sd">        values. The capabilities are stored in a tuple of two elements where the</span>
+<span class="sd">        first one represents what the bears can detect, and the second one what</span>
+<span class="sd">        they can fix.</span>
+<span class="sd">    :param console_printer:</span>
+<span class="sd">        Object to print messages on the console.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">language_bears_capabilities</span><span class="p">:</span>
+        <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;There is no bear available for this language&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">language</span><span class="p">,</span> <span class="n">capabilities</span> <span class="ow">in</span> <span class="n">language_bears_capabilities</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">capabilities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;coala can do the following for &#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">language</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;    Can detect only: &#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+                    <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">capabilities</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">color</span><span class="o">=</span><span class="n">CAPABILITY_COLOR</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">capabilities</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;    Can fix        : &#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                    <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+                        <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">capabilities</span><span class="p">[</span><span class="mi">1</span><span class="p">])),</span>
+                        <span class="n">color</span><span class="o">=</span><span class="n">CAPABILITY_COLOR</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s1">&#39;coala does not support &#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span>
+                                      <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+                <span class="n">console_printer</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">language</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

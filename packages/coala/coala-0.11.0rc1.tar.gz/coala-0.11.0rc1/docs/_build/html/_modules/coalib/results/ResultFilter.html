@@ -1,0 +1,398 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.results.ResultFilter &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.results.ResultFilter</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">difflib</span> <span class="k">import</span> <span class="n">SequenceMatcher</span>
+
+<span class="kn">from</span> <span class="nn">coalib.results.Diff</span> <span class="k">import</span> <span class="n">ConflictError</span><span class="p">,</span> <span class="n">Diff</span>
+<span class="kn">from</span> <span class="nn">coalib.results.SourceRange</span> <span class="k">import</span> <span class="n">SourceRange</span>
+
+
+<div class="viewcode-block" id="filter_results"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.ResultFilter.filter_results">[docs]</a><span class="k">def</span> <span class="nf">filter_results</span><span class="p">(</span><span class="n">original_file_dict</span><span class="p">,</span>
+                   <span class="n">modified_file_dict</span><span class="p">,</span>
+                   <span class="n">original_results</span><span class="p">,</span>
+                   <span class="n">modified_results</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Filters results for such ones that are unique across file changes</span>
+
+<span class="sd">    :param original_file_dict: Dict of lists of file contents before  changes</span>
+<span class="sd">    :param modified_file_dict: Dict of lists of file contents after changes</span>
+<span class="sd">    :param original_results:   List of results of the old files</span>
+<span class="sd">    :param modified_results:   List of results of the new files</span>
+<span class="sd">    :return:                   List of results from new files that are unique</span>
+<span class="sd">                               from all those that existed in the old changes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">renamed_files</span> <span class="o">=</span> <span class="n">ensure_files_present</span><span class="p">(</span><span class="n">original_file_dict</span><span class="p">,</span>
+                                         <span class="n">modified_file_dict</span><span class="p">)</span>
+    <span class="c1"># diffs_dict[file] is a diff between the original and modified file</span>
+    <span class="n">diffs_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">original_file_dict</span><span class="p">:</span>
+        <span class="n">diffs_dict</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="n">Diff</span><span class="o">.</span><span class="n">from_string_arrays</span><span class="p">(</span>
+            <span class="n">original_file_dict</span><span class="p">[</span><span class="n">file</span><span class="p">],</span>
+            <span class="n">modified_file_dict</span><span class="p">[</span><span class="n">renamed_files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">file</span><span class="p">)])</span>
+
+    <span class="n">orig_result_diff_dict_dict</span> <span class="o">=</span> <span class="n">remove_result_ranges_diffs</span><span class="p">(</span><span class="n">original_results</span><span class="p">,</span>
+                                                            <span class="n">original_file_dict</span><span class="p">)</span>
+
+    <span class="n">mod_result_diff_dict_dict</span> <span class="o">=</span> <span class="n">remove_result_ranges_diffs</span><span class="p">(</span><span class="n">modified_results</span><span class="p">,</span>
+                                                           <span class="n">modified_file_dict</span><span class="p">)</span>
+
+    <span class="n">unique_results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">m_r</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">modified_results</span><span class="p">):</span>
+        <span class="n">unique</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">o_r</span> <span class="ow">in</span> <span class="n">original_results</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="n">basics_match</span><span class="p">(</span><span class="n">o_r</span><span class="p">,</span> <span class="n">m_r</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">source_ranges_match</span><span class="p">(</span><span class="n">original_file_dict</span><span class="p">,</span>
+                                       <span class="n">diffs_dict</span><span class="p">,</span>
+                                       <span class="n">orig_result_diff_dict_dict</span><span class="p">[</span><span class="n">o_r</span><span class="p">],</span>
+                                       <span class="n">mod_result_diff_dict_dict</span><span class="p">[</span><span class="n">m_r</span><span class="p">],</span>
+                                       <span class="n">renamed_files</span><span class="p">):</span>
+
+                    <span class="c1"># at least one original result matches completely</span>
+                    <span class="n">unique</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="k">break</span>
+        <span class="k">if</span> <span class="n">unique</span><span class="p">:</span>
+            <span class="n">unique_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m_r</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">unique_results</span></div>
+
+
+<div class="viewcode-block" id="basics_match"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.ResultFilter.basics_match">[docs]</a><span class="k">def</span> <span class="nf">basics_match</span><span class="p">(</span><span class="n">original_result</span><span class="p">,</span>
+                 <span class="n">modified_result</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks whether the following properties of two results match:</span>
+<span class="sd">    * origin</span>
+<span class="sd">    * message</span>
+<span class="sd">    * severity</span>
+<span class="sd">    * debug_msg</span>
+
+<span class="sd">    :param original_result: A result of the old files</span>
+<span class="sd">    :param modified_result: A result of the new files</span>
+<span class="sd">    :return:                Boolean value whether or not the properties match</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">original_result</span><span class="p">,</span> <span class="n">member</span><span class="p">)</span> <span class="o">==</span>
+               <span class="nb">getattr</span><span class="p">(</span><span class="n">modified_result</span><span class="p">,</span> <span class="n">member</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;origin&#39;</span><span class="p">,</span> <span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="s1">&#39;severity&#39;</span><span class="p">,</span> <span class="s1">&#39;debug_msg&#39;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="source_ranges_match"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.ResultFilter.source_ranges_match">[docs]</a><span class="k">def</span> <span class="nf">source_ranges_match</span><span class="p">(</span><span class="n">original_file_dict</span><span class="p">,</span>
+                        <span class="n">diff_dict</span><span class="p">,</span>
+                        <span class="n">original_result_diff_dict</span><span class="p">,</span>
+                        <span class="n">modified_result_diff_dict</span><span class="p">,</span>
+                        <span class="n">renamed_files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks whether the SourceRanges of two results match</span>
+
+<span class="sd">    :param original_file_dict: Dict of lists of file contents before changes</span>
+<span class="sd">    :param diff_dict:          Dict of diffs describing the changes per file</span>
+<span class="sd">    :param original_result_diff_dict: diff for each file for this result</span>
+<span class="sd">    :param modified_result_diff_dict: guess</span>
+<span class="sd">    :param renamed_files:   A dictionary containing file renamings across runs</span>
+<span class="sd">    :return:                     Boolean value whether the SourceRanges match</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">original_file_dict</span><span class="p">:</span>
+
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># fails if the affected range of the result get&#39;s modified</span>
+            <span class="n">original_total_diff</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff_dict</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">+</span>
+                                   <span class="n">original_result_diff_dict</span><span class="p">[</span><span class="n">file_name</span><span class="p">])</span>
+        <span class="k">except</span> <span class="n">ConflictError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># original file with file_diff and original_diff applied</span>
+        <span class="n">original_total_file</span> <span class="o">=</span> <span class="n">original_total_diff</span><span class="o">.</span><span class="n">modified</span>
+        <span class="c1"># modified file with modified_diff applied</span>
+        <span class="n">modified_total_file</span> <span class="o">=</span> <span class="n">modified_result_diff_dict</span><span class="p">[</span>
+            <span class="n">renamed_files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)]</span><span class="o">.</span><span class="n">modified</span>
+        <span class="k">if</span> <span class="n">original_total_file</span> <span class="o">!=</span> <span class="n">modified_total_file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="remove_range"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.ResultFilter.remove_range">[docs]</a><span class="k">def</span> <span class="nf">remove_range</span><span class="p">(</span><span class="n">file_contents</span><span class="p">,</span> <span class="n">source_range</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    removes the chars covered by the sourceRange from the file</span>
+
+<span class="sd">    :param file_contents: list of lines in the file</span>
+<span class="sd">    :param source_range:  Source Range</span>
+<span class="sd">    :return:              list of file contents without specified chars removed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_contents</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">newfile</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">file_contents</span><span class="p">)</span>
+    <span class="c1"># attention: line numbers in the SourceRange are human-readable,</span>
+    <span class="c1"># list indices start with 0</span>
+
+    <span class="n">source_range</span> <span class="o">=</span> <span class="n">source_range</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">file_contents</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">==</span> <span class="n">source_range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span><span class="p">:</span>
+        <span class="c1"># if it&#39;s all in one line, replace the line by it&#39;s beginning and end</span>
+        <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][:</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="o">+</span> <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="n">source_range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># cut away after start</span>
+        <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][:</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">column</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># cut away before end</span>
+        <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="n">source_range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">column</span><span class="p">:])</span>
+
+        <span class="c1"># start: index = first line number ==&gt; line after first line</span>
+        <span class="c1"># end: index = last line -2 ==&gt; line before last line</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span>
+                <span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="p">,</span> <span class="n">source_range</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="k">del</span> <span class="n">newfile</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c1"># remove leftover empty lines</span>
+        <span class="c1"># the first line here is actually the former `source_range.end.line -1`</span>
+        <span class="k">if</span> <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">newfile</span><span class="p">[</span><span class="n">source_range</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">line</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">newfile</span></div>
+
+
+<div class="viewcode-block" id="remove_result_ranges_diffs"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.ResultFilter.remove_result_ranges_diffs">[docs]</a><span class="k">def</span> <span class="nf">remove_result_ranges_diffs</span><span class="p">(</span><span class="n">result_list</span><span class="p">,</span> <span class="n">file_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the diffs to all files in file_dict that describe the removal of</span>
+<span class="sd">    each respective result&#39;s affected code.</span>
+
+<span class="sd">    :param result_list: list of results</span>
+<span class="sd">    :param file_dict:   dict of file contents</span>
+<span class="sd">    :return:            returnvalue[result][file] is a diff of the changes the</span>
+<span class="sd">                        removal of this result&#39;s affected code would cause for</span>
+<span class="sd">                        the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result_diff_dict_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">original_result</span> <span class="ow">in</span> <span class="n">result_list</span><span class="p">:</span>
+        <span class="n">mod_file_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">file_dict</span><span class="p">)</span>
+
+        <span class="c1"># gather all source ranges from this result</span>
+        <span class="n">source_ranges</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># SourceRanges must be sorted backwards and overlaps must be eliminated</span>
+        <span class="c1"># this way, the deletion based on sourceRanges is not offset by</span>
+        <span class="c1"># previous deletions in the same line that invalidate the indices.</span>
+        <span class="n">previous</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">source_range</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">original_result</span><span class="o">.</span><span class="n">affected_code</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="c1"># previous exists and overlaps</span>
+            <span class="k">if</span> <span class="n">previous</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">source_range</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="n">previous</span><span class="p">):</span>
+                <span class="n">combined_sr</span> <span class="o">=</span> <span class="n">SourceRange</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">previous</span><span class="p">,</span> <span class="n">source_range</span><span class="p">)</span>
+                <span class="n">previous</span> <span class="o">=</span> <span class="n">combined_sr</span>
+            <span class="k">elif</span> <span class="n">previous</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">previous</span> <span class="o">=</span> <span class="n">source_range</span>
+            <span class="c1"># previous exists but it doesn&#39;t overlap</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">source_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">previous</span><span class="p">)</span>
+                <span class="n">previous</span> <span class="o">=</span> <span class="n">source_range</span>
+        <span class="c1"># don&#39;t forget last entry if there were any:</span>
+        <span class="k">if</span> <span class="n">previous</span><span class="p">:</span>
+            <span class="n">source_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">previous</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">source_range</span> <span class="ow">in</span> <span class="n">source_ranges</span><span class="p">:</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">source_range</span><span class="o">.</span><span class="n">file</span>
+            <span class="n">new_file</span> <span class="o">=</span> <span class="n">remove_range</span><span class="p">(</span><span class="n">mod_file_dict</span><span class="p">[</span><span class="n">file_name</span><span class="p">],</span>
+                                    <span class="n">source_range</span><span class="p">)</span>
+            <span class="n">mod_file_dict</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_file</span>
+
+        <span class="n">diff_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">file_dict</span><span class="p">:</span>
+            <span class="n">diff_dict</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Diff</span><span class="o">.</span><span class="n">from_string_arrays</span><span class="p">(</span>
+                <span class="n">file_dict</span><span class="p">[</span><span class="n">file_name</span><span class="p">],</span>
+                <span class="n">mod_file_dict</span><span class="p">[</span><span class="n">file_name</span><span class="p">])</span>
+
+        <span class="n">result_diff_dict_dict</span><span class="p">[</span><span class="n">original_result</span><span class="p">]</span> <span class="o">=</span> <span class="n">diff_dict</span>
+
+    <span class="k">return</span> <span class="n">result_diff_dict_dict</span></div>
+
+
+<div class="viewcode-block" id="ensure_files_present"><a class="viewcode-back" href="../../../coalib.results.html#coalib.results.ResultFilter.ensure_files_present">[docs]</a><span class="k">def</span> <span class="nf">ensure_files_present</span><span class="p">(</span><span class="n">original_file_dict</span><span class="p">,</span> <span class="n">modified_file_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensures that all files are available as keys in both dicts.</span>
+
+<span class="sd">    :param original_file_dict: Dict of lists of file contents before  changes</span>
+<span class="sd">    :param modified_file_dict: Dict of lists of file contents after changes</span>
+<span class="sd">    :return:                   Return a dictionary of renamed files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">original_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">original_file_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">modified_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">modified_file_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">affected_files</span> <span class="o">=</span> <span class="n">original_files</span> <span class="o">|</span> <span class="n">modified_files</span>
+    <span class="n">original_unique_files</span> <span class="o">=</span> <span class="n">affected_files</span> <span class="o">-</span> <span class="n">modified_files</span>
+    <span class="n">renamed_files_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">filter_file</span><span class="p">:</span> <span class="n">filter_file</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">original_files</span><span class="p">,</span>
+            <span class="n">affected_files</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">comparable_file</span> <span class="ow">in</span> <span class="n">original_unique_files</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">SequenceMatcher</span><span class="p">(</span>
+                <span class="kc">None</span><span class="p">,</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">modified_file_dict</span><span class="p">[</span><span class="n">file</span><span class="p">]),</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">original_file_dict</span><span class="p">[</span><span class="n">comparable_file</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">real_quick_ratio</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="mf">0.5</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">ratio</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+                <span class="n">renamed_files_dict</span><span class="p">[</span><span class="n">comparable_file</span><span class="p">]</span> <span class="o">=</span> <span class="n">file</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">original_file_dict</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">filter_file</span><span class="p">:</span> <span class="n">filter_file</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">modified_files</span><span class="p">,</span>
+            <span class="n">affected_files</span><span class="p">):</span>
+        <span class="n">modified_file_dict</span><span class="p">[</span><span class="n">file</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">renamed_files_dict</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

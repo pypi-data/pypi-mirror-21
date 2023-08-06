@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>coalib.misc.Shell &#8212; coala 0.11.0.rc1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.11.0.rc1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="top" title="coala 0.11.0.rc1 documentation" href="../../../index.html" />
+    <link rel="up" title="coalib" href="../../coalib.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for coalib.misc.Shell</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="k">import</span> <span class="n">PIPE</span><span class="p">,</span> <span class="n">Popen</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="k">import</span> <span class="n">which</span>
+
+
+<div class="viewcode-block" id="ShellCommandResult"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.Shell.ShellCommandResult">[docs]</a><span class="k">class</span> <span class="nc">ShellCommandResult</span><span class="p">(</span><span class="nb">tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The result of a :func:`coalib.misc.run_shell_command` call.</span>
+
+<span class="sd">    It is based on a ``(stdout, stderr)`` string tuple like it is returned</span>
+<span class="sd">    form ``subprocess.Popen.communicate`` and was originally returned from</span>
+<span class="sd">    :func:`coalib.misc.run_shell_command`. So it is backwards-compatible.</span>
+
+<span class="sd">    It additionally stores the return ``.code``:</span>
+
+<span class="sd">    &gt;&gt;&gt; process = Popen([&#39;python&#39;, &#39;-c&#39;,</span>
+<span class="sd">    ...                  &#39;import sys; print(sys.stdin.readline().strip() +&#39;</span>
+<span class="sd">    ...                  &#39;                  &quot; processed&quot;)&#39;],</span>
+<span class="sd">    ...                 stdin=PIPE, stdout=PIPE, stderr=PIPE,</span>
+<span class="sd">    ...                 universal_newlines=True)</span>
+
+<span class="sd">    &gt;&gt;&gt; stdout, stderr = process.communicate(input=&#39;data&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; stderr</span>
+<span class="sd">    &#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; result = ShellCommandResult(process.returncode, stdout, stderr)</span>
+<span class="sd">    &gt;&gt;&gt; result[0]</span>
+<span class="sd">    &#39;data processed\\n&#39;</span>
+<span class="sd">    &gt;&gt;&gt; result[1]</span>
+<span class="sd">    &#39;&#39;</span>
+<span class="sd">    &gt;&gt;&gt; result.code</span>
+<span class="sd">    0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the basic tuple from `stdout` and `stderr`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Stores the return `code`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span></div>
+
+
+<span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="run_interactive_shell_command"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.Shell.run_interactive_shell_command">[docs]</a><span class="k">def</span> <span class="nf">run_interactive_shell_command</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs a single command in shell and provides stdout, stderr and stdin</span>
+<span class="sd">    streams.</span>
+
+<span class="sd">    This function creates a context manager that sets up the process (using</span>
+<span class="sd">    ``subprocess.Popen()``), returns to caller and waits for process to exit on</span>
+<span class="sd">    leaving.</span>
+
+<span class="sd">    By default the process is opened in ``universal_newlines`` mode and creates</span>
+<span class="sd">    pipes for all streams (stdout, stderr and stdin) using ``subprocess.PIPE``</span>
+<span class="sd">    special value. These pipes are closed automatically, so if you want to get</span>
+<span class="sd">    the contents of the streams you should retrieve them before the context</span>
+<span class="sd">    manager exits.</span>
+
+<span class="sd">    &gt;&gt;&gt; with run_interactive_shell_command([&quot;echo&quot;, &quot;TEXT&quot;]) as p:</span>
+<span class="sd">    ...     stdout = p.stdout</span>
+<span class="sd">    ...     stdout_text = stdout.read()</span>
+<span class="sd">    &gt;&gt;&gt; stdout_text</span>
+<span class="sd">    &#39;TEXT\\n&#39;</span>
+<span class="sd">    &gt;&gt;&gt; stdout.closed</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Custom streams provided are not closed except of ``subprocess.PIPE``.</span>
+
+<span class="sd">    &gt;&gt;&gt; from tempfile import TemporaryFile</span>
+<span class="sd">    &gt;&gt;&gt; stream = TemporaryFile()</span>
+<span class="sd">    &gt;&gt;&gt; with run_interactive_shell_command([&quot;echo&quot;, &quot;TEXT&quot;],</span>
+<span class="sd">    ...                                    stdout=stream) as p:</span>
+<span class="sd">    ...     stderr = p.stderr</span>
+<span class="sd">    &gt;&gt;&gt; stderr.closed</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; stream.closed</span>
+<span class="sd">    False</span>
+
+<span class="sd">    :param command: The command to run on shell. This parameter can either</span>
+<span class="sd">                    be a sequence of arguments that are directly passed to</span>
+<span class="sd">                    the process or a string. A string gets splitted beforehand</span>
+<span class="sd">                    using ``shlex.split()``. If providing ``shell=True`` as a</span>
+<span class="sd">                    keyword-argument, no ``shlex.split()`` is performed and the</span>
+<span class="sd">                    command string goes directly to ``subprocess.Popen()``.</span>
+<span class="sd">    :param kwargs:  Additional keyword arguments to pass to</span>
+<span class="sd">                    ``subprocess.Popen`` that are used to spawn the process.</span>
+<span class="sd">    :return:        A context manager yielding the process started from the</span>
+<span class="sd">                    command.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shell&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="c1"># subprocess doesn&#39;t implicitly look for .bat and .cmd scripts when</span>
+        <span class="c1"># running commands under Windows</span>
+        <span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">which</span><span class="p">(</span><span class="n">command</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;stdout&#39;</span><span class="p">:</span> <span class="n">PIPE</span><span class="p">,</span>
+            <span class="s1">&#39;stderr&#39;</span><span class="p">:</span> <span class="n">PIPE</span><span class="p">,</span>
+            <span class="s1">&#39;stdin&#39;</span><span class="p">:</span> <span class="n">PIPE</span><span class="p">,</span>
+            <span class="s1">&#39;universal_newlines&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+    <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">process</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">process</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;stdout&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="n">PIPE</span><span class="p">:</span>
+            <span class="n">process</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;stderr&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="n">PIPE</span><span class="p">:</span>
+            <span class="n">process</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s1">&#39;stdin&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="n">PIPE</span><span class="p">:</span>
+            <span class="n">process</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="run_shell_command"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.Shell.run_shell_command">[docs]</a><span class="k">def</span> <span class="nf">run_shell_command</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs a single command in shell and returns the read stdout and stderr data.</span>
+
+<span class="sd">    This function waits for the process (created using ``subprocess.Popen()``)</span>
+<span class="sd">    to exit. Effectively it wraps ``run_interactive_shell_command()`` and uses</span>
+<span class="sd">    ``communicate()`` on the process.</span>
+
+<span class="sd">    See also ``run_interactive_shell_command()``.</span>
+
+<span class="sd">    :param command: The command to run on shell. This parameter can either</span>
+<span class="sd">                    be a sequence of arguments that are directly passed to</span>
+<span class="sd">                    the process or a string. A string gets splitted beforehand</span>
+<span class="sd">                    using ``shlex.split()``.</span>
+<span class="sd">    :param stdin:   Initial input to send to the process.</span>
+<span class="sd">    :param kwargs:  Additional keyword arguments to pass to</span>
+<span class="sd">                    ``subprocess.Popen`` that is used to spawn the process.</span>
+<span class="sd">    :return:        A tuple with ``(stdoutstring, stderrstring)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">run_interactive_shell_command</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">stdin</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ShellCommandResult</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="o">*</span><span class="n">ret</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_shell_type"><a class="viewcode-back" href="../../../coalib.misc.html#coalib.misc.Shell.get_shell_type">[docs]</a><span class="k">def</span> <span class="nf">get_shell_type</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Finds the current shell type based on the outputs of common pre-defined</span>
+<span class="sd">    variables in them. This is useful to identify which sort of escaping</span>
+<span class="sd">    is required for strings.</span>
+
+<span class="sd">    :return: The shell type. This can be either &quot;powershell&quot; if Windows</span>
+<span class="sd">             Powershell is detected, &quot;cmd&quot; if command prompt is been</span>
+<span class="sd">             detected or &quot;sh&quot; if it&#39;s neither of these.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">run_shell_command</span><span class="p">(</span><span class="s1">&#39;echo $host.name&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;ConsoleHost&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;powershell&#39;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">run_shell_command</span><span class="p">(</span><span class="s1">&#39;echo $0&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;$0&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;cmd&#39;</span>
+    <span class="k">return</span> <span class="s1">&#39;sh&#39;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../../index.html">
+    <img class="logo" src="../../../_static//images/coala_logo.svg" alt="Logo"/>
+    
+    <h1 class="logo logo-name">coala</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=coala&repo=coala&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Home</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference external" href="http://coala.io/coc">Code of Conduct</a></li>
+</ul>
+<p class="caption"><span class="caption-text">coala API Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../coalib.html">coalib package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Developers</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Newcomers_Guide.html">Newcomers&#8217; Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/coala_settings.html">Documentation coala settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Bear_Installation_Tool.html">Bear Installation Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Good_Commits.html">Writing Good Commit Messages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Codestyle.html">Codestyle</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Git_Basics.html">Git Basics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Review.html">Review</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Development_Setup.html">Development Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Adding_CI.html">Adding CI to your Fork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Native_Bears.html">Writing Native Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Linter_Bears.html">Writing Linter Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Linter_Bears_Advanced.html">Linter Bears - Advanced</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/External_Bears.html">External Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Testing_Bears.html">Testing Bears</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Tests.html">Writing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Writing_Documentation.html">Writing Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Executing_Tests.html">Executing Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../Developers/Useful_Links.html">Useful Links</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../coalib.html">coalib</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, The coala Developers.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.9</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+    <a href="https://github.com/coala/coala" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
