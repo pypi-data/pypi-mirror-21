@@ -1,0 +1,60 @@
+{% if siteInfoData.displayNavBar %}
+        <div class="tm-sidebar">
+            {% if siteInfoData.displayLogo %}
+                {% if siteInfoData.siteLogo %}
+                    <a href="{{siteInfoData.siteLogoLinkTo}}">
+                        <img src="{{siteInfoData.siteLogo.url}}" 
+                        {% if siteInfoData.siteLogo %}
+                            width={{siteInfoData.siteLogoWidth}} 
+                        {% endif %}
+                        alt="{{siteInfoData.siteLogoText}}" 
+                        title="{{siteInfoData.siteLogoText}}" 
+                        class="img-fluid tm-sidebar-image"
+                        {% if siteInfoData.siteLogoPadding %}
+                            style="margin:{{siteInfoData.siteLogoPadding}}px;" 
+                        {% endif %}
+                        >
+                    </a>
+                {% endif %}
+            {% endif %}
+             <nav class="tm-main-nav"
+                {% if siteInfoData.displayImageHeader %} 
+                    {% if siteInfoData.siteHeadBgImg %}
+                        style="background-image: url('{{siteInfoData.siteHeadBgImg.url}}'); background-size: cover; background-color:blue; color:blue; margin-left:80px;" 
+                    {% endif %} 
+                {% endif %}
+                 >
+                <ul >
+                        <li class="tm-nav-item">
+                            <a class="tm-nav-item-link" 
+                                href="/" >
+                                {{siteInfoData.siteHomeLabel}} 
+                            </a>
+                        </li>
+                  
+                    {% for item in itemList %} 
+                        <li class="tm-nav-item">
+                            <a class="tm-nav-item-link" 
+                                href="#{{item.itemCategory}}" >
+                                {%if item.itemDescription %}
+                                    {{item.itemDescription}}
+                                {% else %}
+                                    {{item.itemCategory}}
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </div>
+        <div class="tm-sidebar2" >
+        
+        {% if siteInfoData.displayImageHeader %} 
+                    {% if siteInfoData.siteHeadBgImg %}
+                        <img src='{{siteInfoData.siteHeadBgImg.url}}' />
+                    {% endif %} 
+                {% endif %}
+
+        </div>
+
+{% endif %}

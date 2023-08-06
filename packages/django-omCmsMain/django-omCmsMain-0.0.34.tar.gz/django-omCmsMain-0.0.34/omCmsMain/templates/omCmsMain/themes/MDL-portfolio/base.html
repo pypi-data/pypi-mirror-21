@@ -1,0 +1,59 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="omCms theme - A portfolio template that uses Material Design Lite.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    {% block head-meta %}
+
+    {% endblock %}
+
+   <title>{% block head-title %}omCms - Theme: {{siteInfoData.siteTheme.themeName}} - Base Title{% endblock %}</title>
+    
+    {% static "" as staticBaseUrl %}
+
+    <!-- Material Design Lite -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.grey-pink.min.css" />
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <!-- Load Theme Styles CSS, if defined -->
+    {% if siteInfoData.siteTheme %}
+        <link rel="stylesheet" href="{{staticBaseUrl}}omCmsMain/themes/{{siteInfoData.siteTheme.themeName}}/css/themeStyle.css" />
+    {% endif %}
+
+    <!-- Local Styles CSS -->
+    <link rel="stylesheet" href="{{staticBaseUrl}}omCmsMain/themes/{{siteInfoData.siteTheme.themeName}}/css/omCmsStyle.css" />
+
+    {% block head-js-analytics %}<script>/* Place for Google Analytics*/</script>{% endblock %}
+
+</head>
+
+<body>
+
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header"> <!-- Here whe have to tweak the layout, from Theme Configuration Definitions -->
+  {% block body-header %}Body Header{% endblock %}
+  {% block body-main %}Body Main {% endblock %}
+  {% block body-footer %}Body Footer{% endblock %}
+</div>
+    <!-- script tags
+    
+    ============================================================= -->
+    
+    <!-- jQuery  -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.js"></script>
+    
+    <!-- Theme specific js  -->
+    <script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+    
+    <!-- Adicional omCms specific js  -->
+    <script src="{{staticBaseUrl}}omCmsMain/themes/{{siteInfoData.siteTheme.themeName}}/js/omCms.js"></script>
+
+</body>
+</html>

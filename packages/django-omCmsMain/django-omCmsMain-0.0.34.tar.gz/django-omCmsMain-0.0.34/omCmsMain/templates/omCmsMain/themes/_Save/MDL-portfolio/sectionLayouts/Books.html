@@ -1,0 +1,33 @@
+<!--h4>
+  <strong>{{articleitem.title|safe}} </strong>
+</h4>    
+    
+{% if articleitem.subTitle %} <h5>{{articleitem.subTitle|safe}} </h5> {% endif %}
+    {% if articleitem.teaser %}<p>{{articleitem.teaser|safe}} </p> {% endif %}
+    {% if articleitem.teaserImage %}
+        <img src="{{articleitem.teaserImage.url}}" /> 
+    {% endif %}
+    {% if articleitem.body1 %}<p>{{articleitem.body1|safe}}</p>{% endif %}
+    <hr /-->
+    <div class="mdl-cell mdl-card mdl-shadow--4dp portfolio-card">
+        {% if articleitem.teaserImage %}
+            <div class="mdl-card__media">
+                <a href="{{item.itemCategory}}/{{articleitem.pk}}">
+                    <img class="article-image" src="{{articleitem.teaserImage.url}}" border="0" alt="{{articleitem.title|safe}}" title="{{articleitem.title|safe}}">
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">{{articleitem.title|safe}}</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            {{articleitem.subTitle|safe}}
+        </div>
+        <div class="mdl-card__supporting-text">
+            {{articleitem.teaser|safe}}
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+            <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect mdl-button--accent" href="{{item.itemCategory}}/{{articleitem.pk}}">{{item.itemReadMore}}</a>
+        </div>
+    </div>

@@ -1,0 +1,90 @@
+{% if siteInfoData.displayNavBar %}
+    <!--nav class="navbar navbar-default" style="margin:10px;">
+        <div class="container-fluid">
+            <div class="navbar-header">
+              <a class="navbar-brand" href="#">{{siteInfoData.siteName}}</a>
+            </div>
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="#">{{siteInfoData.siteHomeLabel}}</a></li>
+                    {% for item in itemList %} 
+                        <li><a href="#{{item.itemCategory}}">{{item.itemCategory}}</a></li>
+                    {% endfor %}
+            </ul>
+        </div>
+    </nav>
+
+<hr /-->
+    <!-- ====================================================
+    header section -->
+    <header class="top-header">
+        <div class="container"  
+                                {% if siteInfoData.displayImageHeader %} 
+                                    {% if siteInfoData.siteHeadBgImg %}
+                                        style="background-image: url('{{siteInfoData.siteHeadBgImg.url}}'); background-size: cover;" 
+                                    {% endif %} 
+                                {% endif %} 
+                            >
+            <div class="row">
+                <div class="col-xs-3 header-logo">
+                    {% if siteInfoData.displayLogo %}
+                        <br>
+                        <a href="#">
+                            <img  {% if siteInfoData.siteLogoWidth %} width={{siteInfoData.siteLogoWidth}}{% endif %} 
+                                  {% if siteInfoData.siteLogoHeight %} height={{siteInfoData.siteLogoHeight}}{% endif %} 
+                                  src="{{siteInfoData.siteLogo.url}}" 
+                                  alt="{{siteInfoData.siteHomeLabel}}" 
+                                  class="img-responsive logo" 
+                                  style="float:left;"
+                                  />
+                        </a>
+                        <div class="logoText" >
+                            {% if siteInfoData.siteLogoText %}  
+                                <a href="{% if siteInfoData.siteLogoLinkTo %}{{siteInfoData.siteLogoLinkTo}}{% else %}/{% endif %}">
+                                    <h2>{{siteInfoData.siteLogoText}}</h2>
+                                </a>
+                                {% endif %}
+                        </div>
+                    {% endif %}        
+                </div>
+
+                <div class="col-md-9">
+                    <nav class="navbar navbar-default">
+                      <div class="container-fluid nav-bar">
+                        <!-- Brand and toggle get grouped for better mobile display -->
+                        <div class="navbar-header">
+                          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                          </button>
+                        </div>
+
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                          
+                          <ul class="nav navbar-nav navbar-right">
+                            <li class="active"><a href="#">{% if siteInfoData.siteHomeLabel %}{{siteInfoData.siteHomeLabel}}{% else %} Home {% endif %}</a></li>
+                            {% for item in itemList %} 
+                                <li><a href="#{{item.itemCategory}}">
+                                        {%if item.itemDescription %}
+                                            {{item.itemDescription}}
+                                        {% else %}
+                                            {{item.itemCategory}}
+                                        {% endif %}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                          </ul>
+                        </div><!-- /navbar-collapse -->
+                      </div><!-- / .container-fluid -->
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header> <!-- end of header area -->
+
+<hr />
+
+
+{% endif %}
