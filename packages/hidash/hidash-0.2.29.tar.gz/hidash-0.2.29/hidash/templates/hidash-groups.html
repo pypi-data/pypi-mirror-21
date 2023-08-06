@@ -1,0 +1,33 @@
+{% load staticfiles %}
+<html>
+<head>
+		<link rel="stylesheet" href="{% static "libs/bootstrap/dist/css/bootstrap.css" %}">
+    <link rel="stylesheet" href="{% static "css/reports.css" %}">
+</head>
+<body>
+    <div class="row dashboard-header">
+			<h3>Chart Groups</h3>
+		</div>
+    <section class="container">    
+      {% for hidash_group in hidash_groups %}
+        <div class="col-md-6 col-xs-12">
+        	<div class="groups-heading">
+				  	<span class="col-md-10 col-xs-10">{{hidash_group.group_name}}</span>
+            <a href="/hidash-api/show_reports/?group={{hidash_group.group_name}}">
+    		    	<button type="button" class="col-md-2 col-xs-2 btn btn-default">
+    			    	View
+    			    </button>
+            </a>
+					</div>
+          <ul class="list-group">
+          	{% for chart in hidash_group.charts %}
+	           	<li class="list-group-item">
+	           		{{ chart }}
+	           	</li>
+           	{% endfor %}
+         	</ul>
+        </div>
+      {% endfor %}
+    </section>
+</body>
+</html>

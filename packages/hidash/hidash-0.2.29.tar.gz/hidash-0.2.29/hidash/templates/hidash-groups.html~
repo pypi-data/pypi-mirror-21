@@ -1,0 +1,43 @@
+{% load staticfiles %}
+<html>
+<head>
+    <link rel="stylesheet" href="{% static "libs/angular-material/angular-material.min.css" %}">
+    <link rel="stylesheet" href="{% static "css/reports.css" %}">
+</head>
+<body ng-app="groups">
+    <md-toolbar layout="row" layout-align="center center" layout-padding>
+        <md-whiteframe  class="md-whiteframe-4dp" flex="15" >
+            <div layout= "row" layout-align="center center">Hidash Chart Groups</div>
+        </md-whiteframe>    
+    </md-toolbar>
+    <section layout="row"  layout-sm="column" layout-xs="column" layout-align="center" layout-wrap layout-margin class="report-area">    
+        {% for hidash_group in hidash_groups %}
+            <md-whiteframe  class="card md-whiteframe-4dp" flex="45" flex-sm="100" flex-xs="100" layout="column" layout-wrap>
+                <md-toolbar class="toolbar" layout="row" layout-align="center center" layout-padding>
+                    <div flex>
+                        <span flex>{{hidash_group.group_name}}</span>
+                    </div>
+                    <div flex layout="row" layout-align="end">
+                        <md-button flex="10" class="md-accent md-raised">
+                            <a href="/hidash-api/show_reports/?group={{hidash_group.group_name}}">View</a>
+                        </md-button>
+                    </div>
+                </md-toolbar>
+                <md-list flex>
+           <md-list-item ng-repeat="chart in {{hidash_group.charts}}">
+                            <div class="md-list-item-text" layout="column">
+                      <p>{% verbatim %}{{ chart }}{% endverbatim %}</p>
+                    </div>
+              </md-list-item>
+          </md-list>
+            </md-whiteframe>
+        {% endfor %}
+    </section>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.0/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.0/angular-animate.min.js"></script>
+    <script src="{% static "libs/angular-aria/angular-aria.min.js"  %}"></script>
+    <script src="{% static "libs/angular-messages/angular-messages.min.js"  %}"></script>
+    <script src="{% static "libs/angular-material/angular-material.min.js"  %}"></script>
+    <script src="{% static "js/groups-app.js"  %}"></script>
+</body>
+</html>
