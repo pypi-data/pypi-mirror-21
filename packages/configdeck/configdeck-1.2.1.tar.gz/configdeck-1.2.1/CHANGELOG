@@ -1,0 +1,377 @@
+##########
+Change Log
+##########
+
+Configdeck
+##########
+
+This document is the `change log`_ for this distribution. It is a
+record of all notable changes in each version released.
+
+Version strings conform to the `Semantic Versioning`_ specification,
+`version 2.0.0 <http://semver.org/spec/v2.0.0.html>`__.
+
+..  _change log: http://keepachangelog.com/
+..  _Semantic Versioning: https://semver.org/
+
+
+Version 1.2.1
+=============
+
+:Released: 2017-04-25
+:Maintainer: Ben Finney <ben+python@benfinney.id.au>
+
+Bug fixes
+---------
+
+* Several `try […] except` suites were overly broad, catching
+  exceptions that should instead propagate normally. These are now
+  narrowed to specify only the statements and exception classes
+  needed.
+
+  Pagure: https://pagure.io/python-configdeck/issue/5
+
+Additions
+---------
+
+* The project now documents the Code of Conduct for contributors.
+
+* The documentation now includes guidelines for contributions.
+
+* The `SchemaConfigParser` now implements the `read_file` API from
+  Python 3's `configparser` API recommendation.
+
+  Pagure: https://pagure.io/python-configdeck/issue/4
+
+Removals
+--------
+
+* The `SchemaConfigParser.readfp` API is deprecated in favour of
+  `read_file`.
+
+  Pagure: https://pagure.io/python-configdeck/issue/4
+
+
+Version 1.2.0
+=============
+
+:Released: 2017-04-22
+:Maintainer: Ben Finney <ben+python@benfinney.id.au>
+
+Known issues
+------------
+
+* Python 3.4 and later have changed the behaviour of `configparser` in
+  a way that breaks `SchemaConfigParser`. This code base currently
+  does not support Python 3.4 and later.
+
+  Pagure: https://pagure.io/python-configdeck/issue/1
+
+Bug fixes
+---------
+
+* The `ini2schema` function did not obey the `Option.short_name`
+  attribute for command-line options.
+
+* Interpolation of values was incorrectly parsing items for list and
+  dict option types.
+
+  Pagure: https://pagure.io/python-configdeck/issue/3
+
+* The interpolation of values was incorrectly ignoring errors when
+  parsing a value.
+
+  Pagure: https://pagure.io/python-configdeck/issue/2
+
+Changes
+-------
+
+* The project is now named Configdeck.
+
+* The top-level Python package that was named `configglue` is now
+  named `configdeck`.
+
+* The `configglue.glue` module is now named `configdeck.deck`.
+
+
+Version 1.1.3
+=============
+
+:Released: 2015-10-10
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Bug fixes
+---------
+
+* Multiple included configuration files are now parsed once each, and
+  in the order they are specified.
+
+* The same section defined in multiple files were incorrectly
+  overriding a previously-parsed section with the same name from
+  another file.
+
+Additions
+---------
+
+* Configglue now supports Python 2 versions 2.6, 2.7, and Python 3
+  versions 3.2, 3.3, 3.4, 3.5.
+
+* Value interpolation in a configuration file can now access values
+  defined in a different configuration file.
+
+
+Version 1.1.2
+=============
+
+:Released: 2013-07-11
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Bug fixes
+---------
+
+* The differences between Python 2 and Python 3 implementations of
+  `ConfigParser` are now abstracted using code from Python's standard
+  library.
+
+
+Version 1.1.1
+=============
+
+:Released: 2013-07-08
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Bug fixes
+---------
+
+* The configuration file is now opened using an explicit text
+  encoding, to avoid unwanted differences between locales.
+
+
+Version 1.1.0
+=============
+
+:Released: 2013-05-27
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Additions
+---------
+
+* Configglue now supports Python 2 versions 2.6, 2.7, and Python 3
+  versions 3.2, 3.3.
+
+* Environment variables may now also be interpolated in values using
+  shell-style ``${FOO}`` syntax.
+
+Changes
+-------
+
+* Configglue now uses its own named loggers, via Python's `logging`
+  framework, to emit log messages.
+
+
+Version 1.0.3
+=============
+
+:Released: 2012-05-05
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Changes
+-------
+
+* The plug-in schema that was named `OpenIdSchema` is now named
+  `DjangoOpenIdAuthSchema`.
+
+* The plug-in schema that was named `StatsdSchema` is now named
+  `PyStatsdSchema`.
+
+
+Version 1.0.2
+=============
+
+:Released: 2012-04-25
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Additions
+---------
+
+* The following plug-in schemas are now installed:
+
+  * `DevServerSchema`
+  * `DjangoJenkinsSchema`
+  * `NexusSchema`
+  * `OpenIdSchema`
+  * `PreflightSchema`
+  * `RavenSchema`
+  * `Saml2IdpSchema`
+  * `StatsdSchema`
+
+
+Version 1.0.1
+=============
+
+:Released: 2012-01-04
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Bug fixes
+---------
+
+* Option values that specified value interpolation were sometimes not
+  parsed correctly.
+
+
+Version 1.0
+===========
+
+:Release: 2011-08-05
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Additions
+---------
+
+* The `App` class constructor now accepts a parameter for the
+  command-line option parser – an `optparse.OptionParser` instance –
+  to use.
+
+* Complex option types – e.g. `ListOption`, `DictOption` – can now
+  accept a value from the command-line options. The value is parsed as
+  JSON and deserialised to the option value.
+
+* The command-line parser option 'validate' now instructs the program
+  to validate its configuration, and exit with an error if the
+  validation fails.
+
+* The configuration file parser now emits a warning-level log message
+  if the configuration file cannot be read.
+
+Changes
+-------
+
+* All the modules from the `configglue.pyschema` package are now
+  located in the `configglue` package.
+
+* All the option classes that were named `…ConfigOption` are now named
+  `…Option`. For example, `IntConfigOption` is now named `IntOption`.
+
+* The classes that were named `ConfigOption` and `ConfigSection` are
+  now named `Option` and `Section`, respectively.
+
+Removals
+--------
+
+* The `configglue.pyschema` package is removed.
+
+
+Version 0.11.1
+==============
+
+:Released: 2011-07-09
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Bug fixes
+---------
+
+* Extra sections in `DictOption` and `ListOption` were sometimes
+  failing to parse extra sections.
+
+Additions
+---------
+
+* The command-line option name can now be set explicitly on an option
+  definition.
+
+  Closes: LP#733977.
+
+* The documentation now describes many changes in past versions.
+
+
+Version 0.11
+============
+
+:Released: 2011-06-24
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Bug fixes
+---------
+
+* The `fatal` attribute of an option now does not prevent the `--help`
+  option from working.
+
+  Closes: LP#757955.
+
+* Option values are now represented as Python objects of the
+  appropriate type, and converted to and from text strings only when
+  needed.
+
+  Closes: LP#793060.
+
+Additions
+---------
+
+* All the option classes named `…ConfigOption` now have aliases named
+  `…Option`. For example, `IntConfigOption` has an alias named
+  `IntOption`. These aliases are now the recommended names.
+
+* The classes named `ConfigOption` and `ConfigSection` now have
+  aliases named `Option` and `Section`, respectively. These aliases
+  are now the recommended names.
+
+* The classes `configglue.app.App` and `configglue.app.Config` allows
+  defining an application and its configuration.
+
+* Configuration options are now also parsed from corresponding
+  environment variables, if set.
+
+* A configuration file can specify a value interpolated with an
+  environment variable's value.
+
+Changes
+-------
+
+* A section must now be defined as a class within the schema class
+  definition.
+
+  Closes: LP#753395.
+
+
+Version 0.10
+============
+
+:Released: 2011-05-02
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+Additions
+---------
+
+* The `SchemaConfigParser.write` method now supports non-ASCII (as
+  well as ASCII) data.
+
+Changes
+-------
+
+* The configuration file parser now inherits from the recommended
+  `ConfigParser.SafeConfigParser`.
+
+
+Version 0.9.1
+=============
+
+:Released: 2010-12-28
+:Maintainer: Ricardo Kirkner <ricardo.kirkner@canonical.com>
+
+First versioned release of ‘configglue’.
+
+
+..
+    This document is written using `reStructuredText`_ markup, and can
+    be rendered with `Docutils`_ to other formats.
+
+    ..  _Docutils: http://docutils.sourceforge.net/
+    ..  _reStructuredText: http://docutils.sourceforge.net/rst.html
+
+..
+    Local variables:
+    coding: utf-8
+    mode: text
+    mode: rst
+    End:
+    vim: fileencoding=utf-8 filetype=rst :
