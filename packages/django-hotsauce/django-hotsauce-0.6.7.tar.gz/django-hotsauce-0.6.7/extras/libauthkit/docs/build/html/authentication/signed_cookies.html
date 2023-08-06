@@ -1,0 +1,229 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Signed cookies &mdash; libauthkit 0.4.9 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.9',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="libauthkit 0.4.9 documentation" href="../index.html" />
+    <link rel="next" title="Release notes" href="../releasenotes.html" />
+    <link rel="prev" title="Authentication middleware" href="middleware.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../releasenotes.html" title="Release notes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="middleware.html" title="Authentication middleware"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">libauthkit 0.4.9 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="signed-cookies">
+<h1>Signed cookies<a class="headerlink" href="#signed-cookies" title="Permalink to this headline">¶</a></h1>
+<p>Cookie handling based on paste.auth.auth_tkt but with some bug fixes and
+improvements</p>
+<p>Supported cookie options (described in detail in the AuthKit manual):</p>
+<div class="highlight-python"><div class="highlight"><pre>cookie_name
+cookie_secure
+cookie_includeip
+cookie_signoutpath
+cookie_secret
+cookie_enforce_expires
+cookie_params = expires
+                path
+                comment
+                domain
+                max-age
+                secure
+                version
+</pre></div>
+</div>
+<p>Supported in the middleware but not yet used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">tokens</span><span class="o">=</span><span class="p">()</span>
+<span class="n">user_data</span><span class="o">=</span><span class="s">&#39;&#39;</span>
+<span class="n">time</span><span class="o">=</span><span class="bp">None</span>
+</pre></div>
+</div>
+<p>Features compared to the original paste version:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>The authenticate middleware should use authkit version of make_middleware</li>
+<li>We need the BadTicket handling in place</li>
+<li>We need to be able to use a custom AuthTicket</li>
+<li>The custom AuthTicket should accept cookie params specifiable in the
+config file</li>
+<li>The cookie timestamp should be available in the environment as
+paste.auth_tkt.timestamp</li>
+</ol>
+</div></blockquote>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>You shouldn&#8217;t rely on the bad ticket or server side expires code because
+when they are triggered, the sign in form isn&#8217;t displayed.</p>
+<p class="last">Instead it is better to let the cookie expire naturally. For this reason
+the server side expiration allows a second longer than the cookie expire
+time so it only kicks in if the cookie fails to expire.</p>
+</div>
+<p>Here is an example:</p>
+<div class="highlight-Python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">paste.httpserver</span> <span class="kn">import</span> <span class="n">serve</span>
+<span class="kn">from</span> <span class="nn">authkit.authenticate</span> <span class="kn">import</span> <span class="n">middleware</span><span class="p">,</span> <span class="n">test_app</span>
+
+<span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">username</span><span class="o">==</span><span class="n">password</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">middleware</span><span class="p">(</span>
+    <span class="n">test_app</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s">&#39;form&#39;</span><span class="p">,</span>
+    <span class="n">cookie_secret</span><span class="o">=</span><span class="s">&#39;secret encryption string&#39;</span><span class="p">,</span>
+    <span class="n">valid</span><span class="o">=</span><span class="n">valid</span><span class="p">,</span>
+    <span class="n">cookie_signoutpath</span> <span class="o">=</span> <span class="s">&#39;/signout&#39;</span><span class="p">,</span>
+    <span class="n">cookie_params</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">        expires:10</span>
+<span class="s">        comment:test cookie</span>
+<span class="s">    &#39;&#39;&#39;</span><span class="p">,</span>
+    <span class="n">cookie_enforce</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="p">)</span>
+<span class="n">serve</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The username of the REMOTE_USER variable is stored in plain text in the cookie and
+so is any user data you specify so you should be aware of these facts and
+design your application accordingly. In particular you should definitely
+not store passwords as user data.</p>
+</div>
+<div class="section" id="bad-cookie-support">
+<h2>Bad Cookie Support<a class="headerlink" href="#bad-cookie-support" title="Permalink to this headline">¶</a></h2>
+<p>If a cookie has expired or because there is an error parsing the ticket, it
+is known as a bad cookie. By default, a simple HTML page is displayed with
+the title &#8220;Bad Cookie&#8221; and a brief message. The headers sent with this page
+remove the cookie.</p>
+<p>You may want to disable this functionality and let your application handle
+the error condition. You can do so with this option:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">authkit</span><span class="o">.</span><span class="n">cookie</span><span class="o">.</span><span class="n">badcookie</span><span class="o">.</span><span class="n">page</span> <span class="o">=</span> <span class="n">false</span>
+</pre></div>
+</div>
+<p>When a bad cookie is found the variable <tt class="docutils literal"><span class="pre">authkit.cookie.error</span></tt> is set in
+the environment with a value <tt class="docutils literal"><span class="pre">True</span></tt>. If the error was due to cookie
+expiration the value <tt class="docutils literal"><span class="pre">authkit.cookie.timeout</span></tt> is also set to <tt class="docutils literal"><span class="pre">True</span></tt>. It
+is then up to your application to set an appropriate cookie or restrict
+access to resources. AuthKit will also remove any <tt class="docutils literal"><span class="pre">REMOTE_USER</span></tt> present.</p>
+<p>Rather than handling the bad cookie in your application you may just want
+to change the template used by AuthKit. You do so like this:</p>
+<div class="highlight-python"><div class="highlight"><pre>authkit.cookie.badcookie.page = false
+authkit.cookie.badcookie.template.string = &lt;html&gt;Bad Cookie&lt;/html&gt;
+</pre></div>
+</div>
+<p>You can use any of the template options you use to customise a form so
+you can also specify a function to render the template:</p>
+<div class="highlight-python"><div class="highlight"><pre>authkit.cookie.badcookie.page = false
+authkit.cookie.badcookie.template.obj = mymodule.auth:render_badcookie
+</pre></div>
+</div>
+<p>The render function can also take optional <tt class="docutils literal"><span class="pre">environ</span></tt> and <tt class="docutils literal"><span class="pre">state</span></tt>
+arguments which are passed in by AuthKit if the function takes them as named
+arguments.</p>
+<p>One thing to be aware of when using this functionality is that because the
+render function gets called as the request is first passed along the middleware
+chain, many of the tools your application relies on are not yet set up so
+you may not be able to use all the tools you usually do. This is unlike
+thr forms situation where the form render function is called on the response
+after all your usual application infrastructure is in place.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Signed cookies</a><ul>
+<li><a class="reference internal" href="#bad-cookie-support">Bad Cookie Support</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="middleware.html"
+                        title="previous chapter">Authentication middleware</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../releasenotes.html"
+                        title="next chapter">Release notes</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/authentication/signed_cookies.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../releasenotes.html" title="Release notes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="middleware.html" title="Authentication middleware"
+             >previous</a> |</li>
+        <li><a href="../index.html">libauthkit 0.4.9 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Etienne Robillard.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Authentication middleware &mdash; libauthkit 0.4.9 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.4.9',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="libauthkit 0.4.9 documentation" href="../index.html" />
+    <link rel="next" title="Signed cookies" href="signed_cookies.html" />
+    <link rel="prev" title="Welcome to libauthkit’s documentation!" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="signed_cookies.html" title="Signed cookies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Welcome to libauthkit’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">libauthkit 0.4.9 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="authentication-middleware">
+<h1>Authentication middleware<a class="headerlink" href="#authentication-middleware" title="Permalink to this headline">¶</a></h1>
+<p>This module provides the <tt class="docutils literal"><span class="pre">authkit.authenticate.middleware</span></tt> middleware which is used to
+intercept responses with a specified status code, present a user with a means of authenticating
+themselves and handle the sign in process.</p>
+<p>Each of the authentication methods supported by the middleware is described in
+detail in the main AuthKit manual. The methods include:</p>
+<ul class="simple">
+<li>HTTP Basic (<tt class="docutils literal"><span class="pre">basic</span></tt>)</li>
+<li>HTTP Digest (<tt class="docutils literal"><span class="pre">digest</span></tt>)</li>
+<li>OpenID Passurl (<tt class="docutils literal"><span class="pre">openid</span></tt>)</li>
+<li>Form and Cookie (<tt class="docutils literal"><span class="pre">form</span></tt>)</li>
+<li>Forward (<tt class="docutils literal"><span class="pre">forward</span></tt>)</li>
+<li>Redirect (<tt class="docutils literal"><span class="pre">redirect</span></tt>)</li>
+</ul>
+<p>The authenticate middleware can be configured directly or by means of a Paste
+deploy config file as used by Pylons. It can be used directly like this:</p>
+<div class="highlight-Python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">authkit.authenticate</span> <span class="kn">import</span> <span class="n">middleware</span><span class="p">,</span> <span class="n">test_app</span>
+<span class="kn">from</span> <span class="nn">paste.httpserver</span> <span class="kn">import</span> <span class="n">serve</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">middleware</span><span class="p">(</span>
+    <span class="n">test_app</span><span class="p">,</span>
+    <span class="n">enable</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="s">&#39;passurl&#39;</span><span class="p">,</span>
+    <span class="n">cookie_secret</span><span class="o">=</span><span class="s">&#39;some_secret&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">serve</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s">&#39;0.0.0.0&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../index.html"
+                        title="previous chapter">Welcome to libauthkit&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="signed_cookies.html"
+                        title="next chapter">Signed cookies</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/authentication/middleware.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="signed_cookies.html" title="Signed cookies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Welcome to libauthkit’s documentation!"
+             >previous</a> |</li>
+        <li><a href="../index.html">libauthkit 0.4.9 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2016, Etienne Robillard.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

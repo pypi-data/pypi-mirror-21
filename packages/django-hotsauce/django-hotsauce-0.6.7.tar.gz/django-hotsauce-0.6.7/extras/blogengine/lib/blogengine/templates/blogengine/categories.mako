@@ -1,0 +1,26 @@
+## -*- coding: utf-8 -*-
+<%inherit file="/layout.mako"/>
+
+<%
+## Get the latest entries and sort them by their
+## pub_date in descending order.
+categories = data['categories']
+categories.sort()
+%>
+
+<%def name="pagetitle()">
+Categories
+</%def>
+
+
+<div class="ui-widget whitebg b1">
+<h2 class="feature generic">Categories</h2>
+<ul class="colorList greybg2">
+% for item in categories:
+% if item.slug:
+<li><a href="/blog/categories/${item.slug}/" title="${item}">${item.slug}</a></li>
+% endif
+% endfor
+</ul>
+</div>
+
