@@ -1,0 +1,24 @@
+import rnftools
+
+rnftools.mishmash.sample("simple_end_simulation",reads_in_tuple=1)
+
+fa="../../../example1.fa"
+
+rnftools.mishmash.ArtIllumina(
+	fasta=fa,
+	number_of_read_tuples=10000,
+	read_length_1=100,
+	read_length_2=0,
+)
+
+rnftools.mishmash.sample("paired_end_simulation",reads_in_tuple=2)
+
+rnftools.mishmash.ArtIllumina(
+	fasta=fa,
+	number_of_read_tuples=10000,
+	read_length_1=100,
+	read_length_2=100,
+)
+
+include: rnftools.include()
+rule: input: rnftools.input()
