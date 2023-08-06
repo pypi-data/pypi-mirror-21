@@ -1,0 +1,208 @@
+
+
+
+/* AdminUI page header
+
+The basic components of a header is:
+
+```
+.adminui-page-header  (the outer wrapper)
+    .adminui-page-header__content   (wrapper around the content of the header)
+        .adminui-page-header__brand   (container for a brand)
+        .adminui-page-header__nav     (navigation elements)
+            .adminui-page-header__navlink        (navigation element link)
+            .adminui-page-header__navbutton      (navigation element button)
+            .adminui-page-header__navmenutoggle  (navigation element menu toggle)
+```
+
+Example: {type: isolated} With brand
+
+    <header class="adminui-page-header">
+        <div class="adminui-page-header__content">
+            <a class="adminui-page-header__brand">
+                <span class="adminui-page-header__brandname">My brand</span>
+            </a>
+        </div>
+    </header>
+
+Example: {type: isolated} With brand and navigation
+    <header class="adminui-page-header">
+        <div class="adminui-page-header__content">
+            <a class="adminui-page-header__brand">
+                <span class="adminui-page-header__brandname">My brand</span>
+            </a>
+            <nav class="adminui-page-header__nav">
+                <a class="adminui-page-header__navlink">About</a>
+                <a class="adminui-page-header__navlink">Important stuff</a>
+                <a class="adminui-page-header__navlink">Information</a>
+            </nav>
+        </div>
+    </header>
+
+Example: {type: isolated} Compact
+    <header class="adminui-page-header  adminui-page-header--compact">
+        <div class="adminui-page-header__content">
+            <a class="adminui-page-header__brand">
+                <span class="adminui-page-header__brandname">My brand</span>
+            </a>
+            <nav class="adminui-page-header__nav">
+                <a class="adminui-page-header__navlink">About</a>
+                <a class="adminui-page-header__navlink">Important stuff</a>
+                <a class="adminui-page-header__navlink">Information</a>
+            </nav>
+        </div>
+    </header>
+
+Example: {type: isolated} Navigation active links
+    <header class="adminui-page-header">
+        <div class="adminui-page-header__content">
+            <a class="adminui-page-header__brand">
+                <span class="adminui-page-header__brandname">My brand</span>
+            </a>
+            <nav class="adminui-page-header__nav">
+                <a class="adminui-page-header__navlink">Nonactive link</a>
+                <a class="adminui-page-header__navlink  adminui-page-header__navlink--active">Active link</a>
+                <a class="adminui-page-header__navlink  adminui-page-header__navlink--button">Nonactive button</a>
+                <a class="adminui-page-header__navlink  adminui-page-header__navlink--button adminui-page-header__navlink--active">Active button</a>
+            </nav>
+        </div>
+    </header>
+
+Example: {type: isolated} With navigation buttons and menu toggle button
+    <header class="adminui-page-header">
+        <div class="adminui-page-header__content">
+            <a class="adminui-page-header__brand">
+                <span class="adminui-page-header__brandname">My brand</span>
+            </a>
+            <nav class="adminui-page-header__nav">
+                <a class="adminui-page-header__navlink">About</a>
+                <a class="adminui-page-header__navlink">Important stuff</a>
+                <a class="adminui-page-header__navlink  adminui-page-header__navlink--button">A button</a>
+                <button type="button" class="adminui-page-header__navmenutoggle">
+                    Menu
+                    <i class="icon-hamburger" aria-hidden="true" role="presentation">
+                        <span aria-hidden="true" class="icon-hamburger__bar"></span>
+                        <span aria-hidden="true" class="icon-hamburger__bar"></span>
+                        <span aria-hidden="true" class="icon-hamburger__bar"></span>
+                    </i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+Example: {type: isolated} Compact variant with navigation buttons and menu toggle button
+    <header class="adminui-page-header adminui-page-header--compact">
+        <div class="adminui-page-header__content">
+            <a class="adminui-page-header__brand">
+                <span class="adminui-page-header__brandname">My brand</span>
+            </a>
+            <nav class="adminui-page-header__nav">
+                <a class="adminui-page-header__navlink">About</a>
+                <a class="adminui-page-header__navlink">Important stuff</a>
+                <a class="adminui-page-header__navlink  adminui-page-header__navlink--button-compact">A button</a>
+                <button type="button" class="adminui-page-header__navmenutoggle">
+                    Menu
+                    <i class="icon-hamburger" aria-hidden="true" role="presentation">
+                        <span aria-hidden="true" class="icon-hamburger__bar"></span>
+                        <span aria-hidden="true" class="icon-hamburger__bar"></span>
+                        <span aria-hidden="true" class="icon-hamburger__bar"></span>
+                    </i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+Styleguide layout.adminui.adminui-page-header
+*/
+.adminui-page-header {
+    position: relative;
+    top: 0;
+    width: 100%;
+    padding: vertical-space($spacing--small) 0;
+    color: $color-light;
+    background-color: color(primary);
+
+    &--compact {
+        @include min-width(md) {
+            padding: vertical-space($spacing--small) 0;
+        }
+    }
+
+    &__content {
+        @include container(wide);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+    }
+
+    &__brand {
+        display: inline-block;
+        border: 0;
+    }
+
+    &__brandname {
+        display: none;
+        //line-height: 40px;
+        fill: $color-light;
+        color: $color-light;
+
+        @include min-width(md) {
+            display: inline-block;
+        }
+    }
+
+    &__nav {
+        position: relative;
+        top: -1px;
+    }
+
+    &__navlink {
+        @include font(base, bold);
+        @include font-size(xsmall);
+        display: none;
+        position: relative;
+        margin-left: 1em;
+        color: $color-light;
+        border-bottom: $border-width--small solid transparent;
+
+        @include min-width(lg) {
+            display: inline;
+        }
+
+        &--button {
+            @include min-width(lg) {
+                display: inline-block;
+            }
+            margin-top: -2px;
+            padding: #{$unit + 1px} $spacing--small $unit;
+            border: $border-style;
+        }
+
+        &--active,
+        &:hover,
+        &:focus {
+            color: $color-light;
+            border-color: $color-light;
+        }
+    }
+
+    &__navmenutoggle {
+        position: relative;
+        top: 6px;
+        float: right;
+        margin-left: 1em;
+        min-width: $unit * 14;
+        line-height: 20px;
+        color: $color-light;
+        transition: all 300ms $swift-out;
+
+        .icon-hamburger__bar {
+            background-color: $color-light;
+        }
+    }
+
+    // &--showmenu {
+    //    position: fixed;
+    //    z-index: $level-4;
+    // }
+}
