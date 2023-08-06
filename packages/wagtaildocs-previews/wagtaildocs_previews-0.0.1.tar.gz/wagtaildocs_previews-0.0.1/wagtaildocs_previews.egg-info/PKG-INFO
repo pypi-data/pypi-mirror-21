@@ -1,0 +1,116 @@
+Metadata-Version: 1.1
+Name: wagtaildocs-previews
+Version: 0.0.1
+Summary: Extend Wagtail's Documents with image previews and metadata from FilePreviews
+Home-page: https://github.com/filepreviews/wagtail-filepreviews
+Author: José Padilla
+Author-email: jpadilla@filepreviews.io
+License: MIT
+Description: wagtail-filepreviews
+        ====================
+        
+        .. image:: https://travis-ci.org/filepreviews/wagtail-filepreviews.svg?branch=master
+            :target: https://travis-ci.org/filepreviews/wagtail-filepreviews
+        
+        Extend Wagtail's Documents with image previews and metadata from FilePreviews
+        
+        Installing
+        ----------
+        
+        Install with **pip**:
+        
+        .. code-block:: sh
+        
+            $ pip install wagtaildocs_previews
+        
+        Settings
+        ~~~~~~~~
+        
+        In your settings file, add ``wagtaildocs_previews`` to ``INSTALLED_APPS``:
+        
+        .. code:: python
+        
+            INSTALLED_APPS = [
+                # ...
+                'wagtaildocs_previews',
+                # ...
+            ]
+        
+        You'll also need to set ``WAGTAILDOCS_DOCUMENT_MODEL``.
+        
+        .. code:: python
+        
+            WAGTAILDOCS_DOCUMENT_MODEL = 'wagtaildocs_previews.PreviewableDocument'
+        
+        URL configuration
+        ~~~~~~~~~~~~~~~~~
+        
+        .. code:: python
+        
+            from wagtaildocs_previews import urls as wagtaildocs_urls
+        
+            urlpatterns = [
+                # ...
+                url(r'^documents/', include(wagtaildocs_urls)),
+                # ...
+            ]
+        
+        Usage
+        -----
+        
+        Since we're extending via ``WAGTAILDOCS_DOCUMENT_MODEL`` you should be using
+        ``get_document_model()`` to reference to correct Document model.
+        
+        .. code:: python
+        
+            from wagtail.wagtailcore.models import Page
+            from wagtail.wagtaildocs.models import get_document_model
+            from wagtail.wagtaildocs.edit_handlers import DocumentChooserPanel
+        
+        
+            class BookPage(Page):
+                book_file = models.ForeignKey(
+                    get_document_model(),
+                    null=True,
+                    blank=True,
+                    on_delete=models.SET_NULL,
+                    related_name='+'
+                )
+        
+                content_panels = Page.content_panels + [
+                    DocumentChooserPanel('book_file'),
+                ]
+        
+        
+        In your template now you'll be able to access the ``preview_data`` field.
+        
+        .. code:: html
+        
+            {% extends "base.html" %}
+            {% load wagtailcore_tags %}
+        
+            {% block body_class %}resource-page{% endblock %}
+        
+            {% block content %}
+                <h1>Book</h>
+                <h2>{{ page.book_file.title }}</h2>
+                <img src="{{ page.book_file.preview_data.preview.url|default:'http://placehold.it/300x300' }}" alt="">
+            {% endblock %}
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 1.8
+Classifier: Framework :: Django :: 1.9
+Classifier: Framework :: Django :: 1.10
+Classifier: Topic :: Internet :: WWW/HTTP :: Site Management
