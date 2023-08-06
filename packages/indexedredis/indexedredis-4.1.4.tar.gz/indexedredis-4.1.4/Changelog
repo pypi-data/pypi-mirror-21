@@ -1,0 +1,326 @@
+4.1.4 - Sat Apr 15 2017
+
+- Update READMEs a bit
+
+4.1.3 - Wed Apr 12 2017
+
+** IMPORTANT -- UPGRADE TO THIS, ADJUST YOUR CODE IN DEV TO PREPARE FOR 5.0.0
+**
+
+- Add IRBytesField to work the same as BINARY_FIELDS on both python2 and 3.
+BINARY_FIELDS is going away in python 5.0.0
+
+- Add the new Pickle field implementation from 5.0.0 (which supports pickling
+ALL types, but is not compatible). This is named IRNewPickleField and can be
+found in
+	from IndexedRedis.fields.new_pickle import IRNewPickleField
+
+You can change your models to use this field, then on each model call
+	myModel.compat_convertPickleFields()
+
+to convert the data form the old form to the new form.
+
+Please see the 5.0.0 preview release also released today.
+
+At 4.1.3 you can
+make all your code forwards-compatible (with the exception of pickle fields,
+which need to be converted post-update)
+
+Several things are changing backwards-incompatible, but if you start making
+changes now, you can run on 4.1.3 and then upgrade to 5.0.0 without issue.
+
+4.1.2 - Wed Apr 12 2017
+
+- Fix some potential encoding issues on python2
+- Fixup some potential issues with IRBase64Field on python2 ( keep in mind,
+BASE64_FIELDS is going away in IndexedRedis 5.0.0! )
+- Some minor performance updates in encoding/decoding paths
+
+4.1.1 - Wed Apr 12 2017
+
+- Ensure that the "origData" structure gets updated after a save which
+performs an insert. It was previously only updated after an "update", but not
+an insert. This prevents those fields as being seen as changed and updated
+again if you save the inserted object.
+- Update "runTests.py" to be version 1.2.3 from GoodTests.py
+
+
+4.1.0 - Mon Jan 9 2017
+- Fix issue where fields that implemented toStorage (complex IRFields) would sometimes have problems
+doing updates
+- Fix issue where field values that work as-reference (like lists) would be seen to not update. We now make
+a copy in the "_origData" dict, if possible. If doesn't support copy.copy, we fallback to value assignment.
+- Add tests, specifically for IRPickleField with lists where these issues came up
+
+
+4.0.2 - Fri Nov 18 2016
+- Update link to pypi to be pythonhosted.org
+
+4.0.1 - Fri Nov 18 2016
+- Update pydoc
+
+4.0.0 - Fri Nov 18 2016 INCOMPLETE CHANGELOG - TODO UPDATE
+
+NOTE - This is not a complete changelog, but I haven't had time, and
+IndexedRedis 4.0 has sat stable and idle for 8 months! It is completely
+backwards compatible with IndexedRedis 3.0, and there are plenty of code
+examples in the "tests" directory to get you started on indulging in all the
+great new features. <3 <3
+
+- Introduce "IRField" as a type, wherein you can define field properties
+within the field itself. See examples.py track_number as example.
+- Implement basic client-side type conversion after fetching. The IRField
+has a valueType, which, when provided with a type, will convert the value
+to that type. When "bool" is provided, it will accept "1", "True" (case
+insensitive) as true, 
+and "0", "False" (case insensitive) as false, and raise exception for
+other values.
+- Add IRNullType which will be used for non-string null values (like if a
+valueType=int field has never been set, it will be returned as irNull.
+irNull only equals other IRNullTypes, so it can be filtered out and is
+different from int(0) for int fields. IRNull != '' or any other False
+type, except another IRNull.
+
+	So like:
+	from IndexedRedis import irNull
+	...
+
+	reallyZero = myObjs.filter(age__ne=irNull).filter(age__eq=0)
+
+- Split up some functionality across a couple files
+- Introduce an AdvancedFieldValueTypes module, which contains an example
+advanced field, for a datetime implementation. Pass this as the
+"valueType" on an IRField to have it automatically convert to/from a
+datetime. This stores a string on the backend, and is slightly less
+efficent than using a property and storing an integer, but more
+convienant.
+- Introduce an IRPickleField, use this in place of IRField. It only takes
+one argument right now, "name". It will pickle data before sending to
+Redis, and automatically unpickle it upon retrieval. I highly recommend
+not using this unless you absolutely have to, you are better off designing
+native models than trying to stuff in objects.
+- Add compression via compressed fields (IRCompressedField in
+fields.compressed), using zlib or bz2
+- Change python2 to use unicode everywhere, to match python3 behaviour
+- Don't try to decode every field with the default encoding. Default is
+still to decode/encoding using that encoding (for items not in
+BINARY_FIELDS). Now you can
+use multiple encodings, or no encodings. There is a new field type,
+fields.IRUnicodeField which allows specifying a non-default encoding.
+
+E.x. :
+
+FIELDS = [ IRUnicodeField('name_english', encoding='utf-8'),
+IRUnicodeField('name_jp', encoding='utf-16'),
+IRUnicodeField('uses_default_encoding') ]
+
+You may also use fields.IRRawField which will do no encoding or
+conversions to/from Redis.
+- Field Types can implement "toBytes" to allow them to be base64
+encoded/decoded, in the event that normal decoding wouldn't work (like the
+IRUnicodeField type)
+- Implement IRJsonValue which can be passed to valueType of IRField to
+automatically convert to json before storing, and convert to a python dict
+upon retrieval.
+- Implement IRBase64Field as a field type which will base64-encode before
+sending and base64-decode after retrieving. This adds a slight processing
+overhead, but will save space and network traffic.
+- Implement IRFieldChain, which allows chaining multiple field types
+together. They will be applied left-to-right when going to redis, and
+right-to-left when coming from. For example, to compress and base64 encode
+a json dict, use:
+
+FIELDS = [ ... , 
+ IRFieldChain('myJsonData', [IRField(valueType=IRJsonValue),
+ IRCompressedField, IRBase64Field]),
+ ]
+
+- Implement IRFixedPointField, for safely using floats in filtering and as
+indexes. You define a fixed precision (decimalPlaces) and values will
+always be represented/rounded to that many decimal places. This allows
+values to be defined in a standard away independent of platform.
+- Ensure "_id" field is always an integer, not mix of either bytes or str
+- Add destroyModel function to deleter, so you can do
+MyModel.deleter.destroyModel() to destroy all keys related to the model.
+Very similar to MyModel.reset([]) but more efficient and direct.
+- Change MyModel.objects.delete() ( so a delete with no filters, i.e.
+delete all objects) to call destroyModel. This ensures if you have an
+invalid model or an incompatible change, you can delete the objects
+without fetching anything.
+- Use connection pooling to limit connections to a unqiue Redis server
+   at 32 (default). I've found that in some cases of network disruption,
+   python-Redis can leak connections FAST, and within seconds exhaust all
+   private ports available on a system. 
+- Support hashed indexes, by passing hashIndex=True to an IRField.
+  This will create use an md5 hash in the key in lieu of the field value,
+  which will save memory, network bandwidth, and increase speed where
+  very large values are indexed.
+- Add "compat_convertHashedIndexes" on IndexedRedisSave, i.e.
+"MyModel.objects.compat_convertHashedIndexes()" which should be used to
+reindex a model when any field changes the value of the "hashIndex"
+property.
+
+- Probably a lot more stuff, but this has been sitting around for almost 8
+months due to me not having enough time to write up complete documentation!!
+
+-3.1.1 - Apr 15 2016
+- Fix some 4.0 docs that slipped in to 3.0 series
+
+-3.1.0 - Apr 15 2016
+- Fix where on updating a model, some operations would occur outside
+of a
+  transaction.
+- Fix "reload" method to actually work. It now returns a dict of
+fields
+ changed -> tuple(old value, new value)
+- Allow model.saver.save to take a QueryableList (the return of
+all()) by
+       changing isinstance to issubclass.
+
+
+3.0.3 - Apr 11 2016
+	- Fix issue with binary fields, they were always seen as "changed" even
+	when no update was made, which could have caused unnecessary updates and
+	saves
+	- When deleting single objects, do entire operation in a transaction
+	in case a part fails (like if Redis server is shut down)
+
+3.0.0 - Jan 12 2016
+    - Change return type of functions that used to be a list of instantiated model objects to a QueryableList ( https://github.com/kata198/QueryableList ) which allows easilly chaining complex client-side filtering (beyond just equals and not-equals as the DB-side exists). This is not a backwards-incompatible change, but is forwards-incompatible (i.e. your code may require IndexedRedis>=3.0.0 if you choose to use the client-side filtering)
+    - Restore the repr-view of bytes in __repr__ instead of the "_BINARY DATA OF LENGTH N_" format.
+
+2.9.0 - Dec 28 2015
+	- Add support for BINARY_FIELDS -- directly storing data as binary.
+	This is a better option in most cases than BASE64_FIELDS, takes much
+	less time, and is more space efficient
+	- Implicitly make the FIELDS defined on models to be sets in __init__
+
+2.8.1 - (Oct 06 2015)
+ - Fix py3 install
+
+2.8.0 - (Oct 06 2015)
+	- Add "connect" method to IndexedRedisModel, which allows using models
+	with an alternate redis instance than that on the parent model. It returns
+	a "class" that inherits the IndexedRedisModel with the
+	REDIS_CONNECTION_PARAMS updated to reflect those as passed in.
+
+2.7.2 - (Sep 24 2015)
+	- Remove accidental addition of not-finished code
+
+2.7.1 - (Sep 23 2015)
+	- Updates to documentation and examples
+
+2.7.0 - (Sep 23 2015)
+	- Change very basic existing model validation to a one-time call, and
+	validate on more things.
+	- *EXCITING* - Implement BASE64_FIELDS on IndexedRedisModel. Any
+	FIELDS that also show up in BASE64_FIELDS will be base64-encoded
+	before storage and decoded upon retrieval. This makes it possible and
+	very simple to use "bytes" or other binary data. You may need this,
+	for example, to store files or other blobs.
+	
+2.6.0 - (Sep 22 2015)
+	- Add copyToExternal which allows copying a model to a redis instance
+	other than the one specified for that model
+	- Add copyAllToExternal which allows copying the results of a filterset to
+	a redis instance other than that specified for the given model
+	- Fix inconsistant returns, pk should always be a string
+	- Rewrote internal save function to make more sense and allow forcing
+	multiple IDs
+	- Add reindex method which will rerun the indexes on a list of models. Use
+	this as MyModel.objects.reindex() if you add a field to INDEXED_FIELDS
+	array which is already existing field to add it to indexes.
+
+2.5.1 - (Sep 11 2015)
+	- Add "exists" method for testing the existance of a primary key
+	- Add MANIFEST.in file (missed in 2.5.0 -- this is only difference)
+	- regen docs
+	- Replace example.py with a copy of test.py... not sure why there were two
+
+2.4.0 - (Jul 7 2015)
+	- Add some more documentation
+	- Cleanup connection handling
+	- Remove undocumented _connection override on IndexedRedisModel
+	
+
+2.4.0 beta (unreleased to public) - (Jul 2 2015)
+	- Add method, isIndexedRedisModel to see if a model extends
+	IndexedRedisModel
+	- Add method, hasUnsavedChanges which returns bool of if there are
+	unsaved changes. Remember, you can see all (local) changes with
+	getUpdatedFields
+	- Implement __str__ and __repr__
+	  Examples of __str__: 
+	                         (Pdb) str(z)
+	                         '<Song obj _id=24 at 0x7f3c6a3a4490>'
+	                         (Pdb) z.artist = 'New Artist'
+	                         (Pdb) str(z)
+	                         '<Song obj _id=24 (Unsaved Changes) at 0x7f3c6a3a4490>'
+	- Examples of __repr__ - This will build a constructor.
+	eval(repr(obj)) should build the same object.
+		(Pdb) print repr(song)
+		Song(_id="6", album='Super Tracks', description='Super
+		Nintendo', copyright='Copyright 2014 (c) Cheese Industries',
+		title='Nintendo 2', artist='Mega Men', track_number='2',
+		duration='1:55')
+	- Implement a .copy function for copying models. Takes a single
+	argument, copyPrimaryKey. If True, any saves on the copy will change
+	the original model. Keep in mind this may cause sync issues. If  False
+	(default) only the data is copied.
+	- Implement __setstate__ and __getstate__ to make objects support
+	being pickled and loaded from pickle strings efficiently.
+	- Implement "reload" function on a model. This fetches any updates
+	from Redis, if available, and returns a list of field names that were
+	updated.
+
+
+
+2.3.1 (Jun 27 2015)
+	- Add some more docstring
+	- make getNextID and peekNextID private methods. They should only be
+	used internal.
+	- Regenerate docs
+	- Remove argument on getEncoding -- didn't do anything
+
+2.3.0 (Jun 27 2015)
+	- Change Model.objects.filter(...).delete to fetch minimal data (only
+	indexed fields) instead of entire objects, so deleting is more
+	efficent.
+	- Add getOnlyFields, allOnlyFields, allOnlyIndexedFields, etc for
+	getting partial objects
+	- Increase efficency of getMultiple function
+	- Add more docstrings
+	- Distribute pydoc as /IndexedHtml.html 
+	- Allow deleter to delete by primary key only on (Model.deleter)
+
+2.2.2 (Jun 25 2015)
+	- Fix invalid variable
+
+2.2.1 (Jun 25 2015)
+	- Implement getPrimaryKeys (get primary keys at current filter level).
+	Takes optional argument to sort by age
+	- Implement first/last/random for getting oldest/newest/random record
+	- Update documentation a bit
+
+2.1.1 (Jun 21 2015):
+	- Allow deleting directly from a filter object
+	(SomeModel.objects.filter(...).delete)
+
+2.1.0 (Jun 21 2015):
+	- Much better handle unicode in Python 2
+	- allow changing encoding via a setEncoding function at the global
+	IndexedRedis level
+
+2.0.2 (May 5 2015):
+	- fix typos
+	- fix deleteMultiple
+
+2.0.0 (May 1 2015):
+	- Add support for __ne (not equals) filtering
+	- Make filters default to be copies instead of operating on self, which allows them to be passed to functions but retain original value. Old behaviour can be retained doing .filterInline
+	- Enhance example with more features
+	- Add some docstrings
+	- Fix example where __init__ did not pass args and kwargs to parent and thus broke delete
+	- add asDict method for representation as a dictionary
+	- Change example to use asDict to not print original data
+	- Move module to a standard package setup 
