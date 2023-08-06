@@ -1,0 +1,249 @@
+Metadata-Version: 2.0
+Name: django-icekit
+Version: 0.17.2
+Summary: A modular content CMS by Interaction Consortium.
+Home-page: https://github.com/ic-labs/django-icekit
+Author: Interaction Consortium
+Author-email: studio@interaction.net.au
+License: MIT
+Platform: UNKNOWN
+Requires-Dist: Pillow (>=4)
+Requires-Dist: django-any-urlfield
+Requires-Dist: django-app-namespace-template-loader
+Requires-Dist: django-bootstrap3
+Requires-Dist: django-compressor
+Requires-Dist: django-el-pagination
+Requires-Dist: django-extensions
+Requires-Dist: django-fluent-contents (>=1.1.9)
+Requires-Dist: django-fluent-pages (!=1.1)
+Requires-Dist: django-model-settings
+Requires-Dist: django-mptt
+Requires-Dist: django-multiurl
+Requires-Dist: django-object-actions (>=0.7)
+Requires-Dist: django-polymorphic (!=1.0.1,>=0.8,!=1)
+Requires-Dist: django-wysiwyg
+Requires-Dist: html5lib (==0.999)
+Requires-Dist: nltk
+Requires-Dist: pip-tools
+Requires-Dist: requests
+Requires-Dist: unidecode
+Provides-Extra: api
+Requires-Dist: djangorestframework; extra == 'api'
+Provides-Extra: brightcove
+Requires-Dist: django-brightcove; extra == 'brightcove'
+Provides-Extra: dev
+Requires-Dist: Werkzeug; extra == 'dev'
+Requires-Dist: django-debug-toolbar; extra == 'dev'
+Requires-Dist: ipdb; extra == 'dev'
+Requires-Dist: ipython (<5); extra == 'dev'
+Requires-Dist: mkdocs; extra == 'dev'
+Provides-Extra: django18
+Requires-Dist: Django (>=1.8,<1.9); extra == 'django18'
+Provides-Extra: docs
+Requires-Dist: recommonmark; extra == 'docs'
+Requires-Dist: sphinx; extra == 'docs'
+Requires-Dist: sphinx-autobuild; extra == 'docs'
+Provides-Extra: forms
+Requires-Dist: django-forms-builder; extra == 'forms'
+Provides-Extra: glamkit
+Requires-Dist: glamkit-collections (>=0.35); extra == 'glamkit'
+Requires-Dist: glamkit-sponsors; extra == 'glamkit'
+Requires-Dist: icekit-events; extra == 'glamkit'
+Requires-Dist: icekit-press-releases (>=0.81); extra == 'glamkit'
+Provides-Extra: project
+Requires-Dist: ConcurrentLogHandler; extra == 'project'
+Requires-Dist: Jinja2; extra == 'project'
+Requires-Dist: boto3; extra == 'project'
+Requires-Dist: celery[redis] (<4.0); extra == 'project'
+Requires-Dist: django-celery; extra == 'project'
+Requires-Dist: django-celery-email; extra == 'project'
+Requires-Dist: django-countries; extra == 'project'
+Requires-Dist: django-extensions; extra == 'project'
+Requires-Dist: django-flat-theme (<1.1.3); extra == 'project'
+Requires-Dist: django-fluent-contents[markupoembeditemtext]; extra == 'project'
+Requires-Dist: django-fluent-pages[redirectnodereversion]; extra == 'project'
+Requires-Dist: django-master-password; extra == 'project'
+Requires-Dist: django-polymorphic-auth; extra == 'project'
+Requires-Dist: django-post-office; extra == 'project'
+Requires-Dist: django-redis; extra == 'project'
+Requires-Dist: django-reversion (<1.10,>=1.9.3); extra == 'project'
+Requires-Dist: django-storages; extra == 'project'
+Requires-Dist: django-test-without-migrations; extra == 'project'
+Requires-Dist: django-timezone; extra == 'project'
+Requires-Dist: docutils; extra == 'project'
+Requires-Dist: easy-thumbnails; extra == 'project'
+Requires-Dist: flower; extra == 'project'
+Requires-Dist: gunicorn; extra == 'project'
+Requires-Dist: icekit-notifications; extra == 'project'
+Requires-Dist: ixc-django-compressor; extra == 'project'
+Requires-Dist: ixc-whitenoise; extra == 'project'
+Requires-Dist: psycopg2; extra == 'project'
+Requires-Dist: python-redis-lock[django]; extra == 'project'
+Requires-Dist: pytz; extra == 'project'
+Requires-Dist: raven; extra == 'project'
+Requires-Dist: supervisor; extra == 'project'
+Provides-Extra: search
+Requires-Dist: django-fluent-pages[fluentpage,flatpage]; extra == 'search'
+Requires-Dist: django-haystack; extra == 'search'
+Requires-Dist: elasticsearch; extra == 'search'
+Requires-Dist: elasticstack; extra == 'search'
+Provides-Extra: test
+Requires-Dist: WebTest; extra == 'test'
+Requires-Dist: celery[redis] (==3.1.24); extra == 'test'
+Requires-Dist: coverage; extra == 'test'
+Requires-Dist: coveralls; extra == 'test'
+Requires-Dist: django-dynamic-fixture; extra == 'test'
+Requires-Dist: django-nose; extra == 'test'
+Requires-Dist: django-webtest; extra == 'test'
+Requires-Dist: djangorestframework; extra == 'test'
+Requires-Dist: micawber; extra == 'test'
+Requires-Dist: mock; extra == 'test'
+Requires-Dist: nose-progressive; extra == 'test'
+Requires-Dist: psycopg2; extra == 'test'
+
+|Build Status| |Coverage Status| |Documentation| |Requirements Status|
+|Version|
+
+|Deploy to Docker Cloud|
+
+.. The following is taken from docs/includes/intro.rst. Keep synchronised.
+
+GLAMkit is a next-generation Python CMS by `the Interaction
+Consortium <http://interaction.net.au>`__, designed especially for
+the cultural sector.
+
+ICEkit sits one layer below GLAMkit, and is a framework for building CMSes.
+It has publishing and workflow tools for teams of content professionals,
+and a powerful content framework, based on django-fluent. Everything is written
+in Python, using the Django framework.
+
+`Read the documentation for the latest release <http://docs.glamkit.com>`_
+
+Key features
+============
+
+ICEkit has:
+
+-  Patterns for hierarchical pages and collections of rich content models.
+-  Advanced publishing / preview / unpublishing controls
+-  Simple workflow controls
+-  Content plugins for working with rich text, images, embedded media, etc.
+-  Customisable site search using Elastic Search
+-  ``django-reversion`` compatible, allowing versioning of content
+-  Customisable admin dashboard
+-  Docker-compatible project template supplied
+-  Batteries included: bower, LessCSS, Bootstrap
+-  Easily extensible with models, templates, plugins, etc.
+
+GLAMkit extends ICEkit with:
+
+-  complex repeating calendared events
+-  collection patterns: art, moving image, etc.
+-  a story-telling engine (e.g. rich 'watch', 'read', 'listen' articles)
+-  press releases
+-  sponsors
+
+GLAMkit is delivered as a Docker-compatible package, which means that it's easy
+to share a consistent development environment across your team, or to deploy on
+any Docker-compatible web host, including top-tier cloud hosting services like
+AWS.
+
+.. The following is taken from install/docker.rst. Keep synchronised.
+
+Quickstart, with Docker
+=======================
+
+The recommended installation method uses Docker.
+Docker works on OS X, Linux, and Windows, takes care of all the project
+dependencies (e.g. database, search engine, web server, etc.), and makes
+`deployment <docs/howto/deployment.md>`__ easy.
+
+If you're not ready to use Docker, see `Manual Installation <docs/install/manual-install.rst>`_.
+
+Otherwise, if you haven't already, `install Docker <https://docs.docker.com/engine/installation/>`_.
+
+1. Create a new project
+-----------------------
+
+::
+
+   $ bash <(curl -Ls https://raw.githubusercontent.com/ic-labs/django-icekit/master/startproject.sh) {project_name}
+
+This will create a new project from the ICEkit project template, in a
+directory named ``{project_name}`` in the current working directory.
+
+If you want to create a new project from the ICEkit `develop` branch, do this
+instead::
+
+   $ bash <(curl -Ls https://raw.githubusercontent.com/ic-labs/django-icekit/develop/startproject.sh) {project_name} develop
+
+and change the icekit branch in the generated :code:`requirements-icekit.txt` from :code:`@master` to :code:`@develop`.
+
+NOTE: Windows users should run this command in Git Bash, which comes
+with `Git for Windows <https://git-for-windows.github.io/>`__.
+
+2. Run the project
+------------------
+
+Build a Docker image:
+
+::
+
+    $ cd {project_name}
+    $ docker-compose build --pull
+
+Run a ``django`` container and all of its dependancies:
+
+::
+
+    $ docker-compose run --rm --service-ports django
+
+Create a superuser account:
+
+::
+
+    # manage.py createsuperuser
+
+Run the Django dev server:
+
+::
+
+    # runserver.sh
+
+3. That's it!
+-------------
+
+Open the site in a browser:
+
+::
+
+    http://localhost:8000
+
+When you're done, exit the container and stop all of its dependencies:
+
+::
+
+    # exit
+    $ docker-compose stop
+
+Next steps
+==========
+
+-  `Start building your site <docs/howto/start.md>`__
+-  `Architectural overview <docs/intro/architecture.md>`__
+-  `Read the Documentation <http://docs.glamkit.com>`__
+
+.. |Build Status| image:: https://img.shields.io/travis/ic-labs/django-icekit.svg
+   :target: https://travis-ci.org/ic-labs/django-icekit
+.. |Coverage Status| image:: https://img.shields.io/coveralls/ic-labs/django-icekit.svg
+   :target: https://coveralls.io/github/ic-labs/django-icekit
+.. |Documentation| image:: https://readthedocs.org/projects/icekit/badge/
+   :target: http://docs.glamkit.com/
+.. |Requirements Status| image:: https://img.shields.io/requires/github/ic-labs/django-icekit.svg
+   :target: https://requires.io/github/ic-labs/django-icekit/requirements/
+.. |Version| image:: https://img.shields.io/pypi/v/django-icekit.svg
+   :target: https://pypi.python.org/pypi/django-icekit
+.. |Deploy to Docker Cloud| image:: https://files.cloud.docker.com/images/deploy-to-dockercloud.svg
+   :target: https://cloud.docker.com/stack/deploy/?repo=https://github.com/ic-labs/django-icekit/
+
+
