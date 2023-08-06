@@ -1,0 +1,82 @@
+{% extends 'models_base.html' %}
+{% load staticfiles %}
+
+{% block content_block %}
+    {% if help_text %}
+        <h2>Documentation</h2>
+        {{ help_text|safe }}
+    {% endif %}
+    <h2>Emulate POST request</h2>
+    The resource can handle any answer type, but here we emulate a flashcard answer.
+    <form class="pure-form" action="" method="post" ng-app="proso_models" ng-controller="answer">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Answer</legend>
+            <input type="number" ng-model="answer.flashcard_id" placeholder="Flashcard Id">
+            <input type="number" ng-model="answer.flashcard_answered_id" placeholder="Flashcard Answered Id">
+            <input type="number" ng-model="answer.response_time" placeholder="Response Time">
+        </fieldset>
+
+        <fieldset>
+            <legend>Question Type</legend>
+            <label>From term
+                <input type="radio" name="question_type" value="t2d" ng-model="answer.question_type"/>
+            </label>
+            <label>From description
+                <input type="radio" name="question_type" value="d2t" ng-model="answer.question_type"/>
+            </label>
+        </fieldset>
+
+        <fieldset>
+            <legend>Extra</legend>
+            <input type="text" ng-model="option_ids" placeholder="Option Ids (csv)">
+            <input type="text" ng-model="answer.meta" placeholder="Meta">
+            <input type="number" ng-model="answer.time_gap" placeholder="Time Gap">
+        </fieldset>
+
+
+        <button type="button" class="pure-button pure-button-primary" ng-click="submit()">Save</button>
+
+        <pre> {% verbatim %}{{ answer | json:4 }}{% endverbatim %}</pre>
+        <div style="color:red" ng-show="response">Response: <b>{% verbatim %}{{ response }}{% endverbatim %}</b></div>
+    </form>
+
+{% endblock %}
+
+
+{% block head_block %}
+    <script src="{% static "proso_common/angular/angular.min.js" %}"></script>
+    <script>
+        var app = angular.module('proso_models', []);
+        app.config(function($httpProvider) {
+            $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+            $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
+        });
+        app.controller("answer", function($scope, $http, $window, $location){
+            $scope.answer = {};
+            $scope.answer.answer_class = "flashcard_answer";
+
+            $scope.$watch("option_ids", function(n, o){
+                if (n == null)
+                    return;
+                $scope.answer.option_ids = [];
+                n.split(",").forEach(function (v) {
+                    v = parseInt(v);
+                    if (v != null && !isNaN(v)){
+                        $scope.answer.option_ids.push(v);
+                    }
+                });
+            });
+
+            $scope.submit = function(){
+                $http.post('/models/answer/', {answer: $scope.answer}).
+                    success(function(data, status, headers, config){
+                        $scope.response = data;
+                    }).
+                    error(function(data, status, headers, config){
+                        $scope.response = data;
+                    });
+            };
+        });
+    </script>
+{% endblock %}
