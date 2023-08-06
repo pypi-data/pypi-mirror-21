@@ -1,0 +1,101 @@
+Metadata-Version: 2.0
+Name: TosKer
+Version: 0.2.0
+Summary: A TOSCA engine working with Docker container
+Home-page: https://github.com/di-unipi-socc/TosKer
+Author: lucarin91
+Author-email: to@lucar.in
+License: MIT
+Keywords: docker TOSCA deployment management development
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: System :: Installation/Setup
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Requires-Dist: docker
+Requires-Dist: six
+Requires-Dist: termcolor
+Requires-Dist: tosca-parser
+Provides-Extra: dev
+Requires-Dist: check-manifest; extra == 'dev'
+Requires-Dist: isort; extra == 'dev'
+Provides-Extra: test
+Requires-Dist: coverage; extra == 'test'
+
+TosKer
+======
+
+Orchestrate TOSCA applications on top of Docker.
+
+Intallation
+-----------
+
+**Requirements** - python>=2.7 - pip
+
+::
+
+    sudo pip install tosker
+
+Install from source
+~~~~~~~~~~~~~~~~~~~
+
+::
+
+    git clone https://github.com/di-unipi-socc/tosKer/tree/master
+    cd tosKer
+    sudo python setup.py install
+
+Run the tests:
+
+::
+
+    python setup.py test
+
+Usage
+-----
+
+::
+
+    tosker FILE [COMPONENTS...] COMMANDS...  [OPTIONS] [INPUTS]
+    tosker -h|--help
+    tosker -v|--version
+
+Where - ``FILE`` is a TOSCA YAML file or CSAR file
+
+-  ``COMMANDS`` are a list of the following commands:
+
+   -  ``create`` Create application components
+   -  ``start`` Start applications components
+   -  ``stop`` Stop application components
+   -  ``delete`` Delete application components (except volume)
+
+-  ``COMPONENTS`` is a list of components to deploy
+
+-  ``OPTIONS``
+
+   -  ``-h --help`` Print usage
+   -  ``-q --quiet`` Enable quiet mode
+   -  ``--debug`` Enable debugging mode (override quiet mode)
+   -  ``-v --version`` Print version
+
+-  ``INPUTS`` provide TOSCA inputs *(syntax: ``--NAME VALUE``)*
+
+Examples:
+
+::
+
+    tosker hello.yaml create --name mario
+    tosker hello.yaml start -q
+    tosker hello.yaml stop --debuug
+    tosker hello.yaml delete
+
+    tosker hello.yaml create start --name mario
+    tosker hello.yaml stop delete -q
+
+    tosker hello.yaml database api create start
+
+
