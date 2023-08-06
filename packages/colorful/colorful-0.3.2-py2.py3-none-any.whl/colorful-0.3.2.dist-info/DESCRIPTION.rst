@@ -1,0 +1,34 @@
+    Terminal string styling done right, in Python.
+
+    :copyright: (c) 2017 by Timo Furrer <tuxtimo@gmail.com>
+    :license: MIT, see LICENSE for more details.
+
+Home-page: http://github.com/timofurrer/colorful
+Author: Timo Furrer
+Author-email: tuxtimo@gmail.com
+License: UNKNOWN
+Description: 
+            colorful
+            ~~~~~~~~
+        
+            Terminal string styling done right, in Python.
+        
+            :copyright: (c) 2017 by Timo Furrer <tuxtimo@gmail.com>
+            :license: MIT, see LICENSE for more details.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation
