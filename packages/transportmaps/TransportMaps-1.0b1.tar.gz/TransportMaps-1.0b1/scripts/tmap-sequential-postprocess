@@ -1,0 +1,458 @@
+#!/usr/bin/env python
+
+#
+# This file is part of TransportMaps.
+#
+# TransportMaps is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# TransportMaps is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with TransportMaps.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Transport Maps Library
+# Copyright (C) 2015-2017 Massachusetts Institute of Technology
+# Uncertainty Quantification group
+# Department of Aeronautics and Astronautics
+#
+# Author: Transport Map Team
+# Website: transport-maps.mit.edu
+# Support: transport-maps.mit.edu/qa/
+#
+
+import sys
+import getopt
+import os
+import os.path
+import shutil
+import time
+import datetime
+import logging
+import dill
+import h5py
+import numpy as np
+import numpy.random as npr
+import TransportMaps as TM
+import TransportMaps.CLI as TMCLI
+import TransportMaps.Diagnostics as DIAG
+import TransportMaps.Distributions as DIST
+
+sys.path.append(os.getcwd())
+
+def usage():
+    usage_str = """
+Usage: tmap-sequential-postprocess [-h -v -I]
+  --data=DATA --output=OUTPUT
+  [--store-fig-dir=DIR --store-fig-fmats=FMATS
+   --extra-tit=TITLE --no-plotting 
+   --filtering-conditionals
+     --filt-alc-n-points-x-ax=N --filt-alc-n-tri-plots=N
+     --filt-alc-anchor=LIST --filt-alc-range=LIST
+   --filtering-marginals
+     --filt-alm-n-points=N --filt-alm-n-tri-plots=N
+   --filtering-quadrature
+     --filt-quad-qtype=QTYPE
+     --filt-quad-qnum=QNUM
+   --log=LOG --batch=BATCH --nprocs=NPROCS]
+"""
+    print(usage_str)
+
+def description():
+    docs_distributions_str = \
+        TMCLI.print_avail_options(TMCLI.AVAIL_DISTRIBUTIONS,
+                                  '                        ', False)
+    docs_log_str = \
+        '  --log=LOG               log level (default=30). Uses package logging.\n' + \
+        TMCLI.print_avail_options(TMCLI.AVAIL_LOGGING,'                          ')
+    docs_str = """DESCRIPTION
+Given a file (--data) storing the transport map pushing forward a base distribution
+to a sequential Hidden Markov target distribution, 
+provides a number of postrprocessing routines.
+All files involved are stored and loaded using the python package dill and
+an extra file OUTPUT.hdf5 is created to store big datasets in the hdf5 format.
+In the following default values are shown in brackets.
+
+OPTIONS - input/output:
+  --data=DATA           path to the file containing the target distribution,
+                          the base distribution and the transport map pushing forward
+                          the base to the target.
+  --output=OUTPUT       path to the file storing all postprocess data.
+                          The additional file OUTPUT.hdf5 will be used to store
+                          the more memory consuming data.
+  --store-fig-dir=DIR   path to the directory where to store the figures.
+  --store-fig-fmats=FMATS  figure formats - see matplotlib for supported formats (svg)
+  --extra-tit=TITLE     additional title for the figures' file names.
+  --no-plotting         do not plot figures, but only store their data.
+                          (requires --output or --store-fig-dir)
+OPTIONS - Diagnostics:
+  --filtering-conditionals  plot aligned slices of the filtering distribution:
+                        Optional arguments:
+    --filt-alc-n-points-x-ax=N  number of discretization points per axis (30)
+    --filt-alc-n-tri-plots=N    number of subplots (0)
+    --filt-alc-anchor=LIST      list of floats "f1,f2,f3..." for the anchor point (0)
+    --filt-alc-range=LIST       list of two floats "f1,f2" for the range (-5,5)
+OPTIONS - Sampling:
+  --filtering-marginals  plot aligned marginals of the filtering distribution:
+                        Optional arguments:
+    --filt-alm-n-points=N     number of samples to be used for the kernel density estimation
+    --filt-alm-n-tri-plots=N  number of subplots (0)
+  --filtering-quadrature  generate quadrature of the filtering distribution:
+                        Optional arguments:
+    --filt-quad-qtype=QTYPE  generate quadrature of type QTYPE (0)
+    --filt-quad-qnum=QNUM    level of the quadrature (int or list)
+OPTIONS - Computation:
+""" + docs_log_str + """  --nprocs=NPROCS         number of processors to be used (default=1)
+  --batch=BATCH           list of batch sizes for function evaluation, gradient
+                          evaluation and Hessian evaluation
+OPTIONS - other:
+  -v                      verbose output (not affecting --log)
+  -I                      enter interactive mode after finishing
+  -h                      print this help
+"""
+    print(docs_str)
+    
+def full_usage():
+    usage()
+
+def full_doc():
+    full_usage()
+    description()
+
+##################### INPUT PARSING #####################
+argv = sys.argv[1:]
+INTERACTIVE = False
+# I/O
+DATA = None
+OUTPUT = None    # Postprocess data
+STORE_FIG_DIR = None
+STORE_FIG_FMATS = ['svg']
+EXTRA_TIT = ''
+PLOTTING = True
+# Filtering aligned conditionals
+ALIGNED_CONDITIONALS = False
+ALC_N_POINTS_X_AX = 30
+ALC_N_TRI_PLOTS = 0
+ALC_ANCHOR = None
+ALC_RANGE = [-5.,5.]
+# Filtering Aligned marginals
+ALIGNED_MARGINALS = False
+ALM_N_POINTS = 1000
+ALM_N_TRI_PLOTS = 0
+# Samples
+QUADRATURE = []
+QUAD_QTYPE = []
+QUAD_QNUM = []
+# Logging
+VERBOSE = False
+LOGGING_LEVEL = 30 # Warnings
+# Parallelization
+BATCH_SIZE = 1000
+NPROCS = 1
+
+try:
+    opts, args = getopt.getopt(argv,"hvI",[
+        # I/O
+        "data=", "output=",
+        "store-fig-dir=", "store-fig-fmats=",
+        "extra-tit=", "no-plotting",
+        # Aligned conditionals
+        "filtering-conditionals",
+        "filt-alc-n-points-x-ax=", "filt-alc-n-tri-plots=", 
+        "filt-alc-anchor=", "filt-alc-range=",
+        # Aligned marginals
+        "filtering-marginals",
+        "filt-alm-n-points=", "filt-alm-n-tri-plots=",
+        # Quadrature
+        "filtering-quadrature", 
+        "filt-quad-qtype=", "filt-quad-qnum=",
+        # Logging
+        "log=",
+        # Parallelization and batching option
+        "batch=", "nprocs="])
+except getopt.GetoptError as e:
+    full_usage()
+    raise e
+for opt, arg in opts:
+    if opt == '-h':
+        full_doc()
+        sys.exit()
+
+    # Verbose
+    elif opt == '-v':
+        VERBOSE = True
+
+    # Interactive
+    elif opt in ("-I"):
+        INTERACTIVE = True
+        
+    # I/O
+    elif opt in ("--data"):
+        DATA = arg
+    elif opt in ("--output"):
+        OUTPUT = arg
+    elif opt in ("--store-fig-dir"):
+        STORE_FIG_DIR = arg
+    elif opt in ("--store-fig-fmats"):
+        STORE_FIG_FMATS = arg.split(',')
+    elif opt in ("--extra-tit"):
+        EXTRA_TIT = "-" + arg
+    elif opt in ("--no-plotting"):
+        PLOTTING = False
+
+    # Aligned conditionals
+    elif opt in ("--filtering-conditionals"):
+        ALIGNED_CONDITIONALS = True
+    # Options
+    elif opt in ("--filt-alc-n-points-x-ax"):
+        ALC_N_POINTS_X_AX = int(arg)
+    elif opt in ("--filt-alc-n-tri-plots"):
+        ALC_N_TRI_PLOTS = list(range(int(arg)))
+    elif opt in ("--filt-alc-anchor"):
+        ALC_ANCHOR = [float(s) for s in arg.split(',')]
+    elif opt in ("--filt-alc-range"):
+        ALC_RANGE = [float(s) for s in arg.split(',')]
+        
+    # Aligned marginals
+    elif opt in ("--filtering-marginals"):
+        ALIGNED_MARGINALS = True
+    # Options
+    elif opt in ("--filt-alm-n-points"):
+        ALM_N_POINTS = int(arg)
+    elif opt in ("--filt-alm-n-tri-plots"):
+        ALM_N_TRI_PLOTS = int(arg)
+
+    # Quadrature
+    elif opt in ("--filtering-quadrature"):
+        QUADRATURE.append( True )
+        QUAD_QTYPE.append( None )
+        QUAD_QNUM.append( None )
+    elif opt in ("--filt-quad-qtype"):
+        QUAD_QTYPE[len(QUADRATURE)-1] = int(arg)
+    elif opt in ("--filt-quad-qnum"):
+        QUAD_QNUM[len(QUADRATURE)-1] = [int(q) for q in arg.split(',')]
+
+    # Logging
+    elif opt in ['--log']:
+        LOGGING_LEVEL = int(arg)
+
+    # Parallelization and batching
+    elif opt in ("--batch"):
+        BATCH_SIZE = int(arg)
+    elif opt in ("--nprocs"):
+        NPROCS = int(arg)
+
+logging.basicConfig(level=LOGGING_LEVEL)
+        
+def tstamp_print(msg, *args, **kwargs):
+    tstamp = datetime.datetime.fromtimestamp(
+        time.time()
+    ).strftime('%Y-%m-%d %H:%M:%S')
+    print(tstamp + " " + msg, *args, **kwargs)
+
+def filter_tstamp_print(msg, *args, **kwargs):
+    if VERBOSE:
+        tstamp_print(msg, *args, **kwargs)
+
+def filter_print(*args, **kwargs):
+    if VERBOSE:
+        print(*args, **kwargs)
+
+def safe_store(data, fname):
+    # Backup copy
+    shutil.copyfile(fname, fname + '.bak')
+    # Store data
+    with open(fname, 'wb') as out_stream:
+        dill.dump(data, out_stream)
+    # Remove backup
+    os.remove(fname + '.bak')
+
+# Check for required arguments
+if None in [DATA, OUTPUT]:
+    usage()
+    tstamp_print("ERROR: Option --data and --output must be specified")
+    sys.exit(3)
+if not PLOTTING and STORE_FIG_DIR is None and OUTPUT is None:
+    usage()
+    tstamp_print("ERROR: Neither --output nor --store-fig-dir were " + \
+                 "specified, while --no-plotting is active. " + \
+                 "This would result on no data shown or stored.")
+    sys.exit(3)
+
+if PLOTTING or STORE_FIG_DIR:
+    import matplotlib.pyplot as plt
+    
+mpi_pool = None
+if NPROCS > 1:
+    mpi_pool = TM.get_mpi_pool()
+    mpi_pool.start(NPROCS)
+
+try:
+    # Load data
+    with open(DATA, 'rb') as in_stream:
+        stg = dill.load(in_stream)
+
+    # Prepare storage of figures
+    if STORE_FIG_DIR is not None:
+        fig_folder = STORE_FIG_DIR
+        tit_no_path = str.split(DATA,"/")[-1]
+        title = '.'.join(str.split(tit_no_path,".")[:-1])
+        def store_figure(fig, fname):
+            for fmat in STORE_FIG_FMATS:
+                fig.savefig(fname+'.'+fmat, format=fmat, bbox_inches='tight')
+
+    # Restore data
+    filt_tmap_list = stg.integrator.get_filtering_map_list()
+    
+    # Load output (dill file) if any
+    if OUTPUT is None:
+        postproc_data = {}
+    else:
+        if not os.path.exists(OUTPUT):
+            postproc_data = {}
+            with open(OUTPUT, 'wb') as out_stream:
+                dill.dump(postproc_data, out_stream)
+        with open(OUTPUT, 'rb') as in_stream:
+            postproc_data = dill.load(in_stream)
+        # Load output (hdf5 file) if any
+        h5_file = h5py.File(OUTPUT + '.hdf5', 'a')
+
+    # FILTERING ALIGNED CONDITIONALS
+    if ALIGNED_CONDITIONALS:
+        filter_tstamp_print("[Start] Filtering conditionals")
+        for n, filt_tmap in enumerate(filt_tmap_list):
+            filter_tstamp_print("        Filtering conditionals " + \
+                                "- Step %d" % n)
+            DATA_FIELD = 'filtering-conditionals-%d' % n
+            data = postproc_data.get(DATA_FIELD, None)
+            if data is None:
+                base_density = DIST.StandardNormalDistribution(filt_tmap.dim)
+                d = DIST.PushForwardTransportMapDistribution(
+                    filt_tmap, base_density)
+                data = DIAG.computeAlignedConditionals(
+                    d, dimensions_vec=ALC_N_TRI_PLOTS,
+                    numPointsXax=ALC_N_POINTS_X_AX,
+                    pointEval=ALC_ANCHOR, range_vec=ALC_RANGE,
+                    mpi_pool=mpi_pool)
+                postproc_data[DATA_FIELD] = data
+                if OUTPUT is not None:
+                    safe_store(postproc_data, OUTPUT)
+            if PLOTTING:
+                fig = DIAG.plotAlignedConditionals(
+                    data=data, show_flag=(STORE_FIG_DIR is None))
+                if STORE_FIG_DIR is not None:
+                    store_figure(fig, fig_folder + '/' + title + \
+                                 '-filtering-conditionals-%d' % n +\
+                                 EXTRA_TIT)
+        filter_tstamp_print("[Stop]  Filtering conditionals")
+
+    # FILTERING ALIGNED MARGINALS
+    if ALIGNED_MARGINALS:
+        filter_tstamp_print("[Start] Filtering marginals")
+        F_GRP_NAME = "/filtering"
+        if F_GRP_NAME not in h5_file:
+            h5_file.create_group(F_GRP_NAME)
+        fgrp = h5_file[F_GRP_NAME]
+        for n, filt_tmap in enumerate(filt_tmap_list):
+            filter_tstamp_print("        Filtering marginals " + \
+                                "- Step %d - Sample generation" % n)
+            dim = filt_tmap.dim
+            # Load values if any
+            S_GRP_NAME = "step-%d" % n
+            if S_GRP_NAME not in fgrp:
+                fgrp.create_group(S_GRP_NAME)
+            sgrp = fgrp[S_GRP_NAME]
+            Q_GRP_NAME = "quadrature"
+            if Q_GRP_NAME not in sgrp:
+                sgrp.create_group(Q_GRP_NAME)
+            qgrp = sgrp[Q_GRP_NAME]
+            DSET_NAME = '0'
+            if DSET_NAME not in qgrp:
+                qgrp.create_dataset(
+                    DSET_NAME, (0,dim), maxshape=(None,dim), dtype='d')
+            loaded_samp = qgrp[DSET_NAME]
+            if ALM_N_POINTS > loaded_samp.shape[0]:
+                nold = loaded_samp.shape[0]
+                new_nsamp = ALM_N_POINTS - nold
+                base_density = DIST.StandardNormalDistribution(dim)
+                d = DIST.PushForwardTransportMapDistribution(
+                    filt_tmap, base_density)
+                x = d.rvs(new_nsamp, mpi_pool=mpi_pool)
+                loaded_samp.resize(ALM_N_POINTS, axis=0)
+                loaded_samp[nold:,:] = x
+            filter_tstamp_print("        Filtering marginals " + \
+                                "- Step %d - Plotting" % n)
+            if PLOTTING:
+                fig = DIAG.plotAlignedMarginals(
+                    loaded_samp[:ALM_N_POINTS,:], ALM_N_TRI_PLOTS,
+                    show_flag=(STORE_FIG_DIR is None))
+                if STORE_FIG_DIR is not None:
+                    store_figure(fig, fig_folder+'/'+title + \
+                                 '-filtering-marginals-%d' % n + \
+                                 EXTRA_TIT)
+        filter_tstamp_print("[Stop]  Filtering marginals")
+        
+    for _, qtype, qnum in zip(QUADRATURE, QUAD_QTYPE, QUAD_QNUM):
+        filter_tstamp_print("[Start] Quadrature " + str(qtype))
+        F_GRP_NAME = "/filtering"
+        if F_GRP_NAME not in h5_file:
+            h5_file.create_group(F_GRP_NAME)
+        fgrp = h5_file[F_GRP_NAME]
+        for n, filt_tmap in enumerate(filt_tmap_list):
+            filter_tstamp_print("        Quadrature " + str(qtype) + \
+                                "- Step %d - Sample generation" % n)
+            dim = filt_tmap.dim
+            # Load values if any
+            S_GRP_NAME = "step-%d" % n
+            if S_GRP_NAME not in fgrp:
+                fgrp.create_group(S_GRP_NAME)
+            sgrp = fgrp[S_GRP_NAME]
+            Q_GRP_NAME = "quadrature"
+            if Q_GRP_NAME not in sgrp:
+                sgrp.create_group(Q_GRP_NAME)
+            qgrp = sgrp[Q_GRP_NAME]
+            if qtype == 0: # Monte-Carlo
+                DSET_NAME = str(qtype)
+                if DSET_NAME not in qgrp:
+                    qgrp.create_dataset(
+                        DSET_NAME, (0,dim), maxshape=(None,dim), dtype='d')
+                loaded_samp = qgrp[DSET_NAME]
+                if qnum[0] > loaded_samp.shape[0]:
+                    nold = loaded_samp.shape[0]
+                    new_nsamp = qnum[0] - nold
+                    base_density = DIST.StandardNormalDistribution(dim)
+                    d = DIST.PushForwardTransportMapDistribution(
+                        filt_tmap, base_density)
+                    x = d.rvs(new_nsamp, mpi_pool=mpi_pool)
+                    loaded_samp.resize(qnum[0], axis=0)
+                    loaded_samp[nold:,:] = x
+            elif qtype == 3: # Gauss quadrature
+                QTYPE_NAME = str(qtype)
+                X_NAME = 'x'
+                W_NAME = 'w'
+                if QTYPE_NAME not in qgrp:
+                    qgrp.create_group(QTYPE_NAME)
+                qtp_grp = qgrp[QTYPE_NAME]
+                QNUM_NAME = str(qnum)
+                if QNUM_NAME not in qtp_grp:
+                    qtp_grp.create_group(QNUM_NAME)
+                    qngrp = qtp_grp[QNUM_NAME]
+                    base_density = DIST.StandardNormalDistribution(dim)
+                    d = DIST.PushForwardTransportMapDistribution(
+                        filt_tmap, base_density)
+                    (x, w) = d.quadrature(qtype, qnum, mpi_pool=mpi_pool)
+                    qngrp.create_dataset(X_NAME, data=x)
+                    qngrp.create_dataset(W_NAME, data=w)
+        filter_tstamp_print("[Stop]  Quadrature")
+
+finally:
+    if mpi_pool is not None:
+        mpi_pool.stop()
+    if INTERACTIVE:
+        from IPython import embed
+        embed()

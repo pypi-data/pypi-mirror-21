@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+
+import sys
+import types
+import inspect
+from tabulate import tabulate
+import TransportMaps as TM
+
+def fullname(p, c):
+  return p.__name__ + "." + c.__name__
+
+to_check = [(TM, TM.__all__[:])]
+
+for parent, children in to_check:
+    functions = []
+    classes = []
+    submod = []
+    for child in children:
+        o = getattr(parent, child)
+        if inspect.isclass(o):
+            classes.append(o)
+        elif inspect.isfunction(o):
+            functions.append(o)
+        elif isinstance(o, types.ModuleType):
+            submod.append(o)
+            to_check.append((o, o.__all__[:]))
+
+    FNAME = 'api-' + parent.__name__.replace('.','-')
+    
+    # API TITLE
+    api_str = ''
+    if parent.__name__ == "TransportMaps":
+        api_str += "API - "
+    api_str += parent.__name__ + "\n" + \
+               "=============================================\n"
+
+    # SUBMODULES
+    if len(submod) > 0:
+        autosubmod = \
+"""
+**Sub-modules**
+
+.. toctree::
+   :maxdepth: 1
+
+"""
+        autosubmod += "   " + "\n   ".join([ 'api-' + m.__name__.replace('.','-')
+                                       for m in submod])
+        api_str += autosubmod + '\n\n'
+
+    # CLASSES AND FUNCTIONS SUMMARY
+    autosum = ''
+    if len(classes) > 0:
+        autosum += \
+"""
+**Classes**
+
+"""
+        class_diag = \
+"""
+.. inheritance-diagram:: """ + \
+    ' '.join( [fullname(parent,c) for c in classes] ) + \
+    """
+   :parts: 1
+"""
+        autosum += class_diag + '\n\n'
+        
+        class_table = []
+        for c in classes:
+            doc = c.__doc__
+            if doc is None: doc = ''
+            class_table.append([
+                "`" + c.__name__ + " <" + \
+                FNAME + ".html\#" + fullname(parent, c) + ">`_",
+                doc.split('\n', 1)[0] ])
+        autosum += tabulate(class_table, tablefmt='rst') + '\n\n'
+    if len(functions) > 0:
+        fun_table = []
+        autosum += \
+"""
+**Functions**
+
+"""
+        for f in functions:
+            doc = f.__doc__
+            if doc is None: doc = ''
+            fun_table.append([
+                "`" + f.__name__ + " <" + \
+                FNAME + ".html\#" + fullname(parent,f) + ">`_",
+                doc.split('\n', 1)[0] ])
+        autosum += tabulate(fun_table, tablefmt='rst')
+    api_str += autosum + '\n\n'
+
+    # AUTO MODULE
+    automod = "**Documentation**\n" + \
+              "\n" + \
+              ".. automodule:: " + parent.__name__ + "\n" + \
+              "   :members:"
+    api_str += automod + "\n\n"
+
+    with open('../source/'+FNAME+'.rst', 'w') as f:
+        f.write(api_str)

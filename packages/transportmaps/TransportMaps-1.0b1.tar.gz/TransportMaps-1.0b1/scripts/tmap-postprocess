@@ -1,0 +1,772 @@
+#!/usr/bin/env python
+
+#
+# This file is part of TransportMaps.
+#
+# TransportMaps is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# TransportMaps is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with TransportMaps.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Transport Maps Library
+# Copyright (C) 2015-2017 Massachusetts Institute of Technology
+# Uncertainty Quantification group
+# Department of Aeronautics and Astronautics
+#
+# Author: Transport Map Team
+# Website: transport-maps.mit.edu
+# Support: transport-maps.mit.edu/qa/
+#
+
+from __future__ import print_function
+
+import sys
+import getopt
+import os
+import os.path
+import shutil
+import time
+import datetime
+import logging
+import dill
+import h5py
+import numpy as np
+import numpy.random as npr
+import TransportMaps as TM
+import TransportMaps.CLI as TMCLI
+import TransportMaps.Diagnostics as DIAG
+import TransportMaps.Samplers as SAMP
+import TransportMaps.Distributions as DIST
+
+sys.path.append(os.getcwd())
+
+def usage():
+    usage_str = """
+Usage: tmap-postprocess [-h -v -I]
+  --data=DATA --output=OUTPUT
+  [--store-fig-dir=DIR --store-fig-fmats=FMATS
+   --extra-tit=TITLE --no-plotting 
+   --aligned-conditionals=DIST
+     --alc-n-points-x-ax=N --alc-n-tri-plots=N
+     --alc-anchor=LIST --alc-range=LIST
+   --random-conditionals=DIST
+     --rndc-n-points-x-ax=N --rndc-n-plots-x-ax=N
+     --rndc-anchor=LIST --rndc-range=LIST
+   --var-diag=DIST
+     --var-diag-qtype=QTYPE --var-diag-qnum=QNUM
+   --aligned-marginals=DIST
+     --alm-n-points=N --alm-n-tri-plots=N
+   --quadrature=DIST
+     --quadrature-qtype=QTYPE
+     --quadrature-qnum=QNUM
+   --importance-samples=NSAMP
+   --metropolis-samples=NSAMP
+     --metropolis-burnin=BURNIN
+     --metropolis-ess-q=QUANTILE
+     --metropolis-ess-plot-lag=LAG
+     --metropolis-ess-xcorr
+   --log=LOG --batch=BATCH --nprocs=NPROCS]
+"""
+    print(usage_str)
+
+def description():
+    docs_distributions_str = \
+        TMCLI.print_avail_options(TMCLI.AVAIL_DISTRIBUTIONS,
+                                  '                        ', False)
+    docs_log_str = \
+        '  --log=LOG               log level (default=30). Uses package logging.\n' + \
+        TMCLI.print_avail_options(TMCLI.AVAIL_LOGGING,'                          ')
+    docs_str = """DESCRIPTION
+Given a file (--data) storing the transport map pushing forward a base distribution
+to a target distribution, provides a number of diagnositic routines.
+All files involved are stored and loaded using the python package dill and
+an extra file OUTPUT.hdf5 is created to store big datasets in the hdf5 format.
+In the following default values are shown in brackets.
+
+OPTIONS - input/output:
+  --data=DATA           path to the file containing the target distribution,
+                          the base distribution and the transport map pushing forward
+                          the base to the target.
+  --output=OUTPUT       path to the file storing all postprocess data.
+                          The additional file OUTPUT.hdf5 will be used to store
+                          the more memory consuming data.
+  --store-fig-dir=DIR   path to the directory where to store the figures.
+  --store-fig-fmats=FMATS  figure formats - see matplotlib for supported formats (svg)
+  --extra-tit=TITLE     additional title for the figures' file names.
+  --no-plotting         do not plot figures, but only store their data.
+                          (requires --output or --store-fig-dir)
+OPTIONS - Diagnostics:
+  --aligned-conditionals=DIST  plot aligned slices of the selected DIST:
+""" + docs_distributions_str + """                        Optional arguments:
+    --alc-n-points-x-ax=N  number of discretization points per axis (40)
+    --alc-n-tri-plots=N    number of subplots (0)
+    --alc-anchor=LIST      list of floats "f1,f2,f3..." for the anchor point (0)
+    --alc-range=LIST       list of two floats "f1,f2" for the range (-5,5)
+  --random-conditionals=DIST   plot randomly chosen slices of the selected DIST:
+""" + docs_distributions_str + """                        Optional arguments:
+    --rndc-n-points-x-ax=N   number of discretization points per axis (40)
+    --rndc-n-plots-x-ax=N    number of subplots (0)
+    --rndc-anchor=LIST       list of floats "f1,f2,f3..." for the anchor point (0)
+    --rndc-range=LIST        list of two floats "f1,f2" for the range (-5,5)
+  --var-diag=DIST       compute variance diagostic using the sampling DIST:
+""" + docs_distributions_str + """                        Optional arguments:
+    --var-diag-qtype=QTYPE  quadrature type to be used (0)
+    --var-diag-qnum=QNUM    level of the quadrature (1000)
+OPTIONS - Sampling:
+  --aligned-marginals=DIST  plot aligned marginals of the selected DIST:
+""" + docs_distributions_str + """                        Optional arguments:
+    --alm-n-points=N         number of samples to be used for the kernel density estimation
+    --alm-n-tri-plots=N      number of subplots (0)
+  --quadrature=DIST     generate quadrature for the selected DIST:
+""" + docs_distributions_str + """                        Optional arguments:
+    --quadrature-qtype=QTYPE  generate quadrature of type QTYPE (0)
+    --quadrature-qnum=QNUM  level of the quadrature (int or list)
+  --importance-samples=NSAMP  number of importance samples and weights for the approximation
+                        of estimators with respect to the target distribution
+  --metropolis-samples=NSAMP  length of the chain with invariant distribution the
+                        target distribution using Metropolis-Hastings with independent
+                        proposals
+    --metropolis-burnin=BURNIN   number of samples to be considered as burn-in
+    --metropolis-ess-q=QUANTILE  quantile used for the estimation of the sample size (0.99).
+                             This is estimated over the worst decaying autocorrelation rate.
+    --metropolis-ess-plot-lag=LAG  maximum lag to be plotted (50)
+    --metropolis-ess-xcorr       whether to compute also cross-correlation decays
+OPTIONS - Computation:
+""" + docs_log_str + """  --nprocs=NPROCS         number of processors to be used (default=1)
+  --batch=BATCH           list of batch sizes for function evaluation, gradient
+                          evaluation and Hessian evaluation
+OPTIONS - other:
+  -v                      verbose output (not affecting --log)
+  -I                      enter interactive mode after finishing
+  -h                      print this help
+"""
+    print(docs_str)
+    
+def full_usage():
+    usage()
+
+def full_doc():
+    full_usage()
+    description()
+
+##################### INPUT PARSING #####################
+argv = sys.argv[1:]
+INTERACTIVE = False
+# I/O
+DATA = None
+OUTPUT = None    # Postprocess data
+STORE_FIG_DIR = None
+STORE_FIG_FMATS = ['svg']
+EXTRA_TIT = ''
+PLOTTING = True
+# Aligned conditionals
+ALIGNED_CONDITIONALS = []
+ALC_N_POINTS_X_AX = []
+ALC_N_TRI_PLOTS = []
+ALC_ANCHOR = []
+ALC_RANGE = []
+# Random conditionals
+RANDOM_CONDITIONALS = []
+RNDC_N_POINTS_X_AX = []
+RNDC_N_PLOTS_X_AX = []
+RNDC_ANCHOR = []
+RNDC_RANGE = []
+# Aligned marginals
+ALIGNED_MARGINALS = []
+ALM_N_POINTS = []
+ALM_N_TRI_PLOTS = []
+# Default plotting options
+DFT_N_POINTS = 1000
+DFT_N_POINTS_X_AX = 40
+DFT_N_TRI_PLOTS = 0
+DFT_ANCHOR = None
+DFT_RANGE = [-5.,5.]
+DFT_N_PLOTS_X_AX = 6
+# Variance diagnostic
+VAR_DIAG = []
+VD_QTYPE = []
+VD_QNUM  = []
+# Defaults for variance diagnostic
+DFT_VD_QTYPE = 0
+DFT_VD_QNUM = 1000
+# Samples
+QUADRATURE = []
+QUAD_QTYPE = []
+QUAD_QNUM = []
+# Importance samples
+IMP_SAMPLES = None
+# Metropolis samples
+MET_SAMPLES = None
+MET_BURNIN = 0
+MET_ESS_Q = 0.99
+MET_ESS_PLOT_LAG = 50
+MET_ESS_XCORR = False
+# Logging
+VERBOSE = False
+LOGGING_LEVEL = 30 # Warnings
+# Parallelization
+BATCH_SIZE = 1000
+NPROCS = 1
+
+try:
+    opts, args = getopt.getopt(argv,"hvI",[
+        # I/O
+        "data=", "output=",
+        "store-fig-dir=", "store-fig-fmats=",
+        "extra-tit=", "no-plotting",
+        # Aligned conditionals
+        "aligned-conditionals=",
+        "alc-n-points-x-ax=", "alc-n-tri-plots=", "alc-anchor=", "alc-range=",
+        # Random conditionals
+        "random-conditionals=",
+        "rndc-n-points-x-ax=", "rndc-anchor=", "rndc-range=", "rndc-n-plots-x-ax=",
+        # Aligned marginals
+        "aligned-marginals=",
+        "alm-n-points=", "alm-n-tri-plots=",
+        # Variance diagnostic
+        "var-diag=", "var-diag-qtype=", "var-diag-qnum=",
+        # Quadrature
+        "quadrature=", "quadrature-qtype=", "quadrature-qnum=",
+        # Importance sampling
+        "importance-samples=",
+        # Metropolis Hastings
+        "metropolis-samples=", "metropolis-burnin=",
+        "metropolis-ess-q=", "metropolis-ess-plot-lag=",
+        "metropolis-ess-xcorr",
+        # Logging
+        "log=",
+        # Parallelization and batching option
+        "batch=", "nprocs="])
+except getopt.GetoptError as e:
+    full_usage()
+    raise e
+for opt, arg in opts:
+    if opt == '-h':
+        full_doc()
+        sys.exit()
+
+    # Verbose
+    elif opt == '-v':
+        VERBOSE = True
+
+    # Interactive
+    elif opt in ("-I"):
+        INTERACTIVE = True
+        
+    # I/O
+    elif opt in ("--data"):
+        DATA = arg
+    elif opt in ("--output"):
+        OUTPUT = arg
+    elif opt in ("--store-fig-dir"):
+        STORE_FIG_DIR = arg
+    elif opt in ("--store-fig-fmats"):
+        STORE_FIG_FMATS = arg.split(',')
+    elif opt in ("--extra-tit"):
+        EXTRA_TIT = "-" + arg
+    elif opt in ("--no-plotting"):
+        PLOTTING = False
+
+    # Aligned conditionals
+    elif opt in ("--aligned-conditionals"):
+        ALIGNED_CONDITIONALS.append(arg)
+        ALC_N_POINTS_X_AX.append( DFT_N_POINTS_X_AX )
+        ALC_N_TRI_PLOTS.append( DFT_N_TRI_PLOTS )
+        ALC_ANCHOR.append( DFT_ANCHOR )
+        ALC_RANGE.append( DFT_RANGE )
+    # Options
+    elif opt in ("--alc-n-points-x-ax"):
+        ALC_N_POINTS_X_AX[len(ALIGNED_CONDITIONALS)-1] = int(arg)
+    elif opt in ("--alc-n-tri-plots"):
+        ALC_N_TRI_PLOTS[len(ALIGNED_CONDITIONALS)-1] = list(range(int(arg)))
+    elif opt in ("--alc-anchor"):
+        ALC_ANCHOR[len(ALIGNED_CONDITIONALS)-1] = [float(s) for s in arg.split(',')]
+    elif opt in ("--alc-range"):
+        ALC_RANGE[len(ALIGNED_CONDITIONALS)-1] = [float(s) for s in arg.split(',')]
+        
+    # Random conditionals
+    elif opt in ("--random-conditionals"):
+        RANDOM_CONDITIONALS.append(arg)
+        RNDC_N_POINTS_X_AX.append( DFT_N_POINTS_X_AX )
+        RNDC_N_PLOTS_X_AX.append( DFT_N_PLOTS_X_AX )
+        RNDC_ANCHOR.append( DFT_ANCHOR )
+        RNDC_RANGE.append( DFT_RANGE )
+    # Options
+    elif opt in ("--rndc-n-points-x-ax"):
+        RNDC_N_POINTS_X_AX[len(RANDOM_CONDITIONALS)-1] = int(arg)
+    elif opt in ("--rndc-n-plots-x-ax"):
+        RNDC_N_PLOTS_X_AX[len(RANDOM_CONDITIONALS)-1] = int(arg)
+    elif opt in ("--rndc-anchor"):
+        RNDC_ANCHOR[len(RANDOM_CONDITIONALS)-1] = [float(s) for s in arg.split(',')]
+    elif opt in ("--rndc-range"):
+        RNDC_RANGE[len(RANDOM_CONDITIONALS)-1] = [float(s) for s in arg.split(',')]
+
+    # Aligned marginals
+    elif opt in ("--aligned-marginals"):
+        ALIGNED_MARGINALS.append(arg)
+        ALM_N_POINTS.append(DFT_N_POINTS)
+        ALM_N_TRI_PLOTS.append(DFT_N_TRI_PLOTS)
+    # Options
+    elif opt in ("--alm-n-points"):
+        ALM_N_POINTS[len(ALIGNED_MARGINALS)-1] = int(arg)
+    elif opt in ("--alm-n-tri-plots"):
+        ALM_N_TRI_PLOTS[len(ALIGNED_MARGINALS)-1] = int(arg)
+        
+    # Variance diagnostic
+    elif opt in ("--var-diag"):
+        VAR_DIAG.append(arg)
+        VD_QTYPE.append(DFT_VD_QTYPE)
+        VD_QNUM.append(DFT_VD_QNUM)
+    elif opt in ("--var-diag-qtype"):
+        VD_QTYPE[len(VAR_DIAG)-1] = int(arg)
+    elif opt in ("--var-diag-qnum"):
+        VD_QNUM[len(VAR_DIAG)-1] = [int(q) for q in arg.split(',')]
+
+    # Quadrature
+    elif opt in ("--quadrature"):
+        QUADRATURE.append( arg )
+        QUAD_QTYPE.append( None )
+        QUAD_QNUM.append( None )
+    elif opt in ("--quadrature-qtype"):
+        QUAD_QTYPE[len(QUADRATURE)-1] = int(arg)
+    elif opt in ("--quadrature-qnum"):
+        QUAD_QNUM[len(QUADRATURE)-1] = [int(q) for q in arg.split(',')]
+        
+    # Importance sampling
+    elif opt in ("--importance-samples"):
+        IMP_SAMPLES = int(arg)
+
+    # Metropolis Hastings
+    elif opt in ("--metropolis-samples"):
+        MET_SAMPLES = int(arg)
+    elif opt in ("--metropolis-burnin"):
+        MET_BURNIN = int(arg)
+    elif opt in ("--metropolis-ess-q"):
+        MET_ESS_Q = float(arg)
+    elif opt in ("--metropolis-ess-plot-lag"):
+        MET_ESS_PLOT_LAG = int(arg)
+    elif opt in ("--metropolis-ess-xcorr"):
+        MET_ESS_XCORR = True
+
+    # Logging
+    elif opt in ['--log']:
+        LOGGING_LEVEL = int(arg)
+
+    # Parallelization and batching
+    elif opt in ("--batch"):
+        BATCH_SIZE = int(arg)
+    elif opt in ("--nprocs"):
+        NPROCS = int(arg)
+
+logging.basicConfig(level=LOGGING_LEVEL)
+        
+def tstamp_print(msg, *args, **kwargs):
+    tstamp = datetime.datetime.fromtimestamp(
+        time.time()
+    ).strftime('%Y-%m-%d %H:%M:%S')
+    print(tstamp + " " + msg, *args, **kwargs)
+
+def filter_tstamp_print(msg, *args, **kwargs):
+    if VERBOSE:
+        tstamp_print(msg, *args, **kwargs)
+
+def filter_print(*args, **kwargs):
+    if VERBOSE:
+        print(*args, **kwargs)
+
+def safe_store(data, fname):
+    # Backup copy
+    shutil.copyfile(fname, fname + '.bak')
+    # Store data
+    with open(fname, 'wb') as out_stream:
+        dill.dump(data, out_stream);
+    # Remove backup
+    os.remove(fname + '.bak')
+        
+# Check for required arguments
+if None in [DATA, OUTPUT]:
+    usage()
+    tstamp_print("ERROR: Option --data and --output must be specified")
+    sys.exit(3)
+if not PLOTTING and STORE_FIG_DIR is None and OUTPUT is None:
+    usage()
+    tstamp_print("ERROR: Neither --output nor --store-fig-dir were " + \
+                 "specified, while --no-plotting is active. " + \
+                 "This would result on no data shown or stored.")
+    sys.exit(3)
+    
+mpi_pool = None
+if NPROCS > 1:
+    mpi_pool = TM.get_mpi_pool()
+    mpi_pool.start(NPROCS)
+    
+try:
+    # Load data
+    with open(DATA, 'rb') as in_stream:
+        stg = dill.load(in_stream)
+
+    # Prepare storage of figures
+    if STORE_FIG_DIR is not None:
+        fig_folder = STORE_FIG_DIR
+        tit_no_path = str.split(DATA,"/")[-1]
+        title = '.'.join(str.split(tit_no_path,".")[:-1])
+        def store_figure(fig, fname):
+            for fmat in STORE_FIG_FMATS:
+                fig.savefig(fname+'.'+fmat, format=fmat, bbox_inches='tight');
+
+    # Restore data
+    base_distribution = stg.base_distribution
+    target_distribution = stg.target_distribution
+    tmap = stg.tmap
+    approx_base_distribution = stg.approx_base_distribution
+    approx_target_distribution = stg.approx_target_distribution
+    dim = base_distribution.dim
+    
+    # Load output (dill file) if any
+    if OUTPUT is None:
+        postproc_data = {}
+    else:
+        if not os.path.exists(OUTPUT):
+            postproc_data = {}
+            with open(OUTPUT, 'wb') as out_stream:
+                dill.dump(postproc_data, out_stream)
+        with open(OUTPUT, 'rb') as in_stream:
+            postproc_data = dill.load(in_stream)
+        # Load output (hdf5 file) if any
+        h5_file = h5py.File(OUTPUT + '.hdf5', 'a')
+
+    # ALIGNED CONDITIONALS
+    for aligned, n_tri_plots, n_points_x_ax, anchor, rng in \
+        zip(ALIGNED_CONDITIONALS, ALC_N_TRI_PLOTS, ALC_N_POINTS_X_AX, ALC_ANCHOR, ALC_RANGE):
+        filter_tstamp_print("[Start] Aligned conditionals " + aligned)
+        if aligned == 'exact-target':
+            d = target_distribution
+        elif aligned == 'approx-target':
+            d = approx_target_distribution
+        elif aligned == 'exact-base':
+            d = base_distribution
+        elif aligned == 'approx-base':
+            d = approx_base_distribution
+        else:
+            full_usage()
+            tstamp_print("ERROR: DIST %s not recognized." % aligned)
+        DATA_FIELD = 'aligned-' + aligned
+        data = postproc_data.get(DATA_FIELD, None)
+        if data is None:
+            data = DIAG.computeAlignedConditionals(
+                d, dimensions_vec=n_tri_plots,
+                numPointsXax = n_points_x_ax,
+                pointEval=anchor, range_vec=rng,
+                mpi_pool=mpi_pool)
+            postproc_data[DATA_FIELD] = data
+            if OUTPUT is not None:
+                safe_store(postproc_data, OUTPUT)
+        if PLOTTING:
+            fig = DIAG.plotAlignedConditionals(
+                data=data, show_flag=(STORE_FIG_DIR is None));
+            if STORE_FIG_DIR is not None:
+                store_figure(fig, fig_folder+'/'+title+'-aligned-conditionals-'+ aligned +\
+                             EXTRA_TIT)
+        filter_tstamp_print("[Stop]  Aligned conditionals " + aligned)
+
+    # RANDOM CONDITIONALS
+    for random, n_plots_x_ax, n_points_x_ax, anchor, rng in \
+        zip(RANDOM_CONDITIONALS, RNDC_N_PLOTS_X_AX, RNDC_N_POINTS_X_AX,
+            RNDC_ANCHOR, RNDC_RANGE):
+        filter_tstamp_print("[Start] Random conditionals " + random)
+        if random == 'exact-target':
+            d = target_distribution
+        elif random == 'approx-target':
+            d = approx_target_distribution
+        elif random == 'exact-base':
+            d = base_distribution
+        elif random == 'approx-base':
+            d = approx_base_distribution
+        else:
+            full_usage()
+            tstamp_print("ERROR: DIST %s not recognized." % random)
+        DATA_FIELD = 'random-' + random
+        data = postproc_data.get(DATA_FIELD, None)
+        if data is None:
+            data = DIAG.computeRandomConditionals(
+                d, num_conditionalsXax=n_plots_x_ax,
+                numPointsXax=n_points_x_ax,
+                pointEval=anchor, range_vec=rng,
+                mpi_pool=mpi_pool)
+            postproc_data[DATA_FIELD] = data
+            if OUTPUT is not None:
+                safe_store(postproc_data, OUTPUT)
+        if PLOTTING:
+            fig = DIAG.plotRandomConditionals(
+                data=data, show_flag=(STORE_FIG_DIR is None))
+            if STORE_FIG_DIR is not None:
+                store_figure(fig, fig_folder+'/'+title+'-random-conditionals-' + random + \
+                             EXTRA_TIT)
+        filter_tstamp_print("[Stop]  Random conditionals " + random)
+            
+    # VARIANCE DIAGNOSTIC
+    for dstr, qtype, qnum in zip(VAR_DIAG, VD_QTYPE, VD_QNUM):
+        filter_tstamp_print("[Start] Variance diagnostic " + dstr)
+        if dstr == 'exact-target':
+            d1 = target_distribution
+            d2 = approx_target_distribution
+        elif dstr == 'approx-target':
+            d1 = approx_target_distribution
+            d2 = target_distribution
+        elif dstr == 'exact-base':
+            d1 = base_distribution
+            d2 = approx_base_distribution
+        elif dstr == 'approx-base':
+            d1 = approx_base_distribution
+            d2 = base_distribution
+        else:
+            full_usage()
+            tstamp_print("ERROR: DIST %s not recognized." % dstr)
+        # Load values if any
+        GRP_NAME = "/vals_var_diag/" + dstr
+        if GRP_NAME not in h5_file:
+            h5_file.create_group(GRP_NAME)
+        grp = h5_file[GRP_NAME]
+        QTYPE_NAME = str(qtype)
+        if QTYPE_NAME not in grp:
+            grp.create_group(QTYPE_NAME)
+        qtype_grp = grp[QTYPE_NAME]
+        V1_NAME = 'vals_d1'
+        V2_NAME = 'vals_d2'
+        if qtype == 0: # Monte-Carlo
+            if V1_NAME not in qtype_grp:
+                qtype_grp.create_dataset(V1_NAME, (0,), maxshape=(None,), dtype='d')
+            if V2_NAME not in qtype_grp:
+                qtype_grp.create_dataset(V2_NAME, (0,), maxshape=(None,), dtype='d')
+            loaded_vals_d1 = qtype_grp[V1_NAME]
+            loaded_vals_d2 = qtype_grp[V2_NAME]
+            if len(loaded_vals_d1) > 0 and qnum[0] < len(loaded_vals_d1):
+                # Subselect already available data
+                vals_d1 = np.array( loaded_vals_d1[:qnum[0]] )
+                vals_d2 = np.array( loaded_vals_d2[:qnum[0]] )
+            else:
+                old_len = len(loaded_vals_d1)
+                # Sample new points and evaluate
+                n_new_samps = qnum[0] - len(loaded_vals_d1)
+                x = d1.rvs(n_new_samps)
+                new_vals_d1, new_vals_d2 = DIAG.compute_vals_variance_approx_kl(
+                    d1, d2, x=x, mpi_pool_tuple=(None, mpi_pool))
+                loaded_vals_d1.resize(qnum[0], axis=0)
+                loaded_vals_d2.resize(qnum[0], axis=0)
+                loaded_vals_d1[old_len:] = new_vals_d1
+                loaded_vals_d2[old_len:] = new_vals_d2
+                vals_d1 = np.array( loaded_vals_d1 )
+                vals_d2 = np.array( loaded_vals_d2 )
+            w = np.ones(qnum[0])/float(qnum[0])
+        elif qtype == 3: # Gauss quadrature
+            QNUM_NAME = str(qnum)
+            W_NAME = 'w'
+            if QNUM_NAME not in qtype_grp:
+                qtype_grp.create_group(QNUM_NAME)
+                qnum_grp = qtype_grp[QNUM_NAME]
+                (x, w) = d1.quadrature(qtype, qnum, mpi_pool=mpi_pool)
+                vals_d1, vals_d2 = DIAG.compute_vals_variance_approx_kl(
+                    d1, d2, x=x, mpi_pool_tuple=(None, mpi_pool))
+                qnum_grp.create_dataset(V1_NAME, data=vals_d1)
+                qnum_grp.create_dataset(V2_NAME, data=vals_d2)
+                qnum_grp.create_dataset(W_NAME, data=w)
+            else:
+                qnum_grp[QNUM_NAME]
+                vals_d1 = np.array( qnum_grp[V1_NAME] )
+                vals_d2 = np.array( qnum_grp[V2_NAME] )
+                w = np.array( qnum_grp[W_NAME] )
+        var_diag_tm = DIAG.variance_approx_kl(d1, d2,
+                                              vals_d1=vals_d1, vals_d2=vals_d2, w=w)
+        filter_tstamp_print("[Stop]  Variance Diagnostic %s: %e" % (dstr, var_diag_tm))
+
+    # ALIGNED MARGINALS
+    for dstr, n_points, n_tri_plots in zip(
+            ALIGNED_MARGINALS, ALM_N_POINTS, ALM_N_TRI_PLOTS):
+        filter_tstamp_print("[Start] Aligned marginals %s " % dstr + \
+                       "- Sample generation")
+        if dstr == 'exact-target':
+            d = target_distribution
+        elif dstr == 'approx-target':
+            d = approx_target_distribution
+        elif dstr == 'exact-base':
+            d = base_distribution
+        elif dstr == 'approx-base':
+            d = approx_base_distribution
+        else:
+            full_usage()
+            tstamp_print("ERROR: DIST %s not recognized." % dstr)
+        # Load values if any
+        Q_GRP_NAME = "/quadrature"
+        if Q_GRP_NAME not in h5_file:
+            h5_file.create_group(Q_GRP_NAME)
+        qgrp = h5_file[Q_GRP_NAME]
+        D_GRP_NAME = dstr
+        if D_GRP_NAME not in qgrp:
+            qgrp.create_group(D_GRP_NAME)
+        dgrp = qgrp[D_GRP_NAME]
+        DSET_NAME = '0'
+        if DSET_NAME not in dgrp:
+            dgrp.create_dataset(
+                DSET_NAME, (0,dim), maxshape=(None,dim), dtype='d')
+        loaded_samp = dgrp[DSET_NAME]
+        if n_points > loaded_samp.shape[0]:
+            nold = loaded_samp.shape[0]
+            new_nsamp = n_points - nold
+            x = d.rvs(new_nsamp, mpi_pool=mpi_pool)
+            loaded_samp.resize(n_points, axis=0)
+            loaded_samp[nold:,:] = x
+        filter_tstamp_print("        Aligned marginals %s " % dstr + \
+                            "- Plotting")
+        if PLOTTING:
+            fig = DIAG.plotAlignedMarginals(
+                loaded_samp[:n_points,:], n_tri_plots,
+                show_flag=(STORE_FIG_DIR is None))
+            if STORE_FIG_DIR is not None:
+                store_figure(fig, fig_folder+'/'+title+'-aligned-marginals-'+ dstr +\
+                             EXTRA_TIT)
+        filter_tstamp_print("[Stop]  Aligned marginals %s" % dstr)
+        
+    for dstr, qtype, qnum in zip(QUADRATURE, QUAD_QTYPE, QUAD_QNUM):
+        filter_tstamp_print("[Start] Quadrature " + str(qtype))
+        if dstr == 'exact-target':
+            d = target_distribution
+        elif dstr == 'approx-target':
+            d = approx_target_distribution
+        elif dstr == 'exact-base':
+            d = base_distribution
+        elif dstr == 'approx-base':
+            d = approx_base_distribution
+        else:
+            full_usage()
+            tstamp_print("ERROR: DIST %s not recognized." % dstr)
+        # Load values if any
+        GRP_NAME = "/quadrature"
+        if GRP_NAME not in h5_file:
+            h5_file.create_group(GRP_NAME)
+        qgrp = h5_file[GRP_NAME]
+        D_GRP_NAME = dstr
+        if D_GRP_NAME not in qgrp:
+            qgrp.create_group(D_GRP_NAME)
+        dgrp = qgrp[D_GRP_NAME]
+        if qtype == 0: # Monte-Carlo
+            DSET_NAME = str(qtype)
+            if DSET_NAME not in dgrp:
+                dgrp.create_dataset(
+                    DSET_NAME, (0,dim), maxshape=(None,dim), dtype='d')
+            loaded_samp = dgrp[DSET_NAME]
+            if qnum[0] > loaded_samp.shape[0]:
+                nold = loaded_samp.shape[0]
+                new_nsamp = qnum[0] - nold
+                x = d.rvs(new_nsamp, mpi_pool=mpi_pool)
+                loaded_samp.resize(qnum[0], axis=0)
+                loaded_samp[nold:,:] = x
+        elif qtype == 3: # Gauss quadrature
+            QTYPE_NAME = str(qtype)
+            X_NAME = 'x'
+            W_NAME = 'w'
+            if QTYPE_NAME not in dgrp:
+                dgrp.create_group(QTYPE_NAME)
+            qtp_grp = dgrp[QTYPE_NAME]
+            QNUM_NAME = str(qnum)
+            if QNUM_NAME not in qtp_grp:
+                qtp_grp.create_group(QNUM_NAME)
+                qngrp = qtp_grp[QNUM_NAME]
+                (x, w) = d.quadrature(qtype, qnum, mpi_pool=mpi_pool)
+                qngrp.create_dataset(X_NAME, data=x)
+                qngrp.create_dataset(W_NAME, data=w)
+        filter_tstamp_print("[Stop]  Quadrature")
+
+    if IMP_SAMPLES is not None:
+        filter_tstamp_print("[Start] Importance sampling")
+        # Load values if any
+        GRP_NAME = "/importance-samples"
+        if GRP_NAME not in h5_file:
+            h5_file.create_group(GRP_NAME)
+        is_grp = h5_file[GRP_NAME]
+        X_NAME = 'x'
+        W_NAME = 'w'
+        if X_NAME not in is_grp:
+            is_grp.create_dataset(X_NAME, (0,dim), maxshape=(None,dim), dtype='d')
+            is_grp.create_dataset(W_NAME, (0,), maxshape=(None,), dtype='d')
+        loaded_x = is_grp[X_NAME]
+        loaded_w = is_grp[W_NAME]
+        if IMP_SAMPLES > loaded_x.shape[0]:
+            nold = loaded_x.shape[0]
+            new_nsamp = IMP_SAMPLES - nold
+            sampler = SAMP.ImportanceSampler( approx_base_distribution, base_distribution )
+            (x, w) = sampler.rvs(new_nsamp, mpi_pool_tuple=(mpi_pool, None))
+            x = approx_target_distribution.map_samples_base_to_target(
+                x, mpi_pool=mpi_pool)
+            loaded_x.resize(IMP_SAMPLES, axis=0)
+            loaded_x[nold:,:] = x
+            loaded_w.resize(IMP_SAMPLES, axis=0)
+            loaded_w[nold:] = w
+            loaded_w /= np.sum(loaded_w)
+        filter_tstamp_print("[Stop]  Importance sampling")
+
+    if MET_SAMPLES is not None:
+        filter_tstamp_print("[Start] Metropolis-Hastings with Independent Proposals")
+        # Load values if any
+        GRP_NAME = "/metropolis-independent-proposal-samples"
+        if GRP_NAME not in h5_file:
+            h5_file.create_group(GRP_NAME)
+        is_grp = h5_file[GRP_NAME]
+        X_NAME = 'x'
+        if X_NAME not in is_grp:
+            is_grp.create_dataset(X_NAME, (0,dim), maxshape=(None,dim), dtype='d')
+        loaded_x = is_grp[X_NAME]
+        if MET_SAMPLES > loaded_x.shape[0]:
+            nold = loaded_x.shape[0]
+            new_nsamp = MET_SAMPLES - nold
+            x0 = None
+            burnin = MET_BURNIN
+            if nold > 0:
+                x0 = loaded_x[-1,:]
+                if MET_BURNIN is not None:
+                    burnin = 0
+                    logging.warn("Restrating chain from stored data. " + \
+                                 "Ignoring burn-in parameter")
+            sampler = SAMP.MetropolisHastingsIndependentProposalsSampler(
+                approx_base_distribution, base_distribution )
+            (x, _) = sampler.rvs(new_nsamp, burnin=burnin, x0=x0,
+                                 mpi_pool_tuple=(mpi_pool, None))
+            x = approx_target_distribution.map_samples_base_to_target(
+                x, mpi_pool=mpi_pool)
+            loaded_x.resize(MET_SAMPLES, axis=0)
+            loaded_x[nold:,:] = x
+        # Compute effective sample size
+        filter_tstamp_print("        Metropolis-Hastings with Independent Proposals " + \
+                            "- Estimating ESS")
+        fig = None
+        if PLOTTING:
+            import matplotlib.pyplot as plt
+            if MET_ESS_XCORR:
+                size = (dim*3,dim*3)
+            else:
+                size = (dim*3, 3)
+            fig = plt.figure(figsize=size)
+        ess = SAMP.ess(loaded_x, quantile=MET_ESS_Q, do_xcorr=MET_ESS_XCORR,
+                       plotting=PLOTTING, plot_lag=MET_ESS_PLOT_LAG, fig=fig)
+        if PLOTTING:
+            if STORE_FIG_DIR is None:
+                plt.show(False)
+            else:
+                store_figure(fig, fig_folder+'/'+title+'-metropolis-ess' + \
+                             EXTRA_TIT)
+        filter_tstamp_print("[Stop]  Metropolis-Hastings with Independent Proposals " + \
+                            "- ESS: %d" % ess)
+
+finally:
+    if mpi_pool is not None:
+        mpi_pool.stop()
+    if INTERACTIVE:
+        from IPython import embed
+        embed()
