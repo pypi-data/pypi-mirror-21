@@ -1,0 +1,19 @@
+{%- set name = salt['grains.get']('name-computer:computername', '') %}
+
+{%- load_yaml as salt_states %}
+RedHat:
+  state_name: 'network.system'
+  state_opts:
+      - hostname: {{ name }}
+      - apply_hostname: True
+      - retain_settings: True
+Windows:
+  state_name: 'system.computer_name'
+  state_opts:
+      - name: {{ name }}
+{%- endload %}
+
+{%- set name_computer = salt['grains.filter_by'](
+    salt_states,
+    grain='os_family'
+) if name else {} %}
