@@ -1,0 +1,543 @@
+{% extends 'cpbase.html' %}
+
+{% block pagecontent %}
+<div class="row">
+
+  <div class="col-sm-2 sidebar">
+
+    <div class="row">
+      <div class="col-sm-12">
+        <h4 class="text-sm-center">All Checkplots</h4>
+      </div>
+    </div>
+
+    <div class="row sidebar-list">
+      <div class="col-sm-12">
+        <ul id="checkplotlist" class="list-unstyled">
+          {% for cplpath, cplbase, cplind in zip(project_checkplots, project_checkplotbasenames,project_checkplotindices) %}
+          <li>
+            <span class="object-status" data-fname="{{ cplpath }}"></span>
+            <a class="checkplot-load" href="#"
+               data-findex="{{ cplind }}"
+               data-fname="{{ cplpath }}">
+              {{ cplbase }}
+            </a>
+            <span class="object-disposition" data-fname="{{ cplpath }}"></span>
+          </li>
+          {% end %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="row sidebar-controls">
+      <div class="col-sm-12">
+        <h4 class="text-sm-center">Reviewed Objects</h4>
+
+        <!-- this is where downloads appear -->
+        <div class="row">
+          <div class="col-sm-12 download-center text-sm-center">
+            <p>Reviewed objects so far:
+              <strong><span id="saved-count">0/{{ len(project_checkplots) }}</span></strong></p>
+
+          </div>
+        </div>
+
+        <!-- this is the save project row -->
+        <div class="row">
+          <div class="col-sm-12 text-sm-center">
+
+            <p>Summary in
+              <button type="button" id="save-project-csv"
+                      class="btn btn-outline-primary btn-sm">
+                CSV
+              </button> or
+              <button type="button" id="save-project-json"
+                      class="btn btn-outline-primary btn-sm">
+                JSON
+            </button></p>
+
+          </div>
+        </div>
+
+        <div class="row bot-mrg-10px">
+          <div class="col-sm-12 text-sm-center">
+            <a id="download-anchor" style="display:none">
+              download data for saved objects
+            </a>
+          </div>
+        </div>
+
+        <!-- this is the status row -->
+        <div class="row status-list">
+          <div class="col-sm-12" >
+
+            <div id="project-status">
+
+            </div>
+
+          </div>
+        </div>
+
+        <div class="row py-1">
+          <div class="col-sm-12 text-sm-center">
+            <p>Updates are automatically synced to each checkplot pickle and the
+            checkplot list <strong><abbr title="{{ project_checkplotfile
+            }}">JSON file</abbr></strong>.</p>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="col-sm-10">
+
+    <!-- instructions and nav bar go here -->
+    <div class="row">
+      <div class="col-sm-12 text-sm-center">
+        <p>Use the <kbd>ctrl</kbd> + <kbd>&larr;</kbd> and the <kbd>ctrl</kbd>
+          + <kbd>&rarr;</kbd> keys to move through the checkplot
+          list. <a href="#" id="shortcuts-box" data-toggle="modal"
+          data-target="#help-box">See more keyboard shortcuts and help.</a><br>
+          <a href="#" class="checkplot-prev">&lt;&lt; previous</a>
+          | <span id="checkplot-current"></span> |
+          <a href="#" class="checkplot-next">next &gt;&gt;</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- first row: finderchart, objectinfo, varinfo, unphased LC -->
+    <div class="row objectinfo-row">
+
+      <div class="col-md-3">
+
+        <div class="row">
+          <div class="col-sm-12 text-sm-center">
+
+            <h4 id="objectid">objectid</h4>
+            <h6 id="twomassid">twomassid</h6>
+            <img class="img-fluid" id="finderchart">
+
+          </div>
+        </div>
+
+        <div class="row py-1">
+          <div class="col-sm-12 text-sm-center">
+
+            <select class="custom-select mousetrap" id="varcheck" name="varcheck">
+              <option value="0" selected>Is this a variable star?</option>
+              <option value="1">Probably a variable star</option>
+              <option value="2">Probably not a variable star</option>
+              <option value="3">Not sure if variable or not</option>
+            </select>
+
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-md-4">
+
+        <table class="table table-sm">
+          <tr>
+            <th>Observations</th>
+            <td id="hatinfo">blah</td>
+          </tr>
+          <tr>
+            <th>Coords and PM</th>
+            <td id="coordspm">blah</td>
+          </tr>
+          <tr>
+            <th>Magnitudes</th>
+            <td id="mags">blah</td>
+          </tr>
+          <tr>
+            <th>Colors</th>
+            <td id="colors">blah</td>
+          </tr>
+
+        </table>
+
+      </div>
+
+      <div class="col-md-5">
+        <img class="img-fluid" id="magseriesplot">
+      </div>
+
+    </div>
+
+    <div class="row">
+
+      <!-- this column contains variability controls -->
+      <div class="col-sm-3">
+
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="text-sm-center">
+              <strong>Period and epoch</strong>
+            </div>
+
+            <input type="text" class="form-control mousetrap"
+                   name="objectperiod" id="objectperiod"
+                   placeholder="period in days">
+            <input type="text" class="form-control mousetrap"
+                   name="objectepoch" id="objectepoch"
+                   placeholder="epoch in JD">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="text-sm-center dropdown">
+              <a href="#" id="vartag-dropdown" data-toggle="dropdown"
+                 aria-haspopup="true" aria-expanded="false">
+                <strong>Variability tags</strong>
+              </a>
+
+              <div class="dropdown-menu dropdown-menu-right"
+                   aria-labelledby="vartag-dropdown">
+                <h6 class="dropdown-header">Add a tag from the list below<br>(or
+                type in a new one yourself)</h6>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="planet candidate">planet candidate</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="RRab pulsator">RRab pulsator</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="RRc pulsator">RRc pulsator</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="starspot rotation">starspot rotation</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="flare star">flare star</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="contact EB">contact EB</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="semi-detached EB">semi-detached EB</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="detached EB">detached EB</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="weird variability">weird variability</a>
+                <a class="dropdown-item vartag-dn" href="#"
+                   data-dnvartag="period harmonic">period harmonic</a>
+              </div>
+
+            </div>
+            <input type="text" class="form-control mousetrap"
+                   name="vartags" id="vartags"
+                   placeholder="variability tag 1, variability tag 2,...">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="text-sm-center dropdown">
+              <a href="#" id="objtag-dropdown" data-toggle="dropdown"
+                 aria-haspopup="true" aria-expanded="false">
+                <strong>Object tags</strong>
+              </a>
+
+              <div class="dropdown-menu dropdown-menu-right"
+                   aria-labelledby="objtag-dropdown">
+                <h6 class="dropdown-header">Add a tag from the list below<br>(or
+                type in a new one yourself)</h6>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="white dwarf">white dwarf</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="hot star (OB)">hot star (OB)</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="A star">A star</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="F or G dwarf">F or G dwarf</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="red giant">red giant</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="K or M dwarf">K or M dwarf</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="giant star">giant star</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="dwarf star">dwarf star</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="blended with neighbors">blended with neighbors</a>
+                <a class="dropdown-item objtag-dn" href="#"
+                   data-dnobjtag="weird object">weird object</a>
+              </div>
+
+            </div>
+            <input type="text" class="form-control mousetrap"
+                   name="objecttags" id="objecttags"
+                   placeholder="object tag 1, object tag 2,...">
+          </div>
+        </div>
+
+        <!-- this is the comments box -->
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="text-sm-center">
+              <strong>Comments</strong>
+            </div>
+
+            <textarea class="form-control mousetrap" id="objectcomments" rows="5">
+            </textarea>
+          </div>
+        </div>
+
+        <!-- this is the save to PNG link -->
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="text-sm-center">
+              <a href="#" id="save-to-png">Save this object to a PNG</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- this is the alert box -->
+        <div class="row">
+          <div class="col-sm-12 text-sm-center" id="alert-box">
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- contains the periodogram and phased LCs for each method-->
+      <!-- each method gets their own column with as many rows as necessary -->
+      <div class="col-sm-9">
+        <div class="row phased-container">
+
+        </div>
+      </div>
+
+
+    </div>
+
+
+  </div>
+
+</div>
+
+<!-- this is the help box modal  -->
+<div class="modal fade" id="help-box" tabindex="-1" role="dialog"
+     aria-labelledby="help-box" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h5 class="modal-title" id="help-box-title">Help and Keyboard Shortcuts</h5>
+      </div>
+
+      <div class="modal-body">
+
+        <h6>Moving around and editing</h6>
+
+        <table class="table table-sm">
+          <tr>
+            <td width="200"><kbd>ctrl/shift</kbd> + <kbd>&rarr;</kbd></td>
+            <td>save the current checkplot and move to next in list</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl/shift</kbd> + <kbd>&larr;</kbd></td>
+            <td>save the current checkplot and move to previous in list</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>enter</kbd></td>
+            <td>save the current checkplot and move to next in list</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>shift</kbd> + <kbd>enter</kbd></td>
+            <td>save the current checkplot only, don't move anywhere
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>backspace</kbd></td>
+            <td>clear variability flag, period, epoch, and variability tags</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>backspace</kbd></td>
+            <td>clear all object information (var flag, period, epoch, var
+            tags, object tags, comments)</td>
+          </tr>
+        </table>
+
+        <h6>Setting best period and epoch</h6>
+
+        <table class="table table-sm">
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd>
+            + <kbd>&darr;</kbd></td>
+            <td>move to the next phased light curve plot and set its period and
+            epoch as the current best period and epoch</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd>
+            + <kbd>&uarr;</kbd></td>
+            <td>move to the previous phased light curve plot and set its period
+            and epoch as the current best period and epoch</td>
+          </tr>
+        </table>
+
+        <h6>Setting variability flags</h6>
+
+        <table class="table table-sm">
+          <tr>
+            <td width="200"><kbd>alt</kbd> + <kbd>shift</kbd> + <kbd>v</kbd></td>
+            <td>set the variability flag to <span class="cp-tag">object is
+                variable</span></td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt</kbd> + <kbd>shift</kbd> + <kbd>n</kbd></td>
+            <td>set the variability flag to <span class="cp-tag">object is not
+                variable</span></td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt</kbd> + <kbd>shift</kbd> + <kbd>m</kbd></td>
+            <td>set the variability flag to <span class="cp-tag">object is
+                maybe variable</span></td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt</kbd> + <kbd>shift</kbd> + <kbd>u</kbd></td>
+            <td>reset the variability flag to the unknown state</td>
+          </tr>
+        </table>
+
+        <h6>Tagging objects by variability</h6>
+
+        <table class="table table-sm">
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>1</kbd></td>
+            <td>add a <span class="cp-tag">planet candidate</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>2</kbd></td>
+            <td>add a <span class="cp-tag">RRab pulsator</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>3</kbd></td>
+            <td>add a <span class="cp-tag">RRc pulsator</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>4</kbd></td>
+            <td>add a <span class="cp-tag">starspot rotation</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>5</kbd></td>
+            <td>add a <span class="cp-tag">flare star</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>6</kbd></td>
+            <td>add a <span class="cp-tag">contact EB</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>7</kbd></td>
+            <td>add a <span class="cp-tag">semi-detached EB</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>8</kbd></td>
+            <td>add a <span class="cp-tag">detached EB</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>9</kbd></td>
+            <td>add a <span class="cp-tag">weird variability</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>0</kbd></td>
+            <td>add a <span class="cp-tag">period harmonic</span> tag</td>
+          </tr>
+        </table>
+
+        <h6>Tagging objects by type</h6>
+
+        <table class="table table-sm">
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>1</kbd></td>
+            <td>add a <span class="cp-tag">white dwarf</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>2</kbd></td>
+            <td>add a <span class="cp-tag">hot star (OB)</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>3</kbd></td>
+            <td>add a <span class="cp-tag">A star</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>4</kbd></td>
+            <td>add a <span class="cp-tag">F or G dwarf</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>5</kbd></td>
+            <td>add a <span class="cp-tag">red giant</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>6</kbd></td>
+            <td>add a <span class="cp-tag">K or M dwarf</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>7</kbd></td>
+            <td>add a <span class="cp-tag">giant star</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>8</kbd></td>
+            <td>add a <span class="cp-tag">dwarf star</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>9</kbd></td>
+            <td>add a <span class="cp-tag">blended with neighbors</span> tag</td>
+          </tr>
+          <tr>
+            <td width="200"><kbd>alt/cmd</kbd> + <kbd>shift</kbd> + <kbd>0</kbd></td>
+            <td>add a <span class="cp-tag">weird object</span> tag</td>
+          </tr>
+        </table>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary"
+                data-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+{% end %}
+
+{% block pagejs %}
+<script src="{{ static_url("mousetrap.min.js") }}"></script>
+<script src="{{ static_url("cpserver.js") }}"></script>
+
+<script>
+
+  $(document).ready(function() {
+  // load the count of the objects
+  cpv.totalcps = $('#checkplotlist li').length;
+
+  // set up the controls
+  cpv.action_setup();
+
+  // set up the keyboard shortcuts
+  cpv.keyboard_setup();
+
+  // fix the height for the sidebar
+  var winheight = $(window).height();
+  var docheight = $(document).height();
+  $('.sidebar-controls').css({'height': (docheight - 300.0) + 'px'});
+
+  // load the first checkplot
+  var firstcp = $("a[data-findex='0']").attr('data-fname');
+  cpv.load_checkplot(firstcp);
+
+  // get the already reviewed objects from the checkplot-filelist.json file
+  cptracker.all_reviewed_from_cplist();
+
+  });
+
+
+</script>
+{% end %}
