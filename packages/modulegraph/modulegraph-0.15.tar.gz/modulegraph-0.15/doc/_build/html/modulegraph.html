@@ -1,0 +1,767 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>modulegraph.modulegraph — Find modules used by a script &#8212; modulegraph 0.13 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.13',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="modulegraph.find_modules — High-level module dependency finding interface" href="find_modules.html" />
+    <link rel="prev" title="Commandline tools" href="commandline.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="find_modules.html" title="modulegraph.find_modules — High-level module dependency finding interface"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="commandline.html" title="Commandline tools"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">modulegraph 0.13 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-modulegraph.modulegraph">
+<span id="modulegraph-modulegraph-find-modules-used-by-a-script"></span><h1><a class="reference internal" href="#module-modulegraph.modulegraph" title="modulegraph.modulegraph: Find modules used by a script"><code class="xref py py-mod docutils literal"><span class="pre">modulegraph.modulegraph</span></code></a> &#8212; Find modules used by a script<a class="headerlink" href="#module-modulegraph.modulegraph" title="Permalink to this headline">¶</a></h1>
+<p>This module defines <a class="reference internal" href="#modulegraph.modulegraph.ModuleGraph" title="modulegraph.modulegraph.ModuleGraph"><code class="xref py py-class docutils literal"><span class="pre">ModuleGraph</span></code></a>, which is used to find
+the dependencies of scripts using bytecode analysis.</p>
+<p>A number of APIs in this module refer to filesystem path. Those paths can refer to
+files inside zipfiles (for example when there are zipped egg files on <a class="reference external" href="https://docs.python.org/2/library/sys.html#sys.path" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">sys.path</span></code></a>).
+Filenames referring to entries in a zipfile are not marked any way, if <code class="docutils literal"><span class="pre">&quot;somepath.zip&quot;</span></code>
+refers to a zipfile, that is <code class="docutils literal"><span class="pre">&quot;somepath.zip/embedded/file&quot;</span></code> will be used to refer to
+<code class="docutils literal"><span class="pre">embedded/file</span></code> inside the zipfile.</p>
+<div class="section" id="the-actual-graph">
+<h2>The actual graph<a class="headerlink" href="#the-actual-graph" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="modulegraph.modulegraph.ModuleGraph">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">ModuleGraph</code><span class="sig-paren">(</span><span class="optional">[</span><em>path</em><span class="optional">[</span>, <em>excludes</em><span class="optional">[</span>, <em>replace_paths</em><span class="optional">[</span>, <em>implies</em><span class="optional">[</span>, <em>graph</em><span class="optional">[</span>, <em>debug</em><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new ModuleGraph object. Use the <a class="reference internal" href="#modulegraph.modulegraph.ModuleGraph.run_script" title="modulegraph.modulegraph.ModuleGraph.run_script"><code class="xref py py-meth docutils literal"><span class="pre">run_script()</span></code></a> method to add scripts,
+and their dependencies to the graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path</strong> &#8211; Python search path to use, defaults to <a class="reference external" href="https://docs.python.org/2/library/sys.html#sys.path" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">sys.path</span></code></a></li>
+<li><strong>excludes</strong> &#8211; Iterable with module names that should not be included as a dependency</li>
+<li><strong>replace_paths</strong> &#8211; List of pathname rewrites <code class="docutils literal"><span class="pre">(old,</span> <span class="pre">new)</span></code>. When this argument is
+supplied the <code class="docutils literal"><span class="pre">co_filename</span></code> attributes of code objects get rewritten before scanning
+them for dependencies.</li>
+<li><strong>implies</strong> &#8211; Implied module dependencies, a mapping from a module name to the list
+of modules it depends on. Use this to tell modulegraph about dependencies that cannot
+be found by code inspection (such as imports from C code or using the <a class="reference external" href="https://docs.python.org/2/library/functions.html#__import__" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">__import__()</span></code></a>
+function).</li>
+<li><strong>graph</strong> &#8211; A precreated <a class="reference external" href="https://pythonhosted.org/altgraph/graph.html#altgraph.Graph.Graph" title="(in altgraph v0.14)"><code class="xref py py-class docutils literal"><span class="pre">Graph</span></code></a> object to use, the
+default is to create a new one.</li>
+<li><strong>debug</strong> &#8211; The <a class="reference external" href="https://pythonhosted.org/altgraph/objectgraph.html#altgraph.ObjectGraph.ObjectGraph" title="(in altgraph v0.14)"><code class="xref py py-class docutils literal"><span class="pre">ObjectGraph</span></code></a> debug level.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.run_script">
+<code class="descname">run_script</code><span class="sig-paren">(</span><em>pathname</em><span class="optional">[</span>, <em>caller</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.run_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create, and return,  a node by path (not module name). The <em>pathname</em> should
+refer to a Python source file and will be scanned for dependencies.</p>
+<p>The optional argument <em>caller</em> is the the node that calls this script,
+and is used to add a reference in the graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.import_hook">
+<code class="descname">import_hook</code><span class="sig-paren">(</span><em>name[[, caller[, fromlist[, level, [, attr]]]]</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.import_hook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import a module and analyse its dependencies</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> &#8211; The module name</li>
+<li><strong>caller</strong> &#8211; The node that caused the import to happen</li>
+<li><strong>fromlist</strong> &#8211; The list of names to import, this is an empty list for
+<code class="docutils literal"><span class="pre">import</span> <span class="pre">name</span></code> and a list of names for <code class="docutils literal"><span class="pre">from</span> <span class="pre">name</span> <span class="pre">import</span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c</span></code>.</li>
+<li><strong>level</strong> &#8211; The import level. The value should be <code class="docutils literal"><span class="pre">-1</span></code> for classical Python 2
+imports, <code class="docutils literal"><span class="pre">0</span></code> for absolute imports and a positive number for relative imports (
+where the value is the number of leading dots in the imported name).</li>
+<li><strong>attr</strong> &#8211; Attributes for the graph edge.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.implyNodeReference">
+<code class="descname">implyNodeReference</code><span class="sig-paren">(</span><em>node</em>, <em>other</em>, <em>edgeData=None</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.implyNodeReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explictly mark that <em>node</em> depends on <em>other</em>. Other is either
+a <a class="reference internal" href="#modulegraph.modulegraph.Node" title="modulegraph.modulegraph.Node"><code class="xref py py-class docutils literal"><span class="pre">node</span></code></a> or the name of a module that will be
+searched for as if it were an absolute import.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.createReference">
+<code class="descname">createReference</code><span class="sig-paren">(</span><em>fromnode</em>, <em>tonode</em><span class="optional">[</span>, <em>edge_data</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.createReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a reference from <em>fromnode</em> to <em>tonode</em>, with optional edge data.</p>
+<p>The default for <em>edge_data</em> is <code class="docutils literal"><span class="pre">&quot;direct&quot;</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.getReferences">
+<code class="descname">getReferences</code><span class="sig-paren">(</span><em>fromnode</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.getReferences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all nodes that <em>fromnode</em> refers to. That is, all modules imported
+by <em>fromnode</em>.</p>
+<p>Node <a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">None</span></code></a> is the root of the graph, and refers to all notes that were
+explicitly imported by <a class="reference internal" href="#modulegraph.modulegraph.ModuleGraph.run_script" title="modulegraph.modulegraph.ModuleGraph.run_script"><code class="xref py py-meth docutils literal"><span class="pre">run_script()</span></code></a> or <a class="reference internal" href="#modulegraph.modulegraph.ModuleGraph.import_hook" title="modulegraph.modulegraph.ModuleGraph.import_hook"><code class="xref py py-meth docutils literal"><span class="pre">import_hook()</span></code></a>, unless you use
+an explicit parent with those methods.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.11.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.getReferers">
+<code class="descname">getReferers</code><span class="sig-paren">(</span><em>tonode</em>, <em>collapse_missing_modules=True</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.getReferers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all nodes that refer to <em>tonode</em>. That is, all modules that import
+<em>tonode</em>.</p>
+<p>If <em>collapse_missing_modules</em> is false this includes refererences from
+<a class="reference internal" href="#modulegraph.modulegraph.MissingModule" title="modulegraph.modulegraph.MissingModule"><code class="xref py py-class docutils literal"><span class="pre">MissingModule</span></code></a> nodes, otherwise <a class="reference internal" href="#modulegraph.modulegraph.MissingModule" title="modulegraph.modulegraph.MissingModule"><code class="xref py py-class docutils literal"><span class="pre">MissingModule</span></code></a> nodes
+are replaced by the &#8220;real&#8221; nodes that reference this missing node.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.12.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.foldReferences">
+<code class="descname">foldReferences</code><span class="sig-paren">(</span><em>pkgnode</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.foldReferences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hide all submodule nodes for package <em>pkgnode</em> and add ingoing and outgoing
+edges to <em>pkgnode</em> based on the edges from the submodule nodes.</p>
+<p>This can be used to simplify a module graph: after folding &#8216;email&#8217; all
+references to modules in the &#8216;email&#8217; package are references to the package.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.findNode">
+<code class="descname">findNode</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.findNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a node by identifier.  If a node by that identifier exists, it will be returned.</p>
+<p>If a lazy node exists by that identifier with no dependencies (excluded), it will be
+instantiated and returned.</p>
+<p>If a lazy node exists by that identifier with dependencies, it and its
+dependencies will be instantiated and scanned for additional depende</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.create_xref">
+<code class="descname">create_xref</code><span class="sig-paren">(</span><span class="optional">[</span><em>out</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.create_xref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write an HTML file to the <em>out</em> stream (defaulting to <a class="reference external" href="https://docs.python.org/2/library/sys.html#sys.stdout" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">sys.stdout</span></code></a>).</p>
+<p>The HTML file contains a textual description of the dependency graph.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.graphreport">
+<code class="descname">graphreport</code><span class="sig-paren">(</span><span class="optional">[</span><em>fileobj</em><span class="optional">[</span>, <em>flatpackages</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.graphreport" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">To be documented</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.report">
+<code class="descname">report</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.report" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print a report to stdout, listing the found modules with their
+paths, as well as modules that are missing, or seem to be missing.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="mostly-internal-methods">
+<h3>Mostly internal methods<a class="headerlink" href="#mostly-internal-methods" title="Permalink to this headline">¶</a></h3>
+<p>The methods in this section should be considered as methods for subclassing at best,
+please let us know if you need these methods in your code as they are on track to be
+made private methods before the 1.0 release.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The methods in this section will be refactored in a future release,
+the current architecture makes it unnecessarily hard to write proper tests.</p>
+</div>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">ModuleGraph</code></dt>
+<dd><dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._determine_parent">
+<code class="descname">_determine_parent</code><span class="sig-paren">(</span><em>caller</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._determine_parent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the node of the package root voor <em>caller</em>. If <em>caller</em> is a package
+this is the node itself, if the node is a module in a package this is the
+node of for the package and otherwise the <em>caller</em> is not a package and
+the result is <a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">None</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._find_head_package">
+<code class="descname">_find_head_package</code><span class="sig-paren">(</span><em>parent</em>, <em>name</em><span class="optional">[</span>, <em>level</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._find_head_package" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">To be documented</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._load_tail">
+<code class="descname">_load_tail</code><span class="sig-paren">(</span><em>mod</em>, <em>tail</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._load_tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method is called to load the rest of a dotted name after loading the root
+of a package. This will import all intermediate modules as well (using
+<code class="xref py py-meth docutils literal"><span class="pre">import_module()</span></code>), and returns the module <a class="reference internal" href="#modulegraph.modulegraph.Node" title="modulegraph.modulegraph.Node"><code class="xref py py-class docutils literal"><span class="pre">node</span></code></a> for the
+requested node.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When <em>tail</em> is empty this will just return <em>mod</em>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mod</strong> &#8211; A start module (instance of <a class="reference internal" href="#modulegraph.modulegraph.Node" title="modulegraph.modulegraph.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a>)</li>
+<li><strong>tail</strong> &#8211; The rest of a dotted name, can be empty</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>ImportError</strong> &#8211; When the requested (or one of its parents) module cannot be found</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the requested module</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._ensure_fromlist">
+<code class="descname">_ensure_fromlist</code><span class="sig-paren">(</span><em>m</em>, <em>fromlist</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._ensure_fromlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield all submodules that would be imported when importing <em>fromlist</em>
+from <em>m</em> (using <code class="docutils literal"><span class="pre">from</span> <span class="pre">m</span> <span class="pre">import</span> <span class="pre">fromlist...</span></code>).</p>
+<p><em>m</em> must be a package and not a regular module.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._find_all_submodules">
+<code class="descname">_find_all_submodules</code><span class="sig-paren">(</span><em>m</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._find_all_submodules" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield the filenames for submodules of in the same package as <em>m</em>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._import_module">
+<code class="descname">_import_module</code><span class="sig-paren">(</span><em>partname</em>, <em>fqname</em>, <em>parent</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._import_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform import of the module with basename <em>partname</em> (<code class="docutils literal"><span class="pre">path</span></code>) and
+full name <em>fqname</em> (<code class="docutils literal"><span class="pre">os.path</span></code>). Import is performed by <em>parent</em>.</p>
+<p>This will create a reference from the parent node to the
+module node and will load the module node when it is not already
+loaded.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._load_module">
+<code class="descname">_load_module</code><span class="sig-paren">(</span><em>fqname</em>, <em>fp</em>, <em>pathname</em>, <em>(suffix</em>, <em>mode</em>, <em>type)</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._load_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the module named <em>fqname</em> from the given <em>pathame</em>. The
+argument <em>fp</em> is either <a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">None</span></code></a>, or a stream where the
+code for the Python module can be loaded (either byte-code or
+the source code). The <em>(suffix, mode, type)</em> tuple are the
+suffix of the source file, the open mode for the file and the
+type of module.</p>
+<p>Creates a node of the right class and processes the dependencies
+of the <a class="reference internal" href="#modulegraph.modulegraph.Node" title="modulegraph.modulegraph.Node"><code class="xref py py-class docutils literal"><span class="pre">node</span></code></a> by scanning the byte-code for the node.</p>
+<p>Returns the resulting <a class="reference internal" href="#modulegraph.modulegraph.Node" title="modulegraph.modulegraph.Node"><code class="xref py py-class docutils literal"><span class="pre">node</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._scan_code">
+<code class="descname">_scan_code</code><span class="sig-paren">(</span><em>code</em>, <em>m</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._scan_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scan the <em>code</em> object for module <em>m</em> and update the dependencies of
+<em>m</em> using the import statemets found in the code.</p>
+<p>This will automaticly scan the code for nested functions, generator
+expressions and list comprehensions as well.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._load_package">
+<code class="descname">_load_package</code><span class="sig-paren">(</span><em>fqname</em>, <em>pathname</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._load_package" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a package directory.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._find_module">
+<code class="descname">_find_module</code><span class="sig-paren">(</span><em>name</em>, <em>path</em><span class="optional">[</span>, <em>parent</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._find_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Locates a module named <em>name</em> that is not yet part of the
+graph. This method will raise <code class="xref py py-exc docutils literal"><span class="pre">ImportError</span></code> when
+the module cannot be found or when it is already part
+of the graph. The <em>name</em> can not be a dotted name.</p>
+<p>The <em>path</em> is the search path used, or <a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">None</span></code></a> to
+use the default path.</p>
+<p>When the <em>parent</em> is specified <em>name</em> refers to a
+subpackage of <em>parent</em>, and <em>path</em> should be the
+search path of the parent.</p>
+<p>Returns the result of the global function
+<a class="reference internal" href="#modulegraph.modulegraph.find_module" title="modulegraph.modulegraph.find_module"><code class="xref py py-func docutils literal"><span class="pre">find_module</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph.itergraphreport">
+<code class="descname">itergraphreport</code><span class="sig-paren">(</span><span class="optional">[</span><em>name</em><span class="optional">[</span>, <em>flatpackages</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph.itergraphreport" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">To be documented</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._replace_paths_in_code">
+<code class="descname">_replace_paths_in_code</code><span class="sig-paren">(</span><em>co</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._replace_paths_in_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the filenames in code object <em>co</em> using the <em>replace_paths</em> value that
+was passed to the contructor. Returns the rewritten code object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.ModuleGraph._calc_setuptools_nspackages">
+<code class="descname">_calc_setuptools_nspackages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ModuleGraph._calc_setuptools_nspackages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a mapping from package name to a list of paths where that package
+can be found in <code class="docutils literal"><span class="pre">--single-version-externally-managed</span></code> form.</p>
+<p>This method is used to be able to find those packages: these use
+a magic <code class="docutils literal"><span class="pre">.pth</span></code> file to ensure that the package is added to <a class="reference external" href="https://docs.python.org/2/library/sys.html#sys.path" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">sys.path</span></code></a>,
+as they do not contain an <code class="docutils literal"><span class="pre">___init__.py</span></code> file.</p>
+<p>Packages in this form are used by system packages and the &#8220;pip&#8221;
+installer.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="graph-nodes">
+<h2>Graph nodes<a class="headerlink" href="#graph-nodes" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#modulegraph.modulegraph.ModuleGraph" title="modulegraph.modulegraph.ModuleGraph"><code class="xref py py-class docutils literal"><span class="pre">ModuleGraph</span></code></a> contains nodes that represent the various types of modules.</p>
+<dl class="class">
+<dt id="modulegraph.modulegraph.Alias">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">Alias</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Alias" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a subclass of string that is used to mark module aliases.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.Node">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for nodes, which provides the common functionality.</p>
+<p>Nodes can by used as mappings for storing arbitrary data in the node.</p>
+<p>Nodes are compared by comparing their <em>identifier</em>.</p>
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.debug">
+<code class="descname">debug</code><a class="headerlink" href="#modulegraph.modulegraph.Node.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Debug level (integer)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.graphident">
+<code class="descname">graphident</code><a class="headerlink" href="#modulegraph.modulegraph.Node.graphident" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node identifier, this is the value of the <em>identifier</em> argument
+to the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.identifier">
+<code class="descname">identifier</code><a class="headerlink" href="#modulegraph.modulegraph.Node.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>The node identifier, this is the value of the <em>identifier</em> argument
+to the constructor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.filename">
+<code class="descname">filename</code><a class="headerlink" href="#modulegraph.modulegraph.Node.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filename associated with this node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.packagepath">
+<code class="descname">packagepath</code><a class="headerlink" href="#modulegraph.modulegraph.Node.packagepath" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value of <code class="docutils literal"><span class="pre">__path__</span></code> for this node.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.code">
+<code class="descname">code</code><a class="headerlink" href="#modulegraph.modulegraph.Node.code" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-class docutils literal"><span class="pre">code</span> <span class="pre">object</span></code> associated with this node</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.globalnames">
+<code class="descname">globalnames</code><a class="headerlink" href="#modulegraph.modulegraph.Node.globalnames" title="Permalink to this definition">¶</a></dt>
+<dd><p>The set of global names that are assigned to in this module. This
+includes those names imported through startimports of Python modules.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Node.startimports">
+<code class="descname">startimports</code><a class="headerlink" href="#modulegraph.modulegraph.Node.startimports" title="Permalink to this definition">¶</a></dt>
+<dd><p>The set of startimports this module did that could not be resolved,
+ie. a startimport from a non-Python module.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.Node.__contains__">
+<code class="descname">__contains__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Node.__contains__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return if there is a value associated with <em>name</em>.</p>
+<p>This method is usually accessed as <code class="docutils literal"><span class="pre">name</span> <span class="pre">in</span> <span class="pre">aNode</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.Node.__setitem__">
+<code class="descname">__setitem__</code><span class="sig-paren">(</span><em>name</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Node.__setitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the value of <em>name</em> to <em>value</em>.</p>
+<p>This method is usually accessed as <code class="docutils literal"><span class="pre">aNode[name]</span> <span class="pre">=</span> <span class="pre">value</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.Node.__getitem__">
+<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Node.__getitem__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value of <em>name</em>, raises <code class="xref py py-exc docutils literal"><span class="pre">KeyError</span></code> when
+it cannot be found.</p>
+<p>This method is usually accessed as <code class="docutils literal"><span class="pre">value</span> <span class="pre">=</span> <span class="pre">aNode[name]</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.Node.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>name</em><span class="optional">[</span>, <em>default</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Node.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value of <em>name</em>, or the default value when it
+cannot be found. The <em>default</em> is <a class="reference external" href="https://docs.python.org/2/library/constants.html#None" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">None</span></code></a> when not specified.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="modulegraph.modulegraph.Node.infoTuple">
+<code class="descname">infoTuple</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Node.infoTuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple with information used in the <a class="reference external" href="https://docs.python.org/2/library/functions.html#repr" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">repr()</span></code></a>
+output for the node. Subclasses can add additional informations
+to the result.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.AliasNode">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">AliasNode</code><span class="sig-paren">(</span><em>name</em>, <em>node</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.AliasNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>A node that represents an alias from a name to another node.</p>
+<p>The value of attribute <em>graphident</em> for this node will be the
+value of <em>name</em>, the other <a class="reference internal" href="#modulegraph.modulegraph.Node" title="modulegraph.modulegraph.Node"><code class="xref py py-class docutils literal"><span class="pre">Node</span></code></a> attributed are
+references to those attributed in <em>node</em>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.BadModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">BadModule</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.BadModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for nodes that should be ignored for some reason</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.ExcludedModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">ExcludedModule</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.ExcludedModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>A module that is explicitly excluded.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.MissingModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">MissingModule</code><span class="sig-paren">(</span><em>identifier</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.MissingModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>A module that is imported but cannot be located.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.Script">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">Script</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Script" title="Permalink to this definition">¶</a></dt>
+<dd><p>A python script.</p>
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.Script.filename">
+<code class="descname">filename</code><a class="headerlink" href="#modulegraph.modulegraph.Script.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filename for the script</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.BaseModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">BaseModule</code><span class="sig-paren">(</span><em>name</em><span class="optional">[</span>, <em>filename</em><span class="optional">[</span>, <em>path</em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.BaseModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base class for actual modules. The <em>name</em> is
+the possibly dotted module name, <em>filename</em> is the
+filesystem path to the module and <em>path</em> is the
+value of <code class="docutils literal"><span class="pre">__path__</span></code> for the module.</p>
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.BaseModule.graphident">
+<code class="descname">graphident</code><a class="headerlink" href="#modulegraph.modulegraph.BaseModule.graphident" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of the module</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.BaseModule.filename">
+<code class="descname">filename</code><a class="headerlink" href="#modulegraph.modulegraph.BaseModule.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filesystem path to the module.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.BaseModule.path">
+<code class="descname">path</code><a class="headerlink" href="#modulegraph.modulegraph.BaseModule.path" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value of <code class="docutils literal"><span class="pre">__path__</span></code> for this module.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.BuiltinModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">BuiltinModule</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.BuiltinModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>A built-in module (one in <a class="reference external" href="https://docs.python.org/2/library/sys.html#sys.builtin_module_names" title="(in Python v2.7)"><code class="xref py py-data docutils literal"><span class="pre">sys.builtin_module_names</span></code></a>).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.SourceModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">SourceModule</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.SourceModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>A module for which the python source code is available.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.InvalidSourceModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">InvalidSourceModule</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.InvalidSourceModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>A module for which the python source code is available, but where
+that source code cannot be compiled (due to syntax errors).</p>
+<p>This is a subclass of <a class="reference internal" href="#modulegraph.modulegraph.SourceModule" title="modulegraph.modulegraph.SourceModule"><code class="xref py py-class docutils literal"><span class="pre">SourceModule</span></code></a>.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 0.12.</span></p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.CompiledModule">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">CompiledModule</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.CompiledModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>A module for which only byte-code is available.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.Package">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">Package</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Package" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a python package</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.NamespacePackage">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">NamespacePackage</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.NamespacePackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a python namespace package.</p>
+<p>This is a subclass of <a class="reference internal" href="#modulegraph.modulegraph.Package" title="modulegraph.modulegraph.Package"><code class="xref py py-class docutils literal"><span class="pre">Package</span></code></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="modulegraph.modulegraph.Extension">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">Extension</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.Extension" title="Permalink to this definition">¶</a></dt>
+<dd><p>A native extension</p>
+</dd></dl>
+
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">A number of other node types are defined in the module. Those modules aren&#8217;t
+used by modulegraph and will be removed in a future version.</p>
+</div>
+</div>
+<div class="section" id="edge-data">
+<h2>Edge data<a class="headerlink" href="#edge-data" title="Permalink to this headline">¶</a></h2>
+<p>The edges in a module graph by default contain information about the edge, represented
+by an instance of <a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo" title="modulegraph.modulegraph.DependencyInfo"><code class="xref py py-class docutils literal"><span class="pre">DependencyInfo</span></code></a>.</p>
+<dl class="class">
+<dt id="modulegraph.modulegraph.DependencyInfo">
+<em class="property">class </em><code class="descclassname">modulegraph.modulegraph.</code><code class="descname">DependencyInfo</code><span class="sig-paren">(</span><em>conditional</em>, <em>function</em>, <em>tryexcept</em>, <em>fromlist</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.DependencyInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class is a <a class="reference external" href="https://docs.python.org/2/library/collections.html#collections.namedtuple" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">namedtuple</span></code></a> for representing
+the information on a dependency between two modules.</p>
+<p>All attributes can be used to deduce if a dependency is essential or not, and
+are particularly useful when reporting on missing modules (dependencies on
+<a class="reference internal" href="#modulegraph.modulegraph.MissingModule" title="modulegraph.modulegraph.MissingModule"><code class="xref py py-class docutils literal"><span class="pre">MissingModule</span></code></a>).</p>
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.DependencyInfo.fromlist">
+<code class="descname">fromlist</code><a class="headerlink" href="#modulegraph.modulegraph.DependencyInfo.fromlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean that is true iff the target of the edge is named in the &#8220;import&#8221;
+list of a &#8220;from&#8221; import (&#8220;from package import module&#8221;).</p>
+<p>When the target module is imported multiple times this attribute is false
+unless all imports are in &#8220;import&#8221; list of a &#8220;from&#8221; import.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.DependencyInfo.function">
+<code class="descname">function</code><a class="headerlink" href="#modulegraph.modulegraph.DependencyInfo.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean that is true iff the import is done inside a function definition,
+and is false for imports in module scope (or class scope for classes that
+aren&#8217;t definined in a function).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.DependencyInfo.tryexcept">
+<code class="descname">tryexcept</code><a class="headerlink" href="#modulegraph.modulegraph.DependencyInfo.tryexcept" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean that is true iff the import that is done in the &#8220;try&#8221; or &#8220;except&#8221;
+block of a try statement (but not in the &#8220;else&#8221; block).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modulegraph.modulegraph.DependencyInfo.conditional">
+<code class="descname">conditional</code><a class="headerlink" href="#modulegraph.modulegraph.DependencyInfo.conditional" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean that is true iff the import is done in either block of an &#8220;if&#8221;
+statement.</p>
+</dd></dl>
+
+<p>When the target of the edge is imported multiple times the <a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo.function" title="modulegraph.modulegraph.DependencyInfo.function"><code class="xref py py-data docutils literal"><span class="pre">function</span></code></a>,
+<a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo.tryexcept" title="modulegraph.modulegraph.DependencyInfo.tryexcept"><code class="xref py py-data docutils literal"><span class="pre">tryexcept</span></code></a> and <a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo.conditional" title="modulegraph.modulegraph.DependencyInfo.conditional"><code class="xref py py-data docutils literal"><span class="pre">conditional</span></code></a> attributes of all imports are
+merged: when there is an import where all these attributes are false the
+attributes are false, otherwise each attribute is set to true if it is
+true for at least one of the imports.</p>
+<p>For example, when a module is imported both in a try-except statement and
+furthermore is imported in a function (in two separate statements),
+both <a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo.tryexcept" title="modulegraph.modulegraph.DependencyInfo.tryexcept"><code class="xref py py-data docutils literal"><span class="pre">tryexcept</span></code></a> and <a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo.function" title="modulegraph.modulegraph.DependencyInfo.function"><code class="xref py py-data docutils literal"><span class="pre">function</span></code></a> will be true.  But if there
+is a third unconditional toplevel import for that module as well all
+three attributes are false.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">All attributes but <a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo.fromlist" title="modulegraph.modulegraph.DependencyInfo.fromlist"><code class="xref py py-data docutils literal"><span class="pre">fromlist</span></code></a> will be false when the source of
+a dependency is scanned from a byte-compiled module instead of a python
+source file. The <a class="reference internal" href="#modulegraph.modulegraph.DependencyInfo.fromlist" title="modulegraph.modulegraph.DependencyInfo.fromlist"><code class="xref py py-data docutils literal"><span class="pre">fromlist</span></code></a> attribute will stil be set correctly.</p>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="utility-functions">
+<h2>Utility functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="modulegraph.modulegraph.find_module">
+<code class="descclassname">modulegraph.modulegraph.</code><code class="descname">find_module</code><span class="sig-paren">(</span><em>name</em><span class="optional">[</span>, <em>path</em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.find_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>A version of <a class="reference external" href="https://docs.python.org/2/library/imp.html#imp.find_module" title="(in Python v2.7)"><code class="xref py py-func docutils literal"><span class="pre">imp.find_module()</span></code></a> that works with zipped packages (and other
+<span class="target" id="index-3"></span><a class="pep reference external" href="https://www.python.org/dev/peps/pep-0302"><strong>PEP 302</strong></a> importers).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="modulegraph.modulegraph.moduleInfoForPath">
+<code class="descclassname">modulegraph.modulegraph.</code><code class="descname">moduleInfoForPath</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.moduleInfoForPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the module name, readmode and type for the file at <em>path</em>, or
+None if it doesn&#8217;t seem to be a valid module (based on its name).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="modulegraph.modulegraph.addPackagePath">
+<code class="descclassname">modulegraph.modulegraph.</code><code class="descname">addPackagePath</code><span class="sig-paren">(</span><em>packagename</em>, <em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.addPackagePath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add <em>path</em> to the value of <code class="docutils literal"><span class="pre">__path__</span></code> for the package named <em>packagename</em>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="modulegraph.modulegraph.replacePackage">
+<code class="descclassname">modulegraph.modulegraph.</code><code class="descname">replacePackage</code><span class="sig-paren">(</span><em>oldname</em>, <em>newname</em><span class="sig-paren">)</span><a class="headerlink" href="#modulegraph.modulegraph.replacePackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename <em>oldname</em> to <em>newname</em> when it is found by the module finder. This
+is used as a workaround for the hack that the <code class="docutils literal"><span class="pre">_xmlplus</span></code> package uses
+to inject itself in the <code class="docutils literal"><span class="pre">xml</span></code> namespace.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal"><span class="pre">modulegraph.modulegraph</span></code> &#8212; Find modules used by a script</a><ul>
+<li><a class="reference internal" href="#the-actual-graph">The actual graph</a><ul>
+<li><a class="reference internal" href="#mostly-internal-methods">Mostly internal methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graph-nodes">Graph nodes</a></li>
+<li><a class="reference internal" href="#edge-data">Edge data</a></li>
+<li><a class="reference internal" href="#utility-functions">Utility functions</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="commandline.html"
+                        title="previous chapter">Commandline tools</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="find_modules.html"
+                        title="next chapter"><code class="docutils literal"><span class="pre">modulegraph.find_modules</span></code> &#8212; High-level module dependency finding interface</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/modulegraph.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="find_modules.html" title="modulegraph.find_modules — High-level module dependency finding interface"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="commandline.html" title="Commandline tools"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">modulegraph 0.13 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2010, Ronald Oussoren.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.
+    </div>
+  </body>
+</html>
