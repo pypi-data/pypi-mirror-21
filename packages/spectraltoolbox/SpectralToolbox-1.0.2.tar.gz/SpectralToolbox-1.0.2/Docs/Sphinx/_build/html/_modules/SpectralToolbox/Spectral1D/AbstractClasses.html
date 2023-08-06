@@ -1,0 +1,451 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SpectralToolbox.Spectral1D.AbstractClasses &mdash; SpectralToolbox 0.2.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="SpectralToolbox 0.2.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SpectralToolbox 0.2.3 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for SpectralToolbox.Spectral1D.AbstractClasses</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="c1">#</span>
+<span class="c1"># This file is part of SpectralToolbox.</span>
+<span class="c1">#</span>
+<span class="c1"># SpectralToolbox is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the LGNU Lesser General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># SpectralToolbox is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># LGNU Lesser General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the LGNU Lesser General Public License</span>
+<span class="c1"># along with SpectralToolbox.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># DTU UQ Library</span>
+<span class="c1"># Copyright (C) 2012-2015 The Technical University of Denmark</span>
+<span class="c1"># Scientific Computing Section</span>
+<span class="c1"># Department of Applied Mathematics and Computer Science</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2015-2016 Massachusetts Institute of Technology</span>
+<span class="c1"># Uncertainty Quantification group</span>
+<span class="c1"># Department of Aeronautics and Astronautics</span>
+<span class="c1">#</span>
+<span class="c1"># Author: Daniele Bigoni</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">LA</span>
+
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.Constants</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Basis&#39;</span><span class="p">,</span> <span class="s1">&#39;OrthogonalBasis&#39;</span><span class="p">,</span> <span class="s1">&#39;OrthogonalPolynomial&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Basis"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis">[docs]</a><span class="k">class</span> <span class="nc">Basis</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; This is an abstract class for 1-d basis</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      NotImplementedError: if not overridden.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Basis.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th order polynomial at points ``r``</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomial</span>
+<span class="sd">          N (int): order of the polynomial</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``]) -- polynomial evaluated on</span>
+<span class="sd">             the ``r`` points.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Basis.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th order polynomial at points ``r``</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomial</span>
+<span class="sd">          N (int): order of the polynomial</span>
+<span class="sd">          k (int): order of the derivative</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``]) -- ``k``-th derivative of the</span>
+<span class="sd">            polynomial evaluated on the ``r`` points.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Basis.GradVandermonde"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis.GradVandermonde">[docs]</a>    <span class="k">def</span> <span class="nf">GradVandermonde</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomials</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+<span class="sd">          k (int): order of the derivative</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="sd">            at the ``r`` points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DVr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">DVr</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DVr</span></div>
+
+<div class="viewcode-block" id="Basis.AssemblyDerivativeMatrix"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis.AssemblyDerivativeMatrix">[docs]</a>    <span class="k">def</span> <span class="nf">AssemblyDerivativeMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Assemble the ``k``-th derivative matrix using polynomials of order ``N``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          x (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomials</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+<span class="sd">          k (int): order of the derivative</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``,``m``]) -- derivative matrix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradVandermonde</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">Vx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradVandermonde</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span> <span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">V</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">Vx</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">Dk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mat</span><span class="p">(</span><span class="n">D</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Dk</span></div>
+
+<div class="viewcode-block" id="Basis.DerivativeMatrix"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis.DerivativeMatrix">[docs]</a>    <span class="k">def</span> <span class="nf">DerivativeMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">AssemblyDerivativeMatrix</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Basis.project"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Project ``f`` onto the span of the polynomial up to order ``N``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` evaluation points</span>
+<span class="sd">          f (:class:`ndarray&lt;ndarray&gt;` [``m``]): function value at the ``m``</span>
+<span class="sd">            evaluation points</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``N``]) -- projection coefficients</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># The standard approach is to use the Vandermonde matrix</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradVandermonde</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">):</span>
+            <span class="n">fhat</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fhat</span><span class="p">,</span> <span class="n">residues</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fhat</span></div>
+        
+<div class="viewcode-block" id="Basis.interpolate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Basis.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Interpolate function values ``f`` from points ``x`` to points ``xi``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          x (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` original points</span>
+<span class="sd">          f (:class:`ndarray&lt;ndarray&gt;` [``m``]): function values at points ``x``</span>
+<span class="sd">          xi (:class:`ndarray&lt;ndarray&gt;` [``n``]): set of ``n`` interpolation </span>
+<span class="sd">            points</span>
+<span class="sd">          order (int): polynomial order</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``n``]) -- interpolated function values at</span>
+<span class="sd">            points ``xi``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fhat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="c1"># Use the generalized vandermonde matrix</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradVandermonde</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">fi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="n">fhat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fi</span></div></div>
+
+<div class="viewcode-block" id="OrthogonalBasis"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalBasis">[docs]</a><span class="k">class</span> <span class="nc">OrthogonalBasis</span><span class="p">(</span><span class="n">Basis</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; This is an abstract class for 1-d orthogonal basis</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      normalized (bool): whether to normalize the polynomials. Default=``None``</span>
+<span class="sd">        which leaves the choice at evaluation time.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="o">=</span> <span class="n">normalized</span>
+    
+<div class="viewcode-block" id="OrthogonalBasis.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalBasis.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th order polynomial at points ``r``</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomial</span>
+<span class="sd">          N (int): order of the polynomial</span>
+<span class="sd">          norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="sd">            (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="sd">            parameter is provided at construction time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``]) -- polynomial evaluated on</span>
+<span class="sd">             the ``r`` points.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="OrthogonalBasis.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalBasis.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th order polynomial at points ``r``</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomial</span>
+<span class="sd">          N (int): order of the polynomial</span>
+<span class="sd">          k (int): order of the derivative</span>
+<span class="sd">          norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="sd">            (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="sd">            parameter is provided at construction time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``]) -- ``k``-th derivative of the</span>
+<span class="sd">            polynomial evaluated on the ``r`` points.</span>
+<span class="sd">        </span>
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrthogonalBasis.GradVandermonde"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalBasis.GradVandermonde">[docs]</a>    <span class="k">def</span> <span class="nf">GradVandermonde</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomials</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+<span class="sd">          k (int): order of the derivative</span>
+<span class="sd">          norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="sd">            (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="sd">            parameter is provided at construction time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="sd">            at the ``r`` points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DVr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">DVr</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DVr</span></div>
+
+<div class="viewcode-block" id="OrthogonalBasis.Gamma"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalBasis.Gamma">[docs]</a>    <span class="k">def</span> <span class="nf">Gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Return the normalization constant for the ``N``-th polynomial.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          N (int): polynomial order</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          g (float): normalization constant</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrthogonalBasis.Quadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalBasis.Quadrature">[docs]</a>    <span class="k">def</span> <span class="nf">Quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          N (int): polynomial order</span>
+<span class="sd">          quadType (string): quadrature type</span>
+<span class="sd">          norm (bool): whether to normalize the weights</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`tuple&lt;tuple&gt;` of :class:`ndarray&lt;ndarray&gt;`) -- format</span>
+<span class="sd">            ``(x,w)`` where ``x`` and ``w`` are ``N+1`` nodes and weights</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div></div>
+    
+<div class="viewcode-block" id="OrthogonalPolynomial"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalPolynomial">[docs]</a><span class="k">class</span> <span class="nc">OrthogonalPolynomial</span><span class="p">(</span><span class="n">OrthogonalBasis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; This is an abstract class for 1-d polynomials</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="OrthogonalPolynomial.RecursionCoeffs"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalPolynomial.RecursionCoeffs">[docs]</a>    <span class="k">def</span> <span class="nf">RecursionCoeffs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate the first ``N`` recursion coefficients.</span>
+
+<span class="sd">        These coefficients define the polynomials:</span>
+<span class="sd">        :math:`P_{n+1}(x) = (x - a_n) P_n(x) - b_n P_{n-1}(x)`</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          N (int): number of recursion coefficients</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`tuple&lt;tuple&gt;` [2] of :class:`ndarray&lt;ndarray&gt;` [N]) --</span>
+<span class="sd">            recursion coefficients ``a`` and ``b``</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrthogonalPolynomial.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalPolynomial.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate Gauss quadrature nodes and weights.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          N (int): polynomial order</span>
+<span class="sd">          norm (bool): whether to normalize the weights</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`tuple&lt;tuple&gt;` of :class:`ndarray&lt;ndarray&gt;`) -- format</span>
+<span class="sd">            ``(x,w)`` where ``x`` and ``w`` are ``N+1`` nodes and weights</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrthogonalPolynomial.GaussLobattoQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalPolynomial.GaussLobattoQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussLobattoQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate Gauss Lobatto quadrature nodes and weights.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          N (int): polynomial order</span>
+<span class="sd">          norm (bool): whether to normalize the weights</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`tuple&lt;tuple&gt;` of :class:`ndarray&lt;ndarray&gt;`) -- format</span>
+<span class="sd">            ``(x,w)`` where ``x`` and ``w`` are ``N+1`` nodes and weights</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrthogonalPolynomial.GaussRadauQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalPolynomial.GaussRadauQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussRadauQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate Gauss Radau quadrature nodes and weights.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          N (int): polynomial order</span>
+<span class="sd">          norm (bool): whether to normalize the weights</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`tuple&lt;tuple&gt;` of :class:`ndarray&lt;ndarray&gt;`) -- format</span>
+<span class="sd">            ``(x,w)`` where ``x`` and ``w`` are ``N+1`` nodes and weights</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          NotImplementedError: if not overridden.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not implemented or undefined for this class.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrthogonalPolynomial.Quadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.OrthogonalPolynomial.Quadrature">[docs]</a>    <span class="k">def</span> <span class="nf">Quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          N (int): polynomial order</span>
+<span class="sd">          quadType (string): quadrature type (Guass, Gauss-Lobatto, Gauss-Radau)</span>
+<span class="sd">          norm (bool): whether to normalize the weights</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`tuple&lt;tuple&gt;` of :class:`ndarray&lt;ndarray&gt;`) -- format</span>
+<span class="sd">            ``(x,w)`` where ``x`` and ``w`` are ``N+1`` nodes and weights</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">          ValueError: if quadrature type is not available</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">quadType</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">GAUSS</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">quadType</span> <span class="o">==</span> <span class="n">GAUSSLOBATTO</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">GaussLobattoQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">quadType</span> <span class="o">==</span> <span class="n">GAUSSRADAU</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">GaussRadauQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;quadType=</span><span class="si">%s</span><span class="s2"> not available&quot;</span> <span class="o">%</span> <span class="n">quadType</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SpectralToolbox 0.2.3 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016, Daniele Bigoni.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>

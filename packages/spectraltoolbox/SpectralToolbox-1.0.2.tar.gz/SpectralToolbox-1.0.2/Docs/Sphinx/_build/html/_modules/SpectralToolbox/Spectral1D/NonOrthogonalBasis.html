@@ -1,0 +1,797 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SpectralToolbox.Spectral1D.NonOrthogonalBasis &mdash; SpectralToolbox 0.2.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="SpectralToolbox 0.2.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SpectralToolbox 0.2.3 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for SpectralToolbox.Spectral1D.NonOrthogonalBasis</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="c1">#</span>
+<span class="c1"># This file is part of SpectralToolbox.</span>
+<span class="c1">#</span>
+<span class="c1"># SpectralToolbox is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the LGNU Lesser General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># SpectralToolbox is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># LGNU Lesser General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the LGNU Lesser General Public License</span>
+<span class="c1"># along with SpectralToolbox.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># DTU UQ Library</span>
+<span class="c1"># Copyright (C) 2012-2015 The Technical University of Denmark</span>
+<span class="c1"># Scientific Computing Section</span>
+<span class="c1"># Department of Applied Mathematics and Computer Science</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2015-2016 Massachusetts Institute of Technology</span>
+<span class="c1"># Uncertainty Quantification group</span>
+<span class="c1"># Department of Aeronautics and Astronautics</span>
+<span class="c1">#</span>
+<span class="c1"># Author: Daniele Bigoni</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.Constants</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.AbstractClasses</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.OrthogonalFunctions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.OrthogonalPolynomials</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ConstantExtendedHermiteProbabilistsFunction&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;HermiteProbabilistsRadialBasisFunction&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;ConstantExtendedHermiteProbabilistsRadialBasisFunction&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;LinearExtendedHermiteProbabilistsRadialBasisFunction&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsFunction"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsFunction">[docs]</a><span class="k">class</span> <span class="nc">ConstantExtendedHermiteProbabilistsFunction</span><span class="p">(</span><span class="n">Basis</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; functions extended with the constant basis</span>
+
+<span class="sd">    The basis is defined by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \phi_0(x) = 1 \qquad \phi_i(x) = \psi_{i-1}(x) \quad \text{for } i=1\ldots</span>
+
+<span class="sd">    where :math:`\psi_j` are the Hermite Probabilists&#39; functions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      normalized (bool): whether to normalize the underlying polynomials.</span>
+<span class="sd">        Default=``None`` which leaves the choice at evaluation time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hpf</span> <span class="o">=</span> <span class="n">HermiteProbabilistsFunction</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsFunction.Quadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsFunction.Quadrature">[docs]</a>    <span class="k">def</span> <span class="nf">Quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Quadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">quadType</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">GAUSS</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;quadType=</span><span class="si">%s</span><span class="s2"> not available&quot;</span> <span class="o">%</span> <span class="n">quadType</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsFunction.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsFunction.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hpf</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsFunction.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsFunction.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th order constant extended Hermite Probabilists&#39; function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hpf</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsFunction.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsFunction.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th order constant extended Hermite Probabilists&#39; function</span>
+
+<span class="sd">        .. seealso:: :func:`HermitePhysicistsFunction.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hpf</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">dp</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsFunction.GradVandermonde"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsFunction.GradVandermonde">[docs]</a>    <span class="k">def</span> <span class="nf">GradVandermonde</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomials</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+<span class="sd">          k (int): order of the derivative</span>
+<span class="sd">          norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="sd">            (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="sd">            parameter is provided at construction time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="sd">            at the ``r`` points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DVr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">DVr</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DVr</span></div></div>
+
+<span class="c1"># class HermiteProbabilistsRadialBasisFunction(Basis):</span>
+<span class="c1">#     r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; Radial Basis Functions</span>
+
+<span class="c1">#     For the set :math:`\left\{x_i\right\}_{i=1}^N` of Gauss-Hermite points,</span>
+<span class="c1">#     the basis are defined by:</span>
+
+<span class="c1">#     .. math::</span>
+
+<span class="c1">#        \phi_i(x) = \begin{cases}</span>
+<span class="c1">#        \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i-1}} \right) &amp; \text{if } x \leq x_i</span>
+<span class="c1">#        \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i}} \right) &amp; \text{if } x &gt; x_i</span>
+<span class="c1">#        \end{cases}</span>
+
+<span class="c1">#     where :math:`\sigma_i=x_{i+1} - x_{i}`, :math:`\sigma_0=\sigma_1` and</span>
+<span class="c1">#     :math:`\sigma_N=\sigma_{N-1}`</span>
+
+<span class="c1">#     Args:</span>
+<span class="c1">#       nknots (int): number of knots points :math:`x_i`</span>
+<span class="c1">#       scale (float): scaling for the badwidth :math:`\sigma`.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+
+<span class="c1">#     def __init__(self, order, scale=1.):</span>
+<span class="c1">#         if order &lt; 0:</span>
+<span class="c1">#             raise ValueError(&quot;Range error. nknots &gt;= 0 must hold&quot;)</span>
+<span class="c1">#         self.nknots = order+1</span>
+<span class="c1">#         self.hp = HermiteProbabilistsPolynomial()</span>
+<span class="c1">#         self.xknots, self.wknots = self.hp.GaussQuadrature(self.nknots-1)</span>
+<span class="c1">#         self.sigma = np.zeros(self.nknots+1)</span>
+<span class="c1">#         if self.nknots == 1:</span>
+<span class="c1">#             self.sigma[:] = 1.</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             self.sigma[1:-1] = np.diff(self.xknots)</span>
+<span class="c1">#             self.sigma[0] = self.sigma[1]</span>
+<span class="c1">#             self.sigma[-1] = self.sigma[-2]</span>
+<span class="c1">#         self.sigma *= scale</span>
+
+<span class="c1">#     def Quadrature(self, N, quadType=None, norm=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.Quadrature`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if quadType in [None, GAUSS]:</span>
+<span class="c1">#             return self.GaussQuadrature(N, norm)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             raise ValueError(&quot;quadType=%s not available&quot; % quadType)</span>
+
+<span class="c1">#     def GaussQuadrature(self, N, norm=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         return self.hp.GaussQuadrature(N, norm)</span>
+
+<span class="c1">#     def Evaluate(self, x, N, norm=True, extended_output=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Evaluate the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if N &gt; self.nknots:</span>
+<span class="c1">#             raise ValueError(&quot;N must be &lt;= than the number of knots&quot;)</span>
+<span class="c1">#         leq = (x &lt;= self.xknots[N])</span>
+<span class="c1">#         left = np.where(leq)[0]</span>
+<span class="c1">#         right = np.where(np.logical_not(leq))[0]</span>
+<span class="c1">#         out = np.zeros(x.shape[0])</span>
+<span class="c1">#         diff = x - self.xknots[N]</span>
+<span class="c1">#         out[left] = np.exp( - (diff[left])**2./(2.*self.sigma[N-1]**2.) )</span>
+<span class="c1">#         out[right] = np.exp( - (diff[right])**2./(2.*self.sigma[N]**2.) )</span>
+<span class="c1">#         if extended_output:</span>
+<span class="c1">#             return (out, left, right, diff)</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             return out</span>
+
+<span class="c1">#     def GradEvaluate(self, x, N, k=0, norm=True):</span>
+<span class="c1">#         r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         (out, left, right, diff) = self.Evaluate(x, N, norm, extended_output=True)</span>
+<span class="c1">#         if k == 0:</span>
+<span class="c1">#             return out</span>
+<span class="c1">#         elif k == 1:</span>
+<span class="c1">#             out[left] *= -diff[left]/self.sigma[N-1]**2.</span>
+<span class="c1">#             out[right] *= -diff[right]/self.sigma[N]**2.</span>
+<span class="c1">#         elif k == 2:</span>
+<span class="c1">#             out[left] *= ( -1./self.sigma[N-1]**2. + diff[left]**2./self.sigma[N-1]**4. )</span>
+<span class="c1">#             out[right] *= ( -1./self.sigma[N]**2. + diff[right]**2./self.sigma[N]**4. )</span>
+<span class="c1">#         elif k == 3:</span>
+<span class="c1">#             out[left] *= diff[left] * (3.*self.sigma[N-1]**2. - diff[left]**2.) / self.sigma[N-1]**6.</span>
+<span class="c1">#             out[right] *= diff[right] * (3.*self.sigma[N]**2. - diff[right]**2.) / self.sigma[N]**6.</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             raise ValueError(&quot;%d-th derivative not defined yet&quot; % k)</span>
+<span class="c1">#         return out</span>
+
+<span class="c1">#     def GradVandermonde(self, r, N, k=0, norm=True):</span>
+<span class="c1">#         r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="c1">#         Args:</span>
+<span class="c1">#           r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="c1">#             evaluate the polynomials</span>
+<span class="c1">#           N (int): maximum polynomial order</span>
+<span class="c1">#           k (int): order of the derivative</span>
+<span class="c1">#           norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="c1">#             (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="c1">#             parameter is provided at construction time.</span>
+
+<span class="c1">#         Returns:</span>
+<span class="c1">#           (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="c1">#             at the ``r`` points.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         DVr = np.zeros((r.shape[0],N+1))</span>
+<span class="c1">#         for i in range(0,N+1):</span>
+<span class="c1">#             DVr[:,i] = self.GradEvaluate(r, i, k, norm)</span>
+<span class="c1">#         return DVr</span>
+
+<span class="c1"># class ConstantExtendedHermiteProbabilistsRadialBasisFunction(Basis):</span>
+<span class="c1">#     r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; Radial Basis Functions</span>
+
+<span class="c1">#     For the set :math:`\left\{x_i\right\}_{i=1}^N` of Gauss-Hermite points,</span>
+<span class="c1">#     the basis :math:`\{\phi_i\}_{i=0}^M` are defined by:</span>
+
+<span class="c1">#     .. math::</span>
+
+<span class="c1">#        \phi_0(x) = 1 \\</span>
+<span class="c1">#        \phi_i(x) = \begin{cases}</span>
+<span class="c1">#        \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i-1}} \right) &amp; \text{if } x \leq x_i</span>
+<span class="c1">#        \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i}} \right) &amp; \text{if } x &gt; x_i</span>
+<span class="c1">#        \end{cases}</span>
+
+<span class="c1">#     where :math:`\sigma_i=x_{i+1} - x_{i}`, :math:`\sigma_0=\sigma_1` and</span>
+<span class="c1">#     :math:`\sigma_N=\sigma_{N-1}`</span>
+
+<span class="c1">#     Args:</span>
+<span class="c1">#       order (int): maximum order :math:`M`</span>
+<span class="c1">#       scale (float): scaling for the badwidth :math:`\sigma`.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+
+<span class="c1">#     def __init__(self, nbasis, scale=1.):</span>
+<span class="c1">#         self.nbasis = nbasis</span>
+<span class="c1">#         self.hprbf = HermiteProbabilistsRadialBasisFunction(nbasis-1, scale=1.)</span>
+
+<span class="c1">#     def Quadrature(self, N, quadType=None, norm=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.Quadrature`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         return self.hprbf.Quadrature(N, quadType, norm)</span>
+
+<span class="c1">#     def GaussQuadrature(self, N, norm=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         return self.hprbf.GaussQuadrature(N, norm)</span>
+
+<span class="c1">#     def Evaluate(self, x, N, norm=True):</span>
+<span class="c1">#         r&quot;&quot;&quot; Evaluate the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if N &gt; self.nbasis:</span>
+<span class="c1">#             raise ValueError(&quot;N must be &lt;= than the number of basis&quot;)</span>
+<span class="c1">#         if N == 0:</span>
+<span class="c1">#             out = np.ones(x.shape[0])</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             nrbf = N-1</span>
+<span class="c1">#             out = self.hprbf.Evaluate(x, nrbf, norm)</span>
+<span class="c1">#         return out</span>
+
+<span class="c1">#     def GradEvaluate(self, x, N, k=0, norm=True):</span>
+<span class="c1">#         r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if N == 0:</span>
+<span class="c1">#             if k == 0:</span>
+<span class="c1">#                 return np.ones(x.shape[0])</span>
+<span class="c1">#             elif k &gt; 0:</span>
+<span class="c1">#                 return np.zeros(x.shape[0])</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             nrbf = N-1</span>
+<span class="c1">#             return self.hprbf.GradEvaluate(x, nrbf, k, norm)</span>
+
+<span class="c1">#     def GradVandermonde(self, r, N, k=0, norm=True):</span>
+<span class="c1">#         r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="c1">#         Args:</span>
+<span class="c1">#           r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="c1">#             evaluate the polynomials</span>
+<span class="c1">#           N (int): maximum polynomial order</span>
+<span class="c1">#           k (int): order of the derivative</span>
+<span class="c1">#           norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="c1">#             (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="c1">#             parameter is provided at construction time.</span>
+
+<span class="c1">#         Returns:</span>
+<span class="c1">#           (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="c1">#             at the ``r`` points.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         DVr = np.zeros((r.shape[0],N+1))</span>
+<span class="c1">#         for i in range(0,N+1):</span>
+<span class="c1">#             DVr[:,i] = self.GradEvaluate(r, i, k, norm)</span>
+<span class="c1">#         return DVr</span>
+
+<span class="c1"># class LinearExtendedHermiteProbabilistsRadialBasisFunction(Basis):</span>
+<span class="c1">#     r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; Radial Basis Functions</span>
+
+<span class="c1">#     For the set :math:`\left\{x_i\right\}_{i=1}^N` of Gauss-Hermite points,</span>
+<span class="c1">#     the basis :math:`\{\phi_i\}_{i=0}^M` are defined by:</span>
+
+<span class="c1">#     .. math::</span>
+
+<span class="c1">#        \phi_0(x) = 1 \\</span>
+<span class="c1">#        \phi_1(x) = x \\</span>
+<span class="c1">#        \phi_i(x) = \begin{cases}</span>
+<span class="c1">#        \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i-1}} \right) &amp; \text{if } x \leq x_i</span>
+<span class="c1">#        \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i}} \right) &amp; \text{if } x &gt; x_i</span>
+<span class="c1">#        \end{cases}</span>
+
+<span class="c1">#     where :math:`\sigma_i=x_{i+1} - x_{i}`, :math:`\sigma_0=\sigma_1` and</span>
+<span class="c1">#     :math:`\sigma_N=\sigma_{N-1}`</span>
+
+<span class="c1">#     Args:</span>
+<span class="c1">#       order (int): maximum order :math:`M`</span>
+<span class="c1">#       scale (float): scaling for the badwidth :math:`\sigma`.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+
+<span class="c1">#     def __init__(self, nbasis, scale=1.):</span>
+<span class="c1">#         self.nbasis = nbasis</span>
+<span class="c1">#         self.hprbf = HermiteProbabilistsRadialBasisFunction(nbasis-2, scale=1.)</span>
+
+<span class="c1">#     def Quadrature(self, N, quadType=None, norm=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.Quadrature`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         return self.hprbf.Quadrature(N, quadType, norm)</span>
+
+<span class="c1">#     def GaussQuadrature(self, N, norm=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         return self.hprbf.GaussQuadrature(N, norm)</span>
+
+<span class="c1">#     def Evaluate(self, x, N, norm=True, extended_output=False):</span>
+<span class="c1">#         r&quot;&quot;&quot; Evaluate the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if N &gt; self.nbasis:</span>
+<span class="c1">#             raise ValueError(&quot;N must be &lt;= than the number of basis&quot;)</span>
+<span class="c1">#         if N == 0:</span>
+<span class="c1">#             out = np.ones(x.shape[0])</span>
+<span class="c1">#         elif N == 1:</span>
+<span class="c1">#             out = x.flatten()</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             nrbf = N-2</span>
+<span class="c1">#             out = self.hprbf.Evaluate(x, nrbf, norm)</span>
+<span class="c1">#         return out</span>
+
+<span class="c1">#     def GradEvaluate(self, x, N, k=0, norm=True):</span>
+<span class="c1">#         r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="c1">#         .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         if N == 0:</span>
+<span class="c1">#             if k == 0:</span>
+<span class="c1">#                 return np.ones(x.shape[0])</span>
+<span class="c1">#             elif k &gt; 0:</span>
+<span class="c1">#                 return np.zeros(x.shape[0])</span>
+<span class="c1">#         elif N == 1:</span>
+<span class="c1">#             if k == 0:</span>
+<span class="c1">#                 return x.flatten()</span>
+<span class="c1">#             elif k == 1:</span>
+<span class="c1">#                 return np.ones(x.shape[0])</span>
+<span class="c1">#             elif k &gt; 1:</span>
+<span class="c1">#                 return np.zeros(x.shape[0])</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             nrbf = N-2</span>
+<span class="c1">#             return self.hprbf.GradEvaluate(x, nrbf, k, norm)</span>
+
+<span class="c1">#     def GradVandermonde(self, r, N, k=0, norm=True):</span>
+<span class="c1">#         r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="c1">#         Args:</span>
+<span class="c1">#           r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="c1">#             evaluate the polynomials</span>
+<span class="c1">#           N (int): maximum polynomial order</span>
+<span class="c1">#           k (int): order of the derivative</span>
+<span class="c1">#           norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="c1">#             (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="c1">#             parameter is provided at construction time.</span>
+
+<span class="c1">#         Returns:</span>
+<span class="c1">#           (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="c1">#             at the ``r`` points.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         DVr = np.zeros((r.shape[0],N+1))</span>
+<span class="c1">#         for i in range(0,N+1):</span>
+<span class="c1">#             DVr[:,i] = self.GradEvaluate(r, i, k, norm)</span>
+<span class="c1">#         return DVr</span>
+
+
+<div class="viewcode-block" id="HermiteProbabilistsRadialBasisFunction"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsRadialBasisFunction">[docs]</a><span class="k">class</span> <span class="nc">HermiteProbabilistsRadialBasisFunction</span><span class="p">(</span><span class="n">Basis</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; Radial Basis Functions</span>
+
+<span class="sd">    For the set :math:`\left\{x_i\right\}_{i=1}^N` of Gauss-Hermite points,</span>
+<span class="sd">    the basis are defined by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \phi_i(x) = \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i}} \right) </span>
+
+<span class="sd">    where :math:`\sigma_i=(x_{i+1} - x_{i-1})/2.`, :math:`\sigma_0=\sigma_1` and</span>
+<span class="sd">    :math:`\sigma_N=\sigma_{N-1}`</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      nknots (int): number of knots points :math:`x_i`</span>
+<span class="sd">      scale (float): scaling for the badwidth :math:`\sigma`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">order</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Range error. nknots &gt;= 0 must hold&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nknots</span> <span class="o">=</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hp</span> <span class="o">=</span> <span class="n">HermiteProbabilistsPolynomial</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xknots</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wknots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nknots</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nknots</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nknots</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">1.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xknots</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xknots</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span><span class="o">/</span><span class="mf">2.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*=</span> <span class="n">scale</span>
+
+<div class="viewcode-block" id="HermiteProbabilistsRadialBasisFunction.Quadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsRadialBasisFunction.Quadrature">[docs]</a>    <span class="k">def</span> <span class="nf">Quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Quadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">quadType</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">GAUSS</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;quadType=</span><span class="si">%s</span><span class="s2"> not available&quot;</span> <span class="o">%</span> <span class="n">quadType</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsRadialBasisFunction.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsRadialBasisFunction.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsRadialBasisFunction.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsRadialBasisFunction.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">extended_output</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nknots</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;N must be &lt;= than the number of knots&quot;</span><span class="p">)</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">xknots</span><span class="p">[</span><span class="n">N</span><span class="p">]</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="o">-</span> <span class="n">diff</span><span class="o">**</span><span class="mf">2.</span><span class="o">/</span><span class="p">(</span><span class="mf">2.</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="n">N</span><span class="p">]</span><span class="o">**</span><span class="mf">2.</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">extended_output</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsRadialBasisFunction.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsRadialBasisFunction.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">,</span> <span class="n">extended_output</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">out</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">*=</span> <span class="o">-</span><span class="n">diff</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="n">N</span><span class="p">]</span><span class="o">**</span><span class="mf">2.</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">*=</span> <span class="p">(</span> <span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="n">N</span><span class="p">]</span><span class="o">**</span><span class="mf">2.</span> <span class="o">+</span> <span class="n">diff</span><span class="o">**</span><span class="mf">2.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="n">N</span><span class="p">]</span><span class="o">**</span><span class="mf">4.</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">*=</span> <span class="n">diff</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3.</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="n">N</span><span class="p">]</span><span class="o">**</span><span class="mf">2.</span> <span class="o">-</span> <span class="n">diff</span><span class="o">**</span><span class="mf">2.</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">[</span><span class="n">N</span><span class="p">]</span><span class="o">**</span><span class="mf">6.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">-th derivative not defined yet&quot;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsRadialBasisFunction.GradVandermonde"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsRadialBasisFunction.GradVandermonde">[docs]</a>    <span class="k">def</span> <span class="nf">GradVandermonde</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomials</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+<span class="sd">          k (int): order of the derivative</span>
+<span class="sd">          norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="sd">            (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="sd">            parameter is provided at construction time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="sd">            at the ``r`` points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DVr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">DVr</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DVr</span></div></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsRadialBasisFunction"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsRadialBasisFunction">[docs]</a><span class="k">class</span> <span class="nc">ConstantExtendedHermiteProbabilistsRadialBasisFunction</span><span class="p">(</span><span class="n">Basis</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; Radial Basis Functions</span>
+
+<span class="sd">    For the set :math:`\left\{x_i\right\}_{i=1}^N` of Gauss-Hermite points,</span>
+<span class="sd">    the basis :math:`\{\phi_i\}_{i=0}^M` are defined by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \phi_0(x) = 1 \\</span>
+<span class="sd">       \phi_i(x) = \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i-1}} \right) </span>
+
+<span class="sd">    where :math:`\sigma_i=x_{i+1} - x_{i}`, :math:`\sigma_0=\sigma_1` and</span>
+<span class="sd">    :math:`\sigma_N=\sigma_{N-1}`</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      order (int): maximum order :math:`M`</span>
+<span class="sd">      scale (float): scaling for the badwidth :math:`\sigma`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbasis</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbasis</span> <span class="o">=</span> <span class="n">nbasis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span> <span class="o">=</span> <span class="n">HermiteProbabilistsRadialBasisFunction</span><span class="p">(</span><span class="n">nbasis</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsRadialBasisFunction.Quadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsRadialBasisFunction.Quadrature">[docs]</a>    <span class="k">def</span> <span class="nf">Quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Quadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">Quadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsRadialBasisFunction.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsRadialBasisFunction.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsRadialBasisFunction.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsRadialBasisFunction.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbasis</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;N must be &lt;= than the number of basis&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nrbf</span> <span class="o">=</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">nrbf</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsRadialBasisFunction.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsRadialBasisFunction.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nrbf</span> <span class="o">=</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">nrbf</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConstantExtendedHermiteProbabilistsRadialBasisFunction.GradVandermonde"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.ConstantExtendedHermiteProbabilistsRadialBasisFunction.GradVandermonde">[docs]</a>    <span class="k">def</span> <span class="nf">GradVandermonde</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomials</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+<span class="sd">          k (int): order of the derivative</span>
+<span class="sd">          norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="sd">            (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="sd">            parameter is provided at construction time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="sd">            at the ``r`` points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DVr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">DVr</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DVr</span></div></div>
+
+<div class="viewcode-block" id="LinearExtendedHermiteProbabilistsRadialBasisFunction"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LinearExtendedHermiteProbabilistsRadialBasisFunction">[docs]</a><span class="k">class</span> <span class="nc">LinearExtendedHermiteProbabilistsRadialBasisFunction</span><span class="p">(</span><span class="n">Basis</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; Radial Basis Functions</span>
+
+<span class="sd">    For the set :math:`\left\{x_i\right\}_{i=1}^N` of Gauss-Hermite points,</span>
+<span class="sd">    the basis :math:`\{\phi_i\}_{i=0}^M` are defined by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \phi_0(x) = 1 \\</span>
+<span class="sd">       \phi_1(x) = x \\</span>
+<span class="sd">       \phi_i(x) = \exp\left( -\frac{(x-x_i)^2}{2\sigma^2_{i-1}} \right) </span>
+
+<span class="sd">    where :math:`\sigma_i=x_{i+1} - x_{i}`, :math:`\sigma_0=\sigma_1` and</span>
+<span class="sd">    :math:`\sigma_N=\sigma_{N-1}`</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      order (int): maximum order :math:`M`</span>
+<span class="sd">      scale (float): scaling for the badwidth :math:`\sigma`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbasis</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbasis</span> <span class="o">=</span> <span class="n">nbasis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span> <span class="o">=</span> <span class="n">HermiteProbabilistsRadialBasisFunction</span><span class="p">(</span><span class="n">nbasis</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LinearExtendedHermiteProbabilistsRadialBasisFunction.Quadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LinearExtendedHermiteProbabilistsRadialBasisFunction.Quadrature">[docs]</a>    <span class="k">def</span> <span class="nf">Quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate quadrature rules of the selected type.</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Quadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">Quadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">quadType</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinearExtendedHermiteProbabilistsRadialBasisFunction.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LinearExtendedHermiteProbabilistsRadialBasisFunction.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinearExtendedHermiteProbabilistsRadialBasisFunction.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LinearExtendedHermiteProbabilistsRadialBasisFunction.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">extended_output</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbasis</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;N must be &lt;= than the number of basis&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nrbf</span> <span class="o">=</span> <span class="n">N</span><span class="o">-</span><span class="mi">2</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">nrbf</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="LinearExtendedHermiteProbabilistsRadialBasisFunction.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LinearExtendedHermiteProbabilistsRadialBasisFunction.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th Hermite Probabilists&#39; Radial Basis Function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nrbf</span> <span class="o">=</span> <span class="n">N</span><span class="o">-</span><span class="mi">2</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hprbf</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">nrbf</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LinearExtendedHermiteProbabilistsRadialBasisFunction.GradVandermonde"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LinearExtendedHermiteProbabilistsRadialBasisFunction.GradVandermonde">[docs]</a>    <span class="k">def</span> <span class="nf">GradVandermonde</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate the ``k``-th derivative of the ``N``-th order Vandermoned matrix.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          r (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` points where to</span>
+<span class="sd">            evaluate the polynomials</span>
+<span class="sd">          N (int): maximum polynomial order</span>
+<span class="sd">          k (int): order of the derivative</span>
+<span class="sd">          norm (bool): whether to return normalized (``True``) or unnormalized</span>
+<span class="sd">            (``False``) polynomial. The parameter is ignored if the ``normalized``</span>
+<span class="sd">            parameter is provided at construction time.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``m``,``N+1``]) -- polynomials evaluated</span>
+<span class="sd">            at the ``r`` points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DVr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">r</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">DVr</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DVr</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SpectralToolbox 0.2.3 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016, Daniele Bigoni.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>
