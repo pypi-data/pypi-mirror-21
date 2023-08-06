@@ -1,0 +1,15 @@
+{% extends "admin/login.html" %}
+
+{% block content %}
+{{ block.super }}
+
+{% url 'social:begin' 'google-oauth2' as google_oauth2_url %}
+{% if google_oauth2_url %}
+    <div style="padding-left: 6.9em;">
+        <form action="{{ google_oauth2_url }}">
+            <input type="hidden" name="next" value="{{ next }}" />
+            <input type="submit" value="Log in with Google" />
+        </form>
+    </div>
+{% endif %}
+{% endblock %}
