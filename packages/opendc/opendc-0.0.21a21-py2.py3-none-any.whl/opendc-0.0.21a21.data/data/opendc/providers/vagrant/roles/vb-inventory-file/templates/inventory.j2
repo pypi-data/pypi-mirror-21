@@ -1,0 +1,46 @@
+{% for master in masters -%}
+{{ master.hostname }} ansible_host={{ master.ip }} ansible_private_key_file='{{ inventory_dir }}/.vagrant/machines/{{ master.hostname }}/virtualbox/private_key'
+{% endfor -%}
+{% for node in nodes -%}
+{{ node.hostname }} ansible_host={{ node.ip }} ansible_private_key_file='{{ inventory_dir }}/.vagrant/machines/{{ node.hostname }}/virtualbox/private_key'
+{% endfor %}
+
+[opendc:children]
+opendc-masters
+opendc-nodes
+etcd
+fileserver
+opendc-ca
+timeserver
+docker-registry-mirror
+
+[opendc:vars]
+ansible_ssh_user=vagrant
+ansible_connection=ssh
+
+[opendc-masters]
+{% for master in masters -%}
+{{ master.hostname }}
+{% endfor %}
+
+[opendc-nodes]
+{% for node in nodes -%}
+{{ node.hostname }}
+{% endfor %}
+
+[etcd]
+{% for etcd in etcd -%}
+{{ etcd }}
+{% endfor %}
+
+[fileserver]
+{{ fileserver }}
+
+[opendc-ca]
+{{ opendc_ca }}
+
+[timeserver]
+{{ timeserver }}
+
+[docker-registry-mirror]
+{{ docker_registry_mirror }}

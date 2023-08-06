@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opendc-kube-state-metrics
+  namespace: {{ .Values.namespace }}
+  labels:
+    solution: m1_metrics
+    product:  kube-state-metrics
+    heritage: {{ .Release.Service | quote }}
+    release:  {{ .Release.Name | quote }}
+    chart:    "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  selector:
+    solution: m1_metrics
+    product:  kube-state-metrics
+  ports:
+  - name:       http-metrics
+    port:       8080
+    targetPort: http-metrics
+    protocol:   TCP
