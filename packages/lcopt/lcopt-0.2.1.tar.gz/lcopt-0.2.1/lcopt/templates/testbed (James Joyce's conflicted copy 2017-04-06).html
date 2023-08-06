@@ -1,0 +1,48 @@
+{% extends 'base.html'%}
+
+{% block title %}Analysis{% endblock%}
+
+{% block head_postload %}
+
+<script src="{{ url_for('static', filename = 'js/cdn_cache/d3.min.js') }}"></script>
+<script src="{{ url_for('static', filename = 'js/cdn_cache/d3-legend.min.js') }}"></script>
+
+<!--<script src="{{ url_for('static', filename = 'js/analysis.js') }}"></script>-->
+
+<script src = "{{ url_for('static', filename = 'js/sunburst.js') }}"></script>
+
+
+
+<link rel = "stylesheet" type = "text/css" href = "{{ url_for('static', filename = 'css/analysis.css') }}" />
+
+{% endblock%}
+
+{% block content %}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-xs-10 col-xs-offset-1">
+
+        <div class="row">
+            <div class="col-xs-10">
+                <select id = "parameterSetChoice">
+                    {% for item in args.result_sets.settings.ps_names %}<option value = {{loop.index}}>{{item}}</option>{% endfor %}
+                </select>
+                <select id = "methodChoice">
+                    {% for item in args.result_sets.settings.method_names %}<option value = {{loop.index}}>{{item | capitalize}}</option>{% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        
+        <div class="row">
+
+            <div id = "sb_div" class = "col-xs-6">
+                <svg id = "sunburst"></svg>
+            </div>
+
+        </div>
+
+     </div></div></div>
+
+{% endblock %}
