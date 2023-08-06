@@ -1,0 +1,32 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+</head><body><dom-module id="hedgehog-connection-item-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+      }
+        </style>
+
+        <iron-ajax id="attachAjax" url="/visaweb/devicemanager/attach" body="[[mappingModel]]" as-json="" content-type="application/json" method="POST" on-response="onAttachResponse" on-error="onAttachError"></iron-ajax>
+
+        <paper-icon-item class="item">
+            <paper-item-body two-line="" class="flex">
+                <div>[[connection]]</div>
+            </paper-item-body>
+            
+                <paper-icon-button icon="shared-icons:star" alt="favourite this!" on-tap="onAttachAsset"></paper-icon-button>
+            
+            <content></content>
+        </paper-icon-item>
+    </template>
+
+    <script>Polymer({is:"hedgehog-connection-item-view",properties:{connection:{type:String,notify:!0},mappingModel:{type:Object,notify:!0,value:{}}},onAttachAsset:function(e,n){this.mappingModel.key=null,this.mappingModel.value=this.connection,this.$.attachAjax.generateRequest()},onAttachResponse:function(e,n){this.fire("plutonum-navigate",{page:"/visaconsole-view/"+n.response.id,id:n.response.id})},onAttachError:function(e,n){this.fire("plutonium-notification",{level:"warning",message:n.error})}});</script>
+</dom-module>
+</body></html>
