@@ -1,0 +1,57 @@
+Metadata-Version: 1.1
+Name: addok-trigrams
+Version: 1.0.0
+Summary: Trigram based algorithm for Addok.
+Home-page: https://github.com/addok/addok-trigrams
+Author: Yohan Boniface
+Author-email: yohan.boniface@data.gouv.fr
+License: WTFPL
+Description: # Addok-trigrams
+        
+        Alternative indexation pattern for Addok, based on trigrams.
+        
+        
+        # Installation
+        
+            # No pypi release yet.
+            pip install git+https://github.com/addok/addok-trigrams
+        
+        
+        # Configuration
+        
+        In your local configuration file:
+        
+        - remove `extend_results_reducing_tokens` from RESULTS_COLLECTORS_PYPATHS:
+        
+                from addok.config.default import RESULTS_COLLECTORS_PYPATHS
+                RESULTS_COLLECTORS_PYPATHS.remove('addok.helpers.collectors.extend_results_reducing_tokens')
+        
+        - add new RESULTS_COLLECTORS_PYPATHS:
+        
+                RESULTS_COLLECTORS_PYPATHS += [
+                    'addok_trigrams.extend_results_removing_numbers',
+                    'addok_trigrams.extend_results_removing_one_whole_word',
+                    'addok_trigrams.extend_results_removing_successive_trigrams',
+                ]
+        
+        - add `trigramize` to PROCESSORS_PYPATHS:
+        
+                PROCESSORS_PYPATHS += [
+                    'addok_trigrams.trigramize',
+                ]
+        
+        - remove pairs and autocomplete indexers from `INDEXERS_PYPATHS`:
+        
+                from addok.config.default import INDEXERS_PYPATHS
+                INDEXERS_PYPATHS.remove('addok.pairs.PairsIndexer')
+                INDEXERS_PYPATHS.remove('addok.autocomplete.EdgeNgramIndexer')
+        
+Keywords: addok geocoding
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Scientific/Engineering :: GIS
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
