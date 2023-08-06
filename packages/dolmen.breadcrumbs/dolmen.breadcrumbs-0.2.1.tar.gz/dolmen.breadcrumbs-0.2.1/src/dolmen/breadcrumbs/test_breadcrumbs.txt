@@ -1,0 +1,102 @@
+Getting started
+===============
+
+  >>> from grokcore.component import testing
+  >>> testing.grok('dolmen.breadcrumbs')
+  >>> testing.grok('dolmen.location')
+
+We need to provide a root::
+
+  >>> from zope.location import Location
+  >>> from cromlech.browser import IPublicationRoot
+  >>> from zope.interface import directlyProvides
+
+  >>> root = Location()
+  >>> directlyProvides(root, IPublicationRoot)
+
+We also need a request, to compute the URLs::
+
+  >>> from cromlech.browser.testing import TestRequest
+  >>> request = TestRequest()
+
+Now, we should basically get a result here:
+
+  >>> from dolmen.breadcrumbs import breadcrumbs
+  >>> print list(breadcrumbs(root, request))
+  [{'url': 'http://localhost', 'name': None}]
+
+If there's an application URL that meeses up with our base url, it should
+be reflected::
+
+  >>> request = TestRequest(application_url='http://localhost/app')
+  >>> print list(breadcrumbs(root, request))
+  [{'url': 'http://localhost/app', 'name': None}]
+
+If the item gets a name, it should be reflected also::
+
+  >>> root.__name__ = 'Bob'
+  >>> print list(breadcrumbs(root, request))
+  [{'url': 'http://localhost/app', 'name': 'Bob'}]
+
+
+Siblings, for I am his kinsman !
+================================
+
+  >>> from zope.location import locate
+  >>> duncan = Location()
+  >>> locate(duncan, root, 'Duncan')
+
+  >>> print list(breadcrumbs(duncan, request))
+  ... # doctest: +NORMALIZE_WHITESPACE
+  [{'url': 'http://localhost/app', 'name': 'Bob'},
+   {'url': 'http://localhost/app/Duncan', 'name': 'Duncan'}]
+
+  >>> malcolm = Location()
+  >>> locate(malcolm, duncan, 'Malcolm Heir of the Realm')
+  >>> print list(breadcrumbs(malcolm, request))
+  ... # doctest: +NORMALIZE_WHITESPACE
+  [{'url': 'http://localhost/app', 'name': 'Bob'},
+   {'url': 'http://localhost/app/Duncan', 'name': 'Duncan'},
+   {'url': 'http://localhost/app/Duncan/Malcolm%20Heir%20of%20the%20Realm', 'name': 'Malcolm Heir of the Realm'}]
+
+
+What if...
+==========
+
+... thou have no name ?
+
+  >>> anonymous = Location()
+  >>> anonymous.__parent__ = root
+
+  >>> print list(breadcrumbs(anonymous, request)) # doctest: +ELLIPSIS
+  Traceback (most recent call last):
+  ...
+  KeyError: 'Object name (<...Location object...>) could not be resolved.'
+
+
+Show me !
+=========
+
+  >>> lady = Location()
+  >>> locate(lady, root, 'lady')
+  >>> thane = Location()
+  >>> locate(thane, lady, 'thane')
+
+  >>> from dolmen.breadcrumbs import BreadcrumbsRenderer
+  >>> renderer = BreadcrumbsRenderer(thane, request)
+  >>> renderer.update()
+  >>> print renderer.render()  # doctest: +NORMALIZE_WHITESPACE
+  <div class="breadcrumb">
+    <span class="you-are-here">You are here :</span>
+    <span class="crumb">
+      <a href="http://localhost/app">Bob</a>
+      <span class="divider">&rarr;</span>
+    </span>
+    <span class="crumb">
+      <a href="http://localhost/app/lady">lady</a>
+      <span class="divider">&rarr;</span>
+    </span>
+    <span class="crumb">
+      <a href="http://localhost/app/lady/thane">thane</a>
+    </span>
+  </div>
