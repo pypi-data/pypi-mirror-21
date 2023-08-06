@@ -1,0 +1,42 @@
+ <input{{input_attrs}}/>
+{# <textarea{{input_attrs}}>{{ input_value }}</textarea> #}
+
+<table class="structjsonfield_table">
+    <thead {% if not unpacked %} style="display:none"{% endif %}>
+      <tr>
+        {% for column in columns %}
+          <td>{{ column.label }}</td>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody id="{{ target_id }}">
+      {% for widgets in unpacked %}
+        {% include 'structjsonfield/line_template.html' with widgets=widgets %}
+      {% endfor %}
+    </tbody>
+    <tfoot>
+        {% if not disabled %}
+        <tr>
+            <td colspan="3">
+                <button class="btn structjsonfield_add_button" type="button" id="add_button_{{ name }}">
+                {{ add_label }}
+                </button>
+            </td>
+        </tr>
+        {% endif %}
+    </tfoot>
+</table>
+
+<script type="text/template" id="{{ template_id }}">
+  {% include 'structjsonfield/line_template.html' with widgets=columns.widgets %}
+</script>
+
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function(event) {
+    $("#{{ id }}").structjson({
+      target: '#{{ target_id }}',
+      template: '#{{ template_id }}',
+      addButton: '#add_button_{{ name }}'
+    });
+  });
+</script>
