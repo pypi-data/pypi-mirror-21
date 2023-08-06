@@ -1,0 +1,242 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="plutonium-chart-behavior.html">
+
+<!--
+`plutonium-causal-chart`
+Visualization widget.
+
+@demo demo/index-causal-chart.html 
+-->
+
+<dom-module id="plutonium-causal-chart">
+    <template>
+        <style>
+            :host {
+                display: block;
+                height: 400px;
+                position: relative;
+            }
+
+            .controls {
+                display: inline-block;
+                margin: 0 0 0 20px;
+            }
+            svg {
+                float: right;
+                margin: 0;
+            }
+            .axis--x path {
+                display: none;
+            }
+
+            .line {
+                fill: none;
+                stroke: steelblue;
+                stroke-width: 1.5px;
+            }
+
+            #tooltip {
+                position: absolute;
+                height: auto;
+                padding: 10px;
+                background-color: white;
+                -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                pointer-events: none;
+            }
+
+            #tooltip.hidden {
+                display: none;
+            }
+
+            #imgLines,
+            #container {
+                position: absolute;
+            }
+
+            #tooltip p {
+                margin: 0;
+                font-family: sans-serif;
+                font-size: 12px;
+                line-height: 20px;
+            }
+            
+            canvas {
+                margin-left: var(--margin-left, 0px);
+                margin-top: var(--margin-right, 0px);
+                margin-top: var(--margin-top, 0px);
+                margin-top: var(--margin-bottom, 0px);
+                width: var(--width);
+                height: var(--height);
+            }
+            
+        </style>
+        <content select=".scale"></content>
+        <svg id="container"></svg>
+        <canvas id="canvas" />
+    </template>
+
+    <script>
+        Polymer({
+            is: 'plutonium-causal-chart',
+            extends: 'div',
+            properties: {
+                dataUrl: {
+                    type: String,
+                    notify: true
+                },
+
+                xAxisName: {
+                    type: String,
+                    notify: true
+                },
+                yAxisName: {
+                    type: String,
+                    notify: true
+                },
+                zAxisName: {
+                    type: String,
+                    notify: true
+                },
+                //                _colorBucketCount: {
+                //                    type: Number,
+                //                    computed: '_computeColorBucketCount(data)',
+                //                },
+
+                _tick: {
+                    type: Number,
+                    value: 1
+                },
+
+                _resolution: {
+                    type: Object,
+                    computed: '_computeResolution(dataUrl)'
+                },
+                _cellSizeX: {
+                    type: Number,
+                    computed: '_computeCellSizeX(_resolution, _height)'
+                },
+                _cellSizeY: {
+                    type: Number,
+                    computed: '_computeCellSizeY(_resolution, _width)'
+                },
+                _selectedPoint: {
+                    type: Object,
+                    notify: true
+                },
+
+                _data: {
+                    type: Array,
+                    value: []
+                }
+            },
+            behaviors: [
+                Plutonium.ChartBehavior
+            ],
+            observers: [
+                '_observeServerSideData(_g, dataUrl)'
+            ],
+
+            _computeColorBucketCount: function(data) {
+                return (data.domains.z.length && data.domains.z.length > 0) ? data.domains.z.length - 1 : 0;
+            },
+            _computeCellSizeX: function(resolution, height) {
+                return height / resolution.height;
+            },
+            _computeCellSizeY: function(resolution, width) {
+                return width / resolution.width;
+            },
+            _computeResolution: function(data) {
+                return data.resolution;
+            },
+            _observeServerSideData: function(_cellSizeX, _cellSizeY, _g, dataUrl) {
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'observe-data');
+                this.update();
+            },
+            initialize: function() {
+                this._g = this._svg.append("g").attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+
+                //                try {
+                //                    this._graph = this.$$('canvas#' + this.id + 'Graph');
+                ////                    this.$$('canvas#' + this.id + 'Graph').remove();
+                //                } catch (exception) {
+                //                    d3.select('canvas#' + this.id + 'Graph').remove();
+
+                //                this._graph = d3.select('canvas');
+                //                }
+                /*   this.$.canvas.width = this._width;
+                   this.$.canvas.height = this._height;
+                   this.customStyle['--margin-left'] = this._margin.left + 'px !important';
+                   this.customStyle['--margin-top'] = this._margin.top + 'px !important';
+                   this.customStyle['--width'] = this._width + 'px !important';
+                   this.customStyle['--height'] = this._height + 'px !important';
+                   this.updateStyles();*/
+                this._graph = d3.select('canvas');
+                //                this._graph
+                //                        .attr('id', this.id + 'Graph')
+                //                        .attr("style", "margin-left: " + this._margin.left + "px !important; margin-top: " + this._margin.top + "px !important;")
+                //                        .attr('width', this._width + 'px')
+                //                        .attr('height', this._height + 'px');
+            },
+            draw: function() {
+                var self = this;
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'draw');
+
+                //                self._graph = d3.select('canvas')
+                ////                        .attr('x', self._margin.left)
+                ////                        .attr('y', self._margin.top)
+                //                        .attr("style", "margin-left: " + self._margin.left + "px !important; margin-top: " + self._margin.top + "px !important;")
+                //                        .attr('width', self._width + 'px')
+                //                        .attr('height', self._height + 'px');
+
+                self._graph = self._graph.attr('transform', 'translate(0, ' + (self._tick++) + ')');
+
+                var context = self.$.canvas.getContext("2d");
+                context.beginPath();
+                self._data.forEach(function(d, i) {
+                    context.drawImage(d, 0, 0, self.$.canvas.width, d.height, 1, i + 1, d.width, d.height);
+                });
+                context.closePath();
+
+
+            },
+            refresh: function(input) {
+                var blob = new Blob([input], {
+                    type: 'image/png'
+                });
+                var url = URL.createObjectURL(blob);
+                var img = new Image;
+
+                var self = this;
+                img.onload = function() {
+                    self._data.push(img);
+                    console.debug((self.id ? self.is + '#' + self.id : self.is), 'refresh delta', img);
+                    self._onRender();
+                    URL.revokeObjectURL(url);
+                }
+                img.src = url
+            },
+            update: function(data) {
+                var self = this;
+                var img = new Image();
+                img.src = this.dataUrl;
+                img.onload = function() {
+                    if (self._height > self._data.length) {
+                        self._data.push(img);
+                    } else {
+                        for (var i = 0; i < img.height; i++) {
+                            self._data.shift();
+                        }
+                        self._data.push(img);
+
+                    }
+                    console.debug('add new line', self._data);
+                    self._onRender();
+                };
+            }
+        });
+
+    </script>
+</dom-module>

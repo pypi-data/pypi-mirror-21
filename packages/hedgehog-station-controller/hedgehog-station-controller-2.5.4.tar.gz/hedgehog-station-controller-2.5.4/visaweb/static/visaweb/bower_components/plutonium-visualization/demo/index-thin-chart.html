@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>plutonium-thin-chart demo</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../plutonium-visualization.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles">
+        #chart1 {
+            width: 150px;
+            height: 100px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="vertical-section-container centered">
+
+        <h3>plutonium-thin-chart demo</h3>
+
+        <demo-snippet>
+            <template>
+                    <button id="updateButton">Update</button>
+                    <div id="chart1" 
+                         is="plutonium-thin-chart" 
+                         data-url="http://localhost:8080/live/agilent_hp_8920B/trace/image?amplitude_reference=0.0&amplitude_span=100.0&frequency_span=40.0&frequency_center=100.0&width=90&height=40&pixel_width=1&pixel_height=1&opacity=233&ver=1488490247813"
+                         class="card">
+
+                        <plutonium-axis id="xAxis" class="scale" display-name="X axis" orientation="bottom" axis-layout="horizontal" center="100" label="X tengely" unit="MHz" span="40"></plutonium-axis>
+                        <plutonium-axis id="yAxis" class="scale" display-name="Y axis" orientation="left" axis-layout="vertical" center="-50" label="Y tengel    y" unit="MHz" span="100"></plutonium-axis>
+                        <plutonium-axis id="zAxis" class="scale" display-name="Z axis" orientation="top" axis-layout="horizontal" label="Z tengely" unit="MHz" center="100" span="40"></plutonium-axis>
+                        <plutonium-axis id="aAxis" class="scale" display-name="A axis" orientation="right" axis-layout="legend" label="A tengely" unit="MHz" center="-50" span="100"></plutonium-axis>
+                    </div>
+                    <script>
+                        var updateButton = document.querySelector('#updateButton');
+                        var chart1 = document.querySelector('div#chart1');
+
+                        updateButton.addEventListener('click', function () {
+                            console.log('Update waterfall');
+                            chart1.dataUrl = "http://localhost:8080/live/agilent_hp_8920B/trace/image?amplitude_reference=0.0&amplitude_span=100.0&frequency_span=40.0&frequency_center=100.0&width=90&height=40&pixel_width=1&pixel_height=1&opacity=233&ver=" + Date.now();
+                        });
+                    </script>
+                </template>
+
+        </demo-snippet>
+
+        <h3>plutonium-thin-chart demo dom-bind</h3>
+
+        <demo-snippet>
+            <template is="dom-bind">
+                    <button id="updateButton2">Update</button>
+                    <div id="chart2" 
+                         is="plutonium-thin-chart" 
+                         data-url="http://localhost:8080/live/agilent_hp_8920B/trace/image?amplitude_reference=0.0&amplitude_span=100.0&frequency_span=40.0&frequency_center=100.0&width=360&height=400&pixel_width=1&pixel_height=1&opacity=233&ver=1488490247813"
+                         class="card" x-axis-name="Idő" y-axis-name="Hely" z-axis-name="Sebesség">
+
+                        <plutonium-axis
+                            id="xAxis2"
+                            class="scale"
+                            display-name="X axis"
+                            orientation="bottom"
+                            axis-layout="horizontal"
+                            center="100" 
+                            label="X tengely"
+                            unit="MHz"
+                            span="40">
+                        </plutonium-axis>
+                        <plutonium-axis
+                            id="yAxis2"
+                            class="scale"
+                            display-name="Y axis"
+                            orientation="left"
+                            axis-layout="vertical"
+                            center="-50" 
+                            label="Y tengely"
+                            unit="MHz"
+                            span="100">
+                        </plutonium-axis>
+
+                        <plutonium-axis
+                            id="zAxis2"
+                            class="scale"
+                            display-name="Z axis"
+                            orientation="top"
+                            axis-layout="horizontal"
+                            label="Z tengely"
+                            unit="MHz"
+                            center="100" 
+                            span="40">
+                        </plutonium-axis>
+                        <plutonium-axis
+                            id="aAxis2"
+                            class="scale"
+                            display-name="A axis"
+                            orientation="right"
+                            label="A tengely"
+                            unit="MHz"
+                            axis-layout="vertical"
+                            center="-50" 
+                            span="100">
+                        </plutonium-axis>
+
+                    </div>
+                    <script>
+                        var updateButton2 = document.querySelector('#updateButton2');
+                        var chart2 = document.querySelector('div#chart2');
+
+                        updateButton2.addEventListener('click', function () {
+                            console.log('Update waterfall');
+                            chart2.dataUrl = "http://localhost:8080/live/agilent_hp_8920B/trace/image?amplitude_reference=0.0&amplitude_span=100.0&frequency_span=40.0&frequency_center=100.0&width=360&height=400&pixel_width=1&pixel_height=1&opacity=233&ver=" + Date.now();
+                        });
+                    </script>
+                </template>
+
+        </demo-snippet>
+
+
+
+
+        <!--            <demo-snippet>
+                <template is="dom-bind">
+                    <template>
+                    <plutonium-datasource source-url="./waterfall.json" source-type="json" last-data="{{waterfallData}}"></plutonium-datasource>
+                    <div id="chart0" is="plutonium-waterfall-chart" data="[[waterfallData]]"></div>
+
+
+                </template>
+
+            </demo-snippet>-->
+
+
+
+
+    </div>
+</body>
+
+</html>

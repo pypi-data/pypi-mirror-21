@@ -1,0 +1,76 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`plutonium-datasource`
+Visualization widget.
+
+@demo demo/index.html 
+-->
+
+<dom-module id="plutonium-datasource">
+    <script src="../d3/d3.js"></script>
+
+    <template>
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'plutonium-datasource',
+            properties: {
+                sourceUrl: {
+                    type: String,
+                    notify: true
+                },
+                sourceType: {
+                    type: String,
+                    notify: true
+                },
+                lastData: {
+                    type: Object,
+                    reflectToAttribute: true,
+                    notify: true
+                }
+            },
+            observers: [
+                '_fetchData(sourceUrl, sourceType)'
+            ],
+            ready: function () {
+                console.debug(this.is, 'ready');
+            },
+            _fetchData: function (url, sourceType) {
+                var me = this;
+                console.debug(this.is, 'fetch', sourceType, 'from', url);
+
+                var callback = function (error, data) {
+                    if (error) throw error;
+                    
+                    me.lastData = data;
+                    console.debug(me.is, 'fetched', data);
+                };
+
+                this.parseTime = d3.timeParse("%d-%b-%y");
+
+                var self = this;
+                var timeSeriesParser = function (d) {
+                    d.date = self.parseTime(d.date);
+                    d.close = +d.close;
+                    return d;
+                }
+
+                switch (sourceType) {
+                    case 'csv':
+                        d3.csv(url, timeSeriesParser, callback);
+                        break;
+                    case 'tsv':
+                        d3.tsv(url, timeSeriesParser, callback);
+                        break;
+                    case 'json':
+                    default:
+                        d3.json(url, callback);
+                        break;
+                }
+            }
+        });
+    </script>
+</dom-module>

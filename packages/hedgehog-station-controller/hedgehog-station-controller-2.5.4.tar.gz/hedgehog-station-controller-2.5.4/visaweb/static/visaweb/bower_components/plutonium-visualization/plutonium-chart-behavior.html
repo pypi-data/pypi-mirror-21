@@ -1,0 +1,158 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+
+<script src="../d3/d3.js"></script>
+
+<script>
+    window.Plutonium = window.Plutonium || {};
+    /**
+     * Behavior that highlights stuff.
+     *
+     * @polymerBehavior
+     */
+    Plutonium.ChartBehaviorImpl = {
+        extends: 'div',
+        properties: {
+            _viewport: {
+                type: Object,
+                notify: true
+            },
+            _margin: {
+                type: Object,
+                notify: true,
+                value: {
+                    top: 40,
+                    right: 40,
+                    bottom: 40,
+                    left: 40
+                }
+            },
+            _width: {
+                type: Number,
+                notify: true,
+                reflectToAttribute: true
+            },
+            _height: {
+                type: Number,
+                notify: true,
+                reflectToAttribute: true
+            },
+            loading: {
+                type: Boolean,
+                notify: true,
+                value: false,
+                reflectToAttribute: true
+            }
+        },
+        observers: [
+            '_observeLayout(_viewport, _margin)',
+            '_observerContentArea(_width, _height)',
+            '_computeContentWidth(_viewport.width, _margin.left, _margin.right)',
+            '_computeContentHeight(_viewport.height, _margin.top, _margin.bottom)'
+        ],
+        listeners: {
+            'iron-resize': '_onResize',
+            'plutonium-render': '_onRender'
+        },
+        created: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'created');
+        },
+        ready: function() {
+            this._svg = d3.select(this.$.container);
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'ready');
+        },
+        attached: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'attached');
+            this.async(this.notifyResize, 1);
+        },
+        detached: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'detached');
+        },
+
+        get parent() {
+            if (this.parentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+                return this.parentNode.host;
+            }
+            return this.parentNode;
+        },
+
+        _onResize: function(event, details) {
+            if (this.offsetWidth > 0 && this.offsetHeight > 0) {
+                this._viewport = {
+                    width: this.parentNode.offsetWidth - this._margin.left,
+                    height: this.parentNode.offsetHeight - this._margin.top
+                };
+                console.log((this.id ? this.is + '#' + this.id : this.is), 'resized to', this._viewport);
+
+                this._g = this._svg.append("g").attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+
+                this.$.canvas.width = this._width;
+                this.$.canvas.height = this._height;
+                this.customStyle['--margin-left'] = this._margin.left + 'px !important';
+                this.customStyle['--margin-top'] = this._margin.top + 'px !important';
+                this.customStyle['--margin-right'] = this._margin.right + 'px !important';
+                this.customStyle['--margin-bottom'] = this._margin.bottom + 'px !important';
+                this.customStyle['--width'] = this._width + 'px !important';
+                this.customStyle['--height'] = this._height + 'px !important';
+                this.updateStyles();
+            }
+        },
+        _observeLayout: function(viewport, margin) {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'observe-layout', viewport, margin);
+            this._svg = this._svg.attr('width', this._viewport.width).attr('height', this._viewport.height);
+            if (this._g)
+                this._g.remove();
+            this.initialize();
+
+        },
+        _observerContentArea: function(width, height) {
+            this.fire('plutonium-chart-resize', {
+                id: this.id,
+                width: width,
+                height: height
+            });
+            this.$.canvas.width = width - this._margin.right;
+            this.$.canvas.height = height - this._margin.bottom;
+        },
+        _computeContentWidth: function(viewportWidth, marginLeft, marginRight) {
+            this._width = viewportWidth - marginLeft - marginRight;
+        },
+        _computeContentHeight: function(viewportHeight, marginTop, marginBottom) {
+            this._height = viewportHeight - marginTop - marginBottom;
+        },
+        _onRender: function(chart, x, y) {
+            this.draw();
+
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'render scales');
+            var distributedScales = this.queryAllEffectiveChildren('.scale');
+            for (var index in distributedScales) {
+                console.debug('- ', (distributedScales[index].id ? distributedScales[index].is + '#' + distributedScales[index].id : distributedScales[index].is));
+                /*distributedScales[index].fire('d3-update', {
+                    graphics: this._g,
+                    container: this._svg,
+                    width: this._width,
+                    height: this._height,
+                    margin: this._margin
+                });*/
+                distributedScales[index]._onRender();
+            }
+
+
+            this.loading = false;
+        },
+        draw: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'draw should be overridden');
+        }
+    };
+    /**
+     * Behavior that highlights stuff.
+     *
+     * @polymerBehavior
+     */
+    Plutonium.ChartBehavior = [
+        Polymer.IronResizableBehavior,
+        Plutonium.ChartBehaviorImpl
+    ];
+
+</script>

@@ -1,0 +1,31 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+</head><body><dom-module id="hedgehog-property-editor-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+        @apply(--layout-vertical);
+      }
+
+        </style>
+        <div class="layout horizontal">
+            <paper-input type="text" name="[[property.name]]" label="[[property.display_name]]" title="[[property.description]]" class="flex">
+            </paper-input>
+            <paper-icon-button icon="shared-icons:info" alt="favourite this!" on-tap="togglePropertyInfo"></paper-icon-button>
+
+        </div>
+        <iron-collapse id="propertyHelp">
+            <div>[[property.description]]</div>
+        </iron-collapse>
+    </template>
+
+    <script>Polymer({is:"hedgehog-property-editor-view",properties:{property:{type:Object,notify:!0}},togglePropertyInfo:function(){this.$.propertyHelp.toggle()}});</script>
+</dom-module>
+</body></html>
