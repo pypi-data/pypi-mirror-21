@@ -1,0 +1,52 @@
+{% extends "visaweb/base_generic.html" %}
+
+{% block content %}
+<div>
+    <h1> {{ device.alias }} </h1>
+
+    <div>
+        <h2>Log</h2>
+        {% if log %}
+            <table>
+            {% for entry in log %}
+                <tr>
+                    <td> {{ entry.execution_date }} </td>
+                    <td> {{ entry.operation }} </td>
+                    <td> {{ entry.request }} </td>
+                    <td> {{ entry.response }} </td>
+                </tr>
+            {% endfor %}
+            </table>
+        {% else %}
+            <p>No log events are available.</p>
+        {% endif %}
+    </div>
+    <div>
+        {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+        <h3>Query</h3>
+        <form action="{% url 'visaweb:query' device.alias %}" method="post">
+            {% csrf_token %}
+            <input type="text" name="command" />
+            <input type="submit" value="Submit" />
+        </form>
+
+        <h3>Read</h3>
+        <form action="{% url 'visaweb:read' device.alias %}" method="post">
+            {% csrf_token %}
+            <input type="text" name="command" />
+            <input type="submit" value="Submit" />
+        </form>
+
+        <h3>Write</h3>
+        <form action="{% url 'visaweb:write' device.alias %}" method="post">
+            {% csrf_token %}
+            <input type="text" name="command" />
+            <input type="submit" value="Submit" />
+        </form>
+    </div>
+</div>
+
+<a href="{% url 'visaweb:index' %}">Back to index</a>
+
+{% endblock %}
