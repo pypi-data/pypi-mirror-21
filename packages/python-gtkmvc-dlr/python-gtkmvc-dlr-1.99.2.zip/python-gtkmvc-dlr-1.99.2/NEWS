@@ -1,0 +1,325 @@
+* New
+
+  - Change sensitivity to spurious notifications per observing method.
+    You can still set it for a whole Observer subclass.
+
+  - Added pattern matching for observer methods, including '*' to be notified
+    about any property in any kind of model.
+
+  - Optionally use special method names to connect a Controller to a View,
+    instead of specifying handlers in Glade.
+
+  - Properties can be defined as depending on other properties, so that
+    changing one notifies about several.
+
+  - You can now use the automatic type conversion done by adapters anywhere.
+
+  - Optionally update a TreeView when models stored in it change.
+
+  - Optionally connect cell renderers set up in Glade to models stored in a
+    TreeView.
+
+  - Adapt to arbitraty GObject properties.
+
+* Changed
+
+  - Radio buttons or actions are adapted to string properties.
+    You still have to group them yourself.
+
+  - Toggle actions and tool buttons are adapted to boolean properties.
+
+  - Adapters now catch ValueError in widget getters.
+    Use this if you don't want to influence the property value.
+
+  - You can now observe method calls on set() properties.
+
+  - View['non-existing name'] now raises KeyError instead of returning None.
+
+  - Adapting a property string with dots now notifies about changes along
+    the path.
+
+* Fixed
+
+  - No longer raises when you modify a property while setting up an adapter.
+
+**********************************************************************
+* Dec 30 2010                                                        *
+**********************************************************************
+
+Released version 1.99.1
+
+This is a release that keeps compatibility with previous version
+1.99.0. However, some features provided in 1.99.0 are deprecated in
+1.99.1.
+
+This version goes in the direction of stabilizing the API and making
+the code more robust. Many bugs were fixed, and a new, clean API is
+now provided for defining notification methods in observers, and
+logical observable properties in models.
+
+The documentation has been updated and extended to reflect all changes, and a
+complete Library Reference is now available. Furthermore, the documentation
+now uses Sphinx instead of Latex to generate both pdf and html documentation
+formats. 
+
+Last but not the least, the team grew up! 
+
+* New
+
+  - Models now feature Logical Observable Properties, along with already
+    supported Concrete Observable Properties.
+
+  - In Observers notification methods have all the same prototype,
+    which make much cleaner the application code.
+
+  - New mechanism to declare both dynamically and statically
+    notification methods in Observers.
+
+  - Auto-adapt of FileChooserButton, ComboBox and Adjustment
+
+  - API to extend default adapter list
+
+  - More widget types now correctly cast when adapted to
+    unicode/int/float properties.
+
+  - Enable RoUserClassAdapter to update the widget.
+    It used to only do it when connecting, not on property changes.
+    This makes the built-in support for gtk.Calendar work in both
+    directions.
+
+  - Controller's method adapt() allows auto-adaption even if the view
+    does not have corresponding widgets for *all* properties in the
+    model.
+
+  - Adapters can optionally call prop_write *instead of* casting the value from
+    the widget to the type of the old property value. This was the intended
+    behaviour all along. Default is still to call it after the cast.
+
+  - Decorators for property setters/getters in models. The methods can now have
+    arbitrary names and you are no longer limited to one property per method.
+
+* Changed
+
+  - Name-based notification methods like
+    `property_<name>_value_change` are still supported, but their
+    usage is now discouraged. A new mechanism for declaring
+    notifications is now available, and you should consider porting
+    applications accordingly.
+
+  - Decorator Observer.observes is now deprecated. A new mechanism for
+    declaring notifications is now available, and you should consider
+    porting applications accordingly.
+
+  - support GtkBuilder in addition to libglade, which is no longer
+    required.
+    This changed the signature of the View constructor. The two
+    formats are not equivalent, as GTK cannot build only parts of a
+    file.
+
+  - allow creation of adapters that act on spurious notifications.
+
+  - use less eval(codestring)
+    This changed how adapters create observer functions. If you have
+    adapter subclasses you will have to adjust them.
+
+  - Misuse of the framework that used to exit your application can now be
+    caught as exceptions.
+
+  - Fewer warnings printed by the framework. Remember to increase the logging
+    level during development.
+
+* Fixed
+
+  - Assigning a tuple with length 3 to a property no longer raises
+
+  - Pass the correct model when emitting notifications for an
+    inherited signal.
+    This changes how all property wrappers track their owners, but
+    your code should not be affected.
+
+  - Wrapped sequences lacked crucial special methods like len and
+    iter.
+
+  - Inspecting wrappers no longer omits the class name.
+
+  - Various changes to make SQLObjectModel actually usable.
+
+  - Wrapping more than one sequence class could cause the wrong
+    methods to be called on all but the last instance created. This
+    did not affect programs that only use the built-in list type.
+
+  - Mutable instances that used to be assigned to properties would
+    notify of their changes even after being replaced in the model.
+
+  - No more errors from static container adapters you didn't create.
+
+  - Multiple concurrent iterators on views no longer steal each other
+    widgets.
+
+
+Many thanks to Christian Spoer for narrowing down a bug and to Tobias Weber
+for joining the team.
+
+
+
+**********************************************************************
+*  Apr 1 2009                                                        * 
+**********************************************************************
+
+Released version 1.99.0
+
+This is a major release that breaks backward compatibility with the
+1.2 family.
+
+Also, this version is not stable yet, as there might be some changes
+in the forthcoming releases toward version 2.0.0.
+
+* New features
+  Features 1 and 2 cause this version to be no backward compatible.
+  
+  1. View's constructor no longer takes a controller.
+
+  2. Controller's constructor takes a view.
+     This allows (together with 1.) to have multiple controllers
+     controlling a shared view, making possible to decompose
+     controllers (see the website for details)
+
+  3. Support for SQLObject (support for SQLAlchemy delayed to 1.99.1)
+
+  4. Support for custom observable properties in Models.
+     Now it is possible to define observable properties whose values
+     are stored outside the model, in a DB, a file, a network, etc.
+
+  5. New syntax for defining observable properties.
+     Now class attributes are used as in common ORMs.
+
+  6. Explicit declaration of observing methods into observer through
+     decorators.
+
+  7. Views have attributes 'glade' and 'top' to simplify their
+     construction.
+
+  8. gtkmvc has now its own logging system that users can set when
+     required. Previous naive prints have been removed. 
+
+* Documentation
+  1. New website
+
+  2. New Quick Start Guide
+
+  
+* Refactoring, Bug fixes
+  1. Improved performances
+
+  2. Cleaned up View construction, that is now much more simple
+  
+  3. Fixed a row of minor bugs
+
+Thanks to those who provided feedback and bug reports.
+In particular, to:
+
+Henrik Bohre <henrik TOD bohre TA gmail TOD com>
+Joel Cross
+Alessandro Dentella <sandro TA e-den TOD it>
+Christopher Groskopf <cgroskop TA calpoly TOD edu>
+
+
+**********************************************************************
+*  Aug 26 2008                                                       * 
+**********************************************************************
+Released version 1.2.2
+
+This is a minor release that fixes two major bugs about adapters. 
+A few new examples about adapters have been also added. 
+Thanks to Alessandro Dentella <sandro TA e-den TOD it> for 
+reporting bugs.
+
+
+**********************************************************************
+*  Oct 15 2007                                                       * 
+**********************************************************************
+
+Released version 1.2.1
+
+This is a minor release that fixes a minor bug.
+Thanks to Roman Dobosz <gryf TA elysium TOD pl> for promptly
+reporting it.
+
+
+**********************************************************************
+*  Oct 14 2007                                                       * 
+**********************************************************************
+
+Released version 1.2.0
+
+* New features:
+
+  - Added adapters, new entities that largely simplify and reduce
+    costs and development efforts. Adapters handles autonomous
+    coordination between properties into models and widgets into
+    views. Roughly speaking, an adapter keeps aligned some part of
+    the model and a widget in a transparent and still customizable
+    way.
+
+  - Added script gtkmvc-progen that aids developers in generating
+    gtkmvc-based projects from scratch. gtkmvc-progen can be run in
+    both batch and GUI modalities. For example:
+    $> gtkmvc-progen name=myproj author="Wil Shakespeare" gui=no
+
+    ... generates project "myproj" in batch mode. See the user
+    manual for a full list of available options.
+    
+* Other changes
+  
+  - Spurious value changes in observable properties are no longer
+    notified by default. A new optional parameter of class Observer
+    allows for a backward-compatible semantics.
+
+  - Widgets search into Views has been optimized.
+
+  - Bug fixes and optimizations. 
+
+    o Undefined handlers for custom widgets are correctly
+      managed. Thanks to Allan Douglas <zalguod TA users TOD
+      sourceforge TOD net> for providing a working patch.
+
+    o Fixed a subtle bug in the observer pattern implementation.
+
+    o A few other minor fixes and optimizations. 
+
+
+
+**********************************************************************
+*  May 22 2007                                                       * 
+**********************************************************************
+
+Released version 1.0.1
+This version ships bug fixes and a new feature.
+
+* New features:
+  - Custom widgets into glade file are now supported by views.
+
+* Bug fixes:
+  - Fixed access to properties in multi-threading models
+  - Fixed a bug in the observable properties registration mechanism
+
+* Many thanks to: 
+  - Guillaume Libersat <glibersat AT linux62.org> for providing a
+    patch that enable reading custom widgets from glade files.
+
+  - Phillip Calvin <phillipc AT toasterlogic.com> and Andreas Poisel
+    <ap AT automatisch.cc> for reporting bugs.
+
+  - Jeffrey Barish <jeff_barish AT earthlink.net> for providing
+    feedback.
+
+  - Kartik Mistry <kartik.mistry AT gmail.com> for his work on
+    Debian package.
+
+
+
+**********************************************************************
+*  Dec 21 2006                                                       * 
+**********************************************************************
+
+Released first stable version 1.0.0
