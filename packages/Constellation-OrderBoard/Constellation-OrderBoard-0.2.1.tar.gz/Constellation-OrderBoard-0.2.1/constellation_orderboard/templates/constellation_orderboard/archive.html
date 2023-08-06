@@ -1,0 +1,57 @@
+{% extends "constellation_base/base.html" %}
+
+{% block title %}{{ template_settings.organization }} -- Orderboard Archive{% endblock %}
+{% block heading %}Orderboard -- Archive{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_orderboard/css/orderboard.css' %}">
+{% endblock %}
+
+{% block js %}
+<div id="message-toast" class="mdl-js-snackbar mdl-snackbar">
+  <div class="mdl-snackbar__text"></div>
+  <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{{ block.super }}
+{% load static %}
+<script src="{% static 'constellation_orderboard/js/archive.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script>
+    var board_id = "{{ id }}"
+    var url_api_v1_board_archived_cards = "{% url 'constellation_orderboard:api_v1_board_archived_cards' id %}";
+    var url_api_v1_card_unarchive = "{% url 'constellation_orderboard:api_v1_card_unarchive' id 0 %}";
+</script>
+{% endblock %}
+
+{% block content %}
+{% verbatim %}
+<div class="mdl-grid board" id="board" style="width:100%">
+    <script id="handlebars-board" type="text/x-handlebars-template">
+    {{#each cards}}
+        <div class="mdl-cell mdl-cell--4-col-desktop mdl-cell--12-col mdl-cell--6-col-tablet">
+            <div id="card_{{id}}" class="inventory-item mdl-card mdl-shadow--2p mdl-color--accent mdl-color-text--white">
+                <div class="card_name mdl-card__title mdl-color-text--white">
+                    <span>{{name}}</span>
+                    <span id="card_{{id}}_quantity">({{quantity}})</span>
+                </div>
+                <div class="mdl-card__supporting-text mdl-color-text--white">
+                    <div id="card_{{id}}_notes" class="card_notes">{{notes}}</div>
+                </div>
+                <div class="mdl-card__actions mdl-card--border">
+                    <a onclick="restoreItem({{id}})" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect mdl-color-text--white">
+                        Unarchive <i class="material-icons">restore</i>
+                    </a>
+                </div>
+                <div id="card_{{id}}_progress" class="progress">
+                    <div class="mdl-progress mdl-js-progress mdl-progress__indeterminate">
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{/each}}
+    </script>
+</div>
+{% endverbatim %}
+{% endblock %}

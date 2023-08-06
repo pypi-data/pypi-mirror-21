@@ -1,0 +1,85 @@
+{% extends "constellation_base/base.html" %}
+
+{% block title %}Orderboard | Manage Stages{% endblock %}
+{% block heading %}Orderboard | Manage Stages{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_orderboard/css/orderboard.css' %}">
+{% endblock %}
+
+{% block js %}
+<div id="message-toast" class="mdl-js-snackbar mdl-snackbar">
+  <div class="mdl-snackbar__text"></div>
+  <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{{ block.super }}
+{% load static %}
+<script src="{% static 'constellation_orderboard/js/manage-stages.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script>
+    var url_api_v1_stage_list = "{% url 'constellation_orderboard:api_v1_stage_list' %}";
+    var url_api_v1_stage_create = "{% url 'constellation_orderboard:api_v1_stage_list' %}";
+    var url_api_v1_stage_archive = "{% url 'constellation_orderboard:api_v1_stage_archive' 0 %}";
+    var url_api_v1_stage_unarchive = "{% url 'constellation_orderboard:api_v1_stage_unarchive' 0 %}";
+    var url_api_v1_stage_move_left = "{% url 'constellation_orderboard:api_v1_stage_move_left' 0 %}";
+    var url_api_v1_stage_move_right = "{% url 'constellation_orderboard:api_v1_stage_move_right' 0 %}";
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="stagesCard" class="mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    {% verbatim %}
+    <script id="handlebars-stages" type="text/x-handlebars-template">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Stages</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            {{#if stages}}
+            <div class="mdl-list">
+                {{#each stages}}
+                <div class="mdl-list__item stage-archived--{{archived}}">
+                    <span class="mdl-list__item-primary-content">
+                    <span>{{name}}</span>
+                    </span>
+                    <span class="mdl-list__item-secondary-content">
+                        <span class="mdl-list__item-secondary-action">
+                            <a href="#" onclick="bubbleUp({{id}})"><i class="material-icons bubble_up">keyboard_arrow_up</i></a>
+                            <a href="#" onclick="bubbleDown({{id}})"><i class="material-icons bubble_down">keyboard_arrow_down</i></a>
+                            <a href="#" onclick="archiveStage({{id}})" class="archive-stage"><i class="material-icons">close</i></a>
+                            <a href="#" onclick="unarchiveStage({{id}})" class="unarchive-stage"><i class="material-icons">check_circle</i></a>
+                        </span>
+                    </span>
+                </div>
+                {{/each}}
+            </div>
+            {{else}}
+                No stages yet -- add one below!
+            {{/if}}
+        </div>
+    </script>
+    {% endverbatim %}
+</div>
+<div id="formCard" class="form-card mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">New Stage</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        <form method="post" action="{% url 'constellation_orderboard:api_v1_stage_create' %}" id="newStageForm" class="mdl-cell--2-offset-desktop mdl-cell--8-col">
+            {% csrf_token %}
+            {{ form.archived.as_hidden }}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label mdl-cell--12-col mdl-cell--bottom">
+                {{ form.name }}
+                <label class="mdl-textfield__label" for="{{ form.name.id_for_label }}">Name</label>
+            </div>
+            <div class="mdl-card__actions">
+                <div class="mdl-layout-spacer"></div>
+                <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--primary">
+                    Create Stage <i class="material-icons right">done</i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
