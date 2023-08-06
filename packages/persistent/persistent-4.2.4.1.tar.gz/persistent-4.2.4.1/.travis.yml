@@ -1,0 +1,59 @@
+language: python
+sudo: false
+matrix:
+    include:
+        - os: linux
+          python: 2.7
+        - os: linux
+          python: 3.3
+        - os: linux
+          python: 3.4
+        - os: linux
+          python: 3.5
+        - os: linux
+          python: 3.6
+        - os: linux
+          python: pypy
+        - os: linux
+          python: pypy3
+        # It's important to use 'macpython' builds to get the least
+        # restrictive wheel tag. It's also important to avoid
+        # 'homebrew 3' because it floats instead of being a specific version.
+        - os: osx
+          language: generic
+          env: TERRYFY_PYTHON='macpython 2.7'
+        - os: osx
+          language: generic
+          env: TERRYFY_PYTHON='macpython 3.4'
+        - os: osx
+          language: generic
+          env: TERRYFY_PYTHON='macpython 3.5'
+        - os: osx
+          language: generic
+          env: TERRYFY_PYTHON='macpython 3.6.0'
+before_install:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then git clone https://github.com/MacPython/terryfy; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then source terryfy/travis_tools.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then get_python_environment $TERRYFY_PYTHON venv; fi
+    - if [[ "$TERRYFY_PYTHON" == "homebrew 3" ]]; then alias pip=`which pip3` ; fi
+install:
+    - pip install -e .
+script:
+    - python --version
+    - python setup.py -q test -q
+notifications:
+    email: false
+after_success:
+    - echo [distutils]                                  > ~/.pypirc
+    - echo index-servers = pypi                        >> ~/.pypirc
+    - echo [pypi]                                      >> ~/.pypirc
+    - echo repository=https://pypi.python.org/pypi     >> ~/.pypirc
+    - echo username=zope.wheelbuilder                  >> ~/.pypirc
+    - echo password=$PYPIPASSWORD                      >> ~/.pypirc
+    - if [[ $TRAVIS_TAG && "$TRAVIS_OS_NAME" == "osx" ]]; then pip install twine; fi
+    - if [[ $TRAVIS_TAG && "$TRAVIS_OS_NAME" == "osx" ]]; then python setup.py bdist_wheel; fi
+    - if [[ $TRAVIS_TAG && "$TRAVIS_OS_NAME" == "osx" ]]; then twine upload dist/*; fi
+
+env:
+    global:
+        secure: "avoDyPgppusNzldim5fq35sk7HAn3B8zs2KgAe+8Yr3MDpFaxNV96rhNkTdHgsNNw4N+PVew1sFUxLY7HzACyywLFPUPT+YMRcPeqiuekkQoQxatYR0dEfHrxPpNyvXRxIV+nrKTEaIxQNyDcJcyRw6K7NSNxuu2NR6Dj+xJmKY="
