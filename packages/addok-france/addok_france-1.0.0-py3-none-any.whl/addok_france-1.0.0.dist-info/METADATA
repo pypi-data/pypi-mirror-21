@@ -1,0 +1,56 @@
+Metadata-Version: 2.0
+Name: addok-france
+Version: 1.0.0
+Summary: Add France specific string processors.
+Home-page: https://github.com/etalab/addok-france
+Author: Yohan Boniface
+Author-email: yohan.boniface@data.gouv.fr
+License: WTFPL
+Keywords: addok geocoding france plugin
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Scientific/Engineering :: GIS
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Requires-Dist: addok
+Provides-Extra: test
+Requires-Dist: pytest; extra == 'test'
+
+# Addok plugin for France specifics
+
+## Installation
+
+    pip install addok-france
+
+
+## Configuration
+
+- Add QUERY_PROCESSORS_PYPATHS
+
+    QUERY_PROCESSORS_PYPATHS = [
+        …,
+        "addok_france.extract_address",
+        "addok_france.clean_query",
+    ]
+
+- Add PROCESSORS_PYPATHS
+
+    PROCESSORS_PYPATHS = [
+        …,
+        "addok_france.glue_ordinal",
+        "addok_france.fold_ordinal",
+        "addok_france.flag_housenumber",
+        …,
+    ]
+
+- Replace default `make_labels` by France dedicated one:
+
+    SEARCH_RESULT_PROCESSORS_PYPATHS = [
+        'addok_france.make_labels',
+        …,
+    ]
+
+
