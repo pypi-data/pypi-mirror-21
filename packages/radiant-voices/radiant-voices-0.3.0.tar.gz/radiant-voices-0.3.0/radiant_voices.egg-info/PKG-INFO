@@ -1,0 +1,263 @@
+Metadata-Version: 1.1
+Name: radiant-voices
+Version: 0.3.0
+Summary: Create, read, modify, and write SunVox files.
+Home-page: https://github.com/metrasynth/radiant-voices
+Author: Matthew Scott
+Author-email: matt@11craft.com
+License: MIT
+Description: Overview of Radiant Voices
+        ==========================
+        
+        
+        
+        Part of the Metrasynth_ project.
+        
+        .. _Metrasynth: https://metrasynth.github.io/
+        
+        Radiant Voices provides tools to
+        **create, read, modify, and write SunVox files**.
+        This includes project files ending in ``.sunvox``,
+        and module/synth files ending in ``.sunsynth``.
+        
+        
+        
+        SunVox data structures and APIs
+        -------------------------------
+        
+        Radiant Voices has nearly 100% coverage of
+        all data structures used by SunVox files,
+        exposing a "Pythonic" API for creating and manipulating
+        those structures.
+        
+        Using the API, you can do things not possible
+        with the standard SunVox interface or the SunVox DLL, such as:
+        
+        - `algorithmic composition`_
+        - parametric synth/module design
+        - structure and complexity analysis
+        - automatic `graph layout`_ of modules
+        - and more...
+        
+        Our collective imagination is the limit!
+        
+        ..  _algorithmic composition:
+            https://en.wikipedia.org/wiki/Algorithmic_composition
+        
+        ..  _graph layout:
+            https://en.wikipedia.org/wiki/Graph_drawing
+        
+        
+        Interaction with the SunVox DLL
+        -------------------------------
+        
+        By combining Radiant Voices with sunvox-dll-python_,
+        one can also create alternative editing and performance tools
+        to use alongside, or instead of, the official SunVox app.
+        
+        The two packages work together to provide convenient high-level
+        APIs for loading project and module objects directly into
+        playback slots managed by the SunVox DLL.
+        
+        Some possibilities might include:
+        
+        - alternative project editors
+        - generative_ sound design using `genetic algorithms`_
+        - network-enabled performance tools
+        
+        What can *you* come up with?
+        
+        ..  _sunvox-dll-python:
+            https://sunvox-dll-python.readthedocs.io/
+        
+        ..  _generative:
+            https://en.wikipedia.org/wiki/Generative_Design
+        
+        ..  _genetic algorithms:
+            https://en.wikipedia.org/wiki/Genetic_algorithm
+        
+        
+        SunVox file format documentation
+        --------------------------------
+        
+        Radiant Voices intends to serve as a *de facto* source of documentation
+        about the format, as there is currently `no official documentation for the
+        SunVox file format <http://www.warmplace.ru/forum/viewtopic.php?t=1943#p5562>`__.
+        
+        The interpretation of SunVox file formats is based on a mix of "clean room"
+        style inspection of what SunVox writes to disk when a file is edited
+        a specific way, as well as the `most recent BSD-licensed source code
+        for the SunVox audio engine <https://github.com/warmplace/sunvox_sources>`__.
+        
+        
+        Requirements
+        ------------
+        
+        - Python 3.5
+        
+        - OS supported by `sunvox-dll-python`_, if working with SunVox DLL.
+        
+        - GraphViz_, if you want to make use of module auto-layout features.
+        
+        ..  _GraphViz:
+            http://www.graphviz.org/
+        
+        
+        Quick start
+        -----------
+        
+        The "hello world" example will construct a SunVox project in memory
+        containing a FM module connected to the Output module.
+        It will then load it into the SunVox DLL and send a single note-on command
+        to the FM module::
+        
+            $ pip install radiant-voices
+            $ git clone https://github.com/metrasynth/radiant-voices
+            $ cd radiant-voices/examples
+            $ python helloworld.py
+        
+        
+        About SunVox
+        ------------
+        
+        From the `SunVox home page`_:
+        
+            SunVox is a small, fast and powerful modular synthesizer with pattern-based sequencer (tracker).
+            It is a tool for those people who like to compose music wherever they are, whenever they wish.
+            On any device. SunVox is available for Windows, OS X, Linux, Maemo, Meego, Raspberry Pi,
+            Windows Mobile (WindowsCE), PalmOS, iOS and Android.
+        
+        .. _SunVox home page: http://www.warmplace.ru/soft/sunvox/
+        
+        Changelog
+        =========
+        
+        0.3.0 (2017-04-18)
+        ------------------
+        
+        Additions
+        .........
+        
+        - Add ``propagate`` argument to ``MultiCtl.reflect()``.
+          Defaults to ``True`` which causes the new ``MultiCtl.value`` to
+          immediately propagate to all mapped controllers,
+          including the one that was just reflected.
+        
+          Set to ``False`` if you only want to set ``MultiCtl.value``
+          without propagating to mapped controllers.
+        
+        - Pass a value for ``initial`` when calling ``MultiCtl.macro()`` to
+          set and propagate an initial value. Default behavior is to not set a value.
+        
+        Changes
+        .......
+        
+        - The ``repr`` of a ``CompactRange`` instance now shows that class name,
+          instead of ``Range``.
+        
+        Fixes
+        .....
+        
+        - Fix algorithm for propagating ``MultiCtl.value`` changes to
+          mapped controllers.
+        
+        - Fix algorithm for reflecting mapped controllers back to ``MultiCtl.value``.
+        
+        0.2.0 (2017-04-02)
+        ------------------
+        
+        Additions
+        .........
+        
+        - Add ``Controller.pattern_value()`` instance method, to map a controller's
+          value to a pattern value in the range of 0x0000-0x8000.
+        
+        - Add ``ALL_NOTES`` constant to see if a ``NOTECMD`` is a note or a command.
+          (Example: ``if some_note in ALL_NOTES: ...``)
+        
+        - Add ``tabular_repr()`` instance methods to ``Note`` and ``Pattern``,
+          returning a tabular representation suitable for inclusion in text documents.
+        
+        - Add ``behaviors`` attribute to all module classes, describing the
+          types of information each module can send and receive.
+        
+        - Add package-specific exception base classes to ``rv.errors``.
+        
+        - Add support for reading, writing, and modifying controller MIDI mappings.
+        
+        - Add a ``MultiCtl.macro()`` static method, for quickly creating a
+          ``MultiCtl`` that controls several similar controllers on connected modules.
+        
+        - Add a ``MultiCtl.reflect()`` instance method, for setting a ``MultiCtl``'s
+          value based on the destination controller mapped at a given index.
+        
+        - Add ``# TODO: ...`` notes to indicate unimplemented features.
+        
+        - Allow property-style access to user-defined controllers on ``MetaModule``s
+          using a ``u_`` prefix. For example, if there's a user-defined controller
+          named "Attack", it will be accessible via the ``.u_attack`` property.
+        
+        - Add ``ArrayChunk.set_via_fn()`` method, for setting various curves using
+          the output of a function.
+        
+        - Add ``DRUMNOTE``, ``BDNOTE``, ``HHNOTE``, and ``SDNOTE`` enumerations to
+          ``DrumSynth`` class, providing note aliases for easier programming of
+          drum sequences.
+        
+        - Add ``Pattern.set_via_fn()`` and ``.set_via_gen()`` instance methods,
+          for altering a pattern based on the output of a function or generator.
+        
+        Changes
+        .......
+        
+        - Rename ``Output`` module's module group to ``"Output"``.
+        
+        - When using ``Project.layout()``, default to using ``dot`` layout engine.
+        
+        - Use a direct port of SunVox's algorithm for mapping ``MultiCtl`` values
+          to destination controllers.
+        
+        - Use 1.9.2.0 as SunVox version number when writing projects to files.
+        
+        - Allow using separate x/y offsets and factors during ``Project.layout()``
+        
+        Fixes
+        .....
+        
+        - Use same sharp note notation as used by SunVox (lowercase indicates sharp).
+        
+        - Honor ``prog`` keyword arg when passed into ``Project.layout()`` method.
+        
+        - Do not require pattern ``x`` or ``y`` to be divisible by 4.
+        
+        - Assign correct controller number to user-defined controllers on
+          ``MetaModule``s.
+        
+        - Correct the max value allowed in a ``MultiSynth`` velocity/velocity curve.
+        
+        - Move ``pygraphviz`` from ``requirements/base.txt`` to ``.../tools.txt``
+          to be more Windows-friendly.
+        
+        0.1.1 (2016-11-09)
+        ------------------
+        
+        - Fix upload to PyPI.
+        
+        0.1.0 (2016-11-09)
+        ------------------
+        
+        - Initial release.
+        
+Platform: any
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: MacOS
+Classifier: Operating System :: Unix
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
