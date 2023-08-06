@@ -1,0 +1,334 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from builtins import input
+
+import argparse, re, os, yaml, sys
+import copy
+
+config_file = '.makaronrc'
+
+__version__ = '0.1.2'
+__program__ = 'makaron'
+
+def main(args):
+
+    if args.next and not args.verb:
+        raise(RuntimeError('Cannot show you next release if you do not indicate the type of the release.\nAdd \'major\', \'minor\' or \'patch\' to the command.'))
+
+    if args.version:
+        raise(RuntimeError('{0} {1}\nPython {2}'.format(__program__, __version__, sys.version)))
+
+    if os.path.isfile(config_file):
+
+        with open(config_file, 'r') as stream:
+            config = yaml.load(stream.read())
+            parse_and_execute_config(args, config)
+
+    else:
+        if args.generate_rcfile:
+            generate_empty_rcfile(args)
+        else:
+            raise(RuntimeError('No \'.makaronrc\' file found.\nCreate one by executing \'makaron --generate-rcfile\''))
+
+
+def generate_empty_rcfile(args):
+
+    with open(config_file, 'w') as stream:
+        stream.write(\
+'''# .makaronrc
+version:
+  - file: setup.py
+    regex:
+      all: "__version__ = .*\\n"
+  - file: setup.py
+    regex:
+      major: "major = .*\\n"
+      minor: "minor = .*\\n"
+      patch: "patch = .*\\n"
+''')
+        print('hey')
+
+
+def parse_and_execute_config(args, config):
+
+    version_collected = []
+
+    if 'version' in config and config['version']:
+
+        rules = parse_rules(config)
+        version_collected = collect_versions(args, rules)
+        check_version(args, version_collected)
+
+        old_version = version_collected[0].split('.')
+        new_version = update_version(args, old_version)
+
+        if args.next:
+            print_version(args, new_version)
+        else:
+            prompt_choice(args, rules, old_version, new_version)
+
+    else:
+        print('Makaron has nothing to do.')
+
+
+def parse_rules(config):
+
+    rules = {'all': [], 'separated': []}
+
+    for version_rule in config['version']:
+        parse_rule(rules, version_rule)
+
+    return rules
+
+
+def parse_rule(rules, version_rule):
+
+    if 'file' in version_rule:
+        filename = version_rule['file']
+    else:
+        raise(RuntimeError('Bad \'.makaronrc\' file: missing file info.'))
+
+    if 'regex' in version_rule:
+        regex = version_rule['regex']
+
+        if 'all' in regex and 'major' not in regex and 'minor' not in regex and 'patch' not in regex:
+            all_regex = regex['all']
+            rules['all'].append({'filename': filename, 'regex': all_regex})
+
+        elif 'all' not in regex and 'major' in regex and 'minor' in regex and 'patch' in regex:
+            major_regex = regex['major']
+            minor_regex = regex['minor']
+            patch_regex = regex['patch']
+            rules['separated'].append({'filename': filename, 'major': major_regex, 'minor': minor_regex, 'patch': patch_regex})
+
+        else:
+            raise(RuntimeError('Bad \'.makaronrc\' file: invalid regex info.'))
+
+    else:
+        raise(RuntimeError('Bad \'.makaronrc\' file: missing regex info.'))
+
+
+def collect_versions(args, rules):
+
+    version_collected = []
+
+    for all_rule in rules['all']:
+        version = collect_version_with__all_rule(args, all_rule['filename'], all_rule['regex'])
+        if version: version_collected.append(version)
+
+    for separated_rule in rules['separated']:
+        version = collect_version_with__separated_rule(args, separated_rule['filename'], separated_rule['major'], separated_rule['minor'], separated_rule['patch'])
+        if version: version_collected.append(version)
+
+    return version_collected
+
+
+def collect_version_with__all_rule(args, filename, all_regex):
+
+    try:
+        with open(filename, 'r') as stream:
+            content = stream.read()
+
+            m = re.search(all_regex, content)
+            if m: version_line = m.group(0)
+            else: raise(RuntimeError('\'{0}\': no version found'.format(filename)))
+
+            m = re.search('[0-9]\.[0-9]\.[0-9]', version_line)
+            if m: version_number = m.group(0)
+            else: raise(RuntimeError('\'{0}\': no version found'.format(filename)))
+
+            return version_number
+    except IOError as e:
+        raise(RuntimeError('No such file: \'{0}\''.format(filename)))
+    except FileNotFoundError as e:
+        raise(RuntimeError('No such file: \'{0}\''.format(filename)))
+
+
+def collect_version_with__separated_rule(args, filename, major_regex, minor_regex, patch_regex):
+
+    with open(filename, 'r') as stream:
+        content = stream.read()
+
+        m = re.search(major_regex, content)
+        if m: major_line = m.group(0)
+        else: raise(RuntimeError('No major found: \'{0}\''.format(filename)))
+
+        m = re.search('[0-9]', major_line)
+        if m: major_number = m.group(0)
+        else: raise(RuntimeError('No major found: \'{0}\''.format(filename)))
+
+        m = re.search(minor_regex, content)
+        if m: minor_line = m.group(0)
+        else: raise(RuntimeError('No minor found: \'{0}\''.format(filename)))
+
+        m = re.search('[0-9]', minor_line)
+        if m: minor_number = m.group(0)
+        else: raise(RuntimeError('No minor found: \'{0}\''.format(filename)))
+
+        m = re.search(patch_regex, content)
+        if m: patch_line = m.group(0)
+        else: raise(RuntimeError('No patch found: \'{0}\''.format(filename)))
+
+        m = re.search('[0-9]', patch_line)
+        if m: patch_number = m.group(0)
+        else: raise(RuntimeError('No patch found: \'{0}\''.format(filename)))
+
+        return '{0}.{1}.{2}'.format(major_number, minor_number, patch_number)
+
+
+def check_version(args, version_collected):
+
+    ok = True
+    first_version = version_collected[0]
+    for version in version_collected[1:]:
+        if version != first_version:
+            ok = False
+
+    if not ok:
+        raise(RuntimeError('Version found are not the same: {0}.'.format(version_collected)))
+
+
+def update_version(args, old_version):
+
+    new_version = copy.copy(old_version)
+
+    if args.verb:
+
+        if 'major' in args.verb:
+            new_version = increase_version(new_version, 0)
+            new_version[1] = '0'
+            new_version[2] = '0'
+
+        elif 'minor' in args.verb:
+            new_version = increase_version(new_version, 1)
+            new_version[2] = '0'
+
+        elif 'patch' in args.verb:
+            new_version = increase_version(new_version, 2)
+
+    return new_version
+
+
+def increase_version(version, index):
+    version[index] = str(int(version[index]) + 1)
+    return version
+
+
+def print_version(args, new_version):
+    new_version_str = '.'.join(new_version)
+    print(new_version_str)
+
+
+def prompt_choice(args, rules, old_version, new_version):
+
+    old_version_str = '.'.join(old_version)
+    new_version_str = '.'.join(new_version)
+
+    if old_version_str == new_version_str:
+        print(old_version_str)
+    else:
+        print(old_version_str, '->', new_version_str)
+
+        confirm = input('confirm [y/n] (y): ')
+
+        if confirm == 'y' or confirm == '':
+            apply_version(args, rules, new_version)
+        elif confirm == 'n':
+            pass
+        else:
+            print('bad response')
+
+
+def apply_version(args, rules, new_version):
+
+    for all_rule in rules['all']:
+        apply_version_all_rule(args, all_rule['filename'], all_rule['regex'], new_version)
+
+    for separated_rule in rules['separated']:
+        apply_version_separated_rule(args, separated_rule['filename'], separated_rule['major'], separated_rule['minor'], separated_rule['patch'], new_version)
+
+
+def apply_version_all_rule(args, filename, all_regex, new_version):
+
+    with open(filename, 'r') as stream:
+        content = stream.read()
+
+        new_version_str = '.'.join(new_version)
+
+        m = re.search(all_regex, content)
+        if m: version_line = m.group(0)
+        else: raise(Exception('\'{0}\': no version found'.format(filename)))
+
+        m = re.search('[0-9]\.[0-9]\.[0-9]', version_line)
+        if m: old_version_str = m.group(0)
+        else: raise(Exception('\'{0}\': no version found'.format(filename)))
+
+        new_version_line = version_line.replace(old_version_str, new_version_str)
+        content = content.replace(version_line, new_version_line)
+
+    with open(filename, 'w') as stream:
+        print('{0}: update version'.format(filename))
+        stream.write(content)
+
+
+def apply_version_separated_rule(args, filename, major_regex, minor_regex, patch_regex, new_version):
+
+    with open(filename, 'r') as stream:
+        content = stream.read()
+
+        m = re.search(major_regex, content)
+        if m: major_line = m.group(0)
+        else: raise(Exception('\'{0}\': no major found'.format(filename)))
+
+        m = re.search('[0-9]', major_line)
+        if m: major_number = m.group(0)
+        else: raise(Exception('\'{0}\': no major found'.format(filename)))
+
+        new_major_line = major_line.replace(major_number, new_version[0])
+        content = content.replace(major_line, new_major_line)
+
+        m = re.search(minor_regex, content)
+        if m: minor_line = m.group(0)
+        else: raise(Exception('\'{0}\': no minor found'.format(filename)))
+
+        m = re.search('[0-9]', minor_line)
+        if m: minor_number = m.group(0)
+        else: raise(Exception('\'{0}\': no minor found'.format(filename)))
+
+        new_minor_line = minor_line.replace(minor_number, new_version[1])
+        content = content.replace(minor_line, new_minor_line)
+
+        m = re.search(patch_regex, content)
+        if m: patch_line = m.group(0)
+        else: raise(Exception('\'{0}\': no major found'.format(filename)))
+
+        m = re.search('[0-9]', patch_line)
+        if m: patch_number = m.group(0)
+        else: raise(Exception('\'{0}\': no major found'.format(filename)))
+
+        new_patch_line = patch_line.replace(patch_number, new_version[2])
+        content = content.replace(patch_line, new_patch_line)
+
+    with open(filename, 'w') as stream:
+        print('{0}: update version'.format(filename))
+        stream.write(content)
+
+
+if __name__ == '__main__':
+
+    try:
+        parser = argparse.ArgumentParser(prog=__program__, add_help=False)
+        parser.add_argument('verb', help='What your next release will be.', nargs='?', choices=['major', 'minor', 'patch'])
+        parser.add_argument('-v', '--version', help='Show program\'s version number and exit.', action='store_true')
+        parser.add_argument('-h', '--help', action='help', default=argparse.SUPPRESS, help='Show this help message and exit.')
+        parser.add_argument('-n', '--next', help='Show the next release version number.', action='store_true')
+        parser.add_argument('--generate-rcfile', help='Create a \'.makaronrc\' file if not present.', action='store_true')
+        args = parser.parse_args()
+
+        main(args)
+
+    except RuntimeError as e:
+        print(e)
+
+    except (KeyboardInterrupt, SystemExit):
+        pass
