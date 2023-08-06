@@ -1,0 +1,94 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-list/iron-list.html">
+<link rel="import" href="hedgehog-asset-item-view.html">
+<link rel="import" href="hedgehog-connection-item-view.html">
+<link rel="import" href="shared-styles.html">
+<link rel="import" href="shared-icons.html">
+
+<dom-module id="hedgehog-dashboard-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+      }
+
+        </style>
+
+        <iron-ajax url="/devicemanager/active" last-response="{{activeAssets}}" auto></iron-ajax>
+        <iron-ajax url="/devicemanager/inactive" last-response="{{inactiveAssets}}" auto></iron-ajax>
+        <iron-ajax url="/devicemanager/unknown" last-response="{{unknownConnections}}" auto></iron-ajax>
+        <iron-ajax url="/assets" last-response="{{data}}" auto></iron-ajax>
+        <iron-ajax url="/visa/list" last-response="{{connections}}" auto></iron-ajax>
+
+        <div class="card flex">
+            <div class="circle">A</div>
+            <h1>Aktív eszközök</h1>
+            <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
+
+            <iron-list items="[[activeAssets]]" as="item">
+                <template>
+                    <hedgehog-asset-item-view class="item" asset="[[item]]">
+                    </hedgehog-asset-item-view>
+                </template>
+            </iron-list>
+        </div>
+
+        <div class="card flex">
+            <div class="circle">A</div>
+            <h1>Ismeretlen eszközök</h1>
+            <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
+            <iron-list items="[[unknownConnections]]" as="connectionString">
+                <template>
+                    <hedgehog-connection-item-view class="item" connection="[[connectionString]]"></hedgehog-connection-item-view>
+                </template>
+            </iron-list>
+        </div>
+
+        <div class="card flex">
+            <div class="circle">I</div>
+            <h1>Inaktív eszközök</h1>
+            <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
+
+            <iron-list items="[[inactiveAssets]]" as="item">
+                <template>
+                    <hedgehog-asset-item-view class="item" asset="[[item]]">
+                    </hedgehog-asset-item-view>
+                </template>
+            </iron-list>
+        </div>
+
+        <div class="card flex">
+            <div class="circle">A</div>
+            <h1>Riasztások</h1>
+            <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
+
+            <iron-list items="[[data]]" as="item">
+                <template>
+                    <hedgehog-asset-item-view class="item" asset="[[item]]">
+                    </hedgehog-asset-item-view>
+                </template>
+            </iron-list>
+        </div>
+    </template>
+
+    <script>
+    Polymer({
+      is: 'hedgehog-dashboard-view',
+    });
+
+    </script>
+</dom-module>
