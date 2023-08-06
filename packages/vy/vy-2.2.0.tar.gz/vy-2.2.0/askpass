@@ -1,0 +1,34 @@
+#! /usr/bin/env python
+
+from Tkinter import *
+
+
+class AskPass(Tk):
+
+    def __init__(self, title, default_data='', *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
+        self.data = default_data
+
+        self.bind('<Return>', self._return)
+
+        self.title(title)
+        self.resizable(0, 0)
+
+        self.frame = Frame(self, relief='raised', border=1, padx=3, pady=3)
+        self.frame.pack(side='top', expand=True, fill=BOTH)
+
+        self.entry = Entry(self.frame)
+        self.entry.config(show='*')
+        self.entry.pack(side='left', expand=True, fill=BOTH)
+        self.entry.focus_set()
+
+    def _return(self, event):
+        self.data = self.entry.get()
+        event.widget.quit()
+
+
+if __name__ == '__main__':
+    askpass = AskPass('Word Pass')
+    askpass.mainloop()
+    print askpass.data
+
