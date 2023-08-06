@@ -1,0 +1,47 @@
+#!/usr/bin/make -f
+  
+EXAMPLE_SCRIPTS=\
+    gbp-add-patch          \
+    gbp-cowbuilder-sid     \
+    gbp-posttag-push       \
+    gbp-configure-unpatched-source \
+    wrap_cl.py
+
+DEB_COMPRESS_EXCLUDE=$(EXAMPLE_SCRIPTS)
+
+ZSH_COMPDIR = /usr/share/zsh/vendor-completions/
+
+PYCHECKER_ARGS=-boptparse --no-override --no-shadowbuiltin
+
+%:
+	dh $@ --with python2 --buildsystem=python_distutils
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	dh_auto_test
+	make
+else
+	@echo "Checks disabled via DEB_BUILD_OPTIONS"
+endif
+
+override_dh_auto_build:
+	dh_auto_build
+	make apidocs docs
+
+override_dh_auto_install:
+	dh_auto_install
+	dh_bash-completion
+	mkdir -p debian/git-buildpackage/$(ZSH_COMPDIR)
+	install -m644 debian/git-buildpackage.zsh-completion \
+		debian/git-buildpackage/$(ZSH_COMPDIR)/_gbp
+	chmod a+x debian/tmp/usr/lib/python2.?/dist-packages/gbp/scripts/supercommand.py
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build/
+	make -C docs/ clean
+	-rm gbp/version.py
+
+override_dh_compress:
+	dh_compress --exclude=usr/share/doc/git-buildpackage/examples/
+

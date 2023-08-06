@@ -1,0 +1,195 @@
+<chapter id="gbp.patches">
+    <title>Working with patches</title>
+
+    <para>&gbp-pq; can be used to manage patches inside
+      <filename>debian/patches/</filename>.</para>
+
+<para>The basic idea is that patches are imported to a local
+patch-queue branch with one commit on the patch-queue branch
+representing exactly one patch
+in <filename>debian/patches/</filename>. The patch-queue branch will
+be named like the branch that has
+the <filename>debian/patches</filename> dir you imported from
+with <filename>patch-queue/</filename> prepended. So if you have your
+&debian; packaging on master the patch-queue branch will be
+called <filename>patch-queue/master</filename>.</para>
+
+<para>There, the
+maintainer will work on them using usual &git; commands (rebase, commit
+--amend, etc). When done, &gbp-pq; will be used to export the patches to
+<filename>debian/patches/</filename>. This workflow facilitates the
+cherry-picking of patches for stable releases, and the forward-porting of
+patches to new upstream versions by using git rebase on the
+patch-queue branch (patches already applied
+upstream are detected automatically).  The generated patches
+in <filename>debian/patches/</filename> have all the necessary
+information to forward them upstream given they are auto generated via
+<command>git-format-patch(1)</command>.</para>
+
+<para>The main drawback of this workflow is the lack of history on the
+<filename>patch-queue/master</filename> branch (but there is full history on
+the <filename>master</filename> branch, of course).</para>
+
+    <sect1 id="gbp.patches.workflow">
+<title>Workflow</title>
+
+<para>Assuming the &debian; source package has its patches in
+<filename>debian/patches</filename> and these are parseable by
+<command>git-quiltimport(1)</command>:</para>
+
+<para>Create patch-queue branch and
+import <filename>debian/patches</filename> onto it using &gbp-pq;
+</para>
+
+<programlisting>
+  <command>cd <replaceable>REPO</replaceable></command>
+  &gbp-pq; import
+</programlisting>
+
+<para>This will switch you to the patch-queue branch
+automatically.</para>
+
+<para>Now you can work on the patch-queue branch (add, remove, rebase, test) to
+get your patches into shape:
+<itemizedlist>
+<listitem><para>To add what will later become a patch in <filename>debian/patches/</filename> simply make a
+commit. The first line of the commit message will become the patch name later.
+The following lines include the details of what the patch does.</para></listitem>
+<listitem><para>To remove or edit commits use git rebase -i master. The git documentation
+explains how to work with git-rebase.</para></listitem>
+</itemizedlist></para>
+
+<para>Regenerate the patches in <filename>debian/patches/</filename> using
+&gbp-pq;. This will switch you back to master and regenerate the patches using
+a method similar to <command>git-format-patch(1)</command>:</para>
+
+<programlisting>
+  &gbp-pq; export
+</programlisting>
+
+<para>Commit the result either by passing <option>--commit</option> to
+the above export or by using git commands:</para>
+<programlisting>
+  &gitcmd; add debian/patches
+  &gitcmd; commit
+</programlisting>
+
+<para>Update <filename>debian/changelog</filename> (e.g. by running "&gbp-dch; <option>-S</option> <option>-a</option>")</para>
+<para>You can now build the package as usual.</para>
+
+<para>After importing a new upstream version you can use the following commands
+to refresh <filename>debian/patches/</filename>:</para>
+<programlisting>
+  &gbp-pq; rebase
+  &gbp-pq; export
+</programlisting>
+
+<para>Should the rebase fail you can resort to
+&gitcmd; <option>rebase</option>.</para>
+
+<para>If you forgot to create a patch-queue before importing the new
+upstream version you can make &gbp-pq; figure out where to apply the
+patches by using the <option>--time-machine=</option>.</para>
+
+<para>If a package doesn't have any patches yet, these are the steps to add
+your first patch:</para>
+<orderedlist>
+<listitem><para>Launch an import, this will switch to the proper branch
+<programlisting>
+  &gbp-pq; import
+</programlisting>
+</para></listitem>
+<listitem><para>Create your first patch: edit files, test, commit your changes using <command>git commit</command></para></listitem>
+
+<listitem><para>To generate the new Quilt patch set use
+<programlisting>
+  &gbp-pq; export --commit
+</programlisting>This will switch you back to the <filename>master</filename>
+branch generate the patches and commit them right away to
+your <filename>master</filename> branch.
+
+Skip the <option>--commit</option> if you don't want to commit
+right away. If you want to pick the changelog message from the patch
+see
+<filename>/usr/share/doc/git-buildpackage/examples/gbp-add-patch</filename>.</para></listitem>
+</orderedlist>
+
+<para>
+In order to avoid a patched (unclean) source tree after the build, you
+can use &dpkg-source;'s <option>unapply-patches</option> option and
+tell &git; to ignore the <filename>.pc</filename> directory.
+<filename>/usr/share/doc/git-buildpackage/examples/gbp-configure-unpatched-source</filename>
+sets up these two files for you.
+</para>
+</sect1>
+
+<sect1 id="gbp.patches.team">
+<title>Team maintenance</title>
+
+<para>The easiest way is to not push out any patch-queue/* branches at all.
+They can be recreated by any team member easily by using</para>
+
+<programlisting>
+  &gitcmd; branch -d patch-queue/master
+  &gbp-pq; import
+</programlisting>
+
+<para>The patch-queue branch can also be re-created when pulling (this
+will additionally drop your current patch-queue branch and recreate it
+from <filename>debian/patches</filename>):</para>
+<programlisting>
+  &gbp-pull; --redo-pq
+</programlisting>
+
+<para>
+Note that you can you can push out patch-queue branches. Other team
+members must just be aware that that branches in the patch-queue/
+namespace are being rebased frequently and therefore cause
+non fast-forward updates.
+</para>
+</sect1>
+
+
+<sect1 id="gbp.patches.30quilt">
+<title>Working with 3.0 (quilt) packages</title>
+<para>
+The 3.0 (quilt) format applies the patches
+in <filename>debian/patches</filename> automatically when building a
+source package. If you want your debian branch to contain the
+unpatched source there are several ways to handle this:
+</para>
+<itemizedlist>
+
+<listitem><para>Using <filename>debian/source/local-options</filename>:
+You can use <option>unapply-patches</option> in
+<filename>debian/source/local-options</filename> to unapply the patches after
+the build.
+<filename>/usr/share/doc/git-buildpackage/examples/gbp-configure-unpatched-source</filename>
+will this set up for you when run from inside a git repository of a Debian
+package.
+</para></listitem>
+
+<listitem><para>Using <option>--git-export-dir</option>:
+If you are using option <option>--git-export-dir</option> already there is no
+problem since the unpatched source tree gets exported before being built (and
+patched by dpkg-source). Since this implies an extra copy of the whole source
+tree (which might be slow for big projects) and it is not really necessary when
+using pbuilder the next method might be more appropriate.
+</para></listitem>
+
+<listitem><para>
+Working from a patch-queue branch.
+Instead of building from master build from patch-queue/master prepared by
+&gbp-pq; as describe above. This branch has the patches already applied as
+dpkg-source expects it:</para>
+<programlisting>
+  &gbp-pq; import
+  &gbp-buildpackage; --git-debian-branch=patch-queue/master
+  #Build and test...
+  &git; checkout master
+  &gbp-pq; export
+</programlisting>
+</listitem>
+</itemizedlist>
+</sect1>
+</chapter>
