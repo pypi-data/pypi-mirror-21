@@ -1,0 +1,44 @@
+{% extends "pretixcontrol/event/base.html" %}
+{% load i18n %}
+{% load bootstrap3 %}
+{% block title %}{% trans "Send out emails" %}{% endblock %}
+{% block content %}
+    <h1>{% trans "Send out emails" %}</h1>
+    {% block inner %}
+        <form class="form-horizontal" method="post" action="">
+            {% csrf_token %}
+            {% bootstrap_field form.sendto layout='horizontal' %}
+            {% bootstrap_field form.subject layout='horizontal' %}
+            {% bootstrap_field form.message layout='horizontal' %}
+            {% if request.method == "POST" %}
+            <fieldset>
+            <legend>{% trans "E-mail preview" %}</legend>
+                {% for locale, segments in output.items %}
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <strong>{% blocktrans %}For locale: {{ locale }}{% endblocktrans %}</strong>
+                            </h4>
+                        </div>
+                        <div class="panel-body">
+                            {% for value in segments %}
+                                <p>
+                                    {{ value|linebreaksbr }}
+                                </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </fieldset>
+            {% endif %}
+            <div class="form-group submit-group">
+                <button type="submit" class="btn btn-default btn-save pull-left" name="action" value="preview">
+                {% trans "Preview email" %}
+                </button>
+                <button type="submit" class="btn btn-primary btn-save">
+                    {% trans "Send" %}
+                </button>
+            </div>
+        </form>
+    {% endblock %}
+{% endblock %}

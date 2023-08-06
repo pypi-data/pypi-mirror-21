@@ -1,0 +1,44 @@
+{% extends "pretixcontrol/event/settings_base.html" %}
+{% load i18n %}
+{% load bootstrap3 %}
+{% block inside %}
+	<form action="" method="post" class="form-horizontal form-plugins">
+		{% csrf_token %}
+		<fieldset>
+			<legend>{% trans "Payment settings" %}</legend>
+            {% bootstrap_field sform.payment_term_days layout="horizontal" %}
+            {% bootstrap_field sform.payment_term_last layout="horizontal" %}
+            {% bootstrap_field sform.payment_term_weekdays layout="horizontal" %}
+            {% bootstrap_field sform.payment_term_expire_automatically layout="horizontal" %}
+            {% bootstrap_field sform.payment_term_accept_late layout="horizontal" %}
+            {% bootstrap_field sform.tax_rate_default layout="horizontal" %}
+        </fieldset>
+        <fieldset>
+            <legend>{% trans "Payment providers" %}</legend>
+			{% for provider in providers %}
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<div class="row">
+							<div class="col-sm-10">
+								<h3 class="panel-title">{{ provider.verbose_name }}</h3>
+							</div>
+						</div>
+					</div>
+					<div class="panel-body">
+						{% bootstrap_form provider.form layout='horizontal' %}
+                        {% with c=provider.settings_content %}
+                            {% if c %}{{ c|safe }}{% endif %}
+                        {% endwith %}
+					</div>
+				</div>
+            {% empty %}
+                <em>{% trans "There are no payment providers available. Please go to the plugin settings and activate one or more payment plugins." %}</em>
+			{% endfor %}
+		</fieldset>
+        <div class="form-group submit-group">
+            <button type="submit" class="btn btn-primary btn-save">
+                {% trans "Save" %}
+            </button>
+        </div>
+	</form>
+{% endblock %}
