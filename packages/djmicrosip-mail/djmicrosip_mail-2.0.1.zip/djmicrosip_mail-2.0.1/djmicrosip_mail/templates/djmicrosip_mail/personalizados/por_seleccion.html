@@ -1,0 +1,87 @@
+{% extends "djmicrosip_mail\base.html" %}
+{% block title %}Mail por seleccion{% endblock %}
+
+<!-- CSS Code -->
+{% block style_css %}
+{{ block.super }}
+{% endblock %}
+
+<!-- JavaScript Code -->
+{% block js_code %}
+{{ block.super }}
+{% include 'autocomplete_light/static.html' %}
+<script>
+	$("#id_mensaje").jqte();
+	$("#id_clientes_text").attr('class','form-control');
+</script>
+{% endblock %}
+
+{% block breadcrumb %}
+  {{ block.super }} 
+  <li class='active'>Mensaje a Clientes Específicos</li> 
+{% endblock %}
+
+{% block content %}
+
+{% if not mensaje == '' %}
+<div class="alert alert-{% if estatus == 'ok' %}success{% else %}danger{% endif %} fade in">
+	<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+	<strong>{{ mensaje }}</strong>
+	<a href="/mail/personalizados/por_seleccion"> Enviar Otro </a>
+</div>
+{% else %}
+	
+
+<div>
+
+	<h3><b>Envío de Mensaje a Clientes Específicos </b>
+	</h3>
+</div>
+<p class="text-info col-md-6 col-xs-12 cl-sm-12">
+	El mensaje que escribas en la caja de texto se enviará 
+	<strong>a los clientes de Microsip que selecciones y cuenten con un <u>correo electrónico valido</u></strong>.
+	<small>para seleccionar los clientes escribe el nombre de cada cliente en la caja de texto y seleccionalo de la lista</small>
+</p>
+<br style="clear:both;">
+
+<div align ="center" id="contenedor">
+	<form method="POST" action="#" class="form-inline" enctype='multipart/form-data'>{% csrf_token %}
+		<div class="row">
+			{{ form.asunto }}
+		</div>
+		<div class="col-md-offset-4 col-md-4 col-xs-12 cl-sm-12">
+			<label for="clientes_id">Clientes: </label>
+			{{form.clientes}}<br>
+		</div>
+		<br style="clear:both">
+		<br style="clear:both">
+		<div class="row">
+			{{ form.mensaje }}
+		</div>
+		<br><br>
+		<div class="row">Imagen (JPG): {{form.imagen}}</div>
+		<div class="row">Archivo (PDF): {{form.archivo}}</div>
+		<br style="clear:both">
+		<br>
+		<a href="#" class="btn btn-default" data-toggle="modal" data-target=".bs-example-modal-sm">
+			<i class="glyphicon glyphicon-send"></i> 
+  		Enviar
+		</a>
+		<div class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+		  <div class="modal-dialog modal-sm">
+		    <div class="modal-content">
+		      <div class="modal-header">
+          		<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+          		<h4 class="modal-title" id="mySmallModalLabel">Seguro que quieres enviar los mensajes?</h4>
+        	  </div>
+        	  <div class="modal-body">
+        	  	<button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+				<button type="submit" class="btn btn-default" id="btn-enviar" onclick="this.form.submit();$(this).text('Enviando...');this.disabled=true;">Si, estoy seguro</button>
+        	  </div>
+		    </div>
+		  </div>
+		</div>
+	</form>
+</div>
+{% endif %}
+{% endblock %}
