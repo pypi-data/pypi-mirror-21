@@ -1,0 +1,37 @@
+# Statically
+
+[![Build Status](https://travis-ci.org/joajfreitas/statically.png?branch=master)](https://travis-ci.org/joajfreitas/statically)
+
+Statically is a simple static website generator.
+
+* Create content with github [Markdown](https://pythonhosted.org/Markdown/)
+* Includes a simple CLI interface
+* Generetad pages can be hosted anywhere
+
+## Features
+
+* Site themes with [Jinja2](http://jinja.pocoo.org/)
+* Use or create personalized stylecheats
+* Support for TeX math equations with [Mathjax](https://www.mathjax.org/)
+* Syntex highligth with [Pygments](http://pygments.org/)
+* Embeded videos
+
+## Documentation
+
+Check the [documentation](http://pythonhosted.org/statically)
+
+## Install
+
+```
+pip install statically
+```
+
+## TODO
+
+* Main page
+* Choose template per page
+* Document user style
+* Docs
+* Pretty urls 
+
+
