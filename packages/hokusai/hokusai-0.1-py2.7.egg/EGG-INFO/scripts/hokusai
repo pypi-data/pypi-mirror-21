@@ -1,0 +1,126 @@
+#!/usr/local/opt/python/bin/python2.7
+
+import os
+import sys
+import shutil
+import urllib
+
+from distutils.dir_util import mkpath
+
+import click
+
+import hokusai
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+@click.option('--project-name', type=click.STRING, default=os.path.basename(os.getcwd()), help='The project name (default: name of current directory)')
+@click.option('--aws-account-id', type=click.STRING, required=True, help='Your AWS account ID')
+@click.option('--aws-ecr-region', type=click.STRING, default='us-east-1', help='Your AWS ECR region (default: us-east-1)')
+@click.option('--framework', type=click.Choice(['rack', 'nodejs']), required=True, help='The project framework')
+@click.option('--base-image', type=click.STRING, required=True, help='The base image')
+@click.option('--run-command', type=click.STRING, help='Override the default run command')
+@click.option('--development-command', type=click.STRING, help='Override the default development command')
+@click.option('--test-command', type=click.STRING, help='Override the default test command')
+@click.option('--port', type=click.INT, default=8080, help='The port to access on the host machine (default: 8080)')
+@click.option('--target-port', type=click.INT, default=80, help='The port to expose on the app container (default: 80)')
+@click.option('--with-memcached', type=click.BOOL, is_flag=True, help='Include a Memcached service')
+@click.option('--with-redis', type=click.BOOL, is_flag=True, help='Include a Redis service')
+@click.option('--with-mongo', type=click.BOOL, is_flag=True, help='Include a MongoDB service')
+@click.option('--with-postgres', type=click.BOOL, is_flag=True, help='Include a Postgres service')
+def init(project_name, aws_account_id, aws_ecr_region, framework, base_image,
+          run_command, development_command, test_command, port, target_port,
+            with_memcached, with_redis, with_mongo, with_postgres):
+  """
+  Configure Hokusai for the current project
+  """
+  hokusai.init(project_name, aws_account_id, aws_ecr_region, framework, base_image,
+                run_command, development_command, test_command, port, target_port,
+                  with_memcached, with_redis, with_mongo, with_postgres)
+
+@cli.command()
+@click.option('--interactive', type=click.BOOL, is_flag=True, help='Interactive console to install missing dependencies')
+def check(interactive):
+  """
+  Check hokusai dependencies and configuration
+  """
+  sys.exit(hokusai.check(interactive))
+
+@cli.command()
+@click.option('--docker-compose-yml', type=click.STRING, default=os.path.join(os.getcwd(), 'hokusai/development.yml'), help='docker-compose development file - defaults to hokusai/development.yml')
+def dev(docker_compose_yml):
+  """
+  Boot the development stack
+  """
+  sys.exit(hokusai.development(docker_compose_yml))
+
+@cli.command()
+@click.option('--docker-compose-yml', type=click.STRING, default=os.path.join(os.getcwd(), 'hokusai/test.yml'), help='docker-compose test file - defaults to hokusai/test.yml')
+def test(docker_compose_yml):
+  """
+  Boot the test stack and run the test suite
+  """
+  sys.exit(hokusai.test(docker_compose_yml))
+
+@cli.command()
+def build():
+  """
+  Build the latest docker image for the project
+  """
+  sys.exit(hokusai.build())
+
+@cli.command()
+@click.option('--test-build', type=click.BOOL, is_flag=True, help="Push the latest image output by 'test' - otherwise the latest image output by 'build'")
+@click.option('--tag', '-t', type=click.STRING, multiple=True, help="Tags to apply to the pushed image - defaults to 'latest' if none specified")
+def push(test_build, tag):
+  """
+  Push a docker image to ECR with the given tags
+  """
+  if not len(tag):
+    tags = ['latest']
+  else:
+    tags = list(tag)
+
+  sys.exit(hokusai.push(test_build, tags))
+
+@cli.command()
+@click.argument('context', type=click.STRING)
+@click.argument('key', type=click.STRING)
+@click.argument('value', type=click.STRING)
+def add_secret(context, key, value):
+  """
+  Add a secret for the given context
+  """
+  sys.exit(hokusai.add_secret(context, key, value))
+
+@cli.command()
+@click.argument('context', type=click.STRING)
+@click.option('--kubernetes-yml', type=click.STRING, default=os.path.join(os.getcwd(), 'hokusai/production.yml'), help='kubernetes config file - defaults to hokusai/production.yml')
+def stack_up(context, kubernetes_yml):
+  """
+  Create the stack in the given context
+  """
+  sys.exit(hokusai.stack_up(context, kubernetes_yml))
+
+@cli.command()
+@click.argument('context', type=click.STRING)
+@click.option('--kubernetes-yml', type=click.STRING, default=os.path.join(os.getcwd(), 'hokusai/production.yml'), help='kubernetes config file - defaults to hokusai/production.yml')
+def stack_down(context, kubernetes_yml):
+  """
+  Delete the stack in the given context
+  """
+  sys.exit(hokusai.stack_down(context, kubernetes_yml))
+
+@cli.command()
+@click.argument('context', type=click.STRING)
+@click.option('--tag', '-t', type=click.STRING, default='latest', help="Image tag to deploy - (defaults to 'latest')")
+def deploy(context, tag):
+  """
+  Deploy an image to the given context
+  """
+  sys.exit(hokusai.deploy(context, tag))
+
+if __name__ == '__main__':
+  cli(obj={})
