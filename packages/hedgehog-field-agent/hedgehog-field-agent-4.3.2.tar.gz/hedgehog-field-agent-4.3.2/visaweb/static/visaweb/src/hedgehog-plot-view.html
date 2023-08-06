@@ -1,0 +1,23 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+</head><body><dom-module id="hedgehog-plot-view">
+    <template>
+        <style include="shared-styles">
+            :host { display: block; }
+
+
+        </style>
+        <iron-ajax id="updaterAjax" method="GET" url="{{url}}" last-response="{{graph}}" on-response="onUpdaterResponse" auto=""></iron-ajax>
+        <div id="figure"></div>
+    </template>
+
+    <script src="/static/visaweb/d3.v3.min.js"></script>
+    <script src="/static/visaweb/mpld3.v0.3.js"></script>
+
+    <script>Polymer({is:"hedgehog-plot-view",properties:{endpoint:{type:String,notify:!0},url:{type:String,notify:!0},graph:{type:Object,notify:!0},displayModel:{type:Object,notify:!0,value:{center:100,span:40}},figureId:{type:String,notify:!0,value:function(){function e(){return Math.floor(65536*(1+Math.random())).toString(16).substring(1)}return e()+e()+"-"+e()+"-"+e()+"-"+e()+"-"+e()+e()+e()}}},observers:["_computeUrl(endpoint, displayModel)"],_computeUrl:function(e,n){console.log("New backend endpoint url:",e,n),this.url=e+this.convertObjectToQueryString(n)},convertObjectToQueryString:function(e){var n=null;return n=void 0!==e&&null!==e?"?"+Object.keys(e).map(function(n,o){return encodeURIComponent(n)+"="+encodeURIComponent(e[o])}).join("&"):"",console.log("convent object to url:",n,e),n},onUpdaterResponse:function(e,n){mpld3.draw_figure(this.$.figure,n.response),console.debug("haha",n.response)}});</script>
+</dom-module>
+</body></html>

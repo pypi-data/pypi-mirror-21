@@ -1,0 +1,59 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="hedgehog-app.html"></head><body><dom-module id="hedgehog-device-view">
+    <template>
+        <style include="shared-styles iron-flex">
+          :host {
+            display: block;
+
+            padding: 10px;
+          }
+
+          .item {
+            padding: 10px;
+          }
+
+        </style>
+
+        <iron-ajax url="/assetadapter/assets" last-response="{{data}}" auto=""></iron-ajax>
+
+        <iron-list items="[[data]]" as="item">
+            <template>
+                <hedgehog-asset-item-view class="item" asset="[[item]]">
+                </hedgehog-asset-item-view>
+            </template>
+        </iron-list>
+
+        <div class="card">
+            <paper-icon-item class="item">
+                <div class="avatar success" item-icon=""></div>
+                <paper-item-body two-line="" class="flex">
+                    <div>Eszköz elérhető</div>
+                    <div secondary="">Eszköz konfigurálva.</div>
+                </paper-item-body>
+            </paper-icon-item>
+            <paper-icon-item class="item">
+                <div class="avatar info" item-icon=""></div>
+                <paper-item-body two-line="" class="flex">
+                    <div>Eszköz használatban</div>
+                    <div secondary="">Eszköz foglalt.</div>
+                </paper-item-body>
+            </paper-icon-item>
+            <paper-icon-item class="item">
+                <div class="avatar error" item-icon=""></div>
+                <paper-item-body two-line="" class="flex">
+                    <div>Eszköz hiba</div>
+                    <div secondary="">Eszköz hiba.</div>
+                </paper-item-body>
+            </paper-icon-item>
+            <paper-icon-item class="item">
+                <div class="avatar warning" item-icon=""></div>
+                <paper-item-body two-line="" class="flex">
+                    <div>Nincs kapcsolat</div>
+                    <div secondary="">Nincs kapcsolat az eszközzel.</div>
+                </paper-item-body>
+            </paper-icon-item>
+        </div>
+    </template>
+
+    <script>Polymer({is:"hedgehog-device-view"});</script>
+</dom-module>
+</body></html>
