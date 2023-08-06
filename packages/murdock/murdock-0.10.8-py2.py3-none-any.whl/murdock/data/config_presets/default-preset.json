@@ -1,0 +1,95 @@
+{
+    "steps": [
+      {
+        "title": "global",
+        "transforms": {
+          "translation": {},
+          "rotation": {}
+        },
+        "search": {
+          "module": "search.ps",
+          "parameters": {
+            "max_number_of_iterations": 2000,
+            "init_number_of_particles": 100,
+            "init_speed": 0.2,
+            "w_range": [1.0, 0.99],
+            "p": 0.1,
+            "g_range": [0.0, 0.1]
+          }
+        },
+        "scoring": {
+          "module": "scoring.custom",
+          "parameters": {
+            "terms": [
+              {
+                "class": "InterCollision",
+                "parameters": {
+                  "weight": 100.0
+                }
+              },
+              {
+                "class": "Coulomb",
+                "parameters": {
+                  "weight": 0.9998973
+                }
+              },
+              {
+                "class": "Shape1",
+                "parameters": {
+                  "name": "Shape",
+                  "weight": 0.0001027
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "title": "local",
+        "transforms": {
+          "translation": {},
+          "rotation": {},
+          "rotatable_bonds": {}
+        },
+        "search": {
+          "module": "search.mc",
+          "parameters": {
+            "max_init_step": 0.0,
+            "max_number_of_iterations": 1500
+          }
+        },
+        "scoring": {
+          "module": "scoring.custom",
+          "parameters": {
+            "terms": [
+              {
+                "class": "InterCollision",
+                "parameters": {
+                  "weight": 100.0
+                }
+              },
+              {
+                "class": "IntraCollision",
+                "parameters": {
+                  "weight": 0.1872975
+                }
+              },
+              {
+                "class": "Coulomb",
+                "parameters": {
+                  "weight": 0.8126134
+                }
+              },
+              {
+                "class": "Shape1",
+                "parameters": {
+                  "name": "Shape",
+                  "weight": 8.91e-05
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+}
