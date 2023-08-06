@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sparkdeployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sparkbatch
+    spec:
+      containers:
+        - image: kumabhiacr-microsoft.azurecr.io/sbapp
+          name: sparkbatch
+          env: 
+           - name: SPARK_HOME
+             value: /dsvm/tools/spark/current
+           - name: PYSPARK_PYTHON
+             value: /usr/bin/python2.7
+           - name: LIVY_URL
+             value: http://localhost:8998
+          volumeMounts:
+           - name: azure
+             mountPath: /mnt/azure
+      imagePullSecrets:
+        - name: kumabhiacrregistrykey
+      volumes:
+         - name: azure
+           azureFile:
+             secretName: azure-secret
+             shareName: k8stest
+             readOnly: false
