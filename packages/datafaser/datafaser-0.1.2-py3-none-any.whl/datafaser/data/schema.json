@@ -1,0 +1,176 @@
+{
+  "title": "datafaser schema",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "https://kato.iki.fi/datafaser/schema/0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["datafaser", "schema"],
+  "definitions": {
+    "phase": {
+      "title": "Datafaser run phase",
+      "description": "Single name for a list of operations to perform before a validation checkpoint",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
+      "patternProperties": {
+        "\\w{1,30}(( ?- ?| )\\w{1,30}){0,10}": {
+          "type": "array",
+          "items": {
+            "title": "Datafaser operation",
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "load": {
+                "title": "Datafaser load operation",
+                "type": "object",
+                "minProperties": 1,
+                "maxProperties": 2,
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "minProperties": 1,
+                      "maxProperties": 1,
+                      "additionalProperties": false,
+                      "properties": {
+                        "files": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "to": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": false,
+                    "properties": {
+                      "file": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "string"
+                      },
+                      "format": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "datafaser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run", "formats"],
+      "properties": {
+        "run": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["plan"],
+          "properties": {
+            "options": {
+              "title": "Command line settings guiding datafaser",
+              "type": "object",
+              "properties": {
+                "default-format": {
+                  "title": "Format for reading and writing unrecognized files, such as json, yaml, text, or skip.",
+                  "type": "string"
+                },
+                "log-level": {
+                  "title": "One of DEBUG, INFO (default), WARNING, ERROR, or CRITICAL.",
+                  "type": "string",
+                  "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+                },
+                "log-file": {
+                  "title": "Name of file to log to instead of standard error.",
+                  "type": "string"
+                },
+                "syslog": {
+                  "title": "Send messages to system log.",
+                  "type": "boolean"
+                },
+                "help-on": {
+                  "title": "Explain a topic such as XML in detail.",
+                  "type": "string"
+                },
+                "help": {
+                  "title": "Explain usage instead of normal operation.",
+                  "type": "boolean"
+                }
+              }
+            },
+            "phase": { "$ref": "#/definitions/phase" },
+            "plan": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/phase"
+              }
+            },
+            "done": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/phase"
+              }
+            }
+          }
+        },
+        "formats":  {
+          "description": "Parameters for datafaser.formats.FormatRegister",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format_handlers_by_name",
+            "formats_by_filename_extension"
+          ],
+          "properties": {
+            "format_handlers_by_name": {
+              "description": "A mapping of format names to names of associated format handler modules",
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "patternProperties": {
+                "\\w{1,30}": {
+                  "type": ["string", "null"]
+                }
+              }
+            },
+            "formats_by_filename_extension": {
+              "description": "A mapping of filename extensions to associated format names",
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "patternProperties": {
+                "\\w{1,30}": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schema": {
+      "type": "object"
+    }
+  }
+}
