@@ -1,0 +1,255 @@
+---
+{% set globs={} %}
+{% if dynamodb_capacity.read|int or dynamodb_capacity.write|int %}
+{% set _ = globs.update({'stateful': True}) %}
+{% else %}
+{% set _ = globs.update({'stateful': False}) %}
+{% endif %}
+resources:
+    {% if not api_id %}
+    RestApi:
+      Type: "AWS::ApiGateway::RestApi"
+      Properties:
+        {% if api_name %}
+        Name: "{{api_name}}-{{_env.stage}}"
+        {% else %}
+        Name: "{{_env.name}}-{{_layer.name}}-{{_env.stage}}"
+        {% endif %}
+    {% endif %}
+
+    {% if globs.stateful %}
+    StateTable:
+      Type: "AWS::DynamoDB::Table"
+      Properties:
+        AttributeDefinitions:
+        {# The state item id #}
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: {{dynamodb_capacity.read}}
+          WriteCapacityUnits: {{dynamodb_capacity.write}}
+        {% if _env.stage %}
+        TableName: {{_env.name}}-{{_layer.name}}-{{_env.stage}}-state
+        {% else %}
+        TableName: {{_env.name}}-{{_layer.name}}-state
+        {% endif %}
+    {% endif %}
+
+    {% for resource in api_resources %}
+    Lambda{{loop.index}}:
+      Type: "AWS::Lambda::Function"
+      Properties:
+        Code:
+          S3Bucket: "{{resource.lambda_function.s3bucket}}"
+          S3Key: "{{resource.lambda_function.s3key}}"
+        Runtime: "python2.7"
+        {% if resource.lambda_function.memory_size %}
+        MemorySize: "{{resource.lambda_function.memory_size}}"
+        {% endif %}
+        Description: "{{resource.description or _layer.description}}"
+        {# in seconds #}
+        {% if resource.lambda_function.timeout %}
+        Timeout: "{{resource.lambda_function.timeout}}"
+        {% endif %}
+        Handler: "handler.lambda_handler"
+        Role:
+          "Fn::GetAtt":
+              - LambdaExecutionRole{{loop.index}}
+              - Arn
+        Environment:
+          Variables:
+              "HUMILIS_ENVIRONMENT": "{{_env.name}}"
+              "HUMILIS_STAGE": "{{_env.stage}}"
+              "HUMILIS_LAYER": "{{_layer.name}}"
+              {% set resource_env = dict(lambda_environment or {}) %}
+              {% if resource.lambda_environment %}
+              {% set _ = resource_env.update(resource.lambda_environment) %}
+              {% endif %}
+              {% if resource_env %}
+              {% for k, v in resource_env.items() %}
+              "{{k}}": "{{v}}"
+              {% endfor %}
+              {% endif %}
+
+    LambdaPermission{{loop.index}}:
+      Type: "AWS::Lambda::Permission"
+      Properties:
+        Action: "lambda:invokeFunction"
+        FunctionName: {"Fn::GetAtt": ["Lambda{{loop.index}}", "Arn"]}
+        Principal: "apigateway.amazonaws.com"
+        SourceArn:
+            "Fn::Join":
+                - ""
+                -
+                  - "arn:aws:execute-api:"
+                  - {"Ref": "AWS::Region"}
+                  - ":"
+                  - {"Ref": "AWS::AccountId"}
+                  - ":"
+                  {% if api_id %}
+                  - "{{api_id}}"
+                  {% else %}
+                  - {"Ref": "RestApi"}
+                  {% endif %}
+                  - "/*"
+
+    LambdaExecutionRole{{loop.index}}:
+      Type: "AWS::IAM::Role"
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                  Service: 'lambda.amazonaws.com'
+              Action: 'sts:AssumeRole'
+        # Keep all environment role under the same path
+        Path: {{ "/{}/".format(_env.name) }}
+        Policies:
+          - PolicyName: {{loop.index}}
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  # Write access to Cloudwatch logs
+                  Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Resource: "arn:aws:logs:*:*:*"
+                  {% if globs.stateful %}
+                - Effect: Allow
+                  # Read/write permission on the associated state tables
+                  Action:
+                    - "dynamodb:*"
+                  Resource:
+                    - "Fn::Join":
+                      - ""
+                      - ["arn:aws:dynamodb:", {"Ref": "AWS::Region"},":",
+                         {"Ref": "AWS::AccountId"}, ":", "table/", {"Ref": "StateTable"}]
+                 {% endif %}
+
+    Resource{{loop.index}}:
+      Type: "AWS::ApiGateway::Resource"
+      Properties:
+        RestApiId:
+          {% if api_id %}
+          "{{api_id}}"
+          {% else %}
+          {"Ref": "RestApi"}
+          {% endif %}
+        ParentId:
+            {% if api_id %}
+            {{resource.parent_resource_id}}
+            {% else %}
+            "Fn::GetAtt":
+              - RestApi
+              - RootResourceId
+            {% endif %}
+        {% if resource.path %}
+        PathPart: "{{resource.path}}"
+        {% else %}
+        PathPart: "{{context.layer.name}}{{loop.index}}"
+        {% endif %}
+
+
+    Method{{loop.index}}:
+      Type: "AWS::ApiGateway::Method"
+      Properties:
+        RestApiId:
+          {% if api_id %}
+          {{api_id}}
+          {% else %}
+          {"Ref": "RestApi"}
+          {% endif %}
+        ResourceId: {Ref: "Resource{{loop.index}}"}
+        ApiKeyRequired: {{resource.api_key_required or 'no'}}
+        HttpMethod: POST
+        AuthorizationType: NONE
+        Integration:
+          Type: AWS
+          IntegrationHttpMethod: POST
+          Uri: {"Fn::Join" : ["", ["arn:aws:apigateway:", {"Ref": "AWS::Region"}, ":lambda:path/2015-03-31/functions/", {"Fn::GetAtt": ["Lambda{{loop.index}}", "Arn"]}, "/invocations"]]}
+          PassthroughBehavior: WHEN_NO_TEMPLATES
+          IntegrationResponses:
+              - StatusCode: 200
+          RequestTemplates:
+            "application/json": |
+                #set($allParams = $input.params())
+                {
+                  "body" : $input.json('$'),
+                  "context" : {
+                    "api_id" : "$context.apiId",
+                    "http_method" : "$context.httpMethod",
+                    "stage" : "$context.stage",
+                    "request_id" : "$context.requestId",
+                    "resource_path" : "$context.resourcePath",
+                    "resource_id" : "$context.resourceId",
+                    "identity" : {
+                        "source_ip" : "$context.identity.sourceIp",
+                        "user-agent" : "$context.identity.userAgent",
+                        "account_id" : "$context.identity.accountId",
+                        "api_key" : "$context.identity.apiKey",
+                        "caller" : "$context.identity.caller",
+                        "user" : "$context.identity.user",
+                        "user_arn" : "$context.identity.userArn"
+                    }
+                  },
+                  "parameters" : {
+                    #foreach($type in $allParams.keySet())
+                    #set($params = $allParams.get($type))
+                    "$type" : {
+                      #foreach($paramName in $params.keySet())
+                      "$paramName" : "$util.escapeJavaScript($params.get($paramName))"
+                      #if($foreach.hasNext),#end
+                      #end
+                    }
+                    #if($foreach.hasNext),#end
+                    #end
+                  }
+                }
+
+        MethodResponses:
+            - StatusCode: 200
+        {% if resource.request_parameters %}
+        RequestParameters:
+          {% for k, v in resource.request_parameters.items() %}
+          "method.request.{{k}}": {{v}}
+          {% endfor %}
+        {% endif %}
+    {% endfor %}
+
+    RestApiDeployment:
+      Type: "AWS::ApiGateway::Deployment"
+      {% if api_resources %}
+      DependsOn:
+        {% for _ in api_resources %}
+        - Method{{loop.index}}
+        {% endfor %}
+      {% endif %}
+      Properties:
+          Description: "{{_env.stage}} deployment of {{_env.name}} environment"
+          RestApiId:
+            {% if api_id %}
+            {{api_id}}
+            {% else %}
+            {"Ref": "RestApi"}
+            {% endif %}
+          StageName: {{api_stage or _env.stage|lower}}
+
+    ApiKey:
+      Type: "AWS::ApiGateway::ApiKey"
+      DependsOn:
+        - "RestApiDeployment"
+        - "RestApi"
+      Properties:
+        Name: "{{_env.name}}-{{_env.stage}}"
+        Description: "API key for stage {{_env.stage}} of environment {{_env.name}}"
+        Enabled: "true"
+        StageKeys:
+          - RestApiId:
+              Ref: RestApi
+            StageName: "{{api_stage or _env.stage|lower}}"
