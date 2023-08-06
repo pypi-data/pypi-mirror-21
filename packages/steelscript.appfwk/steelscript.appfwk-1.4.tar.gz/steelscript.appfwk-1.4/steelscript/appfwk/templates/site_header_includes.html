@@ -1,0 +1,56 @@
+    {% comment %}
+    If you add a local JS lib here, you must add a URL for the lib to the
+    OFFLINE_JS_URLS array in mkproject.py.
+    {% endcomment %}
+
+    {% block site_header %}
+    <link href="{{ STATIC_URL }}jquery-timepicker/jquery.timepicker.css" rel="stylesheet"/>
+
+    {% if offline_js %}
+        <link href="{{ STATIC_URL }}jquery-ui/themes/base/jquery-ui.css" rel="stylesheet"/>
+        <link href="{{ STATIC_URL }}bootstrap-{{ js_versions.bootstrap }}/css/bootstrap.min.css"
+              rel="stylesheet"/>
+        <link href="{{ STATIC_URL }}bootstrap-{{ js_versions.bootstrap }}/css/bootstrap-theme.min.css"
+              rel="stylesheet"/>
+        <link href="{{ STATIC_URL }}c3.min.css" rel="stylesheet"/>
+        <link href="{{ STATIC_URL }}pivot.min.css" rel="stylesheet"/>
+        <link href="{{ STATIC_URL }}jquery.dataTables.min.css" rel="stylesheet"/>
+{% else %}
+        <link href="//code.jquery.com/ui/{{ js_versions.jqueryui }}/themes/smoothness/jquery-ui.css" rel="stylesheet"/>
+        {% for css in css_files %}
+        <link href="{{ css.0 }}" rel="stylesheet"/>
+        {% endfor %}
+    {% endif %}
+
+    <script type="text/javascript" src="{{ STATIC_URL }}js/portal.js"></script>
+
+    {% if offline_js %}
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery.min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery-ui/ui/minified/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery.form.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}yui/build/yui/yui-min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}bootstrap-{{ js_versions.bootstrap }}/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}c3.min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}d3.min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}pivot.min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}jquery.dataTables.min.js"></script>
+    {% else %}
+        {% for js in js_files %}
+            <!-- comment here -->
+            <script type="text/javascript" src="{{ js.0 }}"></script>
+        {% endfor %}
+    {% comment %}
+    need to call yui-s separately since it seems to be less efficient
+    with the network requests than the regular unsecured site - four combo
+    requests versus upwards of 50 individual requests under https
+    {% endcomment %}
+    {% if request.is_secure %}
+    <script type="text/javascript" src="https://yui-s.yahooapis.com/{{ js_versions.yui }}/build/yui/yui-min.js"></script>
+    {% else %}
+    <script type="text/javascript" src="http://yui.yahooapis.com/{{ js_versions.yui }}/build/yui/yui-min.js"></script>
+    {% endif %}
+    {% endif %}
+
+    <link href="{{ STATIC_URL }}css/main.css" rel="stylesheet"/>
+
+    {% endblock %}

@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block comments %}
+<!--
+# Copyright (c) 2015 Riverbed Technology, Inc.
+#
+# This software is licensed under the terms and conditions of the MIT License
+# accompanying the software ("License").  This software is distributed "AS IS"
+# as set forth in the License.
+-->
+{% endblock %}
+
+{% load add_attrs %}
+
+{% block title %}App Framework: Device Detail{% endblock %}
+
+
+{% block header %}
+   <script type="text/javascript">
+
+        $(document).ready( function() {
+
+         var auth = document.getElementById("id_auth");
+         changeAuth(auth);
+
+        // copy input value and bind changes to feed to
+        // hidden fields: username, password and access_code
+        // note that the id of field "hidden" is "id_hidden"
+
+        $('#auth_input').val( $('#id_auth').val() );
+
+        $('#username_input').val( $('#id_username').val() );
+        $('#username_input').change( function(e) {
+            text = this.value;
+            $('#id_username').val(text);
+            });
+
+
+        $('#password_input').val( $('#id_password').val() );
+        $('#password_input').change( function(e) {
+            text = this.value;
+            $('#id_password').val(text);
+            });
+
+        $('#access_code_input').val( $('#id_access_code').val() );
+        $('#access_code_input').change( function(e) {
+            text = this.value;
+            $('#id_access_code').val(text);
+            });
+
+       });
+
+        function changeAuth(sel) {
+
+            var auth_method = sel.value;
+            $('#id_auth').val(auth_method);
+
+           if ( auth_method == {{ auth.NONE }} ) {
+                $('#username_div').hide();
+                $('#password_div').hide();
+                $('#access_code_div').hide();
+           }
+           else if ( auth_method == {{ auth.BASIC }} ) {
+               $('#username_div').show();
+               $('#password_div').show();
+               $('#access_code_div').hide();
+           }
+           else {
+               $('#username_div').hide();
+               $('#password_div').hide();
+               $('#access_code_div').show();
+           };
+       };
+
+       function changeMod(){
+            // If adding a device and the module is set as steelhead,
+            // default port is set as 22
+
+            var instance_host = "{{ form.instance.host }}";
+
+            var ele_module = document.getElementById('id_module');
+            var module_text = ele_module.options[ele_module.selectedIndex].text;
+
+            var ele_port = document.getElementById('id_port');
+            if (instance_host == "") {
+                // This is an form to add a device
+                if ( module_text == "steelhead" )
+                    ele_port.value = "22";
+                else
+                    ele_port.value = "443";
+            };
+       };
+
+   </script>
+{% endblock %}
+
+{% block header_row %}
+    <h3>Add/Edit Device</h3>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xs-8 block-centered">
+            <form class="form-horizontal" action="" method="POST">
+                {% csrf_token %}
+                <fieldset>
+                    {% for hidden in form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                    {% for field in form.visible_fields %}
+                      {% if field != form.tags %}
+                        <div class="form-group">
+                            <label  for="{{ field.auto_id }}" class="col-xs-3 control-label">
+                                {{ field.label_tag }}
+                            </label>
+                            <div class="controls col-xs-9">
+                                {{ field|addcss:"form-control" }}
+                                {% if field.errors %}
+                                    {% for err in field.errors %}
+                                        <p class="text-danger">{{ err }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+
+                        <div class="form-group">
+                            <label for="{{ field.auto_id }}" class="col-xs-3 control-label">
+                                Auth Method:
+                            </label>
+                            <div class="controls col-xs-9">
+                             <select class="form-control" onchange="changeAuth(this)" id="auth_input">
+                                 <option value={{ auth.NONE }}>None</option>
+                                 <option value={{ auth.BASIC }}>Username/Password</option>
+                                 <option value={{ auth.OAUTH }}>OAuth2</option>
+                             </select>
+
+                            </div>
+                        </div>
+
+                        <div id="auth-controls" class="col-xs-offset-4 col-xs-8">
+                        <div class="form-group" id="username_div">
+                            <label for="{{ field.auto_id }}" class="control-label" id="username_label">
+                                Username:
+                            </label>
+                            <div class="controls">
+                                <input class="form-control" type="text" id="username_input" >
+                                {% if form.username.errors %}
+                                    <p class="text-error">{% for err in form.username.errors %}{{ err }}{% endfor %}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="password_div">
+                            <label for="{{ field.auto_id }}" class="control-label">
+                                Password:
+                            </label>
+                            <div class="controls">
+                                <input class="form-control" type="password"  id="password_input">
+                                {% if form.password.errors %}
+                                    <p class="text-error">{% for err in form.password.errors %}{{ err }}{% endfor %}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                        <div class="form-group" id="access_code_div">
+                            <label for="{{ field.auto_id }}" class="control-label">
+                                Access code:
+                            </label>
+                            <div class="controls">
+                                <textarea class="form-control" id="access_code_input"></textarea>
+                                {% if form.access_code.errors %}
+                                    <p class="text-error">{% for err in form.access_code.errors %}{{ err }}{% endfor %}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        </div>
+
+                       <div class="form-group">
+                            <label  for="{{ field.auto_id }}" class="col-xs-3 control-label">
+                                Tags
+                            </label>
+                            <div class="controls col-xs-9">
+                                {{ form.tags|addcss:"form-control" }}
+                                {% if form.tags.errors %}
+                                    {% for err in form.tags.errors %}
+                                        <p class="text-danger">{{ err }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                    </fieldset>
+
+                <div style="text-align: center">
+                    <input type="submit" value="Save Changes" class="btn btn-primary">
+                    {% if form.instance.pk %}
+                        <a href="#" id="{{ form.instance.pk }}" class="btn btn-danger delete">Delete Device</a>
+                    {% endif %}
+                </div>
+            </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">document.getElementById("id_name").focus();</script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/rvbd-report.js"></script>
+    <script type="text/javascript">
+        rvbd.report.csrfToken = "{{ csrf_token }}";
+        $('.delete').click(function() {
+            var heading = 'Confirm Device Delete';
+            var question = "Are you sure you would like to delete '{{ form.instance.name }}'?";
+            var cancelButtonTxt = 'Cancel';
+            var okButtonTxt = 'Delete';
+
+            var callback = function() {
+                $.ajaxSetup({
+                    headers: { "X-CSRFToken": rvbd.report.csrfToken }
+                });
+
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/devices/' + {{ form.instance.pk }} + '/',
+                    success: function(){
+                        window.location = '/devices/';
+                    }
+                }); 
+            };
+            rvbd.modal.confirm(heading, question, cancelButtonTxt, okButtonTxt, callback);
+        });
+    </script>
+{% endblock %}

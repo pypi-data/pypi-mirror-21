@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+
+{% block comments %}{% endblock %}
+
+<html>
+  <head>
+    <title>{% block title %}SteelScript App Framework{% endblock %}</title>
+
+    {% include "site_header_includes.html" %}
+
+    {% block header %}{% endblock %}
+
+  </head>
+  <body>
+  <nav class="navbar navbar-inverse ">
+        <div class="container-fluid">
+          <div class="navbar-header">
+              <a class="navbar-brand" style="vertical-align: bottom;" href="/">
+                  <img src="{{ STATIC_URL }}images/riverbed_r_small.png" style="display: inline; height: 18px; width: 18px; max-width:None;" alt="Riverbed">
+                  SteelScript
+              </a>
+          </div>
+          <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+              {% block navbar_left %}
+              {% endblock %}
+
+              {% block extra_nav_left %}
+              {% endblock %}
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              {% block extra_nav_right %}
+              {% endblock %}
+
+              {% block navbar_right %}
+                  {% if user.is_authenticated %}
+                  <li>
+                          <button class="btn btn-primary navbar-btn dropdown-toggle" data-toggle="dropdown" href="#">
+                              <i class="glyphicon glyphicon-edit"></i> {{ user.username }} <span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu">
+                              <li><a href="{% url 'preferences' %}"><i class="glyphicon glyphicon-list"></i> Preferences</a></li>
+                              {% if user.is_superuser %}
+                                  <li class="divider"></li>
+                                  <li><a href="{% url 'system_settings' %}"><i class="glyphicon glyphicon-list"></i> System Settings</a></li>
+                                  <li><a href="{% url 'device-list' %}"><i class="glyphicon glyphicon-pencil"></i> Edit Devices</a></li>
+                                  <li><a href="{% url 'plugins-list' %}"><i class="glyphicon glyphicon-resize-small"></i> Edit Plugins</a></li>
+                                  {% if report_history_enabled %}
+                                  <li><a href="{% url 'report-history' %}"><i class="glyphicon glyphicon-resize-small"></i> Report History</a></li>
+                                  {% endif %}
+                                  <li><a href="/admin"><i class="glyphicon glyphicon-wrench"></i> Admin Panel</a></li>
+                                  <li class="divider"></li>
+                                  {% if report %}
+                                      <li><a href="{% url 'report-editor' report.namespace report.slug %}"><i class="glyphicon glyphicon-edit"></i> Edit Report</a></li>
+                                  {% endif %}
+                                  {% if reports and 'report' in request.path %}
+                                      <li><a href="#" onclick="rvbd.modal.reloading('reload', false)"><i class="glyphicon glyphicon-repeat"></i> Reload This Report</a></li>
+                                  {% endif %}
+                                  <li><a href="#" onclick="rvbd.modal.reloading('{% url 'reload-all' %}', true)"><i class="glyphicon glyphicon-retweet"></i> Reload All Reports</a></li>
+                              {% endif %}
+                              <li class="divider"></li>
+                              <li><a href="/accounts/logout/"><i class="glyphicon glyphicon-off"></i> Logout</a></li>
+                          </ul>
+                  </li>
+                  {% elif guest_enabled and guest_show_button %}
+                  <li class="active">
+                      <div class="btn-group navbar-right">
+                          <a class="btn btn-primary navbar-btn dropdown-toggle" data-toggle="dropdown" href="#">
+                              <i class="glyphicon glyphicon-edit"></i> Guest <span class="caret"></span>
+                          </a>
+                          <ul class="dropdown-menu">
+                              <li><a href="/accounts/login/"><i class="glyphicon glyphicon-user"></i> Login</a></li>
+                          </ul>
+                      </div>
+                  </li>
+                  {% endif %}
+              {% endblock %}
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+    </nav>
+
+{% comment %}
+    {% load pinax_announcements_tags %}
+    {% announcements as announcements_list %}
+
+    {% if announcements_list %}
+        {% include "annoucements.html" %}
+    {% endif %}
+{% endcomment %}
+
+    {% block login_row %}
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-xs-6">
+          {% block header_row %}{% endblock %}
+        </div>
+        <div class="col-xs-6">
+            <div class="pull-right" style="margin: 10px 0">
+                {% block login %}
+                {% endblock %}
+            </div>
+        </div>
+      </div>
+    </div>
+    {% endblock %}
+
+    {% if messages %}
+    <ul id="messages">
+      {% for message in messages %}
+        <li id="message_{{ forloop.counter }}"><a href="#" onclick="$('#message_{{ forloop.counter }}').fadeOut(); return false;"><small>clear</small></a> {{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+    <div class="container">
+        <div class="row block-centered" style="text-align: center">
+            <small>Powered by </small><a style="vertical-align: bottom;padding-top: 8px;" href="http://www.riverbed.com" alt="Riverbed"><img src='{{ STATIC_URL }}images/riverbed-logo.png' style="max-width:None;"></a>
+        </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+<!--
+# Copyright (c) 2015 Riverbed Technology, Inc.
+#
+# This software is licensed under the terms and conditions of the MIT License
+# accompanying the software ("License").  This software is distributed "AS IS"
+# as set forth in the License.
+-->
+
+{% load add_attrs %}
+
+<form id="{{ ajaxform.id }}" action="{{ ajaxform.action }}" method="{{ ajaxform.method }}" class="form-horizontal">
+    {% csrf_token %}
+    {% if ajaxform.non_field_errors %}
+        {% for err in ajaxform.non_field_errors %}
+            <p class="text-danger">{{ err }}</p>
+        {% endfor %}
+    {% endif %}
+    <fieldset>
+        {% for hidden in ajaxform.hidden_fields %}
+            {{ hidden }}
+        {% endfor %}
+        {% for field in ajaxform.visible_fields %}
+            <div class="form-group">
+                <label for="{{ field.auto_id }}" class="col-xs-2 control-label"> {{ field.label_tag }}</label>
+                <div class="col-xs-8" id="{{ field.auto_id }}-span">
+                    {{ field|addcss:"form-control" }}
+                    {% if field.errors %}
+                        {% for err in field.errors %}
+                            <p class="text-danger">{{ err }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </fieldset>
+</form>

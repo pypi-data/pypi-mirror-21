@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block comments %}
+<!--
+# Copyright (c) 2015 Riverbed Technology, Inc.
+#
+# This software is licensed under the terms and conditions of the MIT License
+# accompanying the software ("License").  This software is distributed "AS IS"
+# as set forth in the License.
+-->
+{% endblock %}
+
+{% block title %}App Framework: Edit Devices{% endblock %}
+
+{% block header_row %}
+    <h3>Edit Devices</h3>
+    <h4>Update IP addresses and Username/Password for each device</h4>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+        <div class="col-xs-offset-1 col-xs-10">
+        {% if invalid %}
+        <div class="block-centered" style="text-align: center">
+            <h4 class="text-error">Ensure all enabled devices have valid credentials</h4>
+        </div>
+        {% endif %}
+        <form action="" method="POST">
+                <input type="hidden" name="_method" value="PUT">
+                {% csrf_token %}
+                {{ formset.management_form }}
+                <table border="0" class="table table-bordered block-centered">
+                    <thead>
+                    <tr>
+                        <th>Enabled</th>
+                        <th>Name</th>
+                        <th>Module</th>
+                        <th>Host</th>
+                        <th>Port</th>
+                        <th>Tags</th>
+                        <th>Auth Method</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% if not tabledata %}
+                            <tr>
+                                <td colspan="7" style="text-align: center">No devices found.</td>
+                            </tr>
+                        {% endif %}
+                        {% for form, device in tabledata %}
+                            <tr {% if not device.enabled %}class="row-disabled"{% endif %}>
+                                {% if device.auth == auth.BASIC and not device.password %}
+                                   <td ><input type="checkbox" disabled="disabled"></td>
+                                {% elif device.auth == auth.OAUTH and not device.access_code %}
+                                   <td ><input type="checkbox" disabled="disabled"></td>
+                                {% else %}
+                                    {% for field in form.visible_fields %}
+                                        <td>{{ field }}</td>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                                <td>
+                                    <a href="{% url 'device-detail' device.id %}">{{ device.name }}</a>
+
+                                    {% if device.auth == auth.BASIC and not device.password %}
+                                    <br><span class="text-error">(missing password)</span>
+                                    {% elif device.auth == auth.OAUTH and not device.access_code %}
+                                    <br><span class="text-error">(missing access code)</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ device.module }}</td>
+                                <td>{{ device.host }}</td>
+                                <td>{{ device.port }}</td>
+                                <td>
+                                   {% for tag in device.tags_as_list %}
+                                    <a href="{%url 'device-list' %}?tag={{tag}}">
+                                      {{tag}}</a>{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </td>
+
+                                {% if device.auth == auth.NONE %}
+                                   <td>None</td>
+                                {% elif device.auth == auth.BASIC %}
+                                   <td>Username/Password</td>
+                                {% elif device.auth == auth.OAUTH %}
+                                   <td>OAuth2</td>
+                                {% endif %}
+
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            <div class="row">
+                <div class="block-centered" style="text-align: center">
+                    <input type="submit" value="Save Changes" class="btn btn-primary">
+                    <a href="{% url 'device-add' %}" class="btn btn-default">Add New Device</a>
+                    <a href="{% url 'device-batch' %}" class="btn btn-default">Batch Upload Devices</a>
+                </div>
+            </div>
+        </form>
+        </div>
+        </div>
+    </div>
+{% endblock %}

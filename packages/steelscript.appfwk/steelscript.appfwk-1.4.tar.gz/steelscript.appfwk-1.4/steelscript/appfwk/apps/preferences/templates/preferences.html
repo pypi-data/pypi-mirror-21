@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block comments %}
+<!--
+# Copyright (c) 2015 Riverbed Technology, Inc.
+#
+# This software is licensed under the terms and conditions of the MIT License
+# accompanying the software ("License").  This software is distributed "AS IS"
+# as set forth in the License.
+-->
+{% endblock %}
+{% load add_attrs %}
+
+{% block title %}App Framework: User Preferences{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block header_row %}<h3>User Preferences</h3>{% endblock %}
+
+{% block content %}
+    <div class="container">
+      <div class="row">
+        <div class="center-block">
+            <div class="form-horizontal form-group">
+                <label for="id_password" class="col-xs-5 control-label">
+                    <label for="id_password">Password:</label>
+                </label>
+                <div class="col-xs-4" style="padding-bottom: 10px;">
+                    <a href="{% url 'django.contrib.auth.views.password_change' %}">
+                        <button id="id_password" class="btn btn-primary">Change User Password</button>
+                    </a>
+                </div>
+            </div>
+            <form class="form-horizontal" action="" method="POST">
+              {% csrf_token %}
+              {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+              {% endfor %}
+              {% for field in form.visible_fields %}
+                <div class="form-group{% if field.errors %} error{% endif %}">
+                  <label for="{{ field.auto_id }}" class="col-xs-5 control-label"> {{ field.label_tag }}</label>
+                  <div class="col-xs-4">
+                    {{ field|addcss:"form-control" }}
+                    {% if field.errors %}
+                        <span class="help-inline">
+                            {% for err in field.errors %}{{ err }}{% endfor %}
+                        </span>
+                    {% else %}
+                        {% if field.help_text %}
+                            <span class="help-inline">{{ field.help_text }}</span>
+                        {% endif %}
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+
+              <div style="text-align: center;">
+                  <input class="btn btn-primary" type="submit" value="Update" />
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+{% endblock %}
