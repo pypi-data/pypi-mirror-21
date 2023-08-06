@@ -1,0 +1,45 @@
+#!python
+
+import os
+import sys
+
+from collections import defaultdict
+from argparse import ArgumentParser
+
+from kore_plugins_flask import application_factory
+from kore.configs.exceptions import ConfigPluginNotFoundError
+
+from kore_shell.lib.parsers import KVParser
+from kore_shell.lib.dict import merge_dict
+
+name = os.path.basename(sys.argv[0])
+default_host = "127.0.0.1"
+default_port = 5000
+
+parser = ArgumentParser(name)
+
+parser.add_argument('--config-type', default='dict')
+parser.add_argument('--config-opt', type=KVParser().parse,
+                    action='append', default=[])
+parser.add_argument("-d", "--debug",
+                    action="store_true", dest="debug")
+parser.add_argument("-H", "--host",
+                    help="Hostname of the Flask app " + \
+                       "[default %s]" % default_host,
+                    default=default_host)
+parser.add_argument("-P", "--port", type=int,
+                    help="Port for the Flask app " + \
+                       "[default %s]" % default_port,
+                    default=default_port)
+
+arguments = parser.parse_args()
+
+config_type = arguments.config_type
+config_opt = merge_dict(*arguments.config_opt)
+
+try:
+    app = application_factory.create(config_type, **config_opt)
+except ConfigPluginNotFoundError as e:
+    exit(e)
+
+app.run(debug=arguments.debug, host=arguments.host, port=arguments.port)
