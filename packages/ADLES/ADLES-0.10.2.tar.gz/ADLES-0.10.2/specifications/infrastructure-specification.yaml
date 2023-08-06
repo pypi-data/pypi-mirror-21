@@ -1,0 +1,35 @@
+# Specification of syntax for file for describing the infrastructure used by ADLES to create virtual educational environments.
+# ADLES:            https://pypi.python.org/pypi/ADLES
+# Format:           YAML 1.1 (See: http://yaml.org/spec/1.1/)
+# Author:           Christopher Goes <goes8945@vandals.uidaho.edu>
+# Creation Date:    Febuary 6th, 2017
+# Current Version:  1.0.1
+
+# *** Labels for syntactic components ***
+# Children do not have to be specified if parent is not defined
+# If no label is given, then context will determine label (Everything should be labeled eventually)
+#
+# REQUIRED      These must be defined. Not doing so is an parse-time error
+# Suggested     These should be defined. Will give a warning during parsing
+# Optional      Do not have to be specified
+# Option X      One of the options specified at that level must be defined. Not doing so is a parse-time error
+
+
+# ** VMware vSphere configurations **
+vmware-vsphere:
+  hostname: "hostname"            # REQUIRED    Hostname of the vCenter server
+  port: 0                         # Suggested   Port used to connect to the vCenter server [default: 443]
+  login-file: "vsphere.json"      # Suggested   Login information used to connect to the vCenter server [default: prompt user]
+  datacenter: "datacenter name"   # Suggested   Name of the Datacenter on which to create environment
+  datastore: "datastore name"     # Suggested   Name of Datastore to use for environment VMs
+  template-folder: "folder path"  # REQUIRED    Path from server root to folder that contains VM templates
+  server-root: "folder name"      # Suggested   Name of folder considored to be "root" for the platform
+  vswitch: "vswitch name"         # Suggested   Name of vSwitch to use as default
+
+# ** Docker configurations **
+docker:
+  url: "host:port"        # Suggested   URL to the Docker server [default: unix:///var/run/docker.sock]
+  tls: true               # Optional    Use TLS to connect to the Docker server [default: True]
+  registry: # Optional
+    url: "url://"         # REQUIRED  URL of the registry
+    login-file: "r.json"  # REQUIRED  JSON file containing login information for the Docker registry server
