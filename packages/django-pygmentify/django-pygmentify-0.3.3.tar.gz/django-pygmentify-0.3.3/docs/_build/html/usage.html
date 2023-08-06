@@ -1,0 +1,356 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; django-pygmentify 0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="django-pygmentify 0.1 documentation" href="index.html"/>
+        <link rel="next" title="Settings" href="settings.html"/>
+        <link rel="prev" title="Install" href="install.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> django-pygmentify
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Install</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#html">HTML</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#css">CSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minimalist-example">Minimalist example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customize-with-positional-arguments">Customize with positional arguments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#customize-with-keyword-arguments">Customize with keyword arguments</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">Tests</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">django-pygmentify</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<span id="id1"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="html">
+<h2>HTML<a class="headerlink" href="#html" title="Permalink to this headline">¶</a></h2>
+<p>Load the template tags.</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">pygmentify_tags</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Use the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code> template tag to covert HTML into Pygments HTML.</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">pygmentify</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">&lt;pre class=&quot;python&quot;&gt;</span>
+<span class="x">print(&#39;Hello, world!&#39;)</span>
+<span class="x">&lt;/pre&gt;</span>
+<span class="cp">{%</span> <span class="k">endpygmentify</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Result:</p>
+<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;highlight&quot;</span><span class="p">&gt;&lt;</span><span class="nt">pre</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;python&quot;</span><span class="p">&gt;&lt;</span><span class="nt">span</span><span class="p">&gt;&lt;/</span><span class="nt">span</span><span class="p">&gt;&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;k&quot;</span><span class="p">&gt;</span>print<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;p&quot;</span><span class="p">&gt;</span>(<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;s2&quot;</span><span class="p">&gt;</span><span class="ni">&amp;quot;</span>Hello, world!<span class="ni">&amp;quot;</span><span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;&lt;</span><span class="nt">span</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;p&quot;</span><span class="p">&gt;</span>)<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">pre</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code> template tag expects an opening <code class="docutils literal"><span class="pre">&lt;pre&gt;</span></code> tag with a <code class="docutils literal"><span class="pre">class</span></code> attribute of the programming language that you are using that matches against the <a class="reference external" href="http://pygments.org/docs/lexers/">short name of the corresponding Pygment lexer</a>. For example, <code class="docutils literal"><span class="pre">&lt;pre</span> <span class="pre">class=&quot;python&quot;&gt;</span></code> uses the <a class="reference external" href="http://pygments.org/docs/lexers/#pygments.lexers.python.PythonLexer">Python</a> lexer, and <code class="docutils literal"><span class="pre">&lt;pre</span> <span class="pre">class=&quot;html&quot;&gt;</span></code> uses the <a class="reference external" href="http://pygments.org/docs/lexers/#pygments.lexers.html.HtmlLexer">HTML</a> lexer to highlight code.</p>
+<p>If no CSS class is present, the template tag makes a <a class="reference external" href="http://pygments.org/docs/api/#pygments.lexers.guess_lexer">best guess</a> using heuristics of the code between the <code class="docutils literal"><span class="pre">&lt;pre&gt;</span></code> tags. If multiple CSS classes are present, the classes are collected into a list and are iterated against <a class="reference external" href="http://pygments.org/docs/lexers/">all available lexers</a>.</p>
+<p>Pygments&#8217;s default behavior strips your customized <code class="docutils literal"><span class="pre">&lt;pre</span> <span class="pre">class=&quot;...&quot;&gt;</span></code> tag and replaces it with a plain <code class="docutils literal"><span class="pre">&lt;pre&gt;</span></code> tag. The template tag undoes this behavior and preserves the customized <code class="docutils literal"><span class="pre">&lt;pre</span> <span class="pre">class=&quot;...&quot;&gt;</span></code> tag.</p>
+<p>See the <a class="reference external" href="http://pygments.org/docs/lexers/">Pygments documentation</a> for all language short names. There&#8217;s even a <a class="reference external" href="http://pygments.org/docs/lexers/#pygments.lexers.templates.DjangoLexer">Django</a> template one.</p>
+</div>
+<div class="section" id="css">
+<h2>CSS<a class="headerlink" href="#css" title="Permalink to this headline">¶</a></h2>
+<p>Use the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> template tag to output the URL of the CSS file.</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;</span><span class="cp">{%</span> <span class="k">pygmentify_css</span> <span class="cp">%}</span><span class="x">&quot;&gt;</span>
+</pre></div>
+</div>
+<p>Result:</p>
+<div class="highlight-html"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;/static/pygmentify/css/default.min.css&quot;</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+<p>The default output of the style file is the minified version.</p>
+<p>The way that Pygments generates CSS is awkward. Rather than provide CSS files, Pygments abstracts a more generalized style language into <a class="reference external" href="http://pygments.org/docs/styles/">Python classes to create styles</a> that can be used with formatters other than HTML. Therefore, the template tag provides exports of the default styles using the <a class="reference external" href="http://pygments.org/docs/cmdline/#generating-styles"><code class="docutils literal"><span class="pre">pygmentize</span></code></a> command and <a class="reference external" href="https://www.npmjs.com/package/clean-css"><code class="docutils literal"><span class="pre">clean-css</span></code></a> library.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ pygmentize -S &lt;style&gt; -f html &gt; &lt;style&gt;.css
+</pre></div>
+</div>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ cleancss &lt;style&gt;.css -o &lt;style&gt;.min.css
+</pre></div>
+</div>
+<p>Please remember to put the <code class="docutils literal"><span class="pre">&lt;link&gt;</span></code> tag in the <code class="docutils literal"><span class="pre">&lt;head&gt;</span></code> of your document.</p>
+</div>
+<div class="section" id="minimalist-example">
+<h2>Minimalist example<a class="headerlink" href="#minimalist-example" title="Permalink to this headline">¶</a></h2>
+<p>The bare minimum to highlight your code is to use the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code> tag and to load a corresponding style with the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> tag.</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">pygmentify_tags</span> <span class="cp">%}</span><span class="x"></span>
+
+<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;</span><span class="cp">{%</span> <span class="k">pygmentify_css</span> <span class="cp">%}</span><span class="x">&quot;&gt;</span>
+
+<span class="cp">{%</span> <span class="k">pygmentify</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">&lt;pre class=&quot;python&quot;&gt;</span>
+<span class="x">print(&#39;Hello, world!&#39;)</span>
+<span class="x">&lt;/pre&gt;</span>
+<span class="cp">{%</span> <span class="k">endpygmentify</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">default.min.css</span></code> style file will be used in this example.</p>
+<p>Please ensure that the code to highlight contains HTML either natively or by conversion (by, say <a class="reference external" href="https://pythonhosted.org/Markdown/">Markdown</a>) because the template tag will look for fully rendered HTML.</p>
+</div>
+<div class="section" id="customize-with-positional-arguments">
+<h2>Customize with positional arguments<a class="headerlink" href="#customize-with-positional-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Customize the behavior of the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> and <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code> tags by passing the name of a style as a positional argument.</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">load</span> <span class="nv">pygmentify_tags</span> <span class="cp">%}</span><span class="x"></span>
+
+<span class="x">&lt;link rel=&quot;stylesheet&quot; href=&quot;</span><span class="cp">{%</span> <span class="k">pygmentify_css</span> <span class="s1">&#39;monokai&#39;</span> <span class="cp">%}</span><span class="x">&quot;&gt;</span>
+
+<span class="cp">{%</span> <span class="k">pygmentify</span> <span class="s1">&#39;monokai&#39;</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">&lt;pre class=&quot;python&quot;&gt;</span>
+<span class="x">print(&#39;Hello, world!&#39;)</span>
+<span class="x">&lt;/pre&gt;</span>
+<span class="cp">{%</span> <span class="k">endpygmentify</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">monokai.min.css</span></code> style file will be used in this example.</p>
+<p>The name of a style is the only possible positional argument available to <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> and <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code>.</p>
+<p>If you customize the style, please ensure you pass the same argument, e.g. <code class="docutils literal"><span class="pre">'monokai'</span></code>, to <em>both</em> the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> and <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code> tags. You might see unexpected behavior otherwise because &#8220;<a class="reference external" href="http://pygments.org/docs/styles/">not all lexers might support every style</a>,&#8221; meaning styles are guaranteed to work fully only when the lexer assigns to tokens HTML classes that correspond to the class selectors in the CSS file. Therefore, you&#8217;re probably better off customizing the style by changing the <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a> of the project. Template tag arguments take precedence over settings. Also see <a class="reference internal" href="settings.html#settings"><span class="std std-ref">Settings</span></a> for creating your own styles.</p>
+</div>
+<div class="section" id="customize-with-keyword-arguments">
+<h2>Customize with keyword arguments<a class="headerlink" href="#customize-with-keyword-arguments" title="Permalink to this headline">¶</a></h2>
+<p>Additionally customize the behavior of the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> and <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code> tags with keyword arguments.</p>
+<p>The <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> can accept the <code class="docutils literal"><span class="pre">style</span></code> and <code class="docutils literal"><span class="pre">minify</span></code> keyword arguments.</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">pygmentify_css</span> <span class="nv">style</span><span class="o">=</span><span class="s1">&#39;monokai&#39;</span> <span class="nv">minify</span><span class="o">=</span><span class="s1">&#39;false&#39;</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">monokai.css</span></code> style file will be used in this example.</p>
+<p>Note that because Django&#8217;s template language is not Python, the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify_css</span> <span class="pre">%}</span></code> &#8220;keyword arguments&#8221; are expected to be strings. Therefore, most notably, use <code class="docutils literal"><span class="pre">'true'</span></code> or <code class="docutils literal"><span class="pre">'false'</span></code> for the <code class="docutils literal"><span class="pre">minify</span></code> keyword argument. You will probably want the minified file, so use <code class="docutils literal"><span class="pre">'true'</span></code>&#8211;or even better omit the keyword argument all together because the default style file to use is the minified file.</p>
+<p>Therefore:</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">pygmentify_css</span> <span class="nv">style</span><span class="o">=</span><span class="s1">&#39;default&#39;</span> <span class="nv">minify</span><span class="o">=</span><span class="s1">&#39;true&#39;</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>is equivalent to...</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">pygmentify_css</span> <span class="s1">&#39;default&#39;</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>which is also equivalent to...</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">pygmentify_css</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Additionally, the <code class="docutils literal"><span class="pre">{%</span> <span class="pre">pygmentify</span> <span class="pre">%}</span></code> tag accepts all available options of Pygments&#8217;s <code class="docutils literal"><span class="pre">HtmlFormatter</span></code> class, such as <code class="docutils literal"><span class="pre">style</span></code> and <code class="docutils literal"><span class="pre">linenos</span></code>, as keyword arguments.</p>
+<div class="highlight-django"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">pygmentify</span> <span class="nv">style</span><span class="o">=</span><span class="s1">&#39;monokai&#39;</span> <span class="nv">cssclass</span><span class="o">=</span><span class="s1">&#39;bettercssclass&#39;</span> <span class="nv">linenos</span><span class="o">=</span><span class="s1">&#39;true&#39;</span> <span class="nv">linenostart</span><span class="o">=</span><span class="m">0</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">&lt;pre class=&quot;python&quot;&gt;</span>
+<span class="x">print(&#39;Hello, world!&#39;)</span>
+<span class="x">&lt;/pre&gt;</span>
+<span class="cp">{%</span> <span class="k">endpygmentify</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Again, because Django&#8217;s template language is not Python, template tags expect either a string or a number as a keyword argument. Therefore, in instances when Pygments&#8217;s <code class="docutils literal"><span class="pre">HtmlFormatter</span></code> constructor expects a Python data type, such as a string, number, boolean, or list, the value of the keyword argument should be the equivalent string or number. For example, pass <code class="docutils literal"><span class="pre">'true'</span></code> as the equivalent of <code class="docutils literal"><span class="pre">True</span></code> or <code class="docutils literal"><span class="pre">'[...]'</span></code> as the equivalent of <code class="docutils literal"><span class="pre">[...]</span></code>. Numbers can be left as is. All keyword arguments are later coerced into Python data types.</p>
+<p>See <a class="reference external" href="http://pygments.org/docs/formatters/#HtmlFormatter">Pygments&#8217;s documentation</a> on the <code class="docutils literal"><span class="pre">HtmlFormatter</span></code> class for all available keyword arguments.</p>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="settings.html" class="btn btn-neutral float-right" title="Settings" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install.html" class="btn btn-neutral" title="Install" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Richard Cornish.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
