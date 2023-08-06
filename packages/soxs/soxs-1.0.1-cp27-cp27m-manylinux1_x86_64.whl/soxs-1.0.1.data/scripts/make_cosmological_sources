@@ -1,0 +1,46 @@
+#!python
+
+import argparse
+import numpy as np
+from soxs.cosmology import make_cosmological_sources_file
+
+parser = argparse.ArgumentParser(description='Create a SIMPUT photon list of a '
+                                             'cosmological background.')
+parser.add_argument("simput_prefix", type=str,
+                    help='The prefix of the SIMPUT file to be used as the root of the ' +
+                         'catalog. If it does not exist, it will be created.')
+parser.add_argument("phlist_prefix", type=str,
+                    help='The prefix of the photon list file to be written.')
+parser.add_argument("exp_time", type=float, help='The exposure time to use, in seconds.')
+parser.add_argument("fov", type=float, help="The field of view on a side in arcminutes.")
+parser.add_argument("sky_center", type=str, help='The center RA, Dec coordinates of the ' +
+                                                 'observation, in degrees, comma-separated')
+parser.add_argument("--cat_center", type=str, help='The center of the field in the coordinates '
+                                                   'of the halo catalog, which range from -5.0 '
+                                                   'to 5.0 degrees in both directions. If not '
+                                                   'set, a center will be randomly chosen.')
+parser.add_argument("--nh", type=float, default=0.05,
+                    help='The hydrogen column in units of 10**22 atoms/cm**2. Default: 0.05')
+parser.add_argument("--area", type=float, default=30000.0,
+                    help='The collecting area to use, in cm^2. Default: 30000.0')
+parser.add_argument("--append", action='store_true',
+                    help='If set, append a new source an existing SIMPUT catalog.')
+parser.add_argument("--overwrite", action='store_true',
+                    help='Overwrite an existing file with the same name.')
+parser.add_argument("--output_sources", type=str, 
+                    help="Output the source properties to the specified file.")
+parser.add_argument("--random_seed", type=int,
+                    help="A constant integer random seed to produce a consistent set of random numbers.")
+
+args = parser.parse_args()
+
+sky_center = np.array(args.sky_center.split(',')).astype("float64")
+if args.cat_center is None:
+    cat_center = None
+else:
+    cat_center = np.array(args.cat_center.split(',')).astype("float64")
+
+make_cosmological_sources_file(args.simput_prefix, args.phlist_prefix, args.exp_time, 
+                               args.fov, sky_center, cat_center=cat_center, nH=args.nh, 
+                               area=args.area, append=args.append, overwrite=args.overwrite, 
+                               output_sources=args.output_sources, prng=args.random_seed)
