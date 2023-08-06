@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sqlconvert.process_mysql &#8212; sqlconvert 0.2.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for sqlconvert.process_mysql</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">from</span> <span class="nn">sqlparse.sql</span> <span class="k">import</span> <span class="n">Comment</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Identifier</span><span class="p">,</span> <span class="n">Parenthesis</span><span class="p">,</span> \
+    <span class="n">Statement</span><span class="p">,</span> <span class="n">Token</span>
+<span class="kn">from</span> <span class="nn">sqlparse</span> <span class="k">import</span> <span class="n">tokens</span> <span class="k">as</span> <span class="n">T</span>
+<span class="kn">from</span> <span class="nn">.process_tokens</span> <span class="k">import</span> <span class="n">escape_strings</span><span class="p">,</span> <span class="n">is_comment_or_space</span>
+
+
+<span class="k">def</span> <span class="nf">_is_directive_token</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">Comment</span><span class="p">):</span>
+        <span class="n">subtokens</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">tokens</span>
+        <span class="k">if</span> <span class="n">subtokens</span><span class="p">:</span>
+            <span class="n">comment</span> <span class="o">=</span> <span class="n">subtokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">comment</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">Comment</span><span class="o">.</span><span class="n">Multiline</span> <span class="ow">and</span> \
+                    <span class="n">comment</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/*!&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="is_directive_statement"><a class="viewcode-back" href="../../api/sqlconvert.process_mysql.html#sqlconvert.process_mysql.is_directive_statement">[docs]</a><span class="k">def</span> <span class="nf">is_directive_statement</span><span class="p">(</span><span class="n">statement</span><span class="p">):</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">statement</span><span class="o">.</span><span class="n">tokens</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_directive_token</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">T</span><span class="o">.</span><span class="n">Punctuation</span> <span class="ow">or</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="s1">&#39;;&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">Newline</span><span class="p">,</span> <span class="n">T</span><span class="o">.</span><span class="n">Whitespace</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="remove_directive_tokens"><a class="viewcode-back" href="../../api/sqlconvert.process_mysql.html#sqlconvert.process_mysql.remove_directive_tokens">[docs]</a><span class="k">def</span> <span class="nf">remove_directive_tokens</span><span class="p">(</span><span class="n">statement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove /\*! directives \*/ from the first-level&quot;&quot;&quot;</span>
+    <span class="n">new_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">statement</span><span class="o">.</span><span class="n">tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_is_directive_token</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">new_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+    <span class="n">statement</span><span class="o">.</span><span class="n">tokens</span> <span class="o">=</span> <span class="n">new_tokens</span></div>
+
+
+<div class="viewcode-block" id="requote_names"><a class="viewcode-back" href="../../api/sqlconvert.process_mysql.html#sqlconvert.process_mysql.requote_names">[docs]</a><span class="k">def</span> <span class="nf">requote_names</span><span class="p">(</span><span class="n">token_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove backticks, quote non-lowercase identifiers&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">token_list</span><span class="o">.</span><span class="n">flatten</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">Name</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;`&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;`&quot;</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">islower</span><span class="p">():</span>
+                <span class="n">token</span><span class="o">.</span><span class="n">normalized</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">token</span><span class="o">.</span><span class="n">normalized</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="unescape_strings"><a class="viewcode-back" href="../../api/sqlconvert.process_mysql.html#sqlconvert.process_mysql.unescape_strings">[docs]</a><span class="k">def</span> <span class="nf">unescape_strings</span><span class="p">(</span><span class="n">token_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Unescape strings&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">token_list</span><span class="o">.</span><span class="n">flatten</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">String</span><span class="o">.</span><span class="n">Single</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">for</span> <span class="n">orig</span><span class="p">,</span> <span class="n">repl</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&#39;&quot;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">b&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\b</span><span class="s1">&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">n&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">r&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">t&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\\032</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\032</span><span class="s1">&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">),</span>
+            <span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">orig</span><span class="p">,</span> <span class="n">repl</span><span class="p">)</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">normalized</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="is_insert"><a class="viewcode-back" href="../../api/sqlconvert.process_mysql.html#sqlconvert.process_mysql.is_insert">[docs]</a><span class="k">def</span> <span class="nf">is_insert</span><span class="p">(</span><span class="n">statement</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">statement</span><span class="o">.</span><span class="n">tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_comment_or_space</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">DML</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">normalized</span> <span class="o">==</span> <span class="s1">&#39;INSERT&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="split_ext_insert"><a class="viewcode-back" href="../../api/sqlconvert.process_mysql.html#sqlconvert.process_mysql.split_ext_insert">[docs]</a><span class="k">def</span> <span class="nf">split_ext_insert</span><span class="p">(</span><span class="n">statement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Split extended INSERT into multiple standard INSERTs&quot;&quot;&quot;</span>
+    <span class="n">insert_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">values_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">end_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="s1">&#39;INSERT&#39;</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">statement</span><span class="o">.</span><span class="n">tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_comment_or_space</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expected</span> <span class="o">==</span> <span class="s1">&#39;END&#39;</span><span class="p">:</span>
+                <span class="n">end_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">insert_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">expected</span> <span class="o">==</span> <span class="s1">&#39;INSERT&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">DML</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">normalized</span> <span class="o">==</span> <span class="s1">&#39;INSERT&#39;</span><span class="p">):</span>
+                <span class="n">insert_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                <span class="n">expected</span> <span class="o">=</span> <span class="s1">&#39;INTO&#39;</span>
+                <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">expected</span> <span class="o">==</span> <span class="s1">&#39;INTO&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">Keyword</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">normalized</span> <span class="o">==</span> <span class="s1">&#39;INTO&#39;</span><span class="p">):</span>
+                <span class="n">insert_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                <span class="n">expected</span> <span class="o">=</span> <span class="s1">&#39;TABLE_NAME&#39;</span>
+                <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">expected</span> <span class="o">==</span> <span class="s1">&#39;TABLE_NAME&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="n">Identifier</span><span class="p">)):</span>
+                <span class="n">insert_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                <span class="n">expected</span> <span class="o">=</span> <span class="s1">&#39;VALUES&#39;</span>
+                <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">expected</span> <span class="o">==</span> <span class="s1">&#39;VALUES&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">Keyword</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">normalized</span> <span class="o">==</span> <span class="s1">&#39;VALUES&#39;</span><span class="p">):</span>
+                <span class="n">insert_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                <span class="n">expected</span> <span class="o">=</span> <span class="s1">&#39;VALUES_OR_SEMICOLON&#39;</span>
+                <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">expected</span> <span class="o">==</span> <span class="s1">&#39;VALUES_OR_SEMICOLON&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">Parenthesis</span><span class="p">):</span>
+                <span class="n">values_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">ttype</span> <span class="ow">is</span> <span class="n">T</span><span class="o">.</span><span class="n">Punctuation</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;,&#39;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;;&#39;</span><span class="p">:</span>
+                    <span class="n">end_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+                    <span class="n">expected</span> <span class="o">=</span> <span class="s1">&#39;END&#39;</span>
+                    <span class="k">continue</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;SQL syntax error: expected &quot;</span><span class="si">%s</span><span class="s1">&quot;, got </span><span class="si">%s</span><span class="s1"> &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="n">expected</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">ttype</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">normalized</span><span class="p">))</span>
+    <span class="n">new_line</span> <span class="o">=</span> <span class="n">Token</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">Newline</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">new_lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_line</span><span class="p">]</span>  <span class="c1"># Insert newlines between split statements</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values_tokens</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">values_tokens</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Last but one statement</span>
+            <span class="c1"># Insert newlines only between split statements but not after</span>
+            <span class="n">new_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># The statemnt sets `parent` attribute of the every token to self</span>
+        <span class="c1"># but we don&#39;t care.</span>
+        <span class="n">statement</span> <span class="o">=</span> <span class="n">Statement</span><span class="p">(</span><span class="n">insert_tokens</span> <span class="o">+</span> <span class="p">[</span><span class="n">values</span><span class="p">]</span> <span class="o">+</span>
+                              <span class="n">end_tokens</span> <span class="o">+</span> <span class="n">new_lines</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">statement</span></div>
+
+
+<div class="viewcode-block" id="process_statement"><a class="viewcode-back" href="../../api/sqlconvert.process_mysql.html#sqlconvert.process_mysql.process_statement">[docs]</a><span class="k">def</span> <span class="nf">process_statement</span><span class="p">(</span><span class="n">statement</span><span class="p">,</span> <span class="n">quoting_style</span><span class="o">=</span><span class="s1">&#39;sqlite&#39;</span><span class="p">):</span>
+    <span class="n">requote_names</span><span class="p">(</span><span class="n">statement</span><span class="p">)</span>
+    <span class="n">unescape_strings</span><span class="p">(</span><span class="n">statement</span><span class="p">)</span>
+    <span class="n">remove_directive_tokens</span><span class="p">(</span><span class="n">statement</span><span class="p">)</span>
+    <span class="n">escape_strings</span><span class="p">(</span><span class="n">statement</span><span class="p">,</span> <span class="n">quoting_style</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_insert</span><span class="p">(</span><span class="n">statement</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">statement</span> <span class="ow">in</span> <span class="n">split_ext_insert</span><span class="p">(</span><span class="n">statement</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">statement</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">statement</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016-2017, Oleg Broytman.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
