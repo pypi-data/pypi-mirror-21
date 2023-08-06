@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: opendc-opendj
+  namespace: {{ .Values.namespace }}
+  labels:
+    solution: im1_identity_management
+    product:  opendj
+    heritage: {{ .Release.Service | quote }}
+    release:  {{ .Release.Name | quote }}
+    chart:    "{{ .Chart.Name }}-{{ .Chart.Version }}"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      solution: im1_identity_management
+      product:  opendj
+  strategy: {'type': 'Recreate'}
+  template:
+    metadata:
+      labels:
+        solution: im1_identity_management
+        product:  opendj
+        heritage: {{ .Release.Service | quote }}
+        release:  {{ .Release.Name | quote }}
+        chart:    "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      containers:
+        - name: opendc-opendj
+          image: {{ .Values.opendj_image }}:{{ .Values.opendj_tag }}
+          imagePullPolicy: {{ default "IfNotPresent" .Values.pullPolicy }}
+          ports:
+            - name: ldap
+              containerPort: 389
+              protocol: TCP
+            - name: ldaps
+              containerPort: 636
+              protocol: TCP
+          volumeMounts:
+            - name: opendc-opendj
+              readOnly: false
+              mountPath: /opt/opendj/instance/
+            - name: opendc-opendj-configmap
+              mountPath: /tmp/opendc/
+          resources:
+            limits:
+              cpu: 500m
+              memory: 500Mi
+            requests:
+              cpu: 200m
+              memory: 200Mi
+      volumes:
+        - name: opendc-opendj-configmap
+          configMap:
+            name: opendc-opendj
+        - name: opendc-opendj
+          persistentVolumeClaim:
+            claimName: opendc-opendj

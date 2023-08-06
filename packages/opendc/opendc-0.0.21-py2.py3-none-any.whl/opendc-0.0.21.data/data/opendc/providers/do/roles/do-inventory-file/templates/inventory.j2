@@ -1,0 +1,47 @@
+{% for master in masters -%}
+{{ master.hostname }} ansible_host={{ hostvars[master.hostname]['ansible_host'] }}
+{% endfor -%}
+{% for node in nodes -%}
+{{ node.hostname }} ansible_host={{ hostvars[node.hostname]['ansible_host'] }}
+{% endfor %}
+
+[opendc:children]
+opendc-masters
+opendc-nodes
+etcd
+fileserver
+opendc-ca
+timeserver
+docker-registry-mirror
+
+[opendc:vars]
+ansible_ssh_user=root
+ansible_connection=ssh
+ansible_private_key_file=keys/{{ do_ssh_key_name }}
+
+[opendc-masters]
+{% for master in masters -%}
+{{ master.hostname }}
+{% endfor %}
+
+[opendc-nodes]
+{% for node in nodes -%}
+{{ node.hostname }}
+{% endfor %}
+
+[etcd]
+{% for etcd in etcd -%}
+{{ etcd }}
+{% endfor %}
+
+[fileserver]
+{{ fileserver }}
+
+[opendc-ca]
+{{ opendc_ca }}
+
+[timeserver]
+{{ timeserver }}
+
+[docker-registry-mirror]
+{{ docker_registry_mirror }}
