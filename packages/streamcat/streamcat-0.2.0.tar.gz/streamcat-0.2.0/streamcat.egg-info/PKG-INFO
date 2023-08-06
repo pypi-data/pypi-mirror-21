@@ -1,0 +1,51 @@
+Metadata-Version: 1.1
+Name: streamcat
+Version: 0.2.0
+Summary: Encode and decode concatenated objects as streams
+Home-page: https://github.com/cryptosense/streamcat
+Author: Bertrand Bonnefoy-Claudet
+Author-email: bertrand@cryptosense.com
+License: MIT
+Download-URL: https://github.com/cryptosense/streamcat/tarball/v0.1.1
+Description: streamcat
+        =========
+        
+        Examples
+        --------
+        
+        Encoding a JSON iterator into a stream:
+        
+        .. code-block:: python
+        
+            def gen_records():
+                yield b'{"foo": "bar"}'
+                yield b'{"baz": [1, 2, 3]}'
+        
+            stream = streamcat.iterator_to_stream(gen_records())
+        
+            # `stream` can then be used just like any other `io.RawIOBase`
+            with open('/tmp/jsoncat', 'wb') as destination:
+                shutil.copyfileobj(stream, destination)
+        
+        Decoding a stream into a generator:
+        
+        .. code-block:: python
+        
+            decoder = json.JSONDecoder()
+            with open('/tmp/jsoncat', 'rb') as source:
+                records = streamcat.stream_to_iterator(source, decoder)
+                for record in records:
+                    print(record)
+        
+Keywords: stream,file,json
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
