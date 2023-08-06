@@ -1,0 +1,3 @@
+|pypi| |nixbuild| |winbuild|
+
+
