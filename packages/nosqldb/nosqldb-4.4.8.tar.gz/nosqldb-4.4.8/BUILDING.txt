@@ -1,0 +1,181 @@
+Python Driver for Oracle NoSQL Database
+
+This document is for users of the Python Driver for the Oracle NoSQL Database
+who want to build and test the driver using a source distribution.
+
+Dependencies
+------------
+
+Dependencies include Python 2.7, Thrift support for Python, and a few Python
+tools.
+
+1.  Make sure that Python is installed on your system.  If not install it.
+See https://www.python.org
+Your Python version can be checked this way:
+$ python --version
+
+2.  Install PIP if it is not installed:
+a.  download get-pip.py script from https://bootstrap.pypa.io/get-pip.py
+b. $ python get-pip.py
+
+3.  Install some Python tools and Python support for Thrift:
+You probably need sudo access.
+$ sudo pip install multiprocessing pytest thrift
+
+Build
+-----
+
+1. Build from source
+$ python setup.py build
+
+2. If testing is desired before installing on the local machine, skip to
+the next section and note the use of PYTHONPATH.
+
+3.  Install  (optional, requires sudo).  For development purposes this
+is not recommended, as it installs this package globally on the local machine.
+$ [sudo] python setup.py install
+
+Test and example environment and preparation
+--------------------------------------------
+
+Running tests and examples have some environmental dependencies and if you are
+not planning to run against an existing store, it requires access to an
+Oracle NoSQL server instance.
+
+1. Set PYTHONPATH to point to the development tree:
+$ export PYTHONPATH=<path-to-install-dir>/nosqldb:$PYTHONPATH
+
+NOTE: if using a nosqldb package installed using pip PYTHONPATH is
+not necessary.
+
+2.  Paths to kvproxy.jar and kvclient.jar.
+If you are running from a source distribution these will be present in
+nosqldb/kvproxy/lib/{kvproxy.jar, kvclient.jar} and if you are using
+PYTHONPATH they will be found automatically.
+
+They can also be passed
+to the system via parameters in the ProxyConfig object as well as
+these environment variables:
+$ export KVSTORE_JAR=<path-to-kvclient.jar>
+$ export KVPROXY_JAR=<path-to-kvproxy.jar>
+
+3.  Modify the test parameters file to suit your machine environment:
+a.  Edit test/parameters.py and modify values as necessary.  The default
+values will work for most environments but 2 of them may need modification:
+kvstore_path and kvproxy_path.
+
+4.  Tests require a running store.  The simplest way to do this is using a KVLite
+instance with default values (store name kvstore, port 5000, host localhost) in
+a non-secure configuration:
+$ java -jar <path-to-kvstore.jar> kvlite -secure-config disable &
+which is equivalent to
+$ java -jar <path-to-kvstore.jar> kvlite -store kvstore -host localhost \
+    -port 5000 -secure-config disable
+
+NOTE: the command above requires kvstore.jar, which is part of the Oracle
+NoSQL Database server download, which is independent of this driver and must
+be downloaded and installed separately.  See
+  http://www.oracle.com/technetwork/database/database-technologies/nosqldb/downloads
+
+5.  If you want to run tests against another store, or KVLite instance with
+non-default parameters, make the corresponding modifications in
+test/parameters.py
+
+Run examples
+-----------
+
+There are several simple example programs in the examples directory.  All of
+these require a running store such as a KVLite instance, referenced above.
+The examples expect a store running on localhost:5000 with the store name
+"kvstore."
+
+In order to run against a different store (host, port, store name or all three)
+the code in the examples must change.  Otherwise they can be run this way:
+  $ python examples/example1.py
+
+
+Run tests
+--------
+
+See section above, "Test environment and preparation."
+
+Tests should be run from the directory, test.
+$ cd test
+
+First, make sure that there are no stray proxies running on your system,
+unless it is one you started explicitly for testing.  The tests will
+start/stop a proxy if they do not find one running already.
+
+1. Run all testcases
+$ python -m unittest discover -p '*.py'
+
+2.  Individual testcases
+$ python <testcase>.py
+
+The testcase names are self-explanatory in terms of what types of operations
+they perform.
+
+3.  execute only one test from a file
+$ python -m unittest <testfile>.<testclass>.<testname>
+e.g. to execute testPutNormal, that is inside TestPut class, in the file, put.py
+$ python -m unittest put.TestPut.testPutNormal
+
+4.  Run with a proxy started manually
+
+If you want to start your own proxy on the local machine or a remote machine and
+run tests, you must edit parameters.py and modify several parameters to match
+your configuration.
+
+a. Edit parameters.py:
+
+# the host name and port for the proxy
+host_port = 'localhost:5090'
+# the store name
+store_name = 'mystore'
+# the host name and port used by the store itself
+helper_host = 'localhost:6000'
+
+b. Start the proxy.  It is started using Java and the classpath must include the
+path to kvproxy.jar as well as the path to kvclient.jar.  These commands assume
+that there is a store running on the host "storehost" on port 6000, and the store
+name is "mystore."  It starts the proxy on the local host on port 5090.
+
+$ jar -cp <path-to-kvclient.jar>:<path-to-kvproxy.jar> oracle.kv.proxy.KVProxy
+ -port 5090 -helper-hosts storehost:6000 -store mystore
+
+It is important that the store host:port used by the proxy match the helper_host
+parameter in parameters.py, or the driver will fail to connect to the proxy.
+
+The proxy has a number of additional flags that can be used for its
+configuration.
+
+5.  Run tests with non-default parameters.
+If you run test cases one at a time (vs using python -m unittest) you can specify
+command line flags that override other configuration.  These flags are accepted:
+
+--hostport: specified the proxy host and port in the format hostname:port
+--helperhost: specifies the store helperhost in the format hostname:port
+--helperhost2: specifes an additional helperhost to be used.  This is used
+in testcases that need 2 proxies running
+--tablename: specifies the table name to be used.  This is created by the tests
+--tablename2: specifies the table name to be used.  Thsi is used in testcases
+that need 2 proxies running and is create by the tests
+--storename: specifies the store name to be used
+--user: specifies the user to be used in testcases that connect to a
+secure store
+--storejar: specifies the location of kvclient jar
+--proxyjar: specifies the location of kvproxy jar
+
+Building API documentation
+--------------------------
+
+In order to build the documentation you will need to install Sphinx. So go to
+http://sphinx-doc.org/install.html and follow the documentation in order to
+install it.  Or just do:
+  $ sudo pip install sphinx
+
+Once Sphinx is installed go to doc/ and execute:
+  $ cd doc
+  $ make html
+
+This command puts the documentation in doc/build/html.
