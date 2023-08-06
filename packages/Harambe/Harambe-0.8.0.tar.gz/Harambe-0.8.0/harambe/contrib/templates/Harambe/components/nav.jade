@@ -1,0 +1,48 @@
+
+- import "Harambe/components/widget.html" as widget with context
+
+
+- macro top(brand="", href="/", show_menus=True, id="topnav")
+    + widget.navbar()
+        + widget.navbar_header(id=id, href=href)
+            = brand
+
+        + widget.navbar_body(id=id)
+            each item in g.__SITENAV__
+                - set position = item.get("position") or none
+                + widget.navbar_nav(position=position)
+
+                    if item["visible"]
+                        if item["has_subnav"]
+                            + widget.navbar_dropdown(item["title"])
+                                each item2 in item["subnav"]
+                                    if item2["visible"]
+                                        li: a(href="{{url_for(item2['endpoint'], **item2['endpoint_kwargs']) }}")= item2["title"]
+                        else
+                            li: a(href="{{url_for(item['endpoint'], **item['endpoint_kwargs']) }}")= item["title"]
+
+
+
+- macro panel(id="nav-panel", panel_class="panel-info", open_active=true)
+
+    + widget.accordion(id=id)
+
+        each item in g.__SITENAV__
+            if item["visible"]
+                if item["has_subnav"]
+                    + widget.collapse(class=panel_class)
+
+                        + widget.collapse_header(body_id=id+item["_id"], accordion_id=id)
+                           | + {{ item["title"] }}
+
+                        + widget.collapse_content(id=id+item["_id"], open=true if open_active and item["active"] == true else false)
+                            .list-group
+                                each item2 in item["subnav"]
+                                    if item2["visible"]
+                                        a(href="{{url_for(item2['endpoint'], **item2['endpoint_kwargs']) }}", class="list-group-item")= item2["title"]
+                else
+                    + widget.panel(class=panel_class)
+                        + widget.panel_header_title_link(url_for(item['endpoint'], **item['endpoint_kwargs']))
+                            = item["title"]
+
+
