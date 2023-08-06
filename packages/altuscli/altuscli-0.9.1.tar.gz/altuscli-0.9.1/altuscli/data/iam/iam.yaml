@@ -1,0 +1,1139 @@
+swagger: "2.0"
+x-endpoint-name: iam
+info:
+  version: 0.1-SNAPSHOT
+  title: Cloudera IAM Service
+  license:
+    name: Apache 2.0
+  description: Cloudera IAM Service is a web service that you can use to manage users and user permissions under your CCS account.
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /iam/getUser:
+    post:
+      summary: Gets information on a user.
+      description: Gets information on a user. If no user name is specified. The user name is determined from the access key used to make the request.
+      operationId: getUser
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetUserRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/GetUserResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listUsers:
+    post:
+      summary: Lists users.
+      description: Lists users.
+      operationId: listUsers
+      x-right: iam/listUsers
+      x-paginates: true
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListUsersRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListUsersResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/createAccessKey:
+    post:
+      summary: Creates a new access key.
+      description: Creates a new access key.
+      operationId: createAccessKey
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateAccessKeyRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/CreateAccessKeyResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/deleteAccessKey:
+    post:
+      summary: Deletes an access key.
+      description: Deletes an access key.
+      operationId: deleteAccessKey
+      x-right: iam/deleteAccessKey
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/DeleteAccessKeyRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/DeleteAccessKeyResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/updateAccessKey:
+    post:
+      summary: Updates an access key.
+      description: Updates an access key.
+      operationId: updateAccessKey
+      x-right: iam/updateAccessKey
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateAccessKeyRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/UpdateAccessKeyResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/getAccessKey:
+    post:
+      summary: Gets information on an access key.
+      description: Gets information on an access key. If no access key ID is specified. Information on the access key used to make the request is returned.
+      operationId: getAccessKey
+      x-right: iam/getAccessKey
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/GetAccessKeyRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/GetAccessKeyResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listAccessKeys:
+    post:
+      summary: Lists access keys.
+      description: Lists access keys.
+      operationId: listAccessKeys
+      x-right: iam/listAccessKeys
+      x-paginates: true
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListAccessKeysRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListAccessKeysResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listEntitlements:
+    post:
+      summary: Lists the entitlements for the user.
+      description: Lists the entitlements for the user.
+      operationId: listEntitlements
+      x-hidden: true
+      x-no-compatibility-guarantee: true
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListEntitlementsRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListEntitlementsResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listRoles:
+    post:
+      summary: Lists all the available roles.
+      description: Lists all the available roles. Roles grant rights to users via policies that are attached to the roles.
+      operationId: listRoles
+      x-right: iam/listRoles
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListRolesRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListRolesResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listResourceRoles:
+    post:
+      summary: Lists all the available resource roles.
+      description: Lists all the available reource roles. Resource roles grants rights over certain resources.
+      operationId: listResourceRoles
+      x-right: iam/listResourceRoles
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListResourceRolesRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListResourceRolesResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/assignRole:
+    post:
+      summary: Assign a role to a user.
+      description: Assign a role to a user. If the role is already assigned to the user the request will fail.
+      operationId: assignRole
+      x-right: iam/assignRole
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AssignRoleRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/AssignRoleResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/unassignRole:
+    post:
+      summary: Unassign a role from a user.
+      description: Unassign a role from a user. If the role is not currently assigned to the user the request will fail.
+      operationId: unassignRole
+      x-right: iam/unassignRole
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UnassignRoleRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/UnassignRoleResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/assignResourceRole:
+    post:
+      summary: Assign a resource role to a user.
+      description: Assign a resource role to a user. If the resource role is already assigned to the user the request will fail.
+      operationId: assignResourceRole
+      x-right: iam/assignResourceRole
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AssignResourceRoleRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/AssignResourceRoleResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/unassignResourceRole:
+    post:
+      summary: Unassign a resource role from a user.
+      description: Unassign a resource role from a user. If the resource role is not currently assign to the user the request will fail.
+      operationId: unassignResourceRole
+      x-right: iam/unassignResourceRole
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UnassignResourceRoleRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/UnassignResourceRoleResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listAssignedRoles:
+    post:
+      summary: Lists the user's assigned roles.
+      description: Lists the user's assigned roles.
+      operationId: listAssignedRoles
+      x-right: iam/listAssignedRoles
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListAssignedRolesRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListAssignedRolesResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listAssignedResourceRoles:
+    post:
+      summary: Lists a user's assigned resource roles.
+      description: Lists a user's assigned resource roles.
+      operationId: listAssignedResourceRoles
+      x-right: iam/listAssignedResourceRoles
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListAssignedResourceRolesRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListAssignedResourceRolesResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/listResourceAssignees:
+    post:
+      summary: List the resource assignees and their respective resource roles for the resource.
+      description: List the resource assignees and their respective resource roles for the resource.
+      operationId: listResourceAssignees
+      x-right: iam/listResourceAssignees
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListResourceAssigneesRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/ListResourceAssigneesResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/checkRights:
+    post:
+      summary: Checks if the user has the input rights on the input resources.
+      description: Checks if the user has the input rights on the input resources.
+      operationId: checkRights
+      x-hidden: true
+      x-no-compatibility-guarantee: true
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CheckRightsRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/CheckRightsResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+  /iam/initiateSupportCase:
+    post:
+      summary: Initiate a new support case.
+      description: Initiate a new support case. User must complete submission in browser using a web form URL included in the response.
+      operationId: initiateSupportCase
+      x-hidden: true
+      x-no-compatibility-guarantee: true
+      parameters:
+        - name: input
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/InitiateSupportCaseRequest'
+      responses:
+        200:
+          description: Expected response to a valid request.
+          schema:
+            $ref: '#/definitions/InitiateSupportCaseResponse'
+        default:
+          description: The default response on an error.
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Error:
+    type: object
+    description: An object returned on an error.
+    properties:
+      code:
+        type: string
+        description: The error code.
+      message:
+        type: string
+        description: The error message.
+  User:
+    type: object
+    description: Information about a Cloudera Altus user.
+    required:
+      - userId
+      - crn
+      - email
+      - firstName
+      - lastName
+      - creationDate
+    x-limits:
+      - scope: account
+        value: 100
+        doc: The maximum number of users that can be created in an account.
+    properties:
+      userId:
+        type: string
+        description: The stable, unique identifier of the user.
+      crn:
+        type: string
+        description: The CRN of the user.
+      email:
+        type: string
+        description: The user's email address.
+      firstName:
+        type: string
+        description: The user's first name.
+      lastName:
+        type: string
+        description: The user's last name.
+      creationDate:
+        type: string
+        format: date-time
+        description: The date when this user record was created.
+      lastInteractiveLogin:
+        type: string
+        format: date-time
+        description: The date of the user's last interactive login.
+  AccessKey:
+    type: object
+    description: Information about a Cloudera Altus access key.
+    required:
+      - accessKeyId
+      - crn
+      - userId
+      - creationDate
+    x-limits:
+      - scope: account
+        value: 200
+        doc: The maximum number of access keys that can be created in an account.
+    properties:
+      accessKeyId:
+        type: string
+        description: The ID of the access key.
+      crn:
+        type: string
+        description: The CRN of the access key.
+      userId:
+        type: string
+        description: The ID of the user with which this access key is associated.
+      creationDate:
+        type: string
+        format: date-time
+        description: The date when the access key was created.
+      status:
+        $ref: '#/definitions/AccessKeyStatus'
+        description: The status of the access key.
+      lastUsage:
+        $ref: '#/definitions/AccessKeyLastUsage'
+        description: Information on the last time this access key was used.
+  AccessKeyStatus:
+    type: string
+    description: The status of an access key.
+    enum:
+      - ACTIVE
+      - INACTIVE
+      - UNKNOWN
+  AccessKeyLastUsage:
+    type: object
+    description: Information on the last time an access key was used.
+    properties:
+      lastUsageDate:
+        type: string
+        format: date-time
+        description: The date when the access key was last used.
+      serviceName:
+        type: string
+        description: The name of the service with which this access key was most recently used.
+  PolicyStatement:
+    type: object
+    description: A policy statement is a list of rights and zero or more resources on which the rights are granted.
+    required:
+      - rights
+      - resources
+    properties:
+      rights:
+        type: array
+        items:
+          type: string
+        description: The list of rights in the policy statement.
+      resources:
+        type: array
+        items:
+          type: string
+        description: The resources on which the rights are granted.
+  Policy:
+    type: object
+    description: A policy contains a list of one or more policy statements.
+    required:
+      - crn
+      - policyStatements
+    properties:
+      crn:
+        type: string
+        description: The policy crn.
+      policyStatements:
+        type: array
+        items:
+          $ref: '#/definitions/PolicyStatement'
+        description: The policy statements.
+  ResourceRole:
+    type: object
+    description: Information about a resource role. A resource role is a role that grants a collection of rights to a user on resources.
+    required:
+      - crn
+      - rights
+    properties:
+      crn:
+        type: string
+        description: The CRN of the resource role.
+      rights:
+        type: array
+        items:
+          type: string
+        description: The rights granted by this role.
+  Role:
+    type: object
+    description: Information about a role.
+    required:
+      - crn
+      - policies
+    properties:
+      crn:
+        type: string
+        description: The role's CRN.
+      policies:
+        type: array
+        items:
+          $ref: '#/definitions/Policy'
+        description: The list of policies that belong to the role. Cannot be empty.
+  ResourceAssignment:
+    type: object
+    description: Information about a resource assignment.
+    required:
+      - resourceCrn
+      - resourceRoleCrn
+    properties:
+      resourceCrn:
+        type: string
+        description: The assigned resource's CRN.
+      resourceRoleCrn:
+        type: string
+        description: The assigned resource role CRN.
+  ResourceAssignee:
+    type: object
+    description: Information about the resource role assignee for the resource.
+    required:
+      - assigneeCrn
+      - resourceRoleCrn
+    properties:
+      assigneeCrn:
+        type: string
+        description: The CRN of the assignee.
+      resourceRoleCrn:
+        type: string
+        description: The assigned resource role CRN.
+  ConsoleEntitlement:
+    type: object
+    description: Information about a console entitlement.
+    required:
+      - consoleName
+    properties:
+      consoleName:
+        type: string
+        description: The name of the console.
+  ServiceEntitlement:
+    type: object
+    description: Information about a service entitlement.
+    required:
+      - serviceName
+    properties:
+      serviceName:
+        type: string
+        description: The name of the service.
+  Entitlements:
+    type: object
+    description: Information about entitlements a user has.
+    required:
+      - consoleEntitlements
+      - serviceEntitlements
+    properties:
+      consoleEntitlements:
+        type: array
+        items:
+          $ref: '#/definitions/ConsoleEntitlement'
+        description: The list of console entitlements the user has.
+      serviceEntitlements:
+        type: array
+        items:
+          $ref: '#/definitions/ServiceEntitlement'
+        description: The list of service entitlements the user has.
+  GetUserRequest:
+    type: object
+    description: Request object for a get user request.
+    properties:
+      userId:
+        type: string
+        description: The ID of the user to get information about. If it is not included, it defaults to the user making the request.
+  GetUserResponse:
+    type: object
+    description: Response object for a get user request.
+    required:
+      - user
+    properties:
+      user:
+        $ref: '#/definitions/User'
+        description: Information about the user.
+  ListUsersRequest:
+    type: object
+    description: Request object for a list users request.
+    properties:
+      userIds:
+        type: array
+        items:
+          type: string
+        description: The user IDs or CRNs of the users.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListUsersResponse:
+    type: object
+    description: Response object for a list users request.
+    required:
+      - users
+    properties:
+      users:
+        type: array
+        items:
+          $ref: '#/definitions/User'
+        x-paging-result: true
+        description: The users.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
+  CreateAccessKeyRequest:
+    type: object
+    description: Request object for a create access key request.
+    properties:
+      userId:
+        type: string
+        description: This ID or CRN of the user to whom this access key will be associated. If it is not included, it defaults to the user making the request.
+  CreateAccessKeyResponse:
+    type: object
+    description: Response object for a create access key request.
+    required:
+      - accessKey
+      - privateKey
+    properties:
+      accessKey:
+        $ref: '#/definitions/AccessKey'
+        description: The access key that was created.
+      privateKey:
+        type: string
+        description: The private key associated with this access key. This string is the contents of a PEM file containing a PKCS#8 private key.
+        x-sensitive: true
+  DeleteAccessKeyRequest:
+    type: object
+    description: Request object for a delete access key request.
+    required:
+      - accessKeyId
+    properties:
+      accessKeyId:
+        type: string
+        description: The ID of the access key.
+  DeleteAccessKeyResponse:
+    type: object
+    description: Response object for a delete access key request.
+  UpdateAccessKeyRequest:
+    type: object
+    description: Request object for an update access key request.
+    required:
+      - accessKeyId
+      - status
+    properties:
+      accessKeyId:
+        type: string
+        description: The ID of the access key to update.
+      status:
+        $ref: '#/definitions/AccessKeyStatus'
+        description: The status to assign to the access key.
+  UpdateAccessKeyResponse:
+    type: object
+    description: Response object for an update access key request.
+    required:
+      - accessKey
+    properties:
+      accessKey:
+        $ref: '#/definitions/AccessKey'
+        description: The access key that was updated.
+  GetAccessKeyRequest:
+    type: object
+    description: Request object for a get access key request.
+    properties:
+      accessKeyId:
+        type: string
+        description: The ID of the access key to get information about. If it is not included, it defaults to the access key used to make the request.
+  GetAccessKeyResponse:
+    type: object
+    description: Response object for a get access key request.
+    required:
+      - accessKey
+    properties:
+      accessKey:
+        $ref: '#/definitions/AccessKey'
+        description: Information about the access key.
+  ListAccessKeysRequest:
+    type: object
+    description: Request object for a list access keys request.
+    properties:
+      accessKeyIds:
+        type: array
+        items:
+          type: string
+        description: The access key IDs or CRNs of the access keys.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListAccessKeysResponse:
+    type: object
+    description: Response object for a list access keys request.
+    required:
+      - accessKeys
+    properties:
+      accessKeys:
+        type: array
+        items:
+          $ref: '#/definitions/AccessKey'
+        x-paging-result: true
+        description: The access keys.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
+  ListEntitlementsRequest:
+    type: object
+    description: Request object for a list entitlements request.
+  ListEntitlementsResponse:
+    type: object
+    description: Response object for a list entitlements request.
+    required:
+      - entitlements
+    properties:
+      entitlements:
+        $ref: '#/definitions/Entitlements'
+        description: The entitlements.
+  ListRolesRequest:
+    type: object
+    description: Request object for a list roles request.
+    properties:
+      roleNames:
+        type: array
+        items:
+          type: string
+        description: The roles names or CRNs to retrieve. If empty all roles will be returned.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListRolesResponse:
+    type: object
+    description: Response object for a list roles request.
+    required:
+      - roles
+    properties:
+      roles:
+        type: array
+        items:
+          $ref: '#/definitions/Role'
+        x-paging-result: true
+        description: The list of roles in the account.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
+  ListResourceRolesRequest:
+    type: object
+    description: Request object for a list resource roles request.
+    properties:
+      resourceRoleNames:
+        type: array
+        items:
+          type: string
+        description: The resource roles CRNs to retrieve. If empty all resource roles will be returned.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListResourceRolesResponse:
+    type: object
+    description: Response object for a list resource roles request.
+    required:
+      - resourceRoles
+    properties:
+      resourceRoles:
+        type: array
+        items:
+          $ref: '#/definitions/ResourceRole'
+        x-paging-result: true
+        description: The list of resource roles. Cannot be empty.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
+  AssignRoleRequest:
+    type: object
+    description: Request object for an assign role request.
+    required:
+      - user
+      - role
+    properties:
+      user:
+        type: string
+        description: The user the role is assigned to. Can be the user's CRN or id.
+      role:
+        type: string
+        description: The role to assign to the user. Can be the role's CRN or name.
+  AssignRoleResponse:
+    type: object
+    description: Response object for an assign role request.
+  UnassignRoleRequest:
+    type: object
+    description: Request object for an unassign role request.
+    required:
+      - user
+      - role
+    properties:
+      user:
+        type: string
+        description: The user to unassigned the roles from. Can be the user CRN or id.
+      role:
+        type: string
+        description: The role to unassigned from the user. Can be the role's CRN or name.
+  UnassignRoleResponse:
+    type: object
+    description: Response object for an unassign role request.
+  AssignResourceRoleRequest:
+    type: object
+    description: Request object for an assign resource role request.
+    required:
+      - user
+      - resourceRoleCrn
+      - resourceCrn
+    properties:
+      user:
+        type: string
+        description: The user to assign the resource role to. Can be the user's CRN or id.
+      resourceRoleCrn:
+        type: string
+        description: The CRN of the resource role to assign to the user.
+      resourceCrn:
+        type: string
+        description: The resource for which the resource role rights are granted.
+  AssignResourceRoleResponse:
+    type: object
+    description: Response object for an assign resource role request.
+  UnassignResourceRoleRequest:
+    type: object
+    description: Request object for an unassign role request.
+    required:
+      - user
+      - resourceRoleCrn
+      - resourceCrn
+    properties:
+      user:
+        type: string
+        description: The user to unassign the resource role from.
+      resourceRoleCrn:
+        type: string
+        description: The CRN of the resource role to unassigned from the user.
+      resourceCrn:
+        type: string
+        description: The CRN of the resource for which the resource role rights will be unassigned.
+  UnassignResourceRoleResponse:
+    type: object
+    description: Response object for an unassign role request.
+  ListAssignedRolesRequest:
+    type: object
+    description: Request object for a list assigned roles request.
+    properties:
+      user:
+        type: string
+        description: The user to list the assigned roles for. Can be the user's CRN or id. If it is not included, it defaults to the user making the request.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListAssignedRolesResponse:
+    type: object
+    description: Response object for a list assigned roles request.
+    required:
+      - roleCrns
+    properties:
+      roleCrns:
+        type: array
+        items:
+          type: string
+        x-paging-result: true
+        description: The role CRNs assigned to the user.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
+  ListAssignedResourceRolesRequest:
+    type: object
+    description: Request object for a list assigned resource roles request.
+    properties:
+      user:
+        type: string
+        description: The user to list the assigned roles for. Can be the user's CRN or id. If it is not included, it defaults to the user making the request.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListAssignedResourceRolesResponse:
+    type: object
+    description: Response object for a list assigned roles request.
+    required:
+      - resourceAssignments
+    properties:
+      resourceAssignments:
+        type: array
+        items:
+          $ref: '#/definitions/ResourceAssignment'
+        x-paging-result: true
+        description: The user's resource assignments.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
+  ListResourceAssigneesRequest:
+    type: object
+    description: Request object for a list resource assignees request.
+    required:
+      - resourceCrn
+    properties:
+      resourceCrn:
+        type: string
+        description: The resource CRN for which to list the assignees.
+      pageSize:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        x-paging-page-size: true
+        description: The size of each page.
+      startingToken:
+        type: string
+        x-paging-input-token: true
+        description: A token to specify where to start paginating. This is the nextToken from a previously truncated response.
+  ListResourceAssigneesResponse:
+    type: object
+    description: Response object for a list resource assignees request.
+    required:
+      - resourceAssignees
+    properties:
+      resourceAssignees:
+        type: array
+        items:
+          $ref: '#/definitions/ResourceAssignee'
+        x-paging-result: true
+        description: List of resource assignees and their respective resource roles for the resource.
+      nextToken:
+        type: string
+        x-paging-output-token: true
+        description: The token to use when requesting the next set of results. If there are no additional results, the string is empty.
+  RightsCheck:
+    type: object
+    description: A check for a set of rights. If a resourceCrn is specified, the check will be performed over that resource. If no resourceCrn is specified, the check will be performed over all resources.
+    required:
+      - rights
+    properties:
+      rights:
+        type: array
+        items:
+          type: string
+        description: The rights that will be checked.
+      resourceCrn:
+        type: string
+        description: The resource CRN for which to check for rights.
+  CheckRightsRequest:
+    type: object
+    description: Request object for a check rights request.
+    required:
+      - checks
+    properties:
+      checks:
+        type: array
+        items:
+          $ref: '#/definitions/RightsCheck'
+        description: The rights checks to perform
+  CheckRightsResponse:
+    type: object
+    description: Response object for a check rights request.
+    required:
+      - results
+    properties:
+      results:
+        type: array
+        items:
+          type: boolean
+        description: The results of the rights checks. The results ordering matches the request ordering.
+  InitiateSupportCaseRequest:
+    type: object
+    description: Request object to initiate a support case.
+    required:
+      - component
+      - subComponent
+    properties:
+      component:
+        type: string
+        description: Name of component. Component name must be one of supported ones in SFDC.
+        x-supported-options:
+          - Altus Core
+          - Altus Environment
+          - Altus Data Engineering
+      subComponent:
+        type: string
+        description: Name of sub-component. The component/subcomponent combination to be one of supported ones in SFDC.
+        x-supported-options:
+          - Billing
+          - IAM Authorization
+          - IAM Authentication
+          - Limits
+          - AWS Environment Quickstart
+          - AWS Environment Wizard
+          - AWS Data Access Permissions
+          - Clusters
+          - General Jobs
+          - Hive on Spark Job
+          - Hive on MR Job
+          - Yarn MR2 Job
+      resourceCrn:
+        type: string
+        description: CRN of a resource related to this support case, such as a cluster CRN. If this argument is provided it has to be a valid CRN.
+      clientData:
+        type: string
+        description: Any additional data to be attached to this case, for example a client-side exception. In general data not to be found in server logs.
+  InitiateSupportCaseResponse:
+      type: object
+      description: Response object for a new support case request.
+      required:
+        - caseFormUrl
+      properties:
+        caseFormUrl:
+          type: string
+          description: To complete the support request user must submit the form using a web browser.
