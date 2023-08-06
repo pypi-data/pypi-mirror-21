@@ -1,0 +1,87 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="hedgehog-app.html"></head><body><div hidden="" by-vulcanize=""><dom-module id="hedgehog-connection-item-view" assetpath="./">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+      }
+        </style>
+
+        <iron-ajax id="attachAjax" url="/visaweb/devicemanager/attach" body="[[mappingModel]]" as-json="" content-type="application/json" method="POST" on-response="onAttachResponse" on-error="onAttachError"></iron-ajax>
+
+        <paper-icon-item class="item">
+            <paper-item-body two-line="" class="flex">
+                <div>[[connection]]</div>
+            </paper-item-body>
+            
+                <paper-icon-button icon="shared-icons:star" alt="favourite this!" on-tap="onAttachAsset"></paper-icon-button>
+            
+            <content></content>
+        </paper-icon-item>
+    </template>
+
+    <script>Polymer({is:"hedgehog-connection-item-view",properties:{connection:{type:String,notify:!0},mappingModel:{type:Object,notify:!0,value:{}}},onAttachAsset:function(e,n){this.mappingModel.key=null,this.mappingModel.value=this.connection,this.$.attachAjax.generateRequest()},onAttachResponse:function(e,n){this.fire("plutonum-navigate",{page:"/visaconsole-view/"+n.response.id,id:n.response.id})},onAttachError:function(e,n){this.fire("plutonium-notification",{level:"warning",message:n.error})}});</script>
+</dom-module>
+</div><dom-module id="hedgehog-dashboard-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+      }
+
+
+
+
+
+
+
+
+        </style>
+
+        <iron-ajax url="/assetadapter/devicemanager/active" last-response="{{activeAssets}}" auto=""></iron-ajax>
+        <iron-ajax url="/assetadapter/devicemanager/inactive" last-response="{{inactiveAssets}}" auto=""></iron-ajax>
+        <iron-ajax url="/assetadapter/devicemanager/unknown" last-response="{{unknownConnections}}" auto=""></iron-ajax>
+
+        <paper-card heading="Aktív eszközök">
+            <div class="card-content">
+                <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
+
+                <iron-list items="[[activeAssets]]" as="item">
+                    <template>
+                        <hedgehog-asset-item-view class="item" asset="[[item]]">
+                        </hedgehog-asset-item-view>
+                    </template>
+                </iron-list>
+            </div>
+        </paper-card>
+
+        <paper-card heading="Ismeretlen eszközök">
+            <div class="card-content">
+                <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
+                <iron-list items="[[unknownConnections]]" as="connectionString">
+                    <template>
+                        <hedgehog-connection-item-view class="item" connection="[[connectionString]]"></hedgehog-connection-item-view>
+                    </template>
+                </iron-list>
+            </div>
+        </paper-card>
+
+        <paper-card heading="Inaktív eszközök">
+            <div class="card-content">
+                <p>Modus commodo minimum eum te, vero utinam assueverit per eu.</p>
+
+                <iron-list items="[[inactiveAssets]]" as="item">
+                    <template>
+                        <hedgehog-asset-item-view class="item" asset="[[item]]">
+                        </hedgehog-asset-item-view>
+                    </template>
+                </iron-list>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>Polymer({is:"hedgehog-dashboard-view"});</script>
+</dom-module>
+</body></html>

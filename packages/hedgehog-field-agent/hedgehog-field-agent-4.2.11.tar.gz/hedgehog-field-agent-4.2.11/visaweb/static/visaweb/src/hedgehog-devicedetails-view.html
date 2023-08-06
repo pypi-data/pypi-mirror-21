@@ -1,0 +1,49 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="hedgehog-app.html"></head><body><dom-module id="hedgehog-devicedetails-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+
+      .action-icon {
+            margin: auto px;
+      }
+
+
+
+
+
+        </style>
+
+        <app-route route="{{route}}" pattern="/:id" data="{{routeData}}"></app-route>
+        <iron-ajax url="/assetadapter/assets/[[routeData.id]]" auto="" last-response="{{asset}}"></iron-ajax>
+
+        <paper-card style="width: 100%" heading="[[asset.display_name]]">
+            <div class="card-content">
+                <div class="circle">[[routeData.id]]</div>
+                <h1>[[data.display_name]]</h1>
+                <form>
+                    <template is="dom-repeat" items="[[asset.properties]]" as="property">
+                        <hedgehog-property-editor-view property="[[property]]">
+                        </hedgehog-property-editor-view>
+                    </template>
+                    <template is="dom-if" if$="[[propertiesEmpty]]">
+                        Ennek az eszköznek nincsenek tuljadonságai.
+                    </template>
+                </form>
+            </div>
+            <div class="card-actions">
+                <a href="#/visaconsole-view/[[routeData.id]]" tabindex="-1">
+                    <paper-icon-button icon="shared-icons:visibility" alt="favourite this!"></paper-icon-button>
+                </a>
+                <paper-button on-tap="onOpenMeasurement">Élő kapcsolat</paper-button>
+                <paper-button on-tap="onSetup">Írás</paper-button>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>Polymer({is:"hedgehog-devicedetails-view",properties:{_propertiesEmpty:{type:Boolean,computed:"_isPropertiesEmpty(asset.properties)"}},_isPropertiesEmpty:function(e){return!(void 0!==e&&null!==e&&e.length>0)},onOpenMeasurement:function(e,t){this.fire("plutonum-navigate",{page:"devicemonitor-view",id:this.routeData.id})},onSetup:function(){this.fire("plutonium-notification",{level:"error",message:"Hiba a paraméterek beállítása közben: Kapcsolódás a műszerhez sikertelen."})}});</script>
+</dom-module>
+</body></html>
