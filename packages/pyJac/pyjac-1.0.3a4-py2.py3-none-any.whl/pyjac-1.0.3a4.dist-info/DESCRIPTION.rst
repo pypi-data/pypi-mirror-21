@@ -1,0 +1,406 @@
+#####
+pyJac
+#####
+
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.439682.svg
+   :target: https://zenodo.org/badge/latestdoi/19829533
+
+.. image:: https://badge.fury.io/py/pyJac.svg
+    :target: https://badge.fury.io/py/pyJac
+
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+    :target: https://opensource.org/licenses/MIT
+
+This utility creates source code to calculate the Jacobian matrix analytically
+for a chemical reaction mechanism.
+
+=============
+Documentation
+=============
+
+The full documentation for pyJac can be found at http://slackha.github.io/pyJac/.
+
+======
+Theory
+======
+
+Theory, derivations, validation and performance testing can be found in the paper fully describing version 1.0.2 of pyJac:
+https://Niemeyer-Research-Group.github.io/pyJac-paper/
+
+============
+Installation
+============
+
+Detailed installation instructions can be found in the
+`full documentation <http://slackha.github.io/pyJac/>`_.
+However, pyJac can be installed as a Python module::
+
+   python setup.py install
+
+or from PyPI using pip::
+
+   pip install pyjac
+
+=====
+Usage
+=====
+
+pyJac can be run as a python module::
+
+   python -m pyjac [options]
+
+The generated source code is placed within the ``out`` (by default) directory,
+which is created if it doesn't exist initially.
+See the documentation or use ``python pyjac -h`` for the full list of options.
+
+=======
+License
+=======
+
+pyJac is released under the MIT license; see the
+`LICENSE <https://github.com/slackha/pyJac/blob/master/LICENSE>`_ for
+details.
+
+If you use this package as part of a scholarly publication, please see
+`CITATION.md <https://github.com/slackha/pyJac/blob/master/CITATION.md>`_
+for the appropriate citation(s).
+
+============
+Contributing
+============
+
+We welcome contributions to pyJac! Please see the guide to making contributions
+in the `CONTRIBUTING.md <https://github.com/slackha/pyJac/blob/master/CONTRIBUTING.md>`_
+file.
+
+=======
+Authors
+=======
+
+Created by `Kyle Niemeyer <http://kyleniemeyer.com>`_
+(`kyle.niemeyer@gmail.com <mailto:kyle.niemeyer@gmail.com>`_) and
+Nicholas Curtis (`nicholas.curtis@uconn.edu <mailto:nicholas.curtis@uconn.edu>`_)
+
+
+Change Log
+==========
+
+All notable changes to this project will be documented in this file.
+
+The format is based on `Keep a Changelog <http://keepachangelog.com/>`__
+and this project adheres to `Semantic
+Versioning <http://semver.org/>`__.
+
+`Unreleased <https://github.com/slackha/pyJac/compare/v1.0.3...HEAD>`__
+-----------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  Adds Travis config for automatic PyPI and conda build
+-  Adds minimal unittest test suite for module imports
+
+Fixed
+~~~~~
+
+Changed
+~~~~~~~
+
+`1.0.3 <https://github.com/slackha/pyJac/compare/v1.0.2...v1.0.3>`__ - 2017-04-01
+---------------------------------------------------------------------------------
+
+Fixed
+~~~~~
+
+-  Fix for SRI Falloff functions with non-default third bodies (`issue
+   #12 <https://github.com/SLACKHA/pyJac/issues/12>`__)
+-  Fixed removal of jac/rate lists before libgen of functional\_tester
+-  Fixed pywrap module import
+
+Changed
+~~~~~~~
+
+-  Issue warning in Cantera parsing if the installed version doesn't
+   have access to species thermo properties.
+
+Added
+~~~~~
+
+-  Added significantly more documentation and examples for data
+   ordering, the state vector / Jacobian, and using the python interface
+
+`1.0.2 <https://github.com/slackha/pyJac/compare/v1.0.1...v1.0.2>`__ - 2017-01-18
+---------------------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  Added CHANGELOG
+-  Added documentation for libgen / pywrap features
+
+Changed
+~~~~~~~
+
+-  Minor compilation fixes for including OpenMP
+-  Updated github links to point to SLACKHA / Niemeyer Research Group
+
+Deprecated
+~~~~~~~~~~
+
+-  Shared library creation for CUDA disabled, as CUDA does not allow
+   linkage of SO's into another CUDA kernel
+
+Fixed
+~~~~~
+
+-  Explicitly conserve mass in PaSR
+-  Minor path fixes
+-  Division by zero in some TROE parameter cases
+
+`1.0.1 <https://github.com/slackha/pyJac/compare/v1.0...v1.0.1>`__ - 2016-05-25
+-------------------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  Added GPU macros, e.g., THREAD\_ID, GRID\_SIZE
+
+Changed
+~~~~~~~
+
+-  Much better handling of removal of files created during testing
+
+Fixed
+~~~~~
+
+-  Bugfix that generates data.bin files correctly from .npy files for
+   performance testing (**important**)
+-  Explicit setting of OpenMP # threads for performance testing
+
+`1.0 <https://github.com/slackha/pyJac/compare/v0.9.1-beta...v1.0>`__ - 2016-05-07
+----------------------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  pyJac is now a Python package
+-  pyJac can now create a static/shared library for a mechanism (for
+   external linkage)
+-  Added documentation
+-  Added examples
+
+Changed
+~~~~~~~
+
+-  Handles CUDA compilation better via Cython
+-  pointers are now restricted where appropriate
+-  better Python3 compatibility
+
+Fixed
+~~~~~
+
+-  other minor bugfixes
+
+`0.9.1-beta <https://github.com/slackha/pyJac/compare/v0.9-beta...v0.9.1-beta>`__ - 2015-10-29
+----------------------------------------------------------------------------------------------
+
+Changed
+~~~~~~~
+
+-  Implemented the strict mass conservation formulation
+-  Updated CUDA implementation such that it is testable vs. pyJac
+   c-version (and Cantera where applicable)
+-  More robust build folder management
+-  More robust mapping for strict mass conservation
+
+0.9-beta - 2015-10-02
+---------------------
+
+Added
+~~~~~
+
+-  First working / tested version of pyJac
+
+Cite As:
+--------
+
+Kyle E. Niemeyer and Nicholas J. Curtis (2016). pyJac version 1.0.3
+[Software]. Available from https://github.com/slackha/pyJac.
+`doi:10.5281/zenodo.251144 <http://dx.doi.org/10.5281/zenodo.439682>`__
+
+BibTeX entry:
+-------------
+
+::
+
+    @misc{pyjac:2017,
+        author = {Kyle E Niemeyer and Nicholas J Curtis},
+        title = {{pyJac}},
+        year = {2017},
+        howpublished = {Available via \url{https://github.com/slackha/pyJac}},
+        doi = {10.5281/zenodo.439682},
+        Note = {Version 1.0.3}
+        }
+
+
+Change Log
+==========
+
+All notable changes to this project will be documented in this file.
+
+The format is based on `Keep a Changelog <http://keepachangelog.com/>`__
+and this project adheres to `Semantic
+Versioning <http://semver.org/>`__.
+
+`Unreleased <https://github.com/slackha/pyJac/compare/v1.0.3...HEAD>`__
+-----------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  Adds Travis config for automatic PyPI and conda build
+-  Adds minimal unittest test suite for module imports
+
+Fixed
+~~~~~
+
+Changed
+~~~~~~~
+
+`1.0.3 <https://github.com/slackha/pyJac/compare/v1.0.2...v1.0.3>`__ - 2017-04-01
+---------------------------------------------------------------------------------
+
+Fixed
+~~~~~
+
+-  Fix for SRI Falloff functions with non-default third bodies (`issue
+   #12 <https://github.com/SLACKHA/pyJac/issues/12>`__)
+-  Fixed removal of jac/rate lists before libgen of functional\_tester
+-  Fixed pywrap module import
+
+Changed
+~~~~~~~
+
+-  Issue warning in Cantera parsing if the installed version doesn't
+   have access to species thermo properties.
+
+Added
+~~~~~
+
+-  Added significantly more documentation and examples for data
+   ordering, the state vector / Jacobian, and using the python interface
+
+`1.0.2 <https://github.com/slackha/pyJac/compare/v1.0.1...v1.0.2>`__ - 2017-01-18
+---------------------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  Added CHANGELOG
+-  Added documentation for libgen / pywrap features
+
+Changed
+~~~~~~~
+
+-  Minor compilation fixes for including OpenMP
+-  Updated github links to point to SLACKHA / Niemeyer Research Group
+
+Deprecated
+~~~~~~~~~~
+
+-  Shared library creation for CUDA disabled, as CUDA does not allow
+   linkage of SO's into another CUDA kernel
+
+Fixed
+~~~~~
+
+-  Explicitly conserve mass in PaSR
+-  Minor path fixes
+-  Division by zero in some TROE parameter cases
+
+`1.0.1 <https://github.com/slackha/pyJac/compare/v1.0...v1.0.1>`__ - 2016-05-25
+-------------------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  Added GPU macros, e.g., THREAD\_ID, GRID\_SIZE
+
+Changed
+~~~~~~~
+
+-  Much better handling of removal of files created during testing
+
+Fixed
+~~~~~
+
+-  Bugfix that generates data.bin files correctly from .npy files for
+   performance testing (**important**)
+-  Explicit setting of OpenMP # threads for performance testing
+
+`1.0 <https://github.com/slackha/pyJac/compare/v0.9.1-beta...v1.0>`__ - 2016-05-07
+----------------------------------------------------------------------------------
+
+Added
+~~~~~
+
+-  pyJac is now a Python package
+-  pyJac can now create a static/shared library for a mechanism (for
+   external linkage)
+-  Added documentation
+-  Added examples
+
+Changed
+~~~~~~~
+
+-  Handles CUDA compilation better via Cython
+-  pointers are now restricted where appropriate
+-  better Python3 compatibility
+
+Fixed
+~~~~~
+
+-  other minor bugfixes
+
+`0.9.1-beta <https://github.com/slackha/pyJac/compare/v0.9-beta...v0.9.1-beta>`__ - 2015-10-29
+----------------------------------------------------------------------------------------------
+
+Changed
+~~~~~~~
+
+-  Implemented the strict mass conservation formulation
+-  Updated CUDA implementation such that it is testable vs. pyJac
+   c-version (and Cantera where applicable)
+-  More robust build folder management
+-  More robust mapping for strict mass conservation
+
+0.9-beta - 2015-10-02
+---------------------
+
+Added
+~~~~~
+
+-  First working / tested version of pyJac
+
+Cite As:
+--------
+
+Kyle E. Niemeyer and Nicholas J. Curtis (2016). pyJac version 1.0.3
+[Software]. Available from https://github.com/slackha/pyJac.
+`doi:10.5281/zenodo.251144 <http://dx.doi.org/10.5281/zenodo.439682>`__
+
+BibTeX entry:
+-------------
+
+::
+
+    @misc{pyjac:2017,
+        author = {Kyle E Niemeyer and Nicholas J Curtis},
+        title = {{pyJac}},
+        year = {2017},
+        howpublished = {Available via \url{https://github.com/slackha/pyJac}},
+        doi = {10.5281/zenodo.439682},
+        Note = {Version 1.0.3}
+        }
+
+
