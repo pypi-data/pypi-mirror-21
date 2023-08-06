@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+#-*-  mode: python; coding: utf-8 -*-
+
+import sys, os, re, stat, time
+from subprocess import *
+from optparse import OptionParser
+import json
+
+from gtcms.core import *
+from gtcms.core import BaseConfig
+usage = "%prog [-s|--src src] [-d|--dst dst] [--reverse]"
+desc ="""Tool that allows to clone GtCMS databases between hosts.
+By default it tries to clone db defined in default.json to the local host.
+Optionally different locations can be specified by providing hostnames in
+arguments. Beware that due to use of BaseConfig class, giving as argument
+hostname that misses config file won't stop execution, but will use
+configuration from default.json due to regular fallback procedure.
+"""
+epilog = """\
+WARNING: this script drops destination database without doing any backup
+and creates fresh one in place. Also it doesn't check in advance
+if source database exists, so after execution you may end up with completely
+empty db instance.
+"""
+
+""" \todo pg_dump to $BASEPATH/caches/db-dump-[timestamp].sql before drop
+          of destination db
+"""
+
+opts = OptionParser(description=desc, epilog=epilog, usage=usage)
+
+opts.add_option('-s', '--src', action='store', dest='src', type='string', default='',
+                 help='specify source host name for configuration file search')
+opts.add_option('-d', '--dst', action='store', dest='dst', type='string',
+                 help='specify destination host name for configuration file search')
+opts.add_option('--reverse', action='store_true', dest='reverse', default=False,
+                help='swaps SRC and DST (allows default.json entry to be used as destination)')
+args, pos = opts.parse_args()
+
+if len(pos):
+    print('Error: unknown parameter. Try --help for more information.', file=sys.stderr)
+    sys.exit(1)
+
+#by default we are copying db to the localhost
+if args.dst:
+    dstCfg = BaseConfig(hostname=args.dst,
+                        cacheFile='caches/BaseConfig/clone-db-dst-config.pickle')
+else:
+    dstCfg = cfg
+
+#and by default from global config assuming it points to production system
+srcCfg = BaseConfig(hostname=args.src,
+                    cacheFile='caches/BaseConfig/clone-db-src-config.pickle')
+srcDB = srcCfg.get('db')
+dstDB = dstCfg.get('db')
+
+# let's prevent stupid mistake of rewriting db from default.json:
+if dstCfg.customCfg == 'default.json':
+    print('Error: destination db comes from default.json', file=sys.stderr)
+    sys.exit(20)
+
+# and cloning database to itself makes no sense as well
+if (srcDB['host'], srcDB['database'], srcDB.get('port', 5432)) == \
+        (dstDB['host'], dstDB['database'], dstDB.get('port', 5432)):
+    print("Error: both configs point to the same database", file=sys.stderr)
+    sys.exit(30)
+
+if args.reverse:
+    srcDB, dstDB = dstDB, srcDB
+    srcCfg, dstCfg = dstCfg, srcCfg
+
+srcAuth = {'user': srcDB['user'], 'password': srcDB['password']}
+try:
+    for line in open(os.path.expanduser('~/.pgpass')):
+        creds = line[:-1].split(':', 4)
+        if (srcDB['host'] == creds[0] and
+            srcDB.get('port', '5432') == creds[1] and
+            (srcDB['database'] == creds[2] or creds[2]=='*')):
+            srcAuth['user'], srcAuth['password'] = creds[3:]
+            break
+except FileNotFoundError:
+    pass
+
+print("FROM %s: %s on %s as user %s" % (srcCfg.customCfg, srcDB['database'], srcDB['host'], srcAuth['user']))
+print("TO %s: %s on %s as user %s\n" % (dstCfg.customCfg, dstDB['database'], dstDB['host'], dstDB['user']))
+
+pgpasspath = os.path.join(BASEPATH, 'caches/db-clone-pgpass')
+
+with open(pgpasspath, 'w') as pgpass:
+    print('%s:%d:%s:%s:%s'
+          % (srcDB['host'], srcDB.get('port', 5432), srcDB['database'], srcAuth['user'], srcAuth['password']),
+          file=pgpass)
+    print('%s:%d:%s:%s:%s'
+          % (dstDB['host'], dstDB.get('port', 5432), dstDB['database'], dstDB['user'], dstDB['password']),
+          file=pgpass)
+    print('%s:%d:%s:%s:%s'
+          % (dstDB['host'], dstDB.get('port', 5432), 'template1', dstDB['user'], dstDB['password']),
+          file=pgpass)
+    os.chmod(pgpasspath, stat.S_IRUSR+stat.S_IWUSR)
+
+pgEnv = os.environ.copy()
+pgEnv['PGPASSFILE'] = pgpasspath
+
+psql = Popen(['psql', 'template1', '-U', dstDB['user'],
+              '-h', dstDB['host'], '-p', str(dstDB.get('port', 5432)),
+              '-c',
+              "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='%s';" %
+              (dstDB['database'],)],
+             env=pgEnv)
+psql.communicate()
+psql.wait()
+
+psql = Popen(['psql', 'template1', '-U', dstDB['user'],
+              '-h', dstDB['host'], '-p', str(dstDB.get('port', 5432)),
+              '-c', 'DROP DATABASE "%s";' %
+              (dstDB['database'],)],
+             env=pgEnv)
+psql.communicate()
+psql.wait()
+
+psql = Popen(['psql', 'template1', '-U', dstDB['user'],
+              '-h', dstDB['host'], '-p', str(dstDB.get('port',5432)),
+              '-c', ('CREATE DATABASE "%s" WITH TEMPLATE="template0" ENCODING='
+                    "'UTF8' LC_COLLATE='pl_PL.UTF-8' LC_CTYPE='pl_PL.UTF-8'") % ( dstDB['database'],)],
+             env=pgEnv)
+if (psql.wait() > 0):
+    print('ERROR: Aborting...', file=sys.stderr)
+    sys.exit(50)
+
+print('Cloning structure...')
+
+pgdump = Popen(['pg_dump', srcDB['database'], '-U', srcAuth['user'],
+                '-h', srcDB['host'], '-p', str(srcDB.get('port', 5432))],
+               stdout=PIPE, env=pgEnv)
+
+psql = Popen(['psql', dstDB['database'], '-1', '-U', dstDB['user'],
+              '-h', dstDB['host'], '-p', str(dstDB.get('port', 5432))],
+             stdin=pgdump.stdout, stdout=PIPE, env=pgEnv)
+output = psql.communicate()[0]
+
+#conditional execution to support minimalistic projects
+try:
+    import gtcms.core.db
+except:
+    pass
+else:
+    print('Applying patches...')
+    gtcms.core.db.create_all()
+
+print('Cloning finished.')
+time.sleep(2)
+
+# touching file for nosewatch, but only if sql patches directory exists
+try:
+    with open(os.path.join(BASEPATH, 'sql/.touchfile'), 'w') as touchfile:
+        touchfile.write('touch')
+    os.unlink(os.path.join(BASEPATH, 'sql/.touchfile'))
+except:
+    pass

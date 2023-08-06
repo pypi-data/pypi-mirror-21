@@ -1,0 +1,16 @@
+# MultiViews with SUBREQ below are breaking
+# passing url to application in some screnarios
+Options -MultiViews
+
+RewriteCond %{IS_SUBREQ} true
+RewriteRule ^(.*)$ - [L]
+
+RewriteRule ^(_js/(?!\.minified/).*) _js/.minified/$1
+
+RewriteCond %{REQUEST_FILENAME} -F
+RewriteRule ^(_js/.minified/.*)$ - [L]
+
+RewriteRule ^_js/.minified/(.*)$ $1
+
+RewriteCond %{REQUEST_FILENAME} -F
+RewriteRule ^(.*)$ - [L]

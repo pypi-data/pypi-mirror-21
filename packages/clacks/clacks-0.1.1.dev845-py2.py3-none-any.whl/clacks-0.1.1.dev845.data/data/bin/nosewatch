@@ -1,0 +1,71 @@
+#!/bin/bash
+#
+# Small utility script to observe test results live
+# after each change of some file
+# For now very simple version, options to consider:
+# * exception list for files and directories to be observed,
+#   so only real code changes would trigger an action
+
+#needed by temporary trick allowing new files to be catched
+# after some time
+export DELAY=4
+
+THISFILE=$(readlink -f $(which $0))
+BASEPATH=${BASEPATH:=$(readlink -f "$(dirname "$THISFILE")/..")}
+cd $BASEPATH
+
+export GTMODE=testing
+
+
+if [ -z $(which inotifywait) ]; then
+    echo >&2 'missing required command: inotifywait'
+   exit 20
+fi
+
+export MPID=$$
+RESET=0
+
+
+refresh() {
+    # subprocess observing file changes and refreshing output if needed
+    # does nothing during tests execution as some of them are unfortunately
+    # touching files in code directories
+
+    while true; do
+        inotifywait --format '%f' -t $DELAY -r lib -r sql -r template -e move -e create \
+            -e delete -e modify -e attrib 2>/dev/null| while read FNAME; do
+
+            if [[ "$FNAME" =~ .*~ ]] || [[ "$FNAME" =~ \.\#.* ]] || [[ "$FNAME" =~ \#.* ]]; then
+                continue
+            fi
+
+            LPID=$(pgrep -P $MPID less)
+            #NTPID=$(pgrep -P $MPID nosetest)
+            ps|grep nosetests|grep -v grep >/dev/null; #ugly, better solution welcome
+            NTRUNS=$?
+
+            if [ $NTRUNS -eq 1 -a -n "$LPID" ]; then
+                kill -SIGHUP $LPID
+            fi
+            echo "Triggered by $FNAME"
+        done
+        ps -p $MPID >/dev/null || break
+    done
+}
+
+refresh&
+RPID=$_
+
+while true; do
+    clear
+    ( echo 'Started at' $(date +%T);
+        nosetests --with-coverage --cover-package gtcms 2>&1 )|grep -v "100%"|less
+    if [ $? -eq 0 ]; then
+        #clean up
+        #kill $RPID
+        #for some reason console is broken after killing less from subprocess
+        reset
+        echo $RPID
+        exit
+    fi
+done;

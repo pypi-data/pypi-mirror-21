@@ -1,0 +1,12 @@
+<tal:block>
+  <tal:block repeat="item ctx.deps()['css']"><tal:block condition="'IE' in item"><!--[if ${item['IE']}]><link rel="stylesheet" type="text/css" href="${item.src}?${Env.revId()}" ${('media="'+item['media']+'"') if 'media' in item else ''} /><![endif]--></tal:block><link tal:condition="'IE' not in item" rel="stylesheet" type="text/css" href="${item.src}?${Env.revId()}" tal:attributes="media item.get('media')" />
+  </tal:block>
+  <!--! async="async" dojo can't be async right now yet as it breaks require calls from old scripts -->
+  <script async="async" defer="defer"
+          type="text/javascript" src="/_js/dojo/dojo.js" tal:condition="'dojo' in ctx.deps()"
+          data-dojo-config="deps: [${', '.join(['\''+i.src+'\'' for i in ctx.deps()['dojo']])}], locale: '${Env.lang()}', async: true, cacheBust: '${Env.revId()}', ${'isDebug: true, ' if cfg.get('__meta__','__debug', default=False) else ''} ${'parseOnLoad: true, ' if ctx.hasDependency('dojo', 'dojo/parser') else ''} ver: '${Env.version()}', has: {'pointer-events': false}" ></script>
+  <script type="text/javascript" src="${item.src+('?'+Env.revId() if not item.get('noBust', False) else '')}"
+          tal:condition="'javascript' in ctx.deps()"
+          tal:repeat="item ctx.deps()['javascript']"
+          tal:attributes="data-gt-priority item.priority if cfg.get('__meta__', '__debug', default=False) else None"></script>
+</tal:block>

@@ -1,0 +1,120 @@
+//-*- js -*-
+var dummy = {
+    "page": {
+        "dependencies": {
+            "admin": {
+                "dojo": {
+                    "dojo/parser": {}
+                },
+                "css": {
+                    //"/_js/dojo/resources/dojo.css": {"priority": 10}, /* comes from claro/document.css */
+                    "/_js/dgrid/css/dgrid.css": {"priority": 39},
+                    "/_js/dgrid/css/skins/claro.css": {"priority": 40},
+                    "/_js/dijit/themes/claro/document.css": {},
+                    "/_js/dijit/themes/dijit.css": {},
+                    "/_js/dijit/themes/claro/claro.css": {}
+                },
+                "dojoPackages": {
+                    "gtcms": {"src": "/_js/gtcms"}
+                }
+            },
+            "_admin": {
+                "dojo": {
+                    "dojo/parser": {}
+                },
+                "css": {
+                    //"/_js/dojo/resources/dojo.css": {"priority": 10}, /* comes from claro/document.css */
+                    "/_js/dgrid/css/dgrid.css": {"priority": 39},
+                    "/_js/dgrid/css/skins/claro.css": {"priority": 40},
+                    "/_js/dijit/themes/claro/document.css": {},
+                    "/_js/dijit/themes/dijit.css": {},
+                    "/_js/dijit/themes/claro/claro.css": {}
+                },
+                "dojoPackages": {
+                    "gtcms": {"src": "/_js/gtcms"}
+                }
+            },
+            "_filemanager": {
+                "dojo": {
+                    "dojo/parser": {}
+                },
+                "css": {
+                    //"/_js/dojo/resources/dojo.css": {"priority": 10}, /* comes from claro/document.css */
+                    "/_js/dgrid/css/dgrid.css": {"priority": 39},
+                    "/_js/dgrid/css/skins/claro.css": {"priority": 40},
+                    "/_js/dijit/themes/claro/document.css": {},
+                    "/_js/dijit/themes/dijit.css": {},
+                    "/_js/dijit/themes/claro/claro.css": {}
+                },
+                "dojoPackages": {
+                }
+            },
+            "common": {
+                "dojo": {
+                    "gtcms/toolbox": {}
+                },
+                "css": {
+                },
+                "dojoPackages": {
+                    "gtcms": {"src": "/_js/gtcms"}
+                }
+            }
+        },
+        "placements": {
+            "head" : {
+                "name": "węzeł nadrzędny",
+                "parent-allow": ["^:"],
+                "supports": ["head"]
+            },
+            "lang" : {
+                "name": "menu języka",
+                "parent-allow": [ ":head" ],
+                "supports": ["!", "meta"]
+            },
+            "": {
+                "name": "brak",
+                "parent-allow": [ ":lang.*" ]
+            }
+        },
+        "factory": {
+            "article": {
+                "factory": "ArticleFactory",
+                "module": "gtcms.generators.cms"
+            },
+            "meta": {
+                "factory": "MetaNodeFactory",
+                "module": "gtcms.generators.cms"
+            },
+            "articlelist": {
+                "factory": "ArticleListFactory",
+                "module": "gtcms.generators.cms"
+            },
+            "link": {
+                "factory": "LinkNodeFactory",
+                "module": "gtcms.generators.cms"
+            }
+        }
+    },
+    "imports": {
+        "gtcms.cptools.i18n_tool": {},
+        "gtcms.cptools.sqlalchemy": {},
+        "gtcms.cptools.access_grants": {}
+
+    },
+    "admin": {
+        "scripts": {
+            "gtcms/admin/SiteTree": { "grants": ["SITE_STRUCTURE_VIEW"]},
+            "gtcms/admin/PermissionsPane": {"grants": ["SITE_ADMIN"]},
+            "gtcms/admin/BoxesPane": {"grants": ["SITE_STRUCTURE_VIEW"]},
+	        "gtcms/admin/LoginsGraphs": { "grants": ["LOGIN_HISTORY_VIEW"]},
+            "gtcms/admin/UsersList": {"grants": ["USERS_LIST_VIEW"]},
+            "gtcms/admin/UserProfilePane": {"grants": ["USER_PROFILE_EDIT"]}
+        },
+        "auth": {
+            "remote-auth-url": "https://www.debhosting.net/_gtcms-auth/"
+        }
+    },
+    "client": {
+        "password": {"length": 10}
+    }
+};

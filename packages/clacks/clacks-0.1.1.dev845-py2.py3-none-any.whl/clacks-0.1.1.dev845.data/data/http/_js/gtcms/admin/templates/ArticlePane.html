@@ -1,0 +1,134 @@
+<div style="position: relative">
+  <div data-dojo-attach-point="_mainPane"
+       data-dojo-type="dijit/layout/LayoutContainer"
+       data-dojo-props="gutters: false"
+       style="width: 100%; height: 100%; border-width: 0px;">
+    <div data-dojo-attach-point="_topPane"
+         data-dojo-type="dijit/layout/LayoutContainer"
+         data-dojo-props="gutters: false, region: 'bottom'">
+      <div data-dojo-attach-point="_propsPane"
+           data-dojo-type="dijit/TitlePane"
+           data-dojo-props="title: 'Parametry', duration: 0, region: 'left'"
+           style="min-width: 400px">
+        <div data-dojo-attach-point="form"
+             data-dojo-type="dijit/form/Form">
+          <table>
+            <tr>
+              <td>Tytuł strony:</td>
+              <td><input data-dojo-attach-point="_title"
+                         data-dojo-type="dijit/form/TextBox"
+                         data-dojo-props=""
+                         type="text" name="title" value="" style="min-width: 300px;" /></td>
+            </tr>
+            <tr>
+              <td>Nazwa linku:</td>
+              <td><input data-dojo-attach-point="_linkName"
+                         data-dojo-type="dijit/form/ValidationTextBox"
+                         data-dojo-props="required: true,
+                                          missingMessage: 'Nazwa linku jest wymagana do poprawnego wyświetlania struktury serwisu'"
+                         type="text" name="linkName" value="" style="min-width: 300px;" /></td>
+            </tr>
+            <tr>
+              <td>Identyfikator:</td>
+              <td><input  data-dojo-attach-point="_urlPart"
+                          data-dojo-type="dijit/form/ValidationTextBox"
+                          data-dojo-props="required: true,
+                                           missingMessage: 'Identyfikator jest wymagany do stworzenia poprawnego unikalnego adresu strony'"
+                          type="text" name="url_part" value="{$article.url_part}" style="min-width: 300px;" ></td>
+            </tr>
+            <tr>
+              <td>Adres:</td>
+              <td>
+                <a data-dojo-attach-point="_targetUrl" href="" target=""></a>
+              </td>
+            </tr>
+            <tr>
+              <td>
+              <td>
+                <label><input data-dojo-attach-point="_visible"
+                              data-dojo-type="dijit/form/CheckBox"
+                              type="checkbox" />
+                  publikuj</label>  
+                <label><input data-dojo-attach-point="_isBase"
+                              data-dojo-type="dijit/form/CheckBox"
+                              type="checkbox" />
+                  adres bazowy</label>  
+                <label><input data-dojo-attach-point="_noIndex"
+                              data-dojo-type="dijit/form/CheckBox"
+                              type="checkbox" />
+                  nie indeksuj</label>
+              </td>
+            </tr>
+            <tr>
+              <td>Linkowanie:</td>
+              <td>
+                <select data-dojo-attach-point="_placement"
+                        data-dojo-props="sortByLabel: false"
+                        data-dojo-type="dijit/form/Select">
+                </select>
+              </td>
+            </tr>
+            <tr data-dojo-attach-point="_styleRow">
+              <td>Szablon:</td>
+              <td>
+                <select data-dojo-attach-point="_style"
+                        data-dojo-props="sortByLabel: false"
+                        data-dojo-type="dijit/form/Select">
+                </select>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    <div data-dojo-type="dijit/_Widget" data-dojo-attach-point="_ctrlSplitter"
+         style="min-width: 8px; min-height: 8px; max-width: 8px; max-height: 8px;"
+         data-dojo-props="region: 'top'"
+         ></div>
+      <div data-dojo-attach-point="_ctrlPane"
+           data-dojo-type="dijit/TitlePane"
+           data-dojo-props="title: 'Elementy', duration: 0, region: 'center', toggleable: true"
+           style="min-width: 400px; height: 300px; overflow: auto;">
+      </div>
+    </div>
+    <div data-dojo-type="dijit/_Widget" data-dojo-attach-point="_mainSplitter"
+         style="min-width: 8px; min-height: 8px; max-width: 8px; max-height: 8px;"
+         data-dojo-props="region: 'top'"
+         ></div>
+    <div data-dojo-attach-point="_formPane"
+         data-dojo-type="dijit/layout/StackContainer"
+         data-dojo-props="toggleable: false, region: 'center'"
+         style="margin: 0px; min-width: 705px; padding: 0px;">
+      <div data-dojo-attach-point="_artPane"
+           data-dojo-type="dijit/TitlePane"
+           data-dojo-props="title: 'Artykuł', toggleable: false"
+           style="margin: 0px; min-width: 705px; padding: 0px;"
+           class="ckeditor-titlepane">
+        <div style="width: calc(100%-2px); min-width: 707px; position: relative; padding-right: 1px;">
+          <textarea data-dojo-attach-point="_ckeditor">${article}</textarea>
+        </div>
+      </div>
+    </div>
+    <div data-dojo-attach-point="_bottomPane"
+         style="min-height: 28px"
+         data-dojo-type="dijit/layout/LayoutContainer"
+         data-dojo-props="region: 'bottom'">
+      <button data-dojo-type="dijit/form/Button"
+              data-dojo-props="region: 'left'"
+              data-dojo-attach-point="_addControl"
+              >Dodaj element</button>
+      <div data-dojo-type="dijit/layout/ContentPane"
+           data-dojo-props="region: 'center'",
+           data-dojo-attach-point="messagePane"
+           style="padding: 6px 12px;">
+      </div>
+      <button data-dojo-type="dijit/form/Button"
+              data-dojo-props="region: 'right'"
+              data-dojo-attach-point="_submit"
+              >Zapisz zmiany</button>
+    </div>
+    <div data-dojo-type="dijit/_Widget" data-dojo-attach-point="_bottomSplitter"
+         style="min-width: 8px; min-height: 8px; max-width: 8px; max-height: 8px;"
+         data-dojo-props="region: 'bottom'"
+         ></div>
+  </div>
+</div>
