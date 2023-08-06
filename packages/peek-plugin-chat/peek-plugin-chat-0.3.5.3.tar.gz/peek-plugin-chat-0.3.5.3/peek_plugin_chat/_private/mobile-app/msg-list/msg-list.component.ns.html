@@ -1,0 +1,55 @@
+<GridLayout class="p-20" columns="*" rows="auto, auto, *, auto">
+    <Button row="0" class="fa h2" [text]="'fa-angle-left' | fonticon"
+            (tap)="navToChatsClicked()"></Button>
+
+    <!-- No Messages -->
+    <Label row="1" *ngIf="!haveMessages()" text="No messages"></Label>
+
+    <ListView row="2" [items]="messages()" #messageListRef
+              separatorColor="transparent">
+        <ng-template let-i="index" let-msg="item" let-odd="odd" let-even="even">
+            <StackLayout [class.odd]="odd" [class.even]="even">
+                <!-- Unread marker -->
+                <Label *ngIf="isFirstUnreadMesage(i)"
+                       text="---------------------------"></Label>
+
+                <!-- From and Date -->
+                <Label class="h6"
+                       [class.text-right]="!isMessageFromThisUser(msg)"
+                       *ngIf="!isMessageFromThisUser(msg)"
+                       text="From {{userDisplayName(msg)}} ({{msg.fromUserId}}), {{timePast(msg)}} ago"></Label>
+
+                <Label class="h6"
+                       *ngIf="isMessageFromThisUser(msg)"
+                       [class.text-right]="!isMessageFromThisUser(msg)"
+                       text="{{timePast(msg)}} ago"></Label>
+
+                <!-- Message -->
+                <GridLayout columns="*, *, *" rows="auto" width="*">
+                    <Label class="h3 peek-field-data-text p-5" row="0" colspan="2"
+                           [class.text-right]="!isMessageFromThisUser(msg)"
+                           [col]="isMessageFromThisUser(msg) ? 0 : 1"
+                           textWrap="true"
+                           [text]="msg.message"
+                           [class.h4]="isNormalPriority(msg)"
+                           [class.bg-success]="isNormalPriority(msg)"
+                           [class.h3]="isEmergencyPriority(msg)"
+                           [class.bg-danger]="isEmergencyPriority(msg)"></Label>
+
+                </GridLayout>
+
+            </StackLayout>
+        </ng-template>
+    </ListView>
+
+    <GridLayout row="3" columns="*, auto, auto" rows="auto" width="*" height="auto">
+        <TextView row="0" col="0" [(ngModel)]="newMessageText" returnKeyType="send"
+                  textWrap="true" (returnPress)="sendMsgClicked()"></TextView>
+        <Button row="0" col="1" text="Send"
+                [isEnabled]="sendEnabled()"
+                (tap)="sendMsgClicked()"></Button>
+        <Button row="0" col="2" text="SOS"
+                (tap)="sendSosClicked()"></Button>
+
+    </GridLayout>
+</GridLayout>

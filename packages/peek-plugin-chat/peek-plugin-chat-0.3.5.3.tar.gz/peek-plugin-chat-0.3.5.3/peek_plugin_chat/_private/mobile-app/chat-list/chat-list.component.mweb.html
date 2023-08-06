@@ -1,0 +1,44 @@
+<div class="container">
+
+    <!--TRANSITION WITH REASON DIALOG -->
+    <pl-chat-new-chat
+            *ngIf="isNewChatDialogShown()"
+            (create)="dialogConfirmed($event)"
+            (cancel)="dialogCanceled()"
+            [data]="newChatDialogData">
+
+    </pl-chat-new-chat>
+
+
+    <!-- Navigation Place Holder -->
+    <div class="row" *ngIf="isNewChatDialogShown()">
+        <!-- Keep the spacing of the top navigation buttons when they disappear -->
+        <Button class="btn btn-default" style="opacity: 0">XX</Button>
+    </div>
+
+    <!--Top Menu -->
+    <div class="row" *ngIf="!isNewChatDialogShown()">
+        <Button class="btn btn-default" (click)="newChatClicked()">New Chat</Button>
+    </div>
+
+
+    <!-- Use the template tag syntax, as this works with nativescript too -->
+    <ng-template ngFor let-chat [ngForOf]="chats" let-i="index">
+        <div class="row" (click)="chatClicked(chat)" class="well">
+            <div class="col-sm-12">
+
+                <!-- Unread indicator -->
+                <fa name="fw" *ngIf="isChatRead(chat)"></fa>
+                <fa name="comment-o" *ngIf="!isChatRead(chat)"></fa>
+
+                <!-- Other Users -->
+                <span *ngFor="let user of otherChatUsers(chat)">
+                    <span class="label label-primary">
+                        {{userDisplayName(user)}} ({{user.userId}})
+                    </span>&nbsp;
+                </span>
+            </div>
+        </div>
+    </ng-template>
+
+</div>

@@ -1,0 +1,26 @@
+<StackLayout class="m-10">
+    <Label class="h2" text="Start a chat wth :"></Label>
+
+    <Label class="h3" text="No users selected" *ngIf="!createButtonEnabled()"></Label>
+
+    <StackLayout row="0" col="0" class="input-field"
+                 horizontalAlignment="stretch">
+        <ListPicker #picker class="p-15"
+                        [items]="usersStrList"
+                        (selectedIndexChange)="selectedUserIndex = picker.selectedIndex">
+        </ListPicker>
+    </StackLayout>
+
+
+    <GridLayout columns="*,*, *" rows="auto" width="*">
+        <Button col="0" text="Add User"
+                (tap)="addUserClicked()"></Button>
+        <Button col="1" text="Create Chat"
+                (tap)="confirmClicked(true)">
+        </Button>
+        <Button col="2" text="Cancel"
+                (tap)="cancelClicked(true)">
+        </Button>
+    </GridLayout>
+
+</StackLayout>

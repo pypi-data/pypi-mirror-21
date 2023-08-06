@@ -1,0 +1,38 @@
+<div [@dialogAnimation]="dialogAnimationState"
+     (@dialogAnimation.done)="animationDone($event)">
+
+    <h2>Start a chat wth :</h2>
+
+    <p *ngIf="!createButtonEnabled()">No users selected</p>
+    <ul>
+        <li *ngFor="let u of data.users">{{u.displayName}}</li>
+    </ul>
+
+    <div class="form-group">
+        <label for="userIdField">Add User:</label>
+        <select id="userIdField" class="form-control" name="userId"
+                [(ngModel)]="selectedUserIndex">
+            <option [value]="i" *ngFor="let i = index; let item of usersStrList">
+                {{item}}
+            </option>
+        </select>
+    </div>
+
+
+    <!--BEGIN HANDBACK DIALOG -->
+    <div>
+        <Button class="btn btn-default" (click)="addUserClicked()"
+                [disabled]="!newButtonEnabled()">
+            Add User
+        </Button>
+
+        <Button class="btn btn-default" (click)="confirmClicked(false)"
+                [disabled]="!createButtonEnabled()">
+            Create Chat
+        </Button>
+
+        <Button class="btn btn-default" (click)="cancelClicked(false)">
+            Cancel
+        </Button>
+    </div>
+</div>
