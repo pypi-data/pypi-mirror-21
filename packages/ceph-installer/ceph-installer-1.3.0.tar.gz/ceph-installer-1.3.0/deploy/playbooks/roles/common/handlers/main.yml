@@ -1,0 +1,13 @@
+---
+
+- name: reload systemd
+  sudo: yes
+  command: systemctl daemon-reload
+
+- name: restart app
+  sudo: yes
+  service: name=ceph-installer state=restarted enabled=yes
+
+- name: restart ceph-installer-celery
+  sudo: yes
+  service: name=ceph-installer-celery state=restarted enabled=yes

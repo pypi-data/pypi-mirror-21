@@ -1,0 +1,83 @@
+---
+
+- name: "ensure a home for {{ app_name }}"
+  sudo: yes
+  file:
+    path: "{{ app_home }}"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    state: directory
+    recurse: yes
+  register: app_home_created
+
+- name: "create /var/lib database location for {{ app_name }}"
+  sudo: yes
+  file:
+    path: "/var/lib/{{ app_name }}"
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    state: directory
+    recurse: yes
+  sudo: yes
+
+- name: install EPEL
+  sudo: yes
+  package:
+    name: epel-release
+    state: present
+  tags:
+    - packages
+
+- name: install ssl system requirements
+  sudo: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ ssl_requirements }}"
+  when: app_use_ssl
+  tags:
+    - packages
+
+- name: install system packages
+  sudo: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ system_packages }}"
+  tags:
+    - packages
+
+- name: pip install setuptools
+  sudo: yes
+  pip:
+    name: setuptools
+
+- name: pip install setuptools, pip, and virtualenv
+  sudo: yes
+  pip:
+    name: "{{ item }}"
+    extra_args: '--upgrade'
+  with_items:
+    - pip
+    - setuptools
+    - virtualenv
+
+- name: "pip+git install {{ app_name }} into virtualenv."
+  pip:
+    name: 'git+https://github.com/ceph/ceph-installer@{{ branch }}#egg=ceph_installer'
+    virtualenv: "{{ app_home }}"
+  changed_when: True
+
+- name: populate the database for {{ app_name }}
+  command: "{{ app_home }}/bin/pecan populate {{ app_home }}/src/{{ app_name }}/config/config.py"
+
+- name: clone ceph-ansible to {{ app_home }}
+  git:
+    repo: "https://github.com/ceph/ceph-ansible.git"
+    dest: "{{ app_home }}/ceph-ansible"
+    force: yes
+    update: yes
+
+- include: systemd.yml
+  tags:
+    - systemd
