@@ -1,0 +1,52 @@
+<body xmlns:tal="http://xml.zope.org/namespaces/tal">
+<script>
+function getJs() {
+  var destUrl = document.getElementById('save-to-url').value
+  var bookmarkletJs = "javascript:( function(){\
+    var bookmarkDescription = prompt('Description:');\
+    var bookmarkId = Date.now();\
+    var bookmarkTitle = document.title;\
+    var bookmarkUrl = window.location.href;\
+    var saveToUrl = '" + destUrl + "';\
+    if(bookmarkTitle == '' || bookmarkTitle === undefined) {\
+      bookmarkTitle = bookmarkUrl.split('/');\
+      bookmarkTitle = bookmarkTitle[bookmarkTitle.length-1];\
+    }\
+    saveToUrl += '/portal_factory/Link/';\
+    saveToUrl += bookmarkId + '/edit?title=' + bookmarkTitle;\
+    saveToUrl += '&description=' + bookmarkDescription;\
+    saveToUrl += '&remoteUrl=' + bookmarkUrl + '&autosave';\
+    if(bookmarkDescription !== null) { /* null means user canceled */\
+      window.location.href = saveToUrl;\
+    }\
+  })();"
+  return bookmarkletJs
+}
+function updateBookmarklet(bookmarklet) {
+  bookmarklet.href = getJs()
+  bookmarklet.textContent = document.getElementById('bookmarklet-text').value
+}
+document.addEventListener('DOMContentLoaded', function() {
+  var bookmarklet = document.getElementById('bookmarklet')
+  updateBookmarklet(bookmarklet)
+  document.querySelector('input').onkeyup = function() {
+    updateBookmarklet(bookmarklet)
+  }
+}, false);
+</script>
+<p>
+A bookmarklet for storing bookmarks as a link-item to a given Plone-site or -folder.
+</p>
+<p>
+Drag and drop this link on your browser's bookmarks-bar:
+</p>
+<a id="bookmarklet">bookmarklet</a>
+<p>
+Optionally change these values before dragging the link:
+</p>
+<label for="bookmarklet-text">Bookmarklet text</label>
+<input id="bookmarklet-text" value="book2plone" />
+<br>
+<label for="save-to-url">Plone-site or -folder</label>
+<input id="save-to-url" value="http://localhost:8080/Plone" tal:attributes="value context/absolute_url" />
+</body>
