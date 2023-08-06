@@ -1,0 +1,82 @@
+Metadata-Version: 2.0
+Name: guillotina-oauth
+Version: 1.0.0
+Summary: guillotina oauth support
+Home-page: https://pypi.python.org/pypi/guillotina_oauth
+Author: Ramon Navarro Bosch
+Author-email: ramon@plone.org
+License: GPL version 3
+Keywords: guillotina oauth
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: setuptools
+Requires-Dist: guillotina
+Requires-Dist: ujson
+Requires-Dist: pyjwt
+
+.. contents::
+
+GUILLOTINA_OAUTH
+================
+
+
+Features
+--------
+
+ * There is no persistence information about the user
+
+ * The configuration is global for all application
+
+
+Configuration
+-------------
+
+Generic global configuration on guillotina utilities section:
+
+{
+    "applicatoins": ["guillotina_oauth"],
+    "oauth_settings": {
+        "server": "http://localhost/",
+        "jwt_secret": "secret",
+        "jwt_algorithm": "HS256",
+        "client_id": 11,
+        "client_password": "secret"
+    }
+}
+
+
+Installation on a site
+----------------------
+
+POST SITE_URL/@install
+
+{
+	'pluggins': [
+		'guillotina.googleoauth'
+	]
+}
+
+Uninstall on a site
+-------------------
+
+POST SITE_URL/@uninstall
+
+{
+	'pluggins': [
+		'guillotina.googleoauth'
+	]
+}
+
+
+Events
+------
+
+guillotina.auth.events.NewUserLogin
+
+1.0.0 (2017-04-24)
+------------------
+
+- initial release
+
+
