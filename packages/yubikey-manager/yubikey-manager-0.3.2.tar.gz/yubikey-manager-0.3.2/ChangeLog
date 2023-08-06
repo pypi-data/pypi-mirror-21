@@ -1,0 +1,1954 @@
+2017-04-24  Dag Heyman <dag@yubico.com>
+
+	* ykman/__init__.py: 0.3.2
+
+2017-04-24  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_otp.py: calculate: try calculation 10 times Some versions of NEO returns error 11 too often on
+	challenge-response calculate.  Try 10 times before giving up.  Related to #11
+
+2017-04-24  Dag Heyman <dag@yubico.com>
+
+	* NEWS: Update NEWS
+
+2017-04-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/__init__.py: Update version number to dev version
+
+2017-04-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: calculate: print error actual error Closes #11
+
+2017-04-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: Allow interactive prompt for access code A access code can now be provided through an interactive prompt as
+	an alternative to providing it as an command line argument. To
+	trigger this, set the access-code option to ''.
+
+2017-04-10  Dag Heyman <dag@yubico.com>
+
+	* README.adoc: Recommend pip3 for macOS install instructions
+
+2017-03-13  Dag Heyman <dag@yubico.com>
+
+	* NEWS, ykman/__init__.py: yubikey-manager 0.3.1
+
+2017-03-10  Dag Heyman <dag@yubico.com>
+
+	* NEWS, ykman/__init__.py: Update NEWS and version for 0.3.1 release
+
+2017-03-10  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/util.py: Remove click_parse_key since it's unused
+
+2017-03-10  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: chalresp: small fix in helptext.
+
+2017-03-10  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/slot.py: Update
+	slot hotp command Make the flags be consistent with the other commands. Don't allow
+	key in hex.  Prompt for key if none is provided.
+
+2017-03-10  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/slot.py: Don't
+	confirm static pw command Stay silent when everything is okay, as the other commands does.
+
+2017-02-28  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/cli/slot.py, ykman/cli/util.py,
+	ykman/util.py: refactor: move parse_b32_key and parse_key Move some key parsing functions to the general utility class, as
+	they may not only be used by the CLI code.
+
+2017-02-27  Dag Heyman <dag@yubico.com>
+
+	* : commit 720d23c8e2acf154a77694f6a06475534800355a Author: Liyan
+	David Chang <git@ldchang.com> Date:   Sat Feb 25 00:51:14 2017 -0500
+
+2017-02-27  Dag Heyman <dag@yubico.com>
+
+	* doc/development.adoc: Add note about flake8 in development doc
+
+2017-02-23  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/slot.py,
+	ykman/driver_otp.py: calculate: Add support for provided timestamp
+	as challenge
+
+2017-02-22  Dag Heyman <dag@yubico.com>
+
+	* doc/development.adoc: Add documentation about running tests As discussed in #8.
+
+2017-02-22  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: add tests for calculate
+	command
+
+2017-02-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_otp.py: chalresp: pad key to 20 bytes ykpers.ykp_HMAC_key_raw expects a 20 byte key
+
+2017-02-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: slot calculate: fail on emtpy slot
+
+2017-02-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py, ykman/native/ykpers.py,
+	ykman/util.py: Add 'calculate' command Add a CLI command and library support to perform a
+	challenge-response operation. Also support TOTP output, with the
+	current time as the challenge. This is used to generate TOTP codes
+	when a TOTP credential is stored in a slot.
+
+2017-02-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/cli/util.py: Move prompt_for_touch to
+	util
+
+2017-02-21  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/slot.py,
+	ykman/cli/util.py: chalresp: use key for TOTP credentials
+
+2017-02-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: Add a dot.
+
+2017-02-21  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/slot.py: Add
+	'-T/--totp' flag to slot chalresp command Add a flag to allow programming of TOTP credentials in the slots,
+	using the existing 'chalresp' command.
+
+2017-02-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/cli/util.py: Always assume OATH key is
+	b32 encoded
+
+2017-02-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: Rename touch flag on chalresp command Let the flag for touch when programming a challenge-response
+	credential be '-t/--touch' as it is in the oath commands.
+
+2017-02-17  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: oath: fix problem with expiration
+
+2017-02-17  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: oath: prompt for touch for HOTP credentials HOTP credentials might require touch, but the key doesn't tell us in
+	advance.  When doing a calculate on a HOTP credential, if there is
+	no response after 500 ms, prompt the user to touch the key.
+
+2017-02-15  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/util.py: oath: Move URI parse to util
+
+2017-02-14  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: oath: Add regression test to
+	adress #9
+
+2017-02-14  Dag Heyman <dag@yubico.com>
+
+	* : commit a869f48e25d6615f300ca589859d4d2a3cb5d792 Author: Liyan
+	David Chang <git@ldchang.com> Date:   Mon Feb 13 20:35:13 2017 -0500
+
+2017-02-08  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: oath: refactor password logic
+
+2017-02-08  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: oath: update locked property
+
+2017-02-02  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: oath: only add expiration for totp credentials
+
+2017-02-02  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: oath: Always send time a challenge
+
+2017-02-01  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: Add dict methods to Credential
+
+2017-01-31  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py, ykman/util.py: oath: Add timestamp to Credential
+	object
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* README.adoc: Update README
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* README.adoc: Update README
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* README.adoc: Update README
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* NEWS, ykman/__init__.py: Update NEWS and version
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, test/test_external_libs.py: Make library test a
+	integration test
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: travis: try apt-get upgrade
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: fix travis
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: travis: no prompts
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: travis: add deps
+
+2017-01-23  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, test/test_external_libs.py,
+	test/util.py: Add a test for external libraries
+
+2017-01-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_otp.py, ykman/driver_u2f.py: Use correct name when
+	loading libs
+
+2017-01-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/__main__.py: Make the error message for failed
+	connections more generic
+
+2017-01-19  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/driver_otp.py, ykman/driver_u2f.py,
+	ykman/native/u2fh.py, ykman/native/ykpers.py, ykman/util.py: Better
+	handling of missing native libraries.
+
+2017-01-17  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: travis: create container, don't run it
+
+2017-01-17  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, docker/xenial/Dockerfile: travis: update dockerfile
+
+2017-01-17  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, docker/xenial/Dockerfile: travis: try to run docker
+
+2017-01-17  Dain Nilsson <dain@yubico.com>
+
+	* debian/control: Revert "Update debian/control" This reverts commit d0c4acfdc0da212de65ae576516007913316386e.
+
+2017-01-17  Dag Heyman <dag@yubico.com>
+
+	* debian/control: Update debian/control
+
+2017-01-17  Dain Nilsson <dain@yubico.com>
+
+	* debian/changelog, debian/control, debian/copyright, debian/rules,
+	debian/source/format: Fix some lintian warnings.
+
+2017-01-17  Dag Heyman <dag@yubico.com>
+
+	* debian/control: packaging: update control file
+
+2017-01-17  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: travis: add libpcsclite-dev to build pyscard
+
+2017-01-17  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: travis: install swig to build pyscard
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: travis: install deps with apt
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, debian/control: packaging: support only from 3.4
+
+2017-01-16  Dain Nilsson <dain@yubico.com>
+
+	* test/test_util.py: Remove Python 3.5 requirement in unittest.
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* debian/control: packaging: support for python 3.3
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Run unittests on travis
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* debian/control: packaging: update dependencies
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* debian/python-yubikey-manager.install,
+	debian/python3-yubikey-manager.install,
+	debian/yubikey-manager.install: packaging: add .install files
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* debian/control: packaging: update debian/control
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* debian/control, debian/rules: packaging: split up library and cli
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* debian/control: packaging: fix format
+
+2017-01-16  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, debian/control, debian/rules: packaging: build with
+	Python 3 Temporary disable automated builds on Travis.
+
+2017-01-13  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: slot otp: prompt for ids and key
+
+2017-01-13  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Remove broken test
+
+2017-01-13  Dain Nilsson <dain@yubico.com>
+
+	* test/test_util.py, ykman/cli/__main__.py, ykman/device.py,
+	ykman/oath.py, ykman/util.py: Replace tlv and parse_tlv functions
+	with Tlv and parse_tlvs.
+
+2017-01-13  Dain Nilsson <dain@yubico.com>
+
+	* ykman/descriptor.py: Fix inforrect mode for PID 0x0405.
+
+2017-01-13  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: oath: update prompt for password Use different wording on password command
+
+2017-01-13  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Grammar fix
+
+2017-01-13  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/slot.py: static
+	pw: update prompting
+
+2017-01-13  Dag Heyman <dag@yubico.com>
+
+	* : commit 8281cb233f3fb05820aa741050f4e39c9cd9b3b1 Author: Dag
+	Heyman <dag@yubico.com> Date:   Thu Jan 12 16:54:39 2017 +0100
+
+2017-01-12  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: integration-test: fix delete
+	slot test
+
+2017-01-12  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_otp.py: static pw: return scancodes
+
+2017-01-12  Dain Nilsson <dain@yubico.com>
+
+	* ykman/oath.py: Re-add six fix lost in rebase.
+
+2017-01-11  Dain Nilsson <dain@yubico.com>
+
+	* setup.py, ykman/device.py, ykman/driver_ccid.py,
+	ykman/driver_otp.py, ykman/oath.py, ykman/opgp.py, ykman/util.py: 
+	Replace usage of yubicommon.compat with six.
+
+2017-01-12  Dain Nilsson <dain@yubico.com>
+
+	* test/test_util.py: Fix tests for Python 2.
+
+2017-01-12  Dain Nilsson <dain@yubico.com>
+
+	* test/test_util.py: Add unit tests for ykman.util functions.
+
+2017-01-12  Dain Nilsson <dain@yubico.com>
+
+	* ykman/util.py: Correctly handle time 0 in time_challenge.
+
+2017-01-11  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/oath.py: Fix
+	integration tests
+
+2017-01-11  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py, ykman/util.py: static password: prompt and
+	generate password
+
+2017-01-11  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: oath: allow lowercase secrets in URI
+
+2017-01-11  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: oath uri: prompt for URI if not provided
+
+2017-01-11  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/cli/util.py: oath add: Prompt for key if
+	not provided
+
+2017-01-11  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Update help for oath add command
+
+2017-01-10  Dag Heyman <dag@yubico.com>
+
+	* debian/control, debian/rules: Hold py3 debian build until py3 deps
+	are in travis
+
+2017-01-10  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Update travis build deps again
+
+2017-01-10  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Update build dependencies in travis
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* debian/control, debian/rules,
+	test/test_cli_commands_on_yubikey.py: Update debian script to build
+	with py3
+
+2017-01-09  Dain Nilsson <dain@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Make integration tests
+	opt-in.
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* README.adoc: Update README
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: Add workaround for touch bug in old OATH firmware
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Use single quotes
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Update some help strings.
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Add help text to OATH list command.
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* debian/control: Add pcscd as debian dependency
+
+2017-01-09  Dag Heyman <dag@yubico.com>
+
+	* : commit 53be8f4de02b7ff75ab0a548288c6e84cd20c152 Author: Dan
+	Church <h3xx@users.noreply.github.com> Date:   Sun Jan 8 15:37:37
+	2017 -0600
+
+2016-12-28  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py, ykman/util.py: OATH: Add support
+	for Steam credentials
+
+2016-12-27  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: Fix wording for slot deletion
+
+2016-12-27  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Sort credentials
+
+2016-12-27  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Print name when only printing one cred
+
+2016-12-27  Dag Heyman <dag@yubico.com>
+
+	* setup.py: Add cryptography as dependency
+
+2016-12-27  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py, ykman/util.py: Move utility code to util
+
+2016-12-27  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Don't use private property from
+	outside
+
+2016-12-27  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: Reorder some enums
+
+2016-12-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add options for list command
+
+2016-12-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Align formatting on print
+
+2016-12-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Fix overwrrite issue warning
+
+2016-12-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Refactor password code
+
+2016-12-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add password support for oath
+	commands
+
+2016-12-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add set password command
+
+2016-12-19  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Add test for remove
+
+2016-12-19  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/oath.py: Add test
+	and fix for YK4 overwrite bug
+
+2016-12-19  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add remove command
+
+2016-12-19  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add touch prompt
+
+2016-12-19  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Implement calculate
+
+2016-12-15  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Add query to code command
+
+2016-12-15  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Reword some help strings.
+
+2016-12-15  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add support for _hidden creds
+
+2016-12-14  Dag Heyman <dag@yubico.com>
+
+	* ykman/util.py: Add support for longer length
+
+2016-12-14  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Add test for code command
+
+2016-12-14  Dag Heyman <dag@yubico.com>
+
+	* ykman/oath.py: Fix HMAC shorten function
+
+2016-12-14  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Add input validation on key and name
+
+2016-12-14  Dag Heyman <dag@yubico.com>
+
+	* ykman/device.py, ykman/util.py: Refactor parse tlv code
+
+2016-12-14  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py, ykman/util.py: Add code command
+	to generate codes
+
+2016-12-14  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: No names longer than 64 bytes
+
+2016-12-09  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/oath.py: Add TOTP
+	URI test
+
+2016-12-09  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/oath.py,
+	ykman/oath.py: Add counter option for hotp creds
+
+2016-12-09  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Handle truncated responses from
+	OATH
+
+2016-12-08  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Refactor add credential commands
+
+2016-12-08  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Improve error handling when
+	adding credential
+
+2016-12-08  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/oath.py: Add some
+	tests for oath commands
+
+2016-12-08  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add oath list command
+
+2016-12-07  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Make parse uri a callback
+
+2016-12-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Add touch option to uri command
+
+2016-12-06  Dag Heyman <dag@yubico.com>
+
+	* : commit c213fbc0b1510f66b1fb352bf464aac57382674d Author: Dag
+	Heyman <dag@yubico.com> Date:   Tue Dec 6 15:37:53 2016 +0100
+
+2016-12-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/util.py, ykman/native/u2fh.py, ykman/native/ykpers.py,
+	ykman/util.py: Don't use __all__
+
+2016-12-06  Dag Heyman <dag@yubico.com>
+
+	* : commit 59bb3c12a6edc143693ef889940ee438a4032a8c Author: Dag
+	Heyman <dag@yubico.com> Date:   Tue Dec 6 14:59:00 2016 +0100
+
+2016-12-06  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/opgp.py, ykman/opgp.py: Better
+	error handling.
+
+2016-12-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add algo option
+
+2016-12-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/cli/slot.py, ykman/cli/util.py,
+	ykman/oath.py: Use parse_key callback for oath
+
+2016-12-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Check firmware for touch
+
+2016-12-05  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add options
+
+2016-12-05  Dag Heyman <dag@yubico.com>
+
+	* : commit fea309f4fe09d0c7a98cac53751ed2b242bbdc4b Author: Dag
+	Heyman <dag@yubico.com> Date:   Mon Dec 5 14:29:47 2016 +0100
+
+2016-12-05  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_u2f.py, ykman/util.py: Add tlv utility function.
+
+2016-12-01  Dag Heyman <dag@yubico.com>
+
+	* : commit 57470959e5a502c79de1688432d9c623c66f5dcc Author: Dag
+	Heyman <dag@yubico.com> Date:   Thu Dec 1 14:45:00 2016 +0100
+
+2016-12-01  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Flake8 fix
+
+2016-12-01  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py, ykman/oath.py: Add oath reset command
+
+2016-12-01  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Add integration test for
+	oath command
+
+2016-12-01  Dag Heyman <dag@yubico.com>
+
+	* : commit d17380aaf6a8676f929721e30ca74dea3e2a59da Author: Dag
+	Heyman <dag@yubico.com> Date:   Thu Dec 1 12:50:36 2016 +0100
+
+2016-12-01  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: Fix transport definition for slot commands
+
+2016-11-29  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon, ykman/__init__.py: Update yubicommon and bump
+	version.
+
+2016-11-30  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/oath.py: Catch applet not found error in oath commands
+
+2016-11-30  Dag Heyman <dag@yubico.com>
+
+	* : commit a645b717c5df0eed8448a361511c7be99f8c75e0 Author: Dag
+	Heyman <dag@yubico.com> Date:   Wed Nov 30 15:14:21 2016 +0100
+
+2016-11-30  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/oath.py, ykman/driver_ccid.py,
+	ykman/oath.py: Add oath info command
+
+2016-11-28  Dag Heyman <dag@yubico.com>
+
+	* README.adoc: Add pip as installation option in README
+
+2016-11-24  Dag Heyman <dag@yubico.com>
+
+	* vendor/yubicommon: Update yubicommon
+
+2016-11-24  Dag Heyman <dag@yubico.com>
+
+	* README.adoc: Update README Add installation section for Ubuntu
+
+2016-11-24  Dag Heyman <dag@yubico.com>
+
+	* debian/changelog, debian/control: Update debian files
+
+2016-11-24  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Add upload dir to s3 deploy
+
+2016-11-24  Dag Heyman <dag@yubico.com>
+
+	* README, README.adoc: Remove README symlink
+
+2016-11-23  Dag Heyman <dag@yubico.com>
+
+	* NEWS: Update formatting of NEWS
+
+2016-11-23  Dag Heyman <dag@yubico.com>
+
+	* NEWS: Fix spelling
+
+2016-11-23  Dag Heyman <dag@yubico.com>
+
+	* NEWS: Update NEWS
+
+2016-11-23  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/slot.py: Update wording
+
+2016-11-23  Dag Heyman <dag@yubico.com>
+
+	* ykman/__init__.py: Update version
+
+2016-11-23  Dag Heyman <dag@yubico.com>
+
+	* setup.py: Remove pyinstaller script
+
+2016-11-23  Dag Heyman <dag@yubico.com>
+
+	* resources/fix_libusb_dep_app_bundle.sh,
+	resources/win-installer.nsi: Remove resources folder
+
+2016-11-21  Dag Heyman <dag@yubico.com>
+
+	* README: Remove install options for now
+
+2016-11-21  Dag Heyman <dag@yubico.com>
+
+	* doc/releasing.adoc: Update releasing doc
+
+2016-11-21  Dag Heyman <dag@yubico.com>
+
+	* doc/development.adoc: Update development doc
+
+2016-11-21  Dag Heyman <dag@yubico.com>
+
+	* debian/control: Add debian-dependency
+
+2016-11-21  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, debian/control: Build a .deb file on travis
+
+2016-11-18  Dag Heyman <dag@yubico.com>
+
+	* debian/changelog, debian/compat, debian/control,
+	debian/copyright, debian/rules: Prepare debian files
+
+2016-11-18  Dag Heyman <dag@yubico.com>
+
+	* README: Update README
+
+2016-11-18  Dag Heyman <dag@yubico.com>
+
+	* README: Update README
+
+2016-11-15  Dag Heyman <dag@yubico.com>
+
+	* ykman/device.py, ykman/util.py: Remove NFC transport flag As we can't tell the difference between NEO and NEO-n, it doesn't
+	make sense to have NFC as a transport.
+
+2016-11-15  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: Flake8 fix
+
+2016-11-14  Dag Heyman <dag@yubico.com>
+
+	* ykman/descriptor.py: Update names for standard and SKY
+
+2016-11-11  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_ccid.py, ykman/opgp.py: Change send_apdu() and
+	related Exception.  Now allows returning the response on a non-ok SW, as well as reading
+	the response from APDUException.
+
+2016-11-08  Dain Nilsson <dain@yubico.com>
+
+	* .travis.yml: Ron't run tests on Travis (needs hardware).
+
+2016-11-08  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_otp.py, ykman/driver_u2f.py: Don't fail on init error
+	until library is used.
+
+2016-10-26  Dag Heyman <dag@yubico.com>
+
+	* README: Update README
+
+2016-10-26  Dag Heyman <dag@yubico.com>
+
+	* README: Update README
+
+2016-10-24  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_otp.py: Fix incorrect number in error message.
+
+2016-10-21  Dag Heyman <dag@yubico.com>
+
+	* MANIFEST.in, setup.cfg, setup.py, ykman/cli/__main__.py,
+	ykman/cli/gui.py, ykman/gui/__init__.py, ykman/gui/__main__.py,
+	ykman/gui/controller.py, ykman/gui/messages.py, ykman/gui/util.py,
+	ykman/gui/validators.py, ykman/gui/view/__init__.py,
+	ykman/gui/view/info.py, ykman/gui/view/mode.py,
+	ykman/gui/view/slot.py: Remove GUI code.
+
+2016-10-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/native/pyusb.py: Find usb backend locally first
+
+2016-10-18  Dag Heyman <dag@yubico.com>
+
+	* ykman/native/pyusb.py: Append .dylib when looking for libusb
+
+2016-10-17  Dag Heyman <dag@yubico.com>
+
+	* vendor/yubicommon: Update yubicommon
+
+2016-10-12  Dag Heyman <dag@yubico.com>
+
+	* setup.py: Don't depend on pywin32 on darwin..
+
+2016-10-12  Dag Heyman <dag@yubico.com>
+
+	* .gitignore: Update .gitignore
+
+2016-10-07  Dag Heyman <dag@yubico.com>
+
+	* : commit d0b4b08c8da7b41cf0a595f2e4b01da5c4fc3248 Author: Dag
+	Heyman <dag@yubico.com> Date:   Fri Oct 7 12:15:20 2016 +0200
+
+2016-10-07  Dag Heyman <dag@yubico.com>
+
+	* ykman/native/pyusb.py: Also try working directory when looking for
+	libraries
+
+2016-10-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/native/pyusb.py: Fix flake8
+
+2016-10-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/native/pyusb.py: Modify find_library logic
+
+2016-10-06  Dain Nilsson <dain@yubico.com>
+
+	* .travis.yml: Have travis run pre-commit.
+
+2016-10-06  Dain Nilsson <dain@yubico.com>
+
+	* .pre-commit-config.yaml: Added pre-commit.
+
+2016-10-05  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_ccid.py: Cleanup
+
+2016-10-05  Dag Heyman <dag@yubico.com>
+
+	* vendor/yubicommon: Update Yubicommon
+
+2016-10-05  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_ccid.py: Always kill scdaemon on
+	CardConnectionException
+
+2016-10-05  Dag Heyman <dag@yubico.com>
+
+	* setup.py: Add pypiwin32 dependency for win
+
+2016-09-28  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_ccid.py: Recover if PCSCContext becomes stale.
+
+2016-10-03  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py: Fix flake8
+
+2016-10-03  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py, ykman/cli/slot.py: Use the
+	word "settings" for the command
+
+2016-09-30  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py: First version of update
+	command
+
+2016-09-30  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Fix flake8
+
+2016-09-30  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Add test for update settings
+
+2016-09-30  Dag Heyman <dag@yubico.com>
+
+	* test/test_cli_commands_on_yubikey.py: Fix integration tests
+
+2016-09-28  Dag Heyman <dag@yubico.com>
+
+	* ykman/device.py, ykman/util.py: Modify capabilities behaviour Assume all CCID applets are available on NEO if CCID is turned off.
+	Disable CCID dependent features when CCID is turned off.
+
+2016-09-14  Dag Heyman <dag@yubico.com>
+
+	* doc/releasing.adoc: Update installer command macOS
+
+2016-09-13  Dag Heyman <dag@yubico.com>
+
+	* doc/releasing.adoc: Add retina fix to releasing doc
+
+2016-09-01  Dag Heyman <dag@yubico.com>
+
+	* doc/releasing.adoc: Update code signing commands for macOS
+
+2016-08-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/controller.py: Use descriptor in gui controller.
+
+2016-08-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_otp.py: Fix version checks in driver_otp.
+
+2016-08-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/driver_ccid.py: Move 4.2.4 capabilities fix
+	to device.
+
+2016-08-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/device.py, ykman/driver.py,
+	ykman/driver_ccid.py, ykman/driver_otp.py, ykman/driver_u2f.py: Only
+	do mode reading in descriptor.
+
+2016-08-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/descriptor.py, ykman/device.py,
+	ykman/driver.py, ykman/driver_ccid.py, ykman/driver_otp.py,
+	ykman/driver_u2f.py, ykman/util.py: Added descriptor using pyusb for
+	basic device info.
+
+2016-08-18  Dag Heyman <dag@yubico.com>
+
+	* doc/releasing.adoc: Update releasing doc
+
+2016-08-13  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, test/test_cli_commands_on_yubikey.py: Try running the
+	tests and skipping if import fails
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, test/test_cli_commands_on_yubikey.py: Revert "Try
+	running the tests on Travis" This reverts commit c8e2734829dbf4159d379b64bae06b352dbc23bb.
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml, test/test_cli_commands_on_yubikey.py: Try running the
+	tests on Travis
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* README: Update README
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* README: Fix status badge
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* README: Add travis status badge to README
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Change python versions in Travis
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Remove tests from travis
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Use dev version of libu2f-host in travis
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Use trusty in Travis
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Edit travis config file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Add ppa to travis file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Add libykpers to travis file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Spelling
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Travis: Update config
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Update travis file again
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Update travis file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Update travis file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Add swig to travis file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Update travis file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* .travis.yml: Add travis config file
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* setup.cfg, test/test_cli_commands_on_yubikey.py,
+	ykman/cli/info.py, ykman/device.py, ykman/driver_ccid.py,
+	ykman/gui/__main__.py, ykman/gui/controller.py,
+	ykman/gui/messages.py, ykman/gui/validators.py,
+	ykman/gui/view/info.py, ykman/gui/view/mode.py,
+	ykman/gui/view/slot.py, ykman/opgp.py: Fix flake8 warnings
+
+2016-08-12  Dag Heyman <dag@yubico.com>
+
+	* setup.cfg: Add config for flake8
+
+2016-07-10  Dain Nilsson <dainzor@gmail.com>
+
+	* README: Update README
+
+2016-07-10  Dain Nilsson <dainzor@gmail.com>
+
+	* README: Update README
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/view/info.py: Refactor
+	controller signals Remove signals for properties that can't change during run time.
+	Also only have one update function for device section in GUI.
+
+2016-07-08  Dain Nilsson <dain@yubico.com>
+
+	* doc/development.adoc: Fix development.adoc
+
+2016-07-08  Dain Nilsson <dain@yubico.com>
+
+	* README: Update Bash completion command.
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README, doc/development.adoc: Move development instructions to doc
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README: Move screenshot to root
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README: Don't indent usage block in README
+
+2016-07-08  Dain Nilsson <dain@yubico.com>
+
+	* README: Fix Bash completion command.
+
+2016-07-08  Dain Nilsson <dain@yubico.com>
+
+	* README: Fix Bash completion header.
+
+2016-07-08  Dain Nilsson <dain@yubico.com>
+
+	* README: Added instructions for Bash completion to README.
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README: Add image to README
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README: Fix README style again
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README: Style issues in README
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README: Update installation instructions
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* README: Update README
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* doc/releasing.adoc: Document release commands
+
+2016-07-08  Dag Heyman <dag@yubico.com>
+
+	* resources/win-installer.nsi: Add windows installer script
+
+2016-07-07  Dain Nilsson <dain@yubico.com>
+
+	* .gitignore, setup.py, test/test_cli_commands_on_yubikey.py: Use
+	click CliRunner for tests.
+
+2016-07-07  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py: Use nonzero exit code on slot programming
+	failure.
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/info.py: Fix version printing in GUI When version was changed but not the name, many versions where
+	printed in the GUI.
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/controller.py: Handle no pyusb backend in GUI
+
+2016-07-07  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/native/pyusb.py: Handle missing pyusb
+	backend.
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/info.py: No extra line break in ykman info
+
+2016-07-07  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/native/pyusb.py, ykman/util.py: Show
+	PyUSB backend and version in ykman --version.
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/info.py: Move library versions to
+	'ykman -v' command
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* resources/fix_libusb_dep_app_bundle.sh: Shell script to fix path
+	problem in .app
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* NEWS: Create NEWS file
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* ykman/__init__.py: Update version number
+
+2016-07-07  Dag Heyman <dag@yubico.com>
+
+	* .gitignore: Update .gitignore
+
+2016-07-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/opgp.py: Update help strings for OpenPGP commands
+
+2016-07-06  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/gui.py, ykman/cli/info.py,
+	ykman/cli/mode.py, ykman/cli/slot.py: Fix some help strings.
+
+2016-07-06  Dain Nilsson <dain@yubico.com>
+
+	* README: Update dependencies in README.
+
+2016-07-06  Dag Heyman <dag@yubico.com>
+
+	* : Remove unused icon
+
+2016-07-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/slot.py: Update text on confirm button when
+	swapping
+
+2016-07-06  Dain Nilsson <dain@yubico.com>
+
+	* README.adoc: Add .adoc symlink for Github.
+
+2016-07-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/messages.py, ykman/gui/view/slot.py: Bigger swap button
+
+2016-07-06  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/slot.py: Use grid in write configuration window
+
+2016-07-06  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/slot.py: Use grid for all widgets in OTP
+	configuration.
+
+2016-07-06  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/slot.py: Use grid layout instead of form layout for
+	wizards.
+
+2016-07-05  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/slot.py: Use monospace in key labels
+
+2016-07-05  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/slot.py: Fix OTP programming layout for Windows
+
+2016-07-05  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/mode.py: Connect events in mode switch better
+
+2016-07-05  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/slot.py: Minor cleanups.
+
+2016-07-05  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/slot.py: Don't use Accept/Reject roles for buttons
+	in Wizard.  Windows places "Next" left of "Prev" when these roles.
+
+2016-07-05  Dag Heyman <dag@yubico.com>
+
+	* : Update icons
+
+2016-07-05  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_ccid.py, ykman/gui/view/mode.py: Handle smartcard
+	error in mode switch To avoid the mode switch window to freeze, handle the smart card
+	exception.
+
+2016-07-05  Dag Heyman <dag@yubico.com>
+
+	* : Add icons for executable
+
+2016-07-04  Dag Heyman <dag@yubico.com>
+
+	* README: Update README for move to GitHub
+
+2016-07-04  Dag Heyman <dag@yubico.com>
+
+	* test/{test_yubikey_slot.py => test_cli_commands_on_yubikey.py}: 
+	Add confirmation to integration tests
+
+2016-07-04  Dag Heyman <dag@yubico.com>
+
+	* test/test_yubikey_slot.py: Add integration tests for OpenPGP
+
+2016-07-04  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/__init__.py, ykman/gui/controller.py: Cleanup TODOs.
+
+2016-07-04  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/__main__.py, ykman/gui/controller.py,
+	ykman/gui/messages.py: Handle busy key in GUI If a YubiKey is detected but not able to open give the user a error
+	message about the key being busy.
+
+2016-07-04  Dag Heyman <dag@yubico.com>
+
+	* test/test_yubikey_slot.py: Fixup integration tests
+
+2016-07-01  Dag Heyman <dag@yubico.com>
+
+	* test/__init__.py, test/test_yubikey_slot.py: Add some integration
+	tests for slot programming
+
+2016-07-01  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/validators.py, ykman/gui/view/slot.py: Break out
+	validators to its own file
+
+2016-06-30  Dain Nilsson <dain@yubico.com>
+
+	* ykman/util.py: Find libusb in cwd.
+
+2016-06-30  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/__main__.py, ykman/gui/controller.py,
+	ykman/gui/messages.py: Warn when multiple keys detected in GUI On every refresh, check the number of keys connected.  If it's more
+	than one, lock down the GUI and warn the user.
+
+2016-06-30  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/__main__.py, ykman/gui/messages.py,
+	ykman/gui/view/info.py: Just show a message when no Yubikey When no key is inserted, hide all the widgets in the info view and
+	only show a message.
+
+2016-06-30  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/slot.py: Bigger input for HOTP key in GUI
+
+2016-06-30  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/messages.py, ykman/gui/view/slot.py: Only allow modhex
+	static passwords in GUI.  In the GUI, only allow modhex static passwords to be programmed. Add
+	a generate button.
+
+2016-06-29  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/messages.py, ykman/gui/view/slot.py: Generate key button
+	for challenge response
+
+2016-06-29  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/messages.py, ykman/gui/view/mode.py,
+	ykman/gui/view/slot.py: Use buttons instead of links in slot
+	programming
+
+2016-06-29  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/__main__.py, ykman/gui/messages.py,
+	ykman/gui/view/info.py: Use buttons instead of links in info view
+
+2016-06-29  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/__main__.py, ykman/gui/view/mode.py,
+	ykman/gui/view/slot.py: Disallow resizing the windows.
+
+2016-06-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/util.py: Fix device listing on Windows.
+
+2016-06-28  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/messages.py, ykman/gui/view/slot.py: Generate key and
+	ids in OTP codes (GUI) When programming OTP codes, add the possibility to generate the
+	secret key, the private id and to use the serial number as the
+	public id.
+
+2016-06-27  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/info.py: No special firmware formatting for NEO
+
+2016-06-22  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/messages.py, ykman/gui/view/mode.py: Move strings to
+	message file
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py, ykman/gui/view/slot.py: Don't require device
+	when invoking --help.
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/mode.py, ykman/cli/opgp.py, ykman/cli/slot.py: Set
+	metavar for options.
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py: Randomly generate key and private ID when not
+	given.
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_ccid.py: Better handling of CCID devices without OTP
+	applet.
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py: SKY can't mode switch.
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/opgp.py, ykman/cli/slot.py,
+	ykman/cli/util.py: Don't require device when invoking --help.
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* setup.py, ykman/cli/__main__.py, ykman/cli/info.py,
+	ykman/driver_ccid.py, ykman/driver_u2f.py, ykman/util.py: Added
+	pyusb for correct device and firmware detection.
+
+2016-06-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/mode.py: Connection mode related wording.
+
+2016-06-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/mode.py: NFC should not affect the mode switch
+	button
+
+2016-06-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_ccid.py, ykman/opgp.py: Clean up error handling in
+	openpgp code
+
+2016-06-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/slot.py: Except YkpersError when doing slot
+	programming
+
+2016-06-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/mode.py: Add popup when switching mode fails in GUI
+
+2016-06-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/mode.py: Text changes in mode dialog (GUI)
+
+2016-06-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/slot.py: Modify message for YkpersError in GUI
+
+2016-06-21  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_ccid.py: Refactor CCID driver error handling
+
+2016-06-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/driver_otp.py, ykman/driver_u2f.py: Clean up error handling
+	in u2f driver
+
+2016-06-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py: Don't use a specific error
+	for write error Just use YkpersError
+
+2016-06-20  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/mode.py, ykman/driver.py, ykman/driver_ccid.py,
+	ykman/driver_otp.py, ykman/driver_u2f.py: Handle failed mode
+	switched on U2F and CCID When switching mode, handle the case when an access code is blocking
+	the action on both U2F and CCID
+
+2016-06-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/messages.py,
+	ykman/gui/view/info.py: Move some strings into messages.py
+
+2016-06-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/info.py: Remove configuration button for OPGP.
+
+2016-06-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/info.py: Nicer checks on version and capabilities.
+
+2016-06-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/mode.py: Don't print trace on bad argument.
+
+2016-06-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/native/u2fh.py: Expose u2fh_strerror and u2fh_strerror_name
+
+2016-06-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py: Cleanup access code.
+
+2016-06-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py, ykman/cli/util.py, ykman/driver_otp.py,
+	ykman/native/ykpers.py: Add --access-code to slot commands (CLI).
+
+2016-06-17  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py: Handle write errors for
+	slot commands (CLI) In CLI handle write errors for the slot commands.  This usually
+	means the access to the device is restricted, for example with an
+	access code.
+
+2016-06-17  Dag Heyman <dag@yubico.com>
+
+	* vendor/yubicommon: Update Yubicommon
+
+2016-06-17  Dag Heyman <dag@yubico.com>
+
+	* ykman/cli/info.py: Show firmware version in CLI Show firmware version in 'ykman info' command.  Only two numbers for
+	NEO.
+
+2016-06-17  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/view/info.py: Show firmware
+	version in GUI In the GUI show the firmware version.  For the NEO, only show two
+	numbers to avoid confusion.
+
+2016-06-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_ccid.py: Only try to repoen CCID device if scdaemon
+	was killed.
+
+2016-06-16  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/info.py, ykman/gui/view/mode.py: Use transport
+	protocols instead of USB protocols
+
+2016-06-16  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/mode.py: Don't allow to turn off NFC transport in
+	GUI
+
+2016-06-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/util.py: Correct state for NFC in
+	"enabled".
+
+2016-06-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/driver_ccid.py: Always kill scdaemon
+	on sharing violation.
+
+2016-06-16  Dag Heyman <dag@yubico.com>
+
+	* ykman/gui/view/info.py: Filter out capabilities that are only
+	transports In the feature list, don't show CCID and NFC as they are only
+	transportation modes.
+
+2016-06-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/util.py: Added NFC capability.
+
+2016-06-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py: Fix argument parsing in slot.
+
+2016-06-16  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon: Update yubicommon.
+
+2016-06-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/native/ykpers.py: Fixed ykpers ctypes.
+
+2016-06-09  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon, ykman/driver_otp.py, ykman/driver_u2f.py,
+	ykman/native/u2fh.py, ykman/native/ykpers.py: Update yubicommon and
+	refactored ctypes code.
+
+2016-06-08  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon, ykman/native/u2fh.py, ykman/native/ykpers.py: 
+	Update yubicommon, use use_library.
+
+2016-06-08  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon: Update yubicommon.
+
+2016-06-08  Dain Nilsson <dain@yubico.com>
+
+	* setup.py: Rename extra requirements.
+
+2016-06-03  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/mode.py: click fixes.
+
+2016-06-01  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon: Updated yubicommon.
+
+2016-06-01  Dain Nilsson <dain@yubico.com>
+
+	* setup.py, vendor/yubicommon, ykman/cli/__main__.py,
+	ykman/cli/gui.py, ykman/cli/info.py, ykman/cli/mode.py,
+	ykman/cli/opgp.py, ykman/cli/slot.py, ykman/cli/util.py: Use click
+	instead of docopt.
+
+2016-05-30  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/opgp.py, ykman/driver_ccid.py,
+	ykman/opgp.py: Add openpgp commands to CLI.
+
+2016-05-24  Dag Heyman <dag@yubico.com>
+
+	* vendor/yubicommon: Update yubicommon.
+
+2016-04-06  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_u2f.py, ykman/gui/controller.py: Minor fixes
+
+2016-04-04  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_otp.py, ykman/driver_u2f.py: Store library versions
+	as strings.
+
+2016-04-04  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_ccid.py: Python3 compatibility.
+
+2016-03-30  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon: Updated yubicommon.
+
+2016-03-30  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon, ykman/cli/slot.py, ykman/device.py,
+	ykman/driver_otp.py, ykman/gui/controller.py,
+	ykman/gui/view/mode.py, ykman/util.py: Fixed Python 3
+	incompatibilities.
+
+2016-03-30  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_otp.py: Fix HOTP secret (needs to be padded to 20
+	bytes).
+
+2016-03-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/info.py: Info display changes.
+
+2016-03-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/mode.py: Unset transports which are not allowed.
+
+2016-03-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/driver_ccid.py: Support modeswitching using
+	MGR applet.
+
+2016-03-23  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/view/slot.py: More slot gui
+	work.
+
+2016-03-17  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/view/slot.py: Added chalresp
+	wizard.
+
+2016-03-17  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_otp.py: Set CHAL_BTN_TRIG when needed.
+
+2016-03-17  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/view/slot.py: More slot wizard
+	work.
+
+2016-03-17  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py: Cleanups.
+
+2016-03-17  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/gui.py: Only catch ImportError for PySide.
+
+2016-03-17  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/slot.py: Resize slot dialog when needed.
+
+2016-03-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/view/slot.py: More slot wizard
+	work.
+
+2016-03-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/view/info.py, ykman/gui/view/slot.py: Added initial slot
+	configuratino wizard.
+
+2016-03-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/__main__.py, ykman/gui/controller.py,
+	ykman/gui/view/info.py, ykman/gui/view/mode.py: Use Worker for
+	device access.
+
+2016-03-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/__init__.py: Don't fail on missing resources.
+
+2016-03-16  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py: Added slot status to OTP
+	driver.
+
+2016-01-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/util.py: Add missing parenthesis.
+
+2016-01-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/gui/controller.py, ykman/gui/util.py,
+	ykman/gui/view/__init__.py, ykman/gui/view/info.py,
+	ykman/gui/view/mode.py: Basic GUI with mode switching.
+
+2016-01-29  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/mode.py, ykman/device.py, ykman/util.py: minor
+	refactoring of bitflags.
+
+2016-01-29  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon: Updated yubicommon.
+
+2016-01-29  Dain Nilsson <dain@yubico.com>
+
+	* README, ykman/device.py, ykman/driver_otp.py,
+	ykman/gui/__main__.py: Add missing import to README.
+
+2016-01-27  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon, ykman/cli/slot.py, ykman/driver_otp.py,
+	ykman/util.py: Added YubiKey OTP programming.
+
+2016-01-27  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_ccid.py: Fix CCID driver when serial is not set.
+
+2016-01-27  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/driver.py, ykman/driver_ccid.py,
+	ykman/driver_otp.py: Read serial.
+
+2016-01-27  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/mode.py: Add missing space.
+
+2016-01-26  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/mode.py, ykman/cli/slot.py,
+	ykman/cli/util.py, ykman/driver_otp.py, ykman/native/ykpers.py: 
+	Added chalresp and hotp to slot command.
+
+2016-01-26  Dain Nilsson <dain@yubico.com>
+
+	* README: Mention updating the submodule in README.
+
+2016-01-26  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/gui.py, ykman/cli/info.py, ykman/cli/mode.py,
+	ykman/cli/slot.py, ykman/cli/util.py, ykman/driver_u2f.py,
+	ykman/native/ykpers.py: Use print function and new string
+	formatting.
+
+2016-01-26  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/slot.py, ykman/cli/util.py,
+	ykman/driver_otp.py, ykman/native/ykpers.py,
+	ykman/scanmap/__init__.py, ykman/scanmap/us.py: Added static
+	password.
+
+2016-01-26  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon: Updated yubicommon
+
+2016-01-26  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/gui.py, ykman/cli/slot.py: Set
+	required transports for commands.
+
+2016-01-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py, ykman/driver_otp.py, ykman/native/ykpers.py: 
+	Implement delete slot.
+
+2016-01-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/gui.py: Fix ykman gui command.
+
+2016-01-22  Dain Nilsson <dain@yubico.com>
+
+	* README, setup.py, vendor/yubicommon, ykman/cli/__main__.py,
+	ykman/cli/gui.py, ykman/cli/info.py, ykman/cli/mode.py,
+	ykman/cli/slot.py: Switched from argparse to docopt.
+
+2016-01-22  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/slot.py: Boolerplate for CLI slot
+	subcommand.
+
+2016-01-21  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py: Remove re-open for debugging purposes.
+
+2016-01-21  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/info.py, ykman/cli/slot.py: Improved info CLI output.
+
+2016-01-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/slot.py, ykman/device.py, ykman/driver_otp.py,
+	ykman/native/ykpers.py: Added slot status.
+
+2016-01-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/mode.py, ykman/device.py, ykman/util.py: Check/show
+	available modes.
+
+2016-01-20  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/slot.py: Added stub for otp
+	subcommand.
+
+2016-01-20  Dain Nilsson <dain@yubico.com>
+
+	* README: Remove pycrypto dependency from README.
+
+2016-01-20  Dain Nilsson <dain@yubico.com>
+
+	* setup.py, ykman/cli/mode.py, ykman/device.py,
+	ykman/driver_ccid.py, ykman/driver_otp.py, ykman/driver_u2f.py,
+	ykman/util.py: Introduced enums.
+
+2016-01-19  Dain Nilsson <dain@yubico.com>
+
+	* README: Updated installation instructions in README.
+
+2016-01-18  Dain Nilsson <dain@yubico.com>
+
+	* README: Added instructions on using argcomplete.
+
+2016-01-18  Dain Nilsson <dain@yubico.com>
+
+	* README, setup.py, vendor/yubicommon, ykman/cli/__main__.py,
+	ykman/cli/gui.py: Moved non-core dependencies into extras_require.  Made ykman the CLI tool, and gave it a "gui" subcommand. ykman-gui
+	also exists (for now).
+
+2016-01-18  Dain Nilsson <dain@yubico.com>
+
+	* setup.py, ykman/cli/__main__.py: Added argcomplete.
+
+2016-01-15  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/mode.py, ykman/device.py, ykman/driver_ccid.py,
+	ykman/driver_otp.py, ykman/driver_u2f.py, ykman/gui/__init__.py,
+	ykman/gui/__main__.py, ykman/native/ykpers.py: Add cr_timeout and
+	autoeject_time to set_mode command in drivers.
+
+2016-01-15  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/info.py, ykman/cli/mode.py: CLI
+	improvements.
+
+2016-01-15  Dain Nilsson <dain@yubico.com>
+
+	* ykman/driver_ccid.py: Ignore disconnect errors for CCID in
+	__del__.
+
+2016-01-15  Dain Nilsson <dain@yubico.com>
+
+	* ykman/util.py: Add __eq__ and __ne__ to Mode.
+
+2016-01-15  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py: Fix mode setting.
+
+2016-01-13  Dain Nilsson <dain@yubico.com>
+
+	* vendor/yubicommon, ykman/device.py, ykman/gui/__main__.py,
+	ykman/gui/messages.py: Added boilerplate for gui.
+
+2016-01-13  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/cli/info.py, ykman/cli/mode.py: Added
+	info command.
+
+2015-11-09  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/driver_ccid.py: Show device serial.
+
+2015-11-09  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/device.py, ykman/driver.py,
+	ykman/driver_ccid.py, ykman/driver_otp.py, ykman/driver_u2f.py: 
+	Implemented set_mode.
+
+2015-11-09  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/driver_otp.py, ykman/driver_u2f.py: Added
+	initial implementation of OTP driver.
+
+2015-11-09  Dain Nilsson <dain@yubico.com>
+
+	* ykman/device.py, ykman/driver_ccid.py, ykman/driver_u2f.py,
+	ykman/native/u2fh.py, ykman/native/ykpers.py, ykman/util.py: Added
+	initial implementation of U2F driver.
+
+2015-11-09  Dain Nilsson <dain@yubico.com>
+
+	* ykman/cli/__main__.py, ykman/device.py, ykman/driver.py,
+	ykman/driver_ccid.py, ykman/native/__init__.py,
+	ykman/native/u2fh.py, ykman/native/ykpers.py, ykman/util.py: 
+	Implemented initial CCID driver.
+
+2015-11-06  Dain Nilsson <dain@yubico.com>
+
+	* Initial project layout.
+
