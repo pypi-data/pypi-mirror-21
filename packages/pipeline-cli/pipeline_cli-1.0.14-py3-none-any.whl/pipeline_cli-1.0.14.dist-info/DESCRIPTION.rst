@@ -1,0 +1,225 @@
+Pipeline CLI
+============
+
+Command-line interface to the Sepior Pipeline.
+
+Requirements
+------------
+
+Python 3.5
+
+Install using pyenv or pyvenv
+
+Installation
+------------
+
+.. code-block:: bash
+
+    $ pip install pipeline_cli
+
+
+Usage
+-----
+The tool will show a description of usage when given the 
+`--help` option:
+
+.. code-block:: bash
+
+    $ pipeline --help
+
+    usage: pipeline [-h] [--version] [--host HOST_NAME] {start,enqueue} ...
+
+    The pipeline utility
+
+    positional arguments:
+      {start,enqueue}   sub-commands
+        start           start help
+        enqueue         enqueue downstream dependencies help
+
+    optional arguments:
+      -h, --help        show this help message and exit
+      --version, -v     show programs version number and exit
+      --host HOST_NAME  specify pipeline server host. Default is
+                        https://pipeline.sepior.net```
+
+
+The tool is able to:
+1. start a pipeline
+2. enqueue downstream pipelines
+
+Starting a pipeline
+~~~~~~~~~~~~~~~~~~~
+We assume you already have a pipeline file. If the pipeline file
+is in the current directory then simply run
+
+.. code-block:: bash
+
+    $ pipeline start <version>
+
+See `pipeline start --help` for more advanced usecases.
+
+Enqueue downstream pipelines
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This command is relevant if the pipeline you have is building inside
+the pipeline or if you manually want to (re)start downstream pipelines.
+
+See `pipeline enqueue --help` for parameters.
+
+
+Building the tool
+-----------------
+Make sure you have a Python 3.5 environment with the requirements. 
+
+E.g. use pyenv:
+
+.. code-block:: bash
+
+    $ pyenv virtualenv 3.5.0 pipeline-cli-venv
+    $ pyenv activate pipeline-cli-venv
+
+Make sure pip is up-to-date:
+
+.. code-block:: bash
+
+    $ pip install --upgrade pip
+
+Install requirements:
+
+.. code-block:: bash
+
+    $ pip install --upgrade -r requirements.txt
+
+Build the wheel:
+
+.. code-block:: bash
+
+    $ make
+
+Development
+~~~~~~~~~~~
+
+Use the following command to install the package in the local 
+environment during development.
+
+.. code-block:: bash
+
+    $ pip install -e .
+
+This allows you to change the code and test the pipeline cli
+directly.
+
+
+Contributing
+------------
+
+When contributing changes remember to update the `CHANGELOG.md`.
+
+
+License
+-------
+Proprietary. Copyright 2016 Sepior ApS.
+
+
+Releasing
+---------
+
+Do the following to release a new version:
+
+1. Commit changes
+2. Push changes
+3. Merge with master
+4. Update local master
+5. Find the next release version, e.g. 6.6.6
+6. Create new branch with name core/release-6.6.6
+7. Bump version in __about__.py
+8. Commit
+9. Merge with master
+10. Update local master 
+11. Run `./release.sh 6.6.6`
+
+Upload to Pypi
+--------------
+First, perform a test upload to verify everything is nice and dandy.
+Then perform the real upload.
+
+Build the code
+
+.. code-block:: bash
+    $ make
+
+
+Then define the following environment variables:
+
+.. code-block:: bash
+
+    $ export PYPI_TEST_PASSWORD=""
+    $ export PYPI_PASSWORD=""
+
+
+Test upload to pypi
+~~~~~~~~~~~~~~~~~~~
+
+You may need to register on the Pypi test server. This can be done here:
+
+.. code-block:: bash
+
+    $ https://testpypi.python.org/pypi
+
+
+Register:
+
+.. code-block:: bash
+
+    $ twine register -p ${PYPI_TEST_PASSWORD} -r pypitest dist/pipeline_cli-6.6.6-py3-none-any.whl
+
+Upload
+
+.. code-block:: bash
+
+    $ make testpypi_upload
+
+Goto:
+
+.. code-block:: bash
+
+    $ https://testpypi.python.org/pypi/pipeline-cli/6.6.6
+
+A check that everything looks nice.
+
+You can check the HTML by running:
+
+ .. code-block:: bash
+
+    $ python setup.py --long-description | rst2html.py --no-raw > output.html 
+
+
+Test if it installs (do it in a different environment):
+
+.. code-block:: bash
+
+    $ pip install -i https://testpypi.python.org/pypi pipeline-cli
+
+Real upload to Pypi
+~~~~~~~~~~~~~~~~~~~
+
+Upload
+
+.. code-block:: bash
+
+    $ make pypi_upload
+
+Goto:
+
+.. code-block:: bash
+
+    $ https://pypi.python.org/pypi/pipeline-cli/6.6.6
+
+And check that every things looks nice.
+
+
+
+
+
+
+
+
