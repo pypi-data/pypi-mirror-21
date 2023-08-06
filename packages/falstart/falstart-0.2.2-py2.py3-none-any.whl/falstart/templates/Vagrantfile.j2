@@ -1,0 +1,70 @@
+# vi:syntax=ruby
+ip_address = "{{ proj_ip }}"
+hostname = "{{ proj_name }}"
+box_name = "{{ box_name }}"
+
+SYNC_FOLDER = {{ 'false' if custom_box else 'true' }}
+
+unless Vagrant.has_plugin?("vagrant-fabric")
+  raise "
+    vagrant-fabric is not installed!
+    please run the follow commands:
+      $ vagrant plugin install vagrant-fabric
+      $ sudo apt-get install fabric
+  "
+end
+
+Vagrant.configure(2) do |config|
+  # Virtual machine parameters
+  config.vm.box = "#{box_name}"
+  config.vm.network "private_network", ip: ip_address
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  if SYNC_FOLDER then
+    if ENV['CI_FLAG'] then
+      config.vm.synced_folder ".", "/home/vagrant/proj", "type": "rsync"
+    elsif ENV['NO_NFS'] then
+      config.vm.synced_folder ".", "/home/vagrant/proj"
+    else
+      config.vm.synced_folder ".", "/home/vagrant/proj", type: "nfs",
+      :mount_options => ['actimeo=2']
+    end
+  end
+
+  config.vm.hostname = hostname
+  config.vm.post_up_message = "#{hostname} dev server successfuly started.
+    Connect to host with:
+    http://#{ip_address}/
+    or over ssh with `vagrant ssh`
+
+    Admin user credentials:
+      login: root
+      password: 123123
+  "
+
+  # Set box name
+  config.vm.define :"#{hostname}_vagrant" do |t|
+  end
+  # Virtualbox specific parameters
+  config.vm.provider "virtualbox" do |v|
+    if ENV['BUILD_NUMBER'] then
+        v.name = "#{hostname}_vagrant_#{ENV['BUILD_NUMBER']}"
+    else
+        v.name = "#{hostname}_vagrant"
+    end
+    v.memory = {{ vagrant_memory }}
+    v.cpus = {{ vagrant_cpus }}
+  end
+  # Provisioning with Fabric
+  config.vm.provision :fabric do |fabric|
+    fabric.fabfile_path = "./provision/fabric_provisioner.py"
+    fabric.tasks = [
+      "common",
+      "database",
+      "nginx",
+      {% if custom_box %}# {% endif %}"app",
+    ]
+    {% if custom_box %}# {% endif %}fabric.tasks.push("localserver") unless ENV['CI_FLAG']
+  end
+end
+{# keep trailing newline #}
