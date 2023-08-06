@@ -1,0 +1,77 @@
+2.1.0 - Apr 19 2017
+
+- Change to using deque for internal structures that only popleft
+
+- Use "realpath" to avoid some strange issues which can occur with relative
+paths
+
+- Use OS-independent operations, which should make GoodTests.py windows
+compatible again
+
+- Some cleanups, docstrings, etc
+
+- Simplifications on using specific test pattern (-m)
+
+- Remove __pycache__ directory before running test (can cause issues when
+using multiple branches)
+
+- Allow using -m like -m$PATTERN in addition to -m $PATTERN
+
+- Alert right away if specific test pattern (-m) can't be compiled as a
+regular expression
+
+- Handle terminates better, and OS-independent
+
+- Print a message when GoodTests is terminating
+
+- distrib/runTests.py - Update to better handle pressing control+c, first will
+so a soft terminate, second will do a hard kill on GoodTests.py
+
+- Move GoodTests.py main into a function: main(args) to make it more easily
+called from a wrapper script, if required.
+
+
+2.0.1 - Apr 6 2017
+* Better error reporting:
+	- Report on errors in class setup
+	- Report on errors in class teardown
+	- Note that a failure in method setup/teardown was in that method
+
+* Exclude "GoodTests.py" code from the reported tracebacks
+* Ensure we replace only the START test_ for setup/teardown names, so methods named strangely like test_Whatever_test will work
+
+* 1.2.3 Sep 9 2016
+- Update distrib/runTests.py to support older versions of python (< 2.7.9 or 3.1,3.2, some 3.3 series) which don't support relative path in imp.find_module
+- Update distrib/runTests.py to be importable and functionality called from an external application (like a GUI), and even adjust the globals by passing their names to the new main() function.
+- Update distrib/runTests.py add __version__ marker, some docstrings, extra comments, etc.
+- Update distrib/runTests.py change default of ALLOW_SITE_INSTALL to be the intended "False", so it will only test the LOCAL version of a package (as intended during development)
+
+* 1.2.2 Jul 25 2016
+- Update distrib/runTests.py to support passing arguments to GoodTests
+
+* 1.2.1 Jun 22 2016
+- Update distrib/runTests.py to support relative test directories
+- Update distrib/runTests.py to support providing a relative or absolute path
+to a file or directory as MY_PACKAGE_MODULE and runTests.py will set the
+PYTHONPATH such that the tests will use that directory.
+- Update distrib/runTests.py adding variable ALLOW_SITE_INSTALL, when False
+(default), runTests.py will refuse to run if it can only find a global install
+of the given module, i.e. when False it must find a local install. This can
+help during development, so you aren't testing the wrong code!
+
+* 1.2.0 Apr 25 2016
+- Disable colour by default if platform is windows
+- Default number of processes to the number of CPUs on the system
+- Allow "-n" to be used in more forms (like "-n 1" or "-n1")
+- Update "distrib/runTests.py" script to tell if it failed, or if there were missing
+dependencies (and suggest how to resolve)
+- Fix distrib/runTests.py
+
+* 1.1.4 Mar 25 2016
+- Fix order of arguments in os.symlink in distrib/runTests
+
+* 1.1.2.2 Sep 20 2015
+ - Cleanup READMEs and make README.rst external
+ - Fix typo in help description
+ - Add MANIFEST.in to the project
+ - Add "distrib" directory, which contains 
