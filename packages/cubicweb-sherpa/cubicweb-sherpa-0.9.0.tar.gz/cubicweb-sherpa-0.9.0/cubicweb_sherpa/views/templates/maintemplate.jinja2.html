@@ -1,0 +1,78 @@
+<body>
+  <nav class="navbar-default header-sherpa" role="banner">
+    <div class="container-fluid">
+      <div class="col-md-2 hidden-xs hidden-sm">
+        <a href="{{ build_url('') }}"><img src="{{ data_url }}images/logo_SIAF.png" class="logoSIAF" /></a>
+      </div>
+      <div class="col-md-7 col-xs-8">
+        <a href="/">
+          <div class="logoSHERPA">
+            <img src="{{ data_url }}images/logo_SHERPA_2.png" class="img-responsive"/>
+          </div>
+          <div class="textSHERPA">
+            <h1>Service H&eacute;berg&eacute; pour la R&eacute;daction de Profils d&#39;Archivage</h1>
+          </div>
+        </a>
+      </div>
+      {% if header_components %}
+      <div class="col-md-3 col-xs-4">
+        <ul class="nav navbar-nav navbar-right">
+        {% for comp_html in header_components %}
+        <li>{{ comp_html|safe}}</li>
+        {% endfor %}
+        </ul>
+
+      </div>
+      {% endif %}
+    </div>
+  </nav>
+  <nav role="navigation" class="sherpa-navbar">
+    <div class="col-md-offset-2">
+      <ul class="nav nav-pills">
+        {% for link in navigation_links %}
+        {% if link.active %}
+        <li class="active"><a href="{{ link.url }}" class="navbar-btn">{{ link.label }}</a></li>
+        {% else %}
+        <li><a href="{{ link.url }}" class="navbar-btn">{{ link.label }}</a></li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </nav>
+  <div id="{{page_id}}" class="container-fluid" role="main">
+
+    {% if boxes %}
+    <aside id="aside-main-left" class="col-md-2 cwjs-aside">
+      {% for box_html in boxes %}
+      {{ box_html|safe}}
+      {% endfor %}
+    </aside>
+    <div class="col-md-10 page-content">
+    {% else %}
+    <div class="col-md-12 page-content">
+    {% endif %}
+      <div id="pageContent">
+      {{ application_message|safe }}
+      {{ contextual_components|safe }}
+      {{ page_content|safe }}
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <footer role="contentinfo" id="pagefooter">
+      <section class="links">
+        <div id="sherpa-resources">
+        <h3>Ressources</h3>
+        {% for resource in footer.resources %}
+          <a href='{{ resource.url }}'> {{ resource.label }}</a>
+        {% endfor %}
+        </div>
+      </section>
+      <div id="footer-links">
+        <span><a href="{{ build_url('apropos') }}">À propos</a></span>
+        <span><a href="{{ build_url('contact') }}">Contact</a></span>
+        <span>© Service Interministériel des Archives de France</span>
+      </div>
+    </footer>
+  </div>
+</body>
