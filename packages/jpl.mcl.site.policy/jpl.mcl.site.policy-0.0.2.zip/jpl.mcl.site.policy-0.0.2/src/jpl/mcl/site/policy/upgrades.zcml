@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<configure
+    xmlns='http://namespaces.zope.org/zope'
+    xmlns:genericsetup='http://namespaces.zope.org/genericsetup'
+    i18n_domain='jpl.mcl.site.policy'>
+    <genericsetup:upgradeStep
+        source='0'
+        destination='1'
+        title='Upgrade 0 to 1'
+        description='Upgrade the MCL site policy from version 0 to version 1 (null upgrade, no custom steps required)'
+        profile='jpl.mcl.site.policy:default'
+        handler='jpl.mcl.site.policy.upgrades.nullUpgradeStep'
+        sortkey='1'
+    />
+    <genericsetup:upgradeStep
+        source='1'
+        destination='2'
+        title='MCL Policy Upgrade 1 to 2'
+        description='Upgrade the MCL site policy from profile 1 to 2 with jpl.mcl.site.knowledge (new dependency)'
+        profile='jpl.mcl.site.policy:default'
+        handler='jpl.mcl.site.policy.upgrades.installJPLMCLSiteKnowledge'
+        sortkey='1'
+    />
+    <genericsetup:upgradeStep
+        source='2'
+        destination='3'
+        title='MCL Policy Upgrade 2 to 3'
+        description='Upgrade the MCL site policy from profile 2 to 3 with jpl.mcl.site.sciencedata (new dependency)'
+        profile='jpl.mcl.site.policy:default'
+        handler='jpl.mcl.site.policy.upgrades.installJPLMCLSiteSciencedata'
+        sortkey='1'
+    />
+    <genericsetup:upgradeStep
+        source='3'
+        destination='4'
+        title='MCL Policy Upgrade 3 to 4'
+        description='Upgrade the MCL site policy from profile 3 to 4 with tabs from knowledge and sciencedata reordered'
+        profile='jpl.mcl.site.policy:default'
+        handler='jpl.mcl.site.policy.upgrades.orderFolderTabs'
+        sortkey='1'
+    />
+</configure>
