@@ -1,0 +1,61 @@
+Metadata-Version: 1.1
+Name: django-yamoney
+Version: 1.2
+Summary: A simple Django app for Yandex.Money service
+Home-page: UNKNOWN
+Author: Mpower
+Author-email: mpower.public@yandex.ru
+License: MIT
+Description: .. image:: https://travis-ci.org/mp0wer/django-yamoney.svg?branch=master
+            :target: https://travis-ci.org/mp0wer/django-yamoney
+        
+        =======
+        Yamoney
+        =======
+        
+        Django приложение для приема денег на кошелек Yandex.Money
+        
+        Установка
+        ---------
+        
+        1. Установить::
+        
+            pip install django-yamoney
+        
+        2. Добавить "yamoney" в ваш INSTALLED_APPS::
+        
+            INSTALLED_APPS = (
+                ...
+                'yamoney',
+            )
+        
+        3. Добавить yamoney URLconf в urls.py вашего проекта::
+        
+            url(r'^yamoney/', include('yamoney.urls'))
+        
+        4. Создать форму оплаты с помощью yamoney.forms.paymentform_factory::
+        
+            payment_form = paymentform_factory(
+                'Оплата участия',  # описание платежа
+                2000,               # сумма
+                event               # объект модели
+            )
+        
+        5. Слушать yamoney.signals.transaction_success сигнал, где sender - транзакция, related_obj - объект модели.
+        
+        
+Platform: UNKNOWN
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Framework :: Django :: 1.8
+Classifier: Framework :: Django :: 1.9
+Classifier: Framework :: Django :: 1.10
+Classifier: Framework :: Django :: 1.11
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
