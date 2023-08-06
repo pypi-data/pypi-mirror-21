@@ -1,0 +1,45 @@
+{% load static %}
+<style type="text/css"></style>
+
+{% block content %}
+
+<div class="clear"></div>
+<textarea id="id_{{name}}" name="{{name}}">{{value|safe}}</textarea>
+
+<script type="text/javascript">
+(function ($) {
+  // Prevent multiple initializations
+  if (typeof HTML_EDITOR == 'undefined') {
+    window.HTML_EDITOR = {};
+
+    // Load CSS
+    var styles = [ {% for href in styles %}'{% static href %}', {% endfor %}];
+
+    for (var i=0;i<styles.length;i++) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = styles[i];
+      $('head').append(link);
+    }
+
+    var srcs = [ {% for src in scripts %}'{% static src %}', {% endfor %}];
+
+    // Load Scripts
+    for (var i=0;i<srcs.length;i++) {
+      var script = document.createElement('script');
+      script.src = srcs[i];
+      $('body').append(script);
+    }
+  }
+
+  var options = {
+    'lineNumbers': true,
+    'mode': 'htmlmixed'
+  };
+
+  var textarea = document.getElementById('id_{{name}}');
+  var editor = CodeMirror.fromTextArea(textarea, options);
+})(django.jQuery)
+</script>
+<!-- /CodeMirror -->
+{% endblock %}
