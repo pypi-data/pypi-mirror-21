@@ -1,0 +1,444 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>zope.security.proxy &mdash; zope.security 4.0dev documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '4.0dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="zope.security 4.0dev documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">zope.security 4.0dev documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for zope.security.proxy</h1><div class="highlight"><pre>
+<span></span><span class="c1">##############################################################################</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2001, 2002 Zope Foundation and Contributors.</span>
+<span class="c1"># All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># This software is subject to the provisions of the Zope Public License,</span>
+<span class="c1"># Version 2.1 (ZPL).  A copy of the ZPL should accompany this distribution.</span>
+<span class="c1"># THIS SOFTWARE IS PROVIDED &quot;AS IS&quot; AND ANY AND ALL EXPRESS OR IMPLIED</span>
+<span class="c1"># WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c1"># WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS</span>
+<span class="c1"># FOR A PARTICULAR PURPOSE.</span>
+<span class="c1">#</span>
+<span class="c1">##############################################################################</span>
+<span class="sd">&quot;&quot;&quot;Helper functions for Proxies.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">zope.proxy</span> <span class="kn">import</span> <span class="n">PyProxyBase</span>
+<span class="kn">from</span> <span class="nn">zope.security._compat</span> <span class="kn">import</span> <span class="n">PYPY</span>
+<span class="kn">from</span> <span class="nn">zope.security.interfaces</span> <span class="kn">import</span> <span class="n">ForbiddenAttribute</span>
+
+<span class="k">def</span> <span class="nf">_check_name</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span> <span class="n">wrap_result</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">meth</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+        <span class="n">checker</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">meth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">wrap_result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="k">return</span> <span class="n">checker</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">update_wrapper</span><span class="p">(</span><span class="n">_wrapper</span><span class="p">,</span> <span class="n">meth</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_check_name_inplace</span><span class="p">(</span><span class="n">meth</span><span class="p">):</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">meth</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="k">def</span> <span class="nf">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+        <span class="n">checker</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">w_meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">w_meth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c1"># The proxy object cannot change; we are modifying in place.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped</span> <span class="o">=</span> <span class="n">w_meth</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">x_name</span> <span class="o">=</span> <span class="s1">&#39;__</span><span class="si">%s</span><span class="s1">__&#39;</span> <span class="o">%</span>  <span class="n">name</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ProxyPy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">x_name</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">),</span> <span class="n">checker</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">functools</span><span class="o">.</span><span class="n">update_wrapper</span><span class="p">(</span><span class="n">_wrapper</span><span class="p">,</span> <span class="n">meth</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_fmt_address</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="c1"># Try to replicate PyString_FromString(&quot;%p&quot;, obj), which actually uses</span>
+    <span class="c1"># the platform sprintf(buf, &quot;%p&quot;, obj), which we cannot access from Python</span>
+    <span class="c1"># directly (and ctypes seems like overkill).</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s1">&#39;win32&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;0x</span><span class="si">%08X</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;0x</span><span class="si">%0x</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">id</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">ProxyPy</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">):</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">,</span> <span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">checker</span><span class="p">):</span>
+        <span class="n">inst</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="n">inst</span><span class="o">.</span><span class="n">_wrapped</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="n">inst</span><span class="o">.</span><span class="n">_checker</span> <span class="o">=</span> <span class="n">checker</span>
+        <span class="k">return</span> <span class="n">inst</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">checker</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">checker</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;checker may now be None&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_checker</span> <span class="o">=</span> <span class="n">checker</span>
+
+    <span class="c1"># Attribute protocol</span>
+    <span class="k">def</span> <span class="nf">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">,</span> <span class="s1">&#39;_checker&#39;</span><span class="p">):</span>
+            <span class="c1"># Only allow _wrapped and _checker to be accessed from inside.</span>
+            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">_getframe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">f_locals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;self&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;_wrapped&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">wrapped</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;_checker&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">checker</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;__cmp__&#39;</span><span class="p">,</span> <span class="s1">&#39;__hash__&#39;</span><span class="p">,</span> <span class="s1">&#39;__bool__&#39;</span><span class="p">,</span> <span class="s1">&#39;__nonzero__&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;__lt__&#39;</span><span class="p">,</span> <span class="s1">&#39;__le__&#39;</span><span class="p">,</span> <span class="s1">&#39;__eq__&#39;</span><span class="p">,</span> <span class="s1">&#39;__ne__&#39;</span><span class="p">,</span> <span class="s1">&#39;__ge__&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;__gt__&#39;</span><span class="p">):</span>
+            <span class="n">checker</span><span class="o">.</span><span class="n">check_getattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;__reduce__&#39;</span><span class="p">,</span> <span class="s1">&#39;__reduce_ex__&#39;</span><span class="p">):</span>
+            <span class="c1"># The superclass specifically denies access to __reduce__</span>
+            <span class="c1"># and __reduce__ex__, not letting proxies be pickled. But</span>
+            <span class="c1"># for backwards compatibility, we need to be able to</span>
+            <span class="c1"># pickle proxies. See checker:Global for an example.</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;__module__&#39;</span><span class="p">:</span>
+            <span class="c1"># The superclass deals with descriptors found in the type</span>
+            <span class="c1"># of this object just like the Python language spec states, letting</span>
+            <span class="c1"># them have precedence over things found in the instance. This</span>
+            <span class="c1"># normally makes us a better proxy implementation. However, the</span>
+            <span class="c1"># C version of this code in _proxy doesn&#39;t take that same care and instead</span>
+            <span class="c1"># uses the generic object attribute access methods directly on</span>
+            <span class="c1"># the wrapped object. This is a behaviour difference; so far, it&#39;s</span>
+            <span class="c1"># only been noticed for the __module__ attribute, which checker:Global</span>
+            <span class="c1"># wants to override but couldn&#39;t because this object&#39;s type&#39;s __module__ would</span>
+            <span class="c1"># get in the way. That broke pickling, and checker:Global can&#39;t return</span>
+            <span class="c1"># anything more sophisticated than a str (a tuple) because it gets proxied</span>
+            <span class="c1"># and breaks pickling again. Our solution is to match the C version for this</span>
+            <span class="c1"># one attribute.</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ProxyPy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">checker</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+        <span class="n">checker</span><span class="o">.</span><span class="n">check_getattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">checker</span><span class="o">.</span><span class="n">proxy</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">,</span> <span class="s1">&#39;_checker&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+        <span class="n">checker</span><span class="o">.</span><span class="n">check_setattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">,</span> <span class="s1">&#39;_checker&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">()</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+        <span class="n">checker</span><span class="o">.</span><span class="n">check_setattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="nb">delattr</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@_check_name</span>
+    <span class="k">def</span> <span class="nf">__getslice__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped</span><span class="o">.</span><span class="n">__getslice__</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">getitem</span> <span class="o">=</span> <span class="n">PyProxyBase</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;__getitem__&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">getitem</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+
+    <span class="nd">@_check_name</span>
+    <span class="k">def</span> <span class="nf">__setslice__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrapped</span><span class="o">.</span><span class="n">__setslice__</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">setitem</span> <span class="o">=</span> <span class="n">PyProxyBase</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;__setitem__&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">setitem</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__cmp__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">cmp</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapped</span> <span class="o">&lt;</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapped</span> <span class="o">&lt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapped</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapped</span> <span class="o">!=</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapped</span> <span class="o">&gt;=</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wrapped</span> <span class="o">&gt;</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="n">wrapped</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__nonzero__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># no check</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">wrapped</span><span class="p">)</span>
+    <span class="n">__bool__</span> <span class="o">=</span> <span class="n">__nonzero__</span>
+
+    <span class="k">def</span> <span class="nf">__coerce__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># For some reason _check_name does not work for coerce()</span>
+        <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+        <span class="n">checker</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+        <span class="n">checker</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="s1">&#39;__coerce__&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ProxyPy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__coerce__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_check_name</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="o">.</span><span class="n">__str__</span><span class="p">)(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># The C implementation catches all exceptions.</span>
+            <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;&lt;security proxied </span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1"> instance at </span><span class="si">%s</span><span class="s1">&gt;&#39;</span> <span class="o">%</span><span class="p">(</span>
+                <span class="n">wrapped</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                <span class="n">_fmt_address</span><span class="p">(</span><span class="n">wrapped</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_check_name</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="o">.</span><span class="n">__repr__</span><span class="p">)(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># The C implementation catches all exceptions.</span>
+            <span class="n">wrapped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s1">&#39;&lt;security proxied </span><span class="si">%s</span><span class="s1">.</span><span class="si">%s</span><span class="s1"> instance at </span><span class="si">%s</span><span class="s1">&gt;&#39;</span> <span class="o">%</span><span class="p">(</span>
+                <span class="n">wrapped</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">wrapped</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                <span class="n">_fmt_address</span><span class="p">(</span><span class="n">wrapped</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;__call__&#39;</span><span class="p">,</span>
+             <span class="c1">#&#39;__repr__&#39;,</span>
+             <span class="c1">#&#39;__str__&#39;,</span>
+             <span class="s1">&#39;__unicode__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__reduce__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__reduce_ex__&#39;</span><span class="p">,</span>
+             <span class="c1">#&#39;__lt__&#39;,      # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__le__&#39;,      # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__eq__&#39;,      # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__ne__&#39;,      # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__ge__&#39;,      # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__gt__&#39;,      # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__nonzero__&#39;, # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__bool__&#39;,    # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__hash__&#39;,    # Unchecked in C proxy (rich coparison)</span>
+             <span class="c1">#&#39;__cmp__&#39;,     # Unchecked in C proxy</span>
+             <span class="s1">&#39;__getitem__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__setitem__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__delitem__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__iter__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__next__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;next&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__contains__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__neg__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__pos__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__abs__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__invert__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__complex__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__int__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__float__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__long__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__oct__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__hex__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__index__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__add__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__sub__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__mul__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__div__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__truediv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__floordiv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__mod__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__divmod__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__pow__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__radd__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rsub__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rmul__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rdiv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rtruediv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rfloordiv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rmod__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rdivmod__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rpow__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__lshift__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rshift__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__and__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__xor__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__or__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rlshift__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rrshift__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rand__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__rxor__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__ror__&#39;</span><span class="p">,</span>
+            <span class="p">]:</span>
+    <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">ProxyPy</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_check_name</span><span class="p">(</span><span class="n">meth</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;__len__&#39;</span><span class="p">,</span>
+             <span class="p">]:</span>
+    <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">ProxyPy</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_check_name</span><span class="p">(</span><span class="n">meth</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;__iadd__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__isub__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__imul__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__idiv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__itruediv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__ifloordiv__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__imod__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__ilshift__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__irshift__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__iand__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__ixor__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__ior__&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;__ipow__&#39;</span><span class="p">,</span>
+            <span class="p">]:</span>
+    <span class="n">meth</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="n">ProxyPy</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">_check_name_inplace</span><span class="p">(</span><span class="n">meth</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">getCheckerPy</span><span class="p">(</span><span class="n">proxy</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_checker&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">PYPY</span><span class="p">:</span>
+    <span class="n">_builtin_isinstance</span> <span class="o">=</span> <span class="n">__builtins__</span><span class="o">.</span><span class="n">isinstance</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">_builtin_isinstance</span> <span class="o">=</span> <span class="n">__builtins__</span><span class="p">[</span><span class="s1">&#39;isinstance&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">getObjectPy</span><span class="p">(</span><span class="n">proxy</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_builtin_isinstance</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">ProxyPy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">proxy</span>
+    <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PyProxyBase</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="s1">&#39;_wrapped&#39;</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">zope.security._proxy</span> <span class="kn">import</span> <span class="n">_Proxy</span>
+<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span> <span class="c1">#pragma NO COVER PyPy / PURE_PYTHON</span>
+    <span class="n">getChecker</span> <span class="o">=</span> <span class="n">getCheckerPy</span>
+    <span class="n">getObject</span> <span class="o">=</span> <span class="n">getObjectPy</span>
+    <span class="n">Proxy</span> <span class="o">=</span> <span class="n">ProxyPy</span>
+<span class="k">else</span><span class="p">:</span> <span class="c1">#pragma NO COVER CPython</span>
+    <span class="kn">from</span> <span class="nn">zope.security._proxy</span> <span class="kn">import</span> <span class="n">getChecker</span>
+    <span class="kn">from</span> <span class="nn">zope.security._proxy</span> <span class="kn">import</span> <span class="n">getObject</span>
+    <span class="n">Proxy</span> <span class="o">=</span> <span class="n">_Proxy</span>
+
+<span class="n">removeSecurityProxy</span> <span class="o">=</span> <span class="n">getObject</span>
+
+<div class="viewcode-block" id="getTestProxyItems"><a class="viewcode-back" href="../../../api/proxy.html#zope.security.proxy.getTestProxyItems">[docs]</a><span class="k">def</span> <span class="nf">getTestProxyItems</span><span class="p">(</span><span class="n">proxy</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a sorted sequence of checker names and permissions for testing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">checker</span> <span class="o">=</span> <span class="n">getChecker</span><span class="p">(</span><span class="n">proxy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">checker</span><span class="o">.</span><span class="n">get_permissions</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="isinstance"><a class="viewcode-back" href="../../../api/proxy.html#zope.security.proxy.isinstance">[docs]</a><span class="k">def</span> <span class="nf">isinstance</span><span class="p">(</span><span class="nb">object</span><span class="p">,</span> <span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test whether an object is an instance of a type.</span>
+
+<span class="sd">    This works even if the object is security proxied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The removeSecurityProxy call is OK here because it is *only*</span>
+    <span class="c1"># being used for isinstance</span>
+    <span class="k">return</span> <span class="n">_builtin_isinstance</span><span class="p">(</span><span class="n">removeSecurityProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">),</span> <span class="n">cls</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">zope.security 4.0dev documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, Zope Foundation Contributors &lt;zope-dev@zope.org&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.4.
+    </div>
+  </body>
+</html>

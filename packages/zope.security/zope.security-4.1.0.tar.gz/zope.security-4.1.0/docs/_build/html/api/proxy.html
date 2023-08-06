@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>zope.security.proxy &mdash; zope.security 4.0dev documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '4.0dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="zope.security 4.0dev documentation" href="../index.html" />
+    <link rel="next" title="zope.security.simplepolicies" href="simplepolicies.html" />
+    <link rel="prev" title="zope.security.protectclass" href="protectclass.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplepolicies.html" title="zope.security.simplepolicies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="protectclass.html" title="zope.security.protectclass"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">zope.security 4.0dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="zope-security-proxy">
+<h1><code class="xref py py-mod docutils literal"><span class="pre">zope.security.proxy</span></code><a class="headerlink" href="#zope-security-proxy" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="zope.security.proxy.getTestProxyItems">
+<code class="descclassname">zope.security.proxy.</code><code class="descname">getTestProxyItems</code><span class="sig-paren">(</span><em>proxy</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/zope/security/proxy.html#getTestProxyItems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zope.security.proxy.getTestProxyItems" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a sorted sequence of checker names and permissions for testing</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="zope.security.proxy.isinstance">
+<code class="descclassname">zope.security.proxy.</code><code class="descname">isinstance</code><span class="sig-paren">(</span><em>object</em>, <em>cls</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/zope/security/proxy.html#isinstance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#zope.security.proxy.isinstance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether an object is an instance of a type.</p>
+<p>This works even if the object is security proxied.</p>
+</dd></dl>
+
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">zope.security.proxy</span> <span class="k">import</span> <span class="nb">isinstance</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">C1</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">C1</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">C1</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">zope.security.checker</span> <span class="k">import</span> <span class="n">ProxyFactory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ProxyFactory</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">C1</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">C2</span><span class="p">(</span><span class="n">C1</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">C2</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">C1</span><span class="p">)</span>
+<span class="go">True</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">zope.security.checker</span> <span class="k">import</span> <span class="n">ProxyFactory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">ProxyFactory</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">C1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="protectclass.html"
+                        title="previous chapter"><code class="docutils literal"><span class="pre">zope.security.protectclass</span></code></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="simplepolicies.html"
+                        title="next chapter"><code class="docutils literal"><span class="pre">zope.security.simplepolicies</span></code></a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/proxy.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplepolicies.html" title="zope.security.simplepolicies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="protectclass.html" title="zope.security.protectclass"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">zope.security 4.0dev documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, Zope Foundation Contributors &lt;zope-dev@zope.org&gt;.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.4.
+    </div>
+  </body>
+</html>
