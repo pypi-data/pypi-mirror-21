@@ -1,0 +1,44 @@
+- name: install java and other necessary packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - java-1.{{ java_version }}.0-openjdk
+    - java-1.{{ java_version }}.0-openjdk-devel
+    - libselinux-python
+    - openssh
+  retries: 2
+  register: install_deps
+  until: "{{ install_deps | success }}"
+
+- name: upload common requirements file
+  copy:
+    src: requirements-common.txt
+    dest: /tmp/requirements-common.txt
+
+- name: create jenkins user
+  user:
+    name: "{{ jenkins_user }}"
+    home: "{{ jenkins_user_home }}"
+    shell: /bin/bash
+    uid: "{{ jenkins_user_uid }}"
+
+- name: ensure SSH directory exists
+  file:
+    name: "{{ jenkins_user_home }}/.ssh"
+    owner: "{{ jenkins_user }}"
+    mode: 0700
+    state: directory
+
+- name: add private SSH key
+  copy:
+    src: "{{ jenkins_ssh_keyfile }}"
+    dest: "{{ jenkins_user_home }}/.ssh/id_rsa"
+    owner: "{{ jenkins_user }}"
+    mode: 0600
+  register: ssh_private
+
+- name: generate public SSH key
+  shell: "ssh-keygen -y -f \"{{ jenkins_user_home }}/.ssh/id_rsa\" > \"{{ jenkins_user_home }}/.ssh/id_rsa.pub\""
+  become_user: "{{ jenkins_user }}"
+  when: ssh_private.changed
