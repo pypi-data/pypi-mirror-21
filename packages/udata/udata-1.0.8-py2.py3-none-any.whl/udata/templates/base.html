@@ -1,0 +1,22 @@
+{% extends theme('raw.html') %}
+
+{% block body %}
+    {% include theme("header.html") with context %}
+    {% block subnav %}{% endblock %}
+
+    <section id="notifications-container"></section>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-warning alert-dismissable">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+    {% include theme('footer.html') %}
+    {% block modals %}{% endblock %}
+{% endblock %}

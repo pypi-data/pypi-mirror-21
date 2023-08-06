@@ -1,0 +1,24 @@
+<a href="{{ url_for('organizations.show', org=organization, _external=True) }}"
+   title="{{ organization.name }}">
+    <img src="{{ organization.logo(150)|placeholder('organization') }}"
+        alt="{{ organization.name }}" class="organization-logo producer"
+        width="150" height="150"/>
+</a>
+<div class="caption text-left">
+{% if organization.description %}
+<p>
+    {{ organization.description|mdstrip(180) }}
+    <a href="{{ url_for('organizations.show', org=organization) }}"
+        title="{{ _('more') }}"
+        class="btn btn-grey btn-primary btn-mini">+</a>
+</p>
+{% else %}
+<br/>
+{% endif %}
+<follow-button with-label classes="btn-block btn-sm btn-left btn-warning"
+    {% if is_following(organization) %}following{% endif %}
+    url="{{ url_for('api.organization_followers', id=organization.id|string) }}"
+    tooltip="{{ _('I\'ll be informed about this organization news') }}"
+    >
+</follow-button>
+</div>
