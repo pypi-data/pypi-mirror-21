@@ -1,0 +1,125 @@
+---
+# Configure Kubernetes
+- name: main | Create Kubernetes group
+  group:
+    name:  kube
+    gid:   "{{ kubernetes_gid }}"
+    state: present
+
+- name: main | Create Kubernetes user
+  user:
+    name:    kube
+    uid:     "{{ kubernetes_uid }}"
+    group:   kube
+    shell:   /sbin/nologin
+    comment: "Kubernetes"
+    state:   present
+
+- name: main | Add Kubernetes group to the k8sdc admin user
+  user: 
+    name:   "{{ admin_user }}"
+    append: yes
+    groups: kube
+
+- name: main | Create /etc/kubernetes/
+  file:
+    path:  /etc/kubernetes/
+    state: directory
+    owner: kube
+    group: kube
+    mode:  0755
+
+
+# Download Kubernetes binaries
+- name: main | Download Kubernetes binaries
+  include: download.yaml
+  delegate_to: "{{ fileserver }}"
+  run_once: yes
+  tags:
+    - k8s_download
+    - k8s_binaries
+
+
+# Generate Kubernetes certificates
+- name: main | Stat kube_apiserver.key
+  stat:
+    path: /etc/kubernetes/certs/kube_apiserver.key
+  delegate_to: "{{ groups['k8sdc-masters'][0] }}"
+  run_once: yes
+  register: kube_apiserver_key_file
+  tags:
+    - k8sdc_security 
+    - k8s_security
+    - k8s_certs
+
+- name: main | Generate Kubernetes certificates
+  include: certificates.yaml
+  delegate_to: "{{ groups['k8sdc-ca'][0] }}"
+  run_once: yes
+  when: not kube_apiserver_key_file.stat.exists or k8s_regen_certs
+  tags:
+    - k8sdc_security 
+    - k8s_security
+    - k8s_certs
+
+
+# Generate Kubernetes tokens
+- name: main | Stat known_tokens.csv
+  stat:
+    path: /etc/kubernetes/tokens/known_tokens.csv
+  delegate_to: "{{ groups['k8sdc-masters'][0] }}"
+  run_once: yes
+  register: known_tokens_file
+  tags:
+    - k8sdc_security 
+    - k8s_security
+    - k8s_tokens
+
+- name: main | Generate Kubernetes tokens
+  include: tokens.yaml
+  delegate_to: "{{ groups['k8sdc-masters'][0] }}"
+  run_once: yes
+  when: not known_tokens_file.stat.exists or k8s_regen_tokens
+  tags:
+    - k8sdc_security 
+    - k8s_security
+    - k8s_tokens
+
+
+# Generate Kubernetes basic auth users
+- name: main | Stat known_users.csv
+  stat:
+    path: /etc/kubernetes/users/known_users.csv
+  delegate_to: "{{ groups['k8sdc-masters'][0] }}"
+  run_once: yes
+  register: known_users_file
+  tags:
+    - k8sdc_security 
+    - k8s_security
+    - k8s_users
+
+- name: main | Generate Kubernetes basic auth users
+  include: basic_auth_users.yaml
+  delegate_to: "{{ groups['k8sdc-masters'][0] }}"
+  run_once: yes
+  when: not known_users_file.stat.exists or k8s_regen_users
+  tags:
+    - k8sdc_security
+    - k8s_security
+    - k8s_users
+
+
+# Configure Kubernetes masters
+- name: main | Configure Kubernetes masters
+  include: master.yaml
+  when: '"k8sdc-masters" in group_names'
+  tags: 
+    - k8s_master
+
+
+# Configure Kubernetes nodes
+- name: main | Configure Kubernetes nodes
+  include: node.yaml
+  when: '"k8sdc-nodes" in group_names'
+  tags: 
+    - k8s_node
