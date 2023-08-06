@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+
+      metal:use-macro="api.macro('kotti:templates/view/master.pt')"
+      i18n:domain="kotti_quiz">
+
+  <div metal:fill-slot="content" class="content kotti_google_analytics">
+
+    <h1>${context.title}</h1>
+    
+   <ul class="list-group" >
+     <li class="list-group-item" tal:repeat="link cp_links">
+      <a href="${link.url(context, request)}" target="${link.target}">
+        ${link.title}
+      </a>
+    </li>
+  </ul>
+  
+  
+   <ul class="list-group" >
+        <li class="list-group-item" tal:repeat="key credentials">
+            <label>${key}</label>: ${credentials[key]}
+        </li> 
+    </ul>
+    
+  </div>
+</html>

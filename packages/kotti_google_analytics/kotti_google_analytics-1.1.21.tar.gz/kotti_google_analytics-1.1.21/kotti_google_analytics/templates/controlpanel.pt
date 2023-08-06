@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      metal:use-macro="api.macro('kotti:templates/view/master.pt')">
+
+  <article metal:fill-slot="content"
+           class="content custom-content-alternative-view"
+           i18n:domain="kotti_google_analytics">
+
+     <div class="row">
+       <div class="col-md-9">
+       <div class="panel panel-default">
+          <div class="panel-heading">Instructions</div>
+          <div class="panel-body">
+          <ol>
+              <li>Edit the Google Analytics Settings Below</li>
+              <li>
+                Afterwards, visit the
+                <a href="/@@analytics-setup">
+                    Setup Google Analytics
+              </a>
+              page to embed Google Analytics Reports on your site.
+              </li>
+              <li>
+                Next, visit
+                  <a href="/@@analytics-report">
+                        Google Analytics Report
+                  </a>
+                page to see all available reports for your site.
+              </li>
+        </ol>
+          </div>
+        </div>
+         <div class="panel panel-default">
+           <div class="panel-heading">
+             <h3 class="panel-title">${settings.title}</h3>
+           </div>
+           <div class="panel-body">
+             <form tal:replace="structure settings_form['form']" />
+           </div>
+         </div>
+       </div>
+       <div class="col-md-3" tal:condition="cp_links">
+           <ul class="list-group" >
+             <li class="list-group-item" tal:repeat="link cp_links">
+              <a href="${link.url(context, request)}" target="${link.target}">
+                ${link.title}
+              </a>
+            </li>
+          </ul>
+       </div>
+
+  </article>
+</html>
