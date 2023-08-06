@@ -1,0 +1,104 @@
+<link
+	rel="import"
+	href="/static/bower_components/polymer/polymer.html" />
+
+<link
+	rel="import" 
+	href="/static/otree-redwood/webcomponents/otree-constants/otree-constants.html">
+<link
+    rel="import"
+    href="/static/bower_components/polymerfire/firebase-app.html" />
+<link
+	rel="import"
+	href="/static/bower_components/polymerfire/firebase-document.html">
+
+<!--
+-->
+<dom-module id="otree-continuous-decision">
+
+	<template>
+    	<otree-constants id="constants"></otree-constants>
+    	<firebase-app
+	        api-key="AIzaSyDhaihpJ2W7mR_bScBsc6brBQyFG2N8tJo"
+	        auth-domain="otree.firebaseapp.com"
+	        database-url="otree.firebaseio.com">
+	    </firebase-app>
+    	<firebase-document
+            path="[[_path]]"
+            data="{{ groupDecisions }}">
+        </firebase-document>
+	</template>
+
+	<script>
+		Polymer({
+			is: 'otree-continuous-decision',
+			properties: {
+				component: {
+					type: String
+				},
+				groupDecisions: {
+					type: Object,
+					readonly: true,
+					notify: true,
+					observer: '_groupDecisionsChanged',
+				},
+				myDecision: {
+					type: Number,
+					observer: '_myDecisionChanged',
+					notify: true,
+					value: 0.5
+				},
+				otherDecision: {
+					type: Number,
+					readonly: true,
+					notify: true,
+					computed: '_computeOtherDecision(groupDecisions.*)'
+				}
+			},
+			ready() {
+				this._path = (
+                    '/session/' + this.$.constants.session +
+                    '/app/' + this.$.constants.appName +
+                    '/subsession/' + this.$.constants.subsession +
+                    '/round/' + this.$.constants.round +
+                    '/group/' + this.$.constants.group +
+                    '/component/' + this.component +
+                    '/decisions');
+			},
+			_computeOtherDecision(groupDecisions) {
+				this.groupDecisions = this.groupDecisions || {};
+				const pcode = this.$.constants.participantCode;
+
+				// group decisions should have two entries maximum
+				console.assert (Object.keys(this.groupDecisions).length <= 2, "too many players in group decisions");
+
+				for (let key in this.groupDecisions) {
+                    if (key != pcode) {
+                    	return this.groupDecisions[key];
+                    }
+                }
+
+                // if no key for the other player is found, just default to 0.5
+                return 0.5;
+			},
+			_myDecisionChanged(newValue, oldValue) {
+				if (isNaN(newValue)) {
+					if (oldValue !== undefined)  {
+						newValue = oldValue;
+					} else {
+						newValue = 0.5;
+					}
+				}
+				this.groupDecisions = this.groupDecisions || {};
+				this.myDecision = parseFloat(newValue);
+				const pcode = this.$.constants.participantCode;
+				this.set(['groupDecisions', pcode], this.myDecision);
+			},
+			_groupDecisionsChanged() {
+				const pcode = this.$.constants.participantCode;
+				this.myDecision = this.groupDecisions[pcode];
+			}
+		});
+	</script>
+
+</dom-module>
