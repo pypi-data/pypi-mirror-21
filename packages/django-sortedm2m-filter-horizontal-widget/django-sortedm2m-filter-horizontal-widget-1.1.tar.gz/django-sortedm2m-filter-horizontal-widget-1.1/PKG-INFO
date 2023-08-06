@@ -1,0 +1,87 @@
+Metadata-Version: 1.1
+Name: django-sortedm2m-filter-horizontal-widget
+Version: 1.1
+Summary: Horizontal filter widget for django-sortedm2m
+Home-page: https://github.com/svleeuwen/sortedm2m-filter-horizontal-widget
+Author: Sander van Leeuwen
+Author-email: replytosander@gmail.com
+License: BSD
+Download-URL: https://github.com/svleeuwen/sortedm2m-filter-horizontal-widget/archive/1.1.tar.gz
+Description: =========================================
+        django-sortedm2m-filter-horizontal-widget
+        =========================================
+        
+        ``sortedm2m-filter-horizontal-widget`` is an admin widget for Gregor Mülleggers excellent django-sortedm2m_ library.
+        
+        .. _django-sortedm2m: http://github.com/gregmuellegger/django-sortedm2m
+        
+        This allows for a familiar filter horizontal widget.
+        
+        Installation
+        ============
+        
+        ``pip install django-sortedm2m-filter-horizontal-widget``
+        
+        
+        What version do I need?
+        =======================
+        
+        +------------+------------+
+        | Django     | Install    |
+        +============+============+
+        | < 1.8      | 0.2        |
+        +------------+------------+
+        | 1.8        | 1.1        |
+        +------------+------------+
+        | > 1.8      | dev        |
+        +------------+------------+
+        
+        Usage
+        =====
+        
+        Add ``sortedm2m_filter_horizontal_widget`` to your ``INSTALLED_APPS``. (needed for static files)
+        
+        In your ``ModelAdmin`` add the following function to override the default widget. ::
+        
+            from sortedm2m_filter_horizontal_widget.forms import SortedFilteredSelectMultiple
+        
+            class MyModelAdmin(admin.ModelAdmin):
+                # ...
+        
+                def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+                    if db_field.name == 'your_sortedm2m_field_name':
+                        kwargs['widget'] = SortedFilteredSelectMultiple()
+                    return super(MyModelAdmin, self).formfield_for_manytomany(db_field, request, **kwargs)
+        
+        Todo
+        ====
+        
+        * Automatically assign widget if field is specified in ModelAdmin's ``filter_horizontal``.
+        * Add tests
+        
+        
+        Changelog
+        =========
+        1.1:
+         Use admin_prefix to find image, in case user changes STATIC_URL setting
+         Add version requirements per Django version
+        
+        1.0:
+         Fixed bugs with popup closing.
+         Added support for Django 1.10+
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
