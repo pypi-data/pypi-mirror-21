@@ -1,0 +1,22 @@
+
+{% call widget.panel("App Data", type="table") %}
+
+    <table class="table">
+        <thead>
+            <th>Key</th>
+            <th>Description</th>
+        </thead>
+
+        <tbody>
+            {% for p in prefs %}
+                <tr>
+                    <td><a href="{{ url_for("AppDataAdmin:get", id=p.id) }}">{{ p.key }}</a></td>
+                    <td>{{ p.description }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {{ widget.pagination(prefs) }}
+
+{% endcall %}
