@@ -1,0 +1,126 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
+import argparse
+import sys
+import os
+import logging, logging.config
+import traceback
+from alertlogiccli.commands import import_command_modules
+
+
+sys.path.insert(0, os.path.dirname(__file__))
+
+import alertlogic.auth, alertlogic.dynapi
+import alertlogiccli.config, alertlogiccli.commands
+
+from alertlogiccli.config import DEFAULT_CONFIG_FILE as DEFAULT_CONFIG_FILE
+
+def import_dependencies():
+    try:
+        global requests
+        import requests
+    except ImportError:
+        print("requests library required, install it first: pip install requests")
+        return False
+
+    try:
+        global alertlogic
+        import alertlogic.auth, alertlogic.dynapi
+    except ImportError:
+        print("unable to find alertlogic library, check your installation")
+        return False
+
+    try:
+        global alertlogiccli
+        import alertlogiccli.config, alertlogiccli.commands
+    except ImportError:
+        print("unable to find alertlogiccli library, check your installation")
+        return False
+
+    return True
+
+def bug_report_traceback():
+    msg = ("Oops something went wrong.\n"
+           "Please contact support@alertlogic.com and provide the following information:\n"
+           "****************************************************************************\n"
+           "{}")
+    return msg.format(traceback.format_exc())
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="alertlogic cloud insight client")
+
+    parser.add_argument("--logging_config_file", help="use a specific configuration file for logging")
+    parser.add_argument("--username", help="a specific username to override the configuration option")
+    parser.add_argument("--password", help="a specific password to override the configuration option")
+    parser.add_argument("--api_endpoint", help="a specific endpoint to override the configuration option")
+
+    parser.add_argument("-c", "--config_file", default=DEFAULT_CONFIG_FILE, help="use a specific configuration file")
+    parser.add_argument("-p", "--profile", default="default", help="use a specific profile from your config")
+    parser.add_argument("-a", "--account_id", help="use a specific account (managed accounts only)")
+    subparsers = parser.add_subparsers(title="commands", description="valid commands", dest="command")
+
+    commands = import_command_modules(subparsers)
+    args = parser.parse_args()
+    return {'commands': commands, 'args': args}
+
+def init_logging(args):
+    if args.logging_config_file:
+        logging.config.fileConfig(args.logging_config_file)
+    elif os.environ.get("DEBUG"):
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+
+def make_config(args):
+    config = alertlogiccli.config.Config(config_file=args.config_file, profile=args.profile)
+    if args.username:
+        config.username = args.username
+    if args.password:
+        config.password = args.password
+    if args.api_endpoint:
+        config.api_endpoint = args.api_endpoint
+    if args.account_id:
+        config.account_id = args.account_id
+    return config
+
+def run_command(args, commands):
+    config = make_config(args)
+    session = config.make_session()
+    services = alertlogic.dynapi.Services()
+    services.set_session(session)
+
+    if args.environment_id is None:
+        args.environment_id = config.environment_id
+
+    KeyCommand = (args.command, args.subcommand)
+
+    return commands[KeyCommand](services).execute(**vars(args))
+
+
+
+def main():
+    if os.environ.get("DEBUG"):
+         print("Running in DEBUG mode")
+
+    if not import_dependencies():
+        sys.exit(2)
+
+    context = parse_args()
+    args = context['args']
+    try:
+        init_logging(args)
+        result = run_command(args, context['commands'])
+        print(result)
+        sys.exit(0)
+    except (alertlogic.auth.AuthenticationException,
+            alertlogiccli.config.ConfigException,
+            alertlogiccli.commands.CommandException) as e:
+        print(e.message)
+        sys.exit(1)
+    except Exception as e:
+        print(bug_report_traceback())
+        sys.exit(2)
+
+if __name__ == "__main__":
+    main()
