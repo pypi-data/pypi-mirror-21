@@ -1,0 +1,298 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+
+<script src="../d3/d3.js"></script>
+
+<script>
+    window.Plutonium = window.Plutonium || {};
+
+    /**
+     * Behavior that highlights stuff.
+     *
+     * @polymerBehavior
+     */
+    Plutonium.AxisBehaviorImpl = {
+        properties: {
+            label: {
+                type: String,
+                notify: true,
+                value: ''
+            },
+            unit: {
+                type: String,
+                notify: true,
+                value: ''
+            },
+
+            /**
+             * Orientation enumeration. 
+             * Possible values: left, right, top, bottom.
+             * Left and right uninterpretable on vertical axises. 
+             * Top and down uninterpretable on horizontal axises. 
+             * @type {string} 
+             */
+            orientation: {
+                type: String,
+                notify: true
+            },
+
+            /**
+             * Property to control axis type.
+             * Possible values: horizontal, vertical, legend.
+             * @type {string}
+             */
+            axisLayout: {
+                type: String,
+                notify: true
+            },
+
+            /**
+             * Center of the axis.
+             * @type {number}
+             */
+            center: {
+                type: Number,
+                notify: true,
+                value: 0.0
+            },
+            /**
+             * Span of the viewed window.
+             * @type {number}
+             */
+            span: {
+                type: Number,
+                notify: true,
+                value: 1.0
+            },
+
+            /**
+             * Center of the axis.
+             * @type {number}
+             */
+            minimum: {
+                type: Number,
+                notify: true,
+                value: 0.0
+            },
+            /**
+             * Span of the viewed window.
+             * @type {number}
+             */
+            maximum: {
+                type: Number,
+                notify: true,
+                value: 1.0
+            },
+
+            /**
+             * String pattern for format time based axises.
+             * Default is ISO 8601
+             * @type {string}
+             */
+            timeParse: {
+                type: String,
+                notify: true,
+                //                value: '%d-%b-%y'
+            },
+            _ranges: {
+                type: Object
+            },
+            _axis: {
+                type: Object
+            },
+            _title: {
+                type: String,
+                notify: true
+            }
+        },
+        observers: [
+            '_observeText(label, unit)',
+            '_observeRange(minimum, maximum)',
+            '_observeOrientation(orientation)',
+
+            '_observeTimeParsePattern(timeParse)',
+            '_observeVisiblePart(span, center)',
+
+            '_observeD3State(_ranges, _title)'
+        ],
+        listeners: {
+            'iron-resize': '_onResize',
+            'd3-update': '_onD3Update'
+        },
+        created: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'created');
+        },
+        ready: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'ready');
+        },
+        attached: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'attached');
+
+        },
+        detached: function() {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'detached');
+        },
+
+        _onResize: function(event, details) {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'resize');
+
+        },
+
+        _getRange: function(layout, details) {
+            var range;
+            switch (layout) {
+                case 'horizontal':
+                    range = [0, details.width];
+                    break;
+                case 'vertical':
+                    range = [details.height, 0];
+                    break;
+                case 'legend':
+                    range = [0, 0];
+                    break;
+                default:
+                    range = [0, 0];
+                    break;
+            }
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'range', range);
+            return range;
+        },
+
+        _getRangeByParent: function(layout) {
+            var range;
+            switch (layout) {
+                case 'horizontal':
+                    range = [0, this.parentNode._width];
+                    break;
+                case 'vertical':
+                    range = [this.parentNode._height, 0];
+                    break;
+                case 'legend':
+                    range = [0, 0];
+                    break;
+                default:
+                    range = [0, 0];
+                    break;
+            }
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'range', range);
+            return range;
+        },
+
+        _onD3Update: function(event, details) {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'd3-draw');
+            if (this._ranges && this._title && this._axis) {
+                // this._onRender();
+            }
+            //
+        },
+        _observeD3State: function(_ranges, _title) {
+            //this._onRender();
+        },
+        _onRender: function() {
+            if (this.parentNode._g && this.parentNode._width && this.parentNode._height) {
+
+                var r = this._ranges.range(this._getRangeByParent(this.axisLayout));
+
+                r.domain([this.minimum, this.maximum]);
+                this._labelFontSize = this.parentNode._margin[this.orientation] / 3;
+                switch (this.orientation) {
+                    case 'left':
+                        this._axis = d3.axisLeft(r);
+                        this._transformationAttribute = 'translate(0,0)';
+                        this._transformationAttributeForLabel = 'translate(' + (-this.parentNode._margin.left * 0.75) + ' ,' + (this.parentNode._height / 2) + ') ' + 'rotate(-90)';
+                        this._axis.ticks(this.parentNode._height / (2 * this._labelFontSize));
+                        break;
+                    case 'right':
+                        this._axis = d3.axisRight(r);
+                        this._transformationAttribute = 'translate(' + this.parentNode._width + ', 0)';
+                        this._transformationAttributeForLabel = 'translate(' + (this.parentNode._width + this.parentNode._margin.right * 0.75) + ', ' + (this.parentNode._height / 2) + ')' + ' rotate(90)';
+                        this._axis.ticks(this.parentNode._height / (2 * this._labelFontSize));
+                        break;
+                    case 'top':
+                        this._axis = d3.axisTop(r);
+                        this._transformationAttribute = 'translate(0,0)';
+                        this._transformationAttributeForLabel = 'translate(' + (this.parentNode._width / 2) + ',' + (-this.parentNode._margin.top * 0.75) + ')';
+                        this._axis.ticks(this.parentNode._width / (2 * this._labelFontSize));
+                        break;
+                    case 'bottom':
+                        this._axis = d3.axisBottom(r);
+                        this._transformationAttribute = "translate(0," + this.parentNode._height + ')';
+                        this._transformationAttributeForLabel = "translate(" + (this.parentNode._width / 2) + " ," + (this.parentNode._height + this.parentNode._margin.bottom) + ")";
+                        this._axis.ticks(this.parentNode._width / (2 * this._labelFontSize));
+                        break;
+                    default:
+                        console.warn((this.id ? this.is + '#' + this.id : this.is), 'orientation value is invalid:', this.orientation);
+                        return;
+                }
+
+
+
+                d3.select('#' + this.id + '-axis').remove();
+                this._axisGraphics = this.parentNode._g.append("g")
+                    .attr("id", this.id + "-axis")
+                    .attr("class", "axis")
+                    .style("font-size", (this._labelFontSize / 2) + "px")
+                    .attr("transform", this._transformationAttribute)
+                    .call(this._axis);
+
+                d3.select('#' + this.id + '-axis-label').remove();
+                this._axisLabel = this.parentNode._g.append("text")
+                    .attr("id", this.id + "-axis-label")
+                    .attr("class", "axis-label")
+                    .attr("transform", this._transformationAttributeForLabel)
+                    .style("text-anchor", "middle")
+                    .style("font-size", this._labelFontSize + "px")
+                    .text(this._title)
+                    .attr("class", 'axis-label');
+            }
+        },
+
+        _observeTimeParsePattern: function(timeParse) {
+            if (timeParse) {
+                this._parseTime = d3.timeParse(timeParse);
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'set ne time pattern', timeParse);
+            }
+            //            this._onRender();
+        },
+        _observeVisiblePart: function(span, center) {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'observe visible parts with center', '=', center, ',', 'span', '=', span);
+            this.minimum = this.center - this.span / 2;
+            this.maximum = this.center + this.span / 2;
+        },
+        _observeRange: function(minimum, maximum) {
+            if (this.timeParse) {
+                this._ranges = d3.scaleTime();
+            } else {
+                this._ranges = d3.scaleLinear();
+            }
+
+            //this._onRender();
+            //            d3.select(Polymer.dom(this).parentNode) // change the x axis
+            //                    .duration(1000)
+            //                    .call(this._axis);
+        },
+
+        _observeOrientation: function(orientation) {
+            console.debug((this.id ? this.is + '#' + this.id : this.is), 'observe orientation', 'orientation', '=', orientation);
+        },
+
+        _observeText: function(label, unit) {
+            if (label && unit) {
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'observe textual attributes', label, unit);
+                this._title = label + ' (' + unit + ')';
+            }
+        }
+    };
+
+    /**
+     * Behavior that highlights stuff.
+     *
+     * @polymerBehavior
+     */
+    Plutonium.AxisBehavior = [
+        Polymer.IronResizableBehavior,
+        Plutonium.AxisBehaviorImpl
+    ];
+
+</script>

@@ -1,0 +1,166 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="plutonium-chart-behavior.html">
+
+<!--
+`plutonium-line-chart`
+Visualization widget.
+
+@demo demo/index-line-chart.html 
+-->
+
+<dom-module id="plutonium-line-chart">
+    <template>
+        <style>
+            :host {
+                display: block;
+                height: 400px;
+            }
+            text {
+                fill: white;
+            }
+            .controls {
+                display: inline-block;
+                margin: 0 0 0 20px;
+            }
+            svg {
+                float: right;
+                margin: 0;
+            }
+            .axis--x path {
+                display: none;
+            }
+
+            .line {
+                fill: none;
+                stroke: steelblue;
+                stroke-width: 1.5px;
+            }
+        </style>
+        <content select="plutonium-axis"></content>
+        <!--        <div class="controls">
+                    <template is="dom-repeat" items="{{data}}" as="d">
+                        <p>A
+                            <label for="input">{{d.type}}: </label>
+                            <input id="input"
+                                   type="range"
+                                   value="{{d.amount}}"
+                                   min="0" max="500" />
+                            <span>[[d.amount]]</span>
+                        </p>
+                    </template>
+                </div>-->
+        <svg id="svg"></svg>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'plutonium-line-chart',
+            extends: 'div',
+            properties: {
+            },
+            behaviors: [
+                Plutonium.ChartBehavior
+            ],
+            observers: [
+                '_observeLine(_g, data)'
+            ],
+            _observeLine: function (g, data) {
+                this.fire('d3-render', {});
+            },
+//            initialize: function () {
+//                console.debug((this.id ? this.is + '#' + this.id : this.is), 'initialize');
+//                var parseTime = d3.timeParse("%d-%b-%y");
+//
+//                var self = this;
+//                this._x = d3.scaleTime().rangeRound([0, self._width]);
+//                this._y = d3.scaleLinear().rangeRound([self._height, 0]);
+//                this._chart = d3.line().x(function (d) {
+//                    return self._x(d.date);
+//                }).y(function (d) {
+//                    return self._y(d.close);
+//                });
+//
+////                if (!this._axisX) {
+//                    this._axisX = this._g.append("g")
+//                            .attr("class", "axis axis--x")
+//                            .attr("transform", "translate(0," + this._height + ")");
+////                }
+//
+////                if (!this._axisY) {
+//                    this._axisY = this._g.append("g")
+//                            .attr("class", "axis axis--y");
+//                    this._axisY.append("text")
+//                            .attr("fill", "#000")
+//                            .attr("transform", "rotate(-90)")
+//                            .attr("y", 6)
+//                            .attr("dy", "0.71em")
+//                            .style("text-anchor", "end")
+//                            .text("Price ($)");
+////                }
+//
+////                if (!this._graph) {
+//                    this._graph = this._g.append("path")
+//                            .attr("class", "line")
+//                            .attr("stroke", "black")
+//                            .attr("fill", "transparent");
+////                }
+//            },
+            draw: function () {
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'draw');
+
+                var parseTime = d3.timeParse("%d-%b-%y");
+
+                var self = this;
+                this._x = d3.scaleTime().rangeRound([0, self._width]);
+                this._y = d3.scaleLinear().rangeRound([self._height, 0]);
+                this._chart = d3.line().x(function (d) {
+                    return self._x(d.date);
+                }).y(function (d) {
+                    return self._y(d.close);
+                });
+
+//                if (!this._axisX) {
+                this._axisX = this._g.append("g")
+                        .attr("class", "axis axis--x")
+                        .attr("transform", "translate(0," + this._height + ")");
+//                }
+
+//                if (!this._axisY) {
+                this._axisY = this._g.append("g")
+                        .attr("class", "axis axis--y");
+                this._axisY.append("text")
+                        .attr("fill", "#000")
+                        .attr("transform", "rotate(-90)")
+                        .attr("y", 6)
+                        .attr("dy", "0.71em")
+                        .style("text-anchor", "end")
+                        .text("Price ($)");
+//                }
+
+//                if (!this._graph) {
+                this._graph = this._g.append("path")
+                        .attr("class", "line")
+                        .attr("stroke", "black")
+                        .attr("fill", "transparent");
+
+                this._x.domain(d3.extent(this.data, function (d) {
+                    return d.date;
+                }));
+                this._y.domain(d3.extent(this.data, function (d) {
+                    return d.close;
+                }));
+
+
+                this._axisX.call(d3.axisBottom(this._x));
+
+
+                this._axisY.call(d3.axisLeft(this._y));
+
+
+                this._graph.datum(this.data).attr("d", this._chart);
+
+            }
+        });
+    </script>
+</dom-module>
