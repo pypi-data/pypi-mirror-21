@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Tiros Network Visualization</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="../static/css/index.css" rel="stylesheet">  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+  <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+  <h2 class="text-muted">Tiros Network Visualization</h2>
+</div>
+<hr/>
+  <ul class="nav nav-pills nav-justified">
+    <li class="active"><a data-toggle="tab" href="#snapshot">Take a Snpashot</a></li>
+    <li><a data-toggle="tab" href="#upload">Upload a Snapshot</a></li>
+
+<form action="mk_snapshot" method="post" enctype="multipart/form-data">
+<div class="snap_container">
+    <button data-toggle="tooltip" title="Take a snapshot of your AWS network!"
+           class='fa fa-camera-retro fa-5x snap_icon'>
+    </button>
+    <!-- <span class="snap-text">Snap AWS network</span> -->
+</div>
+</form>
+  </ul>
+
+  <div class="tab-content">
+    <div id="snapshot" class="tab-pane fade in active">
+      </br>
+      <!-- <p class="center">Take a snapshot of your AWS network configuration</p> -->
+    </div>
+    <div id="upload" class="tab-pane fade">
+    </br>
+      <!-- <p class="center">Upload a snapshot for visualization. Currently, it only supports snapshot taken with <i>tiros snapshot</i></p> -->
+
+      <form action="snapshot" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" multiple=""><br />
+        <input type="submit" value="Visualize">
+        <br/><br/>
+        <div class="btn-group btn-group" data-toggle="buttons">
+          <label class="btn">
+           <input type="checkbox" name='general_query'>
+           <i class="fa fa-square-o fa-2x"></i>
+           <i class="fa fa-check-square-o fa-2x"></i>
+           <span>Cache General Queries</span>
+         </label>
+
+        </div>
+      </form>
+            <div class="{{ alert }}">
+              {{snapshot_validation}}
+            </div>
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</body>
+</html>
