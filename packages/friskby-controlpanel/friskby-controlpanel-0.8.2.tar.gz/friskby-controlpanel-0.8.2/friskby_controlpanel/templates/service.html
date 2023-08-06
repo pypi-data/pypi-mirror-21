@@ -1,0 +1,47 @@
+
+{% extends "base.html" %}
+{% block body %}
+
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% else %}
+    {% if status %}
+    <p>{{ name }} is in the <b>{{ status }}</b> status.</p>
+    {% endif %}
+
+    {% if not status %}
+        <p>The service {{ name }} had no status.</p>
+        <p class="pure-form-message">This might mean that the service is not enabled or installed on your system.</p>
+    {% endif %}
+
+    <div class="service-actions">
+        <form action="{{ url_for('status_manage', service_name=name, action_name='start') }}" method="post">
+            <button class="pure-button">Start</button>
+        </form>
+        <form action="{{ url_for('status_manage', service_name=name, action_name='stop') }}" method="post">
+            <button class="pure-button">Stop</button>
+        </form>
+        <form action="{{ url_for('status_manage', service_name=name, action_name='restart') }}" method="post">
+            <button class="pure-button">Restart</button>
+        </form>
+    </div>
+
+    <div class="journal-content">
+        <table>
+        <tbody>
+        {% for line in journal %}
+            <tr class="log-line">
+                <td class="timestamp">{{line.timestamp_realtime}}</td>
+                <td class="message">{{line.message}}</td>
+            </tr>
+        {% else %}
+            <tr class="log-line-empty">
+                <td>Nothing has been logged yet…</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+{% endif %}
+
+{% endblock %}
