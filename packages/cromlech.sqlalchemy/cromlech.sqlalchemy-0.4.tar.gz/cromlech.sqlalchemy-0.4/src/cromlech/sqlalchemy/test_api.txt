@@ -1,0 +1,237 @@
+Test setup
+===========
+
+We get a temporary dir to place our databases::
+
+    >>> import tempfile
+    >>> working_dir = tempfile.mkdtemp('cromlech-sqlalchemy-test')
+
+
+Configuration & registration
+============================
+
+    >>> from cromlech.sqlalchemy import create_engine
+
+    >>> user_db =  'sqlite:///%s/users.db' % working_dir
+    >>> store_db = 'sqlite:///%s/store.db' % working_dir
+
+    >>> users_engine = create_engine(user_db, 'Users')
+    >>> store_engine = create_engine(store_db, 'Store')
+
+
+Model
+=====
+
+Let's use declarative extension::
+
+    >>> from sqlalchemy.ext.declarative import declarative_base
+
+    >>> UserBase = declarative_base()
+    >>> users_engine.bind(UserBase)
+
+In SQLAlchemy you would declare wich engine the database is bound to. In our
+case the url will come in environ with the first connection so we deffer
+this to the moment when engine will be created. The package provides a method
+for that::
+
+
+We can define our SQLAlchemy model::
+
+    >>> from sqlalchemy import Column, Integer, String
+
+    >>> class User(UserBase):
+    ...     __tablename__ = 'test_users'
+    ...
+    ...     id = Column('id', Integer, primary_key=True)
+    ...     name = Column('name', String(50))
+    ...
+    ...     def __repr__(self):
+    ...         return "User(%d, '%s')" % (self.id, self.name)
+
+
+Controller
+==========
+
+To do any operation we will have use SQLAlchemySession context manager
+providing an engine name::
+
+    >>> from cromlech.sqlalchemy import SQLAlchemySession, get_session
+
+Typically first request may create our tables::
+
+    >>> with SQLAlchemySession(users_engine) as session:
+    ...     UserBase.metadata.create_all()
+    ...     print session.query(User).all()
+    []
+
+Transaction of database is ruled by the general transaction package::
+
+    >>> import transaction
+    >>> transaction.commit()
+
+Inside the context you can also fetch the session by its configuration name,
+this is convenient from anywhere in the code, eg a fonction::
+
+    >>> def add_user(id, name):
+    ...     session = get_session("Users")
+    ...     session.add(User(id=id, name=name))
+
+    >>> with SQLAlchemySession(users_engine) as session:
+    ...     add_user(1, 'bob')
+    ...     print session.query(User).all()
+    [User(1, 'bob')]
+
+
+Transaction
+===========
+
+For this chapter let's assume we are inside a with SQLAlchemySession clause::
+
+    >>> ctxmanager = SQLAlchemySession(users_engine)
+    >>> session = ctxmanager.__enter__()
+
+Transaction are linked to zope transaction using zope.sqlalchemy, all operations
+above are not yet commited. Let's abort to see bob is not present no more::
+
+    >>> transaction.abort()
+    
+    >>> print session.query(User).all()
+    []
+
+Now add it again an commit so that it's ok::
+
+    >>> transaction.commit()
+    >>> add_user(1, 'bob')
+    >>> transaction.commit()
+    >>> print session.query(User).all()
+    [User(1, 'bob')]
+
+Now we really are in a new transaction::
+
+    >>> transaction.abort()
+    >>> print session.query(User).all()
+    [User(1, 'bob')]
+
+Let's end our session for now ::
+
+   >>> ctxmanager.__exit__(None, None, None)
+
+
+More than one database
+======================
+
+We can use more than one database, Let's define another
+model in another database:
+
+    >>> StoreBase = declarative_base()
+    >>> store_engine.bind(StoreBase)
+    
+We can define our SQLAlchemy model::
+
+    >>> class Product(StoreBase):
+    ...     __tablename__ = 'test_products'
+    ...     id = Column('id', Integer, primary_key=True)
+    ...     name = Column('name', String(50))
+    ...
+    ...     def __repr__(self):
+    ...         return "Product(%d, '%s')" % (self.id, self.name)
+
+
+Create tables::
+
+    >>> from transaction import manager as transaction_manager
+
+    >>> with transaction_manager:
+    ...     with SQLAlchemySession(store_engine) as session:
+    ...         StoreBase.metadata.create_all()
+
+and an product adder::
+
+    >>> def add_product(id, name):
+    ...     session = get_session('Store')
+    ...     session.add(Product(id=id, name=name))
+
+We may do operations in databases using our objects::
+
+    >>> with transaction_manager:
+    ...   with SQLAlchemySession(store_engine) as session:
+    ...     with SQLAlchemySession(users_engine) as session:
+    ...         add_user(2, 'juan')
+    ...         add_product(1, 'table')
+
+It works :
+
+    >>> with SQLAlchemySession(users_engine) as session:
+    ...     session.query(User).all()
+    [User(1, 'bob'), User(2, 'juan')]
+
+    >>> with SQLAlchemySession(store_engine) as session:
+    ...     session.query(Product).all()
+    [Product(1, 'table')]
+
+
+More than one metadata
+======================
+
+Now we may also bind another metadata to same database, and this work
+even if it's already initialised::
+
+    >>> GroupBase = declarative_base()
+    >>> users_engine.bind(GroupBase)
+
+    >>> class Group(GroupBase):
+    ...     __tablename__ = 'test_groups'
+    ...     id = Column('id', Integer, primary_key=True)
+    ...     name = Column('name', String(50))
+    ...
+    ...     def __repr__(self):
+    ...         return "Group(%d, '%s')" % (self.id, self.name)
+
+    >>> with transaction_manager:
+    ...     with SQLAlchemySession(users_engine) as session:
+    ...         GroupBase.metadata.create_all()
+    ...         session.add(Group(id=1, name='them'))
+    ...         session.query(Group).all()
+    [Group(1, 'them')]
+
+
+Unique session
+==============
+
+Whenever you know that your application will always associate same db name with
+same DBName, you can setup session once and only once, removing overhead to
+single request. For that use the SharedSQLAlchemySession context manager.
+Note that it is still a scoped session (no sharing between thread), and that
+you don't have to care when it will be initialized, you just use the context
+manager ::
+
+    >>> from cromlech.sqlalchemy import SharedSQLAlchemySession
+    >>> with SharedSQLAlchemySession(store_engine) as session:
+    ...     the_session = session
+    ...     session.query(Product).all()
+    [Product(1, 'table')]
+
+session will be reused::
+
+   >>> with SharedSQLAlchemySession(store_engine) as session:
+   ...     print session is the_session
+   True
+
+
+to phase or not two phase
+=========================
+
+You can pass a two_phase boolean argument to activate or not two_phase commit.
+see zope.sqlalchemy. If you do not pass it, two_phase will be set to true for
+mysql and postgre (known supporting database) and false otherwise.
+
+You may force it however::
+
+   >>> with transaction_manager:
+   ...     with SQLAlchemySession(store_engine, two_phase=True):
+   ...         add_product(10, 'chair')
+   Traceback (most recent call last):
+   ...
+   ValueError: SQL Engine 'Store' : 'sqlite' does not support two phase commits
+
+as sqlite does not support it !
