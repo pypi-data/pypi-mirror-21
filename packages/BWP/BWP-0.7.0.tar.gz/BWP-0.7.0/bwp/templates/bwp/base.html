@@ -1,0 +1,206 @@
+{% load i18n l10n static bwp_base bwp_static bwp_locale %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:"ru" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% SETTINGS 'PROJECT_DESCRIPTION' %}">
+    <meta name="author" content="{% filter force_escape %}{% AUTHORS %}{% endfilter %}">
+    <meta name="version" content="{% SETTINGS 'VERSION' %}">
+    <meta name="generator" content="Django {% SETTINGS 'DJANGO_VERSION' %}">
+
+    <title>{% SETTINGS 'PROJECT_SHORTNAME' %}: {% block title %}{% filter force_escape %}{% SETTINGS 'PROJECT_DESCRIPTION' %}{% endfilter %}{% endblock %}</title>
+    
+<!-- START: block shortcut_icons -->{% block shortcut_icons %}
+    <link href="{% get_static_prefix %}bwp/img/minilogo.svg" rel="icon" type="image/svg">
+    <link href="{% get_static_prefix %}bwp/img/favicon.png" rel="icon" type="image/png">
+{% endblock %}<!-- END: block shortcut_icons -->
+
+
+<!-- START: styles -->
+
+    <!-- bootstrap & fontawesome & text fonts -->
+    <link rel="stylesheet" href="{% get_static_prefix %}opensans/opensans.min.css" />
+    <link rel="stylesheet" href="{% get_static_prefix %}font-awesome/4.3.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="{% get_static_prefix %}bootstrap/3.3.7.bwp/css/bootstrap.min.css" />
+
+    <style type="text/css">
+        html {
+            position: relative;
+            min-height: 100%;
+        }
+        body {
+            margin-bottom: 90px;
+            padding-top: 50px;
+        }
+        @media (max-width: 768px) {
+            body {
+                margin-bottom: 160px;
+            }
+        }
+        .footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            min-height: 50px;
+            background-color: #f5f5f5;
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
+        .footer>div {
+            background-color: #f5f5f5;
+        }
+
+        /* fixed bootstrap 3.3.2 */
+
+        .modal-fix-bs332 {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        .table>thead>tr>td.active,
+        .table>tbody>tr>td.active,
+        .table>tfoot>tr>td.active,
+        .table>thead>tr>th.active,
+        .table>tbody>tr>th.active,
+        .table>tfoot>tr>th.active,
+        .table>thead>tr.active>td,
+        .table>tbody>tr.active>td,
+        .table>tfoot>tr.active>td,
+        .table>thead>tr.active>th,
+        .table>tbody>tr.active>th,
+        .table>tfoot>tr.active>th {
+            background-color: #7BBEFF;
+        }
+
+        .navbar-form.navbar-left {
+            float: left!important;
+        }
+        .navbar-header .navbar-form {
+            width: auto;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin-right: 0;
+            margin-left: 0;
+            border: 0;
+            -webkit-box-shadow: none;
+                    box-shadow: none;
+        }
+        @media (min-width: 768px) {
+            .navbar-form input { min-width: 260px;}
+        }
+        @media (max-width: 768px) {
+            .navbar-form { min-width: 340px;}
+        }
+        .search-timer {
+            position: relative;
+            width: 50px;
+            left: -68px;
+            margin-right: -50px;
+            top: 9px;
+            font-size: xx-small;
+            text-align: right;
+        }
+        .dropdown-menu > li > div {
+            display: block;
+            padding: 3px 20px;
+            clear: both;
+            font-weight: normal;
+            line-height: 1.42857143;
+            color: #333;
+        }
+
+        
+        div.navbar-collapse.navbar-left {margin-left: -15px;}
+        form.navbar-form.navbar-left {padding-right: 0px;}
+
+        .modal .modal-body tab-content {padding-top: 10px;}
+
+        .modal .modal-body tab-content div.checkbox label,
+        .modal .modal-body tab-content div.radio label
+        {font-size: medium;}
+
+        label input:checked+span {font-weight: 600;}
+        label input:disabled+span {color: #777; cursor: no-drop;}
+
+        .onprint { display: none }
+        @media print {
+            .noprint { display: none }
+            .onprint { display: initial }
+            body {
+                margin: 0px;
+                padding: 0px;
+            }
+        }
+
+    </style>
+
+
+    <!-- bwp styles -->
+    <link rel="stylesheet" href="{% get_static_prefix %}bwp/{% SETTINGS 'BWP_VERSION' %}/css/bwp{% mini_library %}.css" />
+
+    <!-- START: block extrastyle -->
+    {% block extrastyle %}{% endblock %}
+    <!-- END: block extrastyle -->
+
+<!-- END: styles -->
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body class="{% block bodyclass %}{% endblock %}" {% block bodyspy %}{% endblock %}>
+<!-- START: block body -->{% block body %}
+
+    <!-- START: block navbar -->{% block navbar %}{% endblock %}<!-- END: block navbar -->
+
+    <!-- START: block container -->{% block container %}
+    <div class="container-fluid" id="main-container">
+
+        <!-- START: block sidebar -->{% block sidebar %}{% endblock %}<!-- END: block sidebar -->
+
+        <!-- START: block content -->{% block content %}{% endblock %}<!-- END: block content -->
+
+    </div>
+    {% endblock %}<!-- END: block container -->
+
+    <!-- START: block footer -->{% block footer %}{% endblock %}<!-- END: block footer -->
+
+    <!-- START: block modal_error -->{% block modal_error %}{% endblock %}<!-- END: block modal_error -->
+
+    <!-- START: block modal -->{% block modal %}{% endblock %}<!-- END: block modal -->
+
+{% endblock %}<!-- END: block body -->
+
+
+<!-- START: block jstemplates -->{% block jstemplates %}{% endblock %}<!-- END: block jstemplates -->
+
+    <!--[if !IE]> -->
+    <script type="text/javascript">
+        document.write("<script src='{% get_static_prefix %}jquery/jquery/jquery-2.1.4.min.js'>"+"<"+"/script>");
+    </script>
+    <!-- <![endif]-->
+
+    <!--[if IE]>
+    <script type="text/javascript">
+        document.write("<script src='{% get_static_prefix %}jquery/jquery/jquery-1.11.3.min.js'>"+"<"+"/script>");
+    </script>
+    <![endif]-->
+
+    <script src="{% get_static_prefix %}bootstrap/3.3.7.bwp/js/bootstrap.min.js"></script>
+
+
+<!-- START: block jsvars -->{% block jsvars %}{% endblock %}<!-- END: block jsvars -->
+
+<!-- START: block appjs -->{% block appjs %}{% endblock %}<!-- END: block appjs -->
+
+<!-- START: block extrajs -->{% block extrajs %}{% endblock %}<!-- END: block extrajs -->
+
+
+</body>
+</html>
