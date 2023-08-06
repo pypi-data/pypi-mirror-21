@@ -1,0 +1,78 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    i18n_domain="collective.upload">
+
+  <browser:page
+      name="upload-settings"
+      for="Products.CMFPlone.interfaces.IPloneSiteRoot"
+      class="..controlpanel.UploadSettingsControlPanel"
+      permission="collective.upload.Setup"
+      layer="..interfaces.IUploadBrowserLayer"
+      />
+
+  <browser:page
+      for="Products.CMFCore.interfaces.IFolderish"
+      name="media_uploader"
+      class=".views.MediaUploader"
+      permission="collective.upload.UploadFiles"
+      template="templates/media_uploader.pt"
+      layer="..interfaces.IUploadBrowserLayer"
+      />
+
+  <browser:page
+      for="Products.CMFCore.interfaces.IFolderish"
+      name="api"
+      class=".views.JSONView"
+      permission="cmf.AddPortalContent"
+      layer="..interfaces.IUploadBrowserLayer"
+      />
+
+  <browser:page
+      for="Products.CMFCore.interfaces.IFolderish"
+      name="jsonimageserializer"
+      class=".views.JSONImageConverter"
+      permission="zope.Public"
+      layer="..interfaces.IUploadBrowserLayer"
+      />
+
+  <browser:viewlet
+      name="collective.upload.tmpls"
+      manager="plone.app.layout.viewlets.interfaces.IHtmlHead"
+      class=".viewlets.Tmpls"
+      permission="cmf.AddPortalContent"
+      template="templates/tmpls.pt"
+      layer="..interfaces.IUploadBrowserLayer"
+      />
+
+  <browser:viewlet
+      name="collective.upload.widget"
+      for="Products.CMFCore.interfaces.IFolderish"
+      manager="plone.app.layout.viewlets.interfaces.IAboveContentBody"
+      class=".viewlets.WidgetViewlet"
+      template="templates/contents.pt"
+      permission="cmf.AddPortalContent"
+      layer="..interfaces.IUploadBrowserLayer"
+      />
+
+  <!-- Menu item -->
+  <adapter
+      for="* collective.upload.interfaces.IUploadBrowserLayer"
+      name="plone.contentmenu.factories"
+      factory=".menu.FactoriesSubMenuItem"
+      provides="plone.app.contentmenu.interfaces.IContentMenuItem"
+      />
+
+  <browser:menu
+      id="upload_contentmenu_factory"
+      title="The 'add' menu - allows the user to add new content items in the context"
+      class=".menu.FactoriesMenu"
+      />
+
+  <browser:resourceDirectory
+      name="collective.upload"
+      directory="static"
+      />
+
+</configure>
