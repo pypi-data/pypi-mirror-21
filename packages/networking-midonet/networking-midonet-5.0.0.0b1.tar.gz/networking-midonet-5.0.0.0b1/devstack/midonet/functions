@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# Neutron MidoNet plugin
+# ----------------------
+
+
+function neutron_plugin_configure_common {
+    local conf_file
+
+    Q_PLUGIN_CONF_PATH=etc/neutron/plugins/midonet
+    Q_PLUGIN_CONF_FILENAME=midonet.ini
+    Q_PLUGIN_CLASS=${MIDONET_PLUGIN}
+
+    cd ${NETWORKING_MIDONET_DIR}
+    mkdir -p etc/midonet
+    oslo-config-generator --output-file etc/midonet/midonet.ini.v2.sample \
+        --namespace midonet_v2
+    cd -
+    mkdir -p /${Q_PLUGIN_CONF_PATH}
+    conf_file=midonet.ini.v2.sample
+    cp ${NETWORKING_MIDONET_DIR}/etc/midonet/${conf_file} \
+       /${Q_PLUGIN_CONF_PATH}/${Q_PLUGIN_CONF_FILENAME}
+}
+
+function neutron_plugin_configure_l3_agent {
+    die $LINENO "q-l3 must not be executed with MidoNet plugin!"
+}
+
+function neutron_plugin_configure_plugin_agent {
+    die $LINENO "q-agt must not be executed with MidoNet plugin!"
+}
+
+function neutron_plugin_configure_service {
+    iniset /$Q_PLUGIN_CONF_FILE MIDONET midonet_uri $MIDONET_API_URL
+    iniset /$Q_PLUGIN_CONF_FILE MIDONET username $Q_ADMIN_USERNAME
+    iniset /$Q_PLUGIN_CONF_FILE MIDONET password $SERVICE_PASSWORD
+    iniset /$Q_PLUGIN_CONF_FILE MIDONET project_id $SERVICE_TENANT_NAME
+    iniset /$Q_PLUGIN_CONF_FILE MIDONET client $MIDONET_CLIENT
+    iniset /$Q_PLUGIN_CONF_FILE MIDONET cluster_ip $MIDONET_SERVICE_HOST
+    iniset /$Q_PLUGIN_CONF_FILE MIDONET cluster_port $TOPOLOGY_API_PORT
+}
+
+function neutron_plugin_setup_interface_driver {
+    local conf_file=$1
+    iniset $conf_file DEFAULT interface_driver midonet
+}
+
+function neutron_plugin_check_adv_test_requirements {
+    # 0 means True here
+    return 1
+}
+
+function configure_neutron_midonet {
+    :
+}
+
+function configure_qos_midonet {
+    :
+}
+
+function install_neutron_midonet {
+    :
+}
