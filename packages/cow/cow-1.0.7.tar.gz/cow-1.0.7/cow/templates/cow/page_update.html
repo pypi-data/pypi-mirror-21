@@ -1,0 +1,51 @@
+{% extends "cow/base.html" %}
+
+{% load class_tag %}
+
+{% block content %}
+<div>
+    <h4>Page detail for: {{ page.name }}</h4>
+    <article>
+        <form class="pure-form" action="" method="post">{% csrf_token %}
+            {{ form.as_p }}
+            <input class="pure-button pure-button-primary" type="submit" value="Update" />
+        </form>
+        <p><a class="pure-button pure-button-primary" href="{% url 'plugin_create' page.pk %}">Plugins <i class="icon-plus"></i></a></p>
+        <table class="pure-table">
+            <thead>
+                <tr>
+                    <th>name</th>
+                    <th>actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plugin in page.plugins.all %}
+                <tr>
+                    <td>{{ plugin }}</td>
+                    <td>
+                        {% if plugin.content_object|class_name == 'AddressPlugin' %}
+                        <a href="{% url 'address_plugin_edit' plugin.content_object.pk %}">
+                            <i class="icon-pencil"></i>
+                        </a>
+                        {% endif %}
+                        {% if plugin.content_object|class_name == 'ImagePlugin' %}
+                        <a href="{% url 'image_plugin_edit' plugin.content_object.pk %}">
+                            <i class="icon-pencil"></i>
+                        </a>
+                        {% endif %}
+                        {% if plugin.content_object|class_name == 'TextPlugin' %}
+                        <a href="{% url 'text_plugin_edit' plugin.content_object.pk %}">
+                            <i class="icon-pencil"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'plugin_delete' plugin.pk %}">
+                            <i class="icon-cancel"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </article>
+</div>
+{% endblock %}

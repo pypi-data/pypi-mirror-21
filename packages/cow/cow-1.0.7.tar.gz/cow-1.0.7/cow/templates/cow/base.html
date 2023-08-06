@@ -1,0 +1,40 @@
+{% load staticfiles %}
+<!doctype html>
+<html>
+    <head>
+        <title>{% block title %}cowdash{% endblock title %}</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <link async href="{% static "cow/css/cowhide.css" %}" rel="stylesheet">
+        <link async href="{% static "cow/css/pure-min.css" %}" rel="stylesheet">
+        <link async href="{% static "cow/css/cowbone.css" %}" rel="stylesheet">
+        <script src='{% static "cow/tinymce/tinymce.min.js" %}'></script>
+        {% block head %}{% endblock %}
+        <style>
+a, u {
+        text-decoration: none;
+}
+        </style>
+    </head>
+    <body>
+        <header>
+            <nav class="pure-menu pure-menu-horizontal">
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-item">
+                        <a class="pure-menu-link" href="{% url 'page_list' %}">Home <i class="icon-home"></i></a>
+                    </li>
+                    <li class="pure-menu-item">
+                        <a class="pure-menu-link" href="javascript:history.back()">Back <i class="icon-left-open"></i></a>
+                    </li>
+                {% if user.is_staff %}
+                    <li class="pure-menu-item">
+                        <a class="pure-menu-link" href="{% url 'page_list' %}admin/">Admin <i class="icon-pencil"></i></a>
+                    </li>
+                {% endif %}
+                </ul>
+            </nav>
+        </header>
+        <div class="container">
+            {% block content %}{% endblock content %}
+        </div>
+    </body>
+</html>
