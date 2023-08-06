@@ -1,0 +1,83 @@
+Metadata-Version: 1.2
+Name: sorna-client
+Version: 0.9.2
+Summary: Sorna API Client Library
+Home-page: https://github.com/lablup/sorna-client
+Author: Lablup Inc.
+Author-email: joongi@lablup.com
+License: LGPLv3
+Description: Sorna Client
+        ============
+        
+        |Travis Build Status| |AppVeyor Build Status| |Code Coverage| |PyPI|
+        
+        The API client library for `Sorna <http://sorna.io>`__
+        
+        Usage
+        -----
+        
+        Grab your keypair from `cloud.sorna.io <https://cloud.sorna.io>`__ or
+        your cluster admin.
+        
+        .. code:: sh
+        
+            export SORNA_ACCESS_KEY=...
+            export SORNA_SECRET_KEY=...
+        
+            # optional (for local clusters)
+            export SORNA_ENDPOINT="https://my-precious-cluster/"
+        
+        Synchronous API
+        ---------------
+        
+        .. code:: python
+        
+            from sorna.kernel import Kernel
+        
+            kern = Kernel.get_or_create('lua5', client_token='abc')
+            result = kern.execute('print("hello world")', mode='query')
+            print(result['console'])
+            kern.destroy()
+        
+        Asynchronous API
+        ----------------
+        
+        .. code:: python
+        
+            import asyncio
+            from sorna.asyncio.kernel import AsyncKernel
+        
+            async def main():
+                kern = await AsyncKernel.get_or_create('lua5', client_token='abc')
+                result = await kern.execute('print("hello world")', mode='query')
+                print(result['console'])
+                await kern.destroy()
+        
+            loop = asyncio.get_event_loop()
+            try:
+                loop.run_until_complete(main())
+            finally:
+                loop.close()
+        
+        .. |Travis Build Status| image:: https://travis-ci.org/lablup/sorna-client.svg?branch=master
+           :target: https://travis-ci.org/lablup/sorna-client
+        .. |AppVeyor Build Status| image:: https://ci.appveyor.com/api/projects/status/5h6r1cmbx2965yn1/branch/master?svg=true
+           :target: https://ci.appveyor.com/project/achimnol/sorna-client/branch/master
+        .. |Code Coverage| image:: https://codecov.io/gh/lablup/sorna-client/branch/master/graph/badge.svg
+           :target: https://codecov.io/gh/lablup/sorna-client
+        .. |PyPI| image:: https://badge.fury.io/py/sorna-client.svg
+           :target: https://pypi.python.org/pypi/sorna-client
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Operating System :: POSIX
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Environment :: No Input/Output (Daemon)
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Software Development
+Requires-Python: >=3.6
