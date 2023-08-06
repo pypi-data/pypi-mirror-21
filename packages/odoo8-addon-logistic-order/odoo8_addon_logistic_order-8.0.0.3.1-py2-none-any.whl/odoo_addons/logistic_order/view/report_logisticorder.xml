@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+  <data>
+    <template id="report_logistic_order_document" inherit_id="sale.report_saleorder_document">
+      <xpath expr="//h2" position="replace">
+        <h2>
+          <span t-if="o.state not in ['progress','manual','done']">Cost Estimate N° </span>
+          <span t-if="o.state in ['progress','manual','done']">Logistics Order N° </span>
+          <span t-field="o.name"/>
+        </h2>
+      </xpath>
+
+      <xpath expr='//div[@t-if="o.date_order" and @class="col-xs-3"]' position="replace">
+        <div t-if="o.date_order" class="col-xs-3">
+          <strong t-if="o.state not in ['progress','manual','done']">Date:</strong>
+          <strong t-if="o.state in ['progress','manual','done']">Order Date:</strong>
+          <p t-field="o.date_order"/>
+        </div>
+      </xpath>
+
+      <xpath expr='//strong[text()="Salesperson:"]' position="replace">
+        <strong>Prepared by:</strong>
+      </xpath>
+
+      <xpath expr='//div[@t-if="o.payment_term" and @class="col-xs-3"]' position="after">
+        <div t-if="o.date_validity" class="col-xs-3">
+          <strong>Validity:</strong>
+          The pricing indications in this estimate are valid till:
+          <p t-field="o.date_validity"/>
+        </div>
+      </xpath>
+
+      <!-- remove taxes -->
+      <xpath expr="//table//th[text()='Taxes']" position="replace"/>
+      <xpath expr="//tbody[@class='sale_tbody']//span[@t-esc=&quot;', '.join(map(lambda x: x.name, l.tax_id))&quot;]/.." position="replace"/>
+
+      <xpath expr="//table//th[text()='Quantity']" position="after">
+        <th class="text-right col-xs-1">Total weight (kg)</th>
+        <th class="text-right col-xs-1">Total volume (m³)</th>
+      </xpath>
+
+      <xpath expr="//tbody[@class='sale_tbody']//span[@t-field='l.product_uom_qty']/.." position="after">
+        <td class="text-right">
+          <t t-if="l.product_id">
+            <span t-esc="l.product_id.weight * l.product_uom_qty"/>
+          </t>
+        </td>
+        <td class="text-right">
+          <t t-if="l.product_id">
+            <span t-esc="l.product_id.volume * l.product_uom_qty"/>
+          </t>
+        </td>
+      </xpath>
+
+      <!-- remove taxes -->
+      <xpath expr="//td/strong[text()='Total Without Taxes']/../.." position="replace"/>
+      <xpath expr="//td[text()='Taxes']/.." position="replace"/>
+
+      <!-- position is reversed due to "pull-right" -->
+      <xpath expr="//td/strong[text()='Total']/../../../.." position="after">
+        <div class="col-xs-3 pull-right">
+          <table class="table table-condensed">
+            <tr class="border-black">
+              <td>
+                <strong>Weight</strong>
+              </td>
+              <td class="text-right">
+                <span t-esc="sum(l.product_id.weight * l.product_uom_qty for l in o.order_line)"/>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-xs-3 pull-right">
+          <table class="table table-condensed">
+            <tr class="border-black">
+              <td>
+                <strong>Volume</strong>
+              </td>
+              <td class="text-right">
+                <span t-esc="sum(l.product_id.volume * l.product_uom_qty for l in o.order_line)"/>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </xpath>
+
+      <xpath expr='//p[@t-field="o.note"]' position="before">
+        <table class="table table-condensed">
+          <tr class="border-black">
+            <td><strong>Delivery time</strong></td>
+            <td><strong>Payment term</strong></td>
+            <td><strong>Incoterm/Incoterm Place</strong></td>
+          </tr>
+          <tr>
+            <td>Item subjet to supplier availability.<br/>
+              Transit Time
+              <span t-if="o.delivery_time" t-field="o.delivery_time"/>
+              <span t-if="not o.delivery_time">N/A</span>
+            </td>
+            <td>
+              <p t-field="o.payment_term.note"/>
+            </td>
+            <td>
+              <p t-field="o.incoterm.name"/> <p t-field="o.incoterm_address"/> INCOTERMS 2010
+            </td>
+          </tr>
+        </table>
+      </xpath>
+
+    </template>
+
+  </data>
+</openerp>
