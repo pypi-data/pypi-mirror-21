@@ -1,0 +1,101 @@
+Metadata-Version: 1.1
+Name: twiki
+Version: 0.0.2
+Summary: A bunch of tools which allow manage a TWiki
+Home-page: http://github.com/psaavedra/python-twiki
+Author: Pablo Saavedra
+Author-email: psaavedra@igalia.com
+License: Copyright 2017 Pablo Saavedra <psaavedra@igalia.com>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the 
+"Software"), to deal in the Software without restriction, including 
+without limitation the rights to use, copy, modify, merge, publish, 
+distribute, sublicense, and/or sell copies of the Software, and to 
+permit persons to whom the Software is furnished to do so, subject to 
+the following conditions:
+
+The above copyright notice and this permission notice shall be 
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Download-URL: https://github.com/psaavedra/python-twiki/zipball/master
+Description: # python-twiki
+        
+        python-twiki is a bunch of tools which allow manage a TWiki.
+        
+        # Examples
+        
+        ## Configuration file (setup.cfg)
+        
+        ```
+        auth:http_basic
+        auth_user:psaavedra
+        auth_password:verysecret
+        url:https://localhost/
+        ```
+        where `url` is something like: ''https://wiki.igalia.com/twiki''.
+        
+        In other side, `auth` and `auth_*` settings refer to HTTP Basic
+        authentication parameters, in necessary case.
+        
+        ## Getting Topics from a Web
+        
+        ```sh 
+        $ twiki-get-topics -c setup.cfg -o list.csv -w WebName
+        
+        ```
+        
+        where `list.csv` results something like this:
+        
+        ```
+        "WebName/WebTopic1",
+        "WebName/WebTopic2",
+        ```
+        
+        ## Moving a Topic to another Topic parent
+        
+        ```sh
+        $ twiki-move-topic -c setup.cfg -t WebName/WebTopic -p NewWebTopicParent
+        $ twiki-move-topic -c setup.cfg -i list.csv
+        $ twiki-move-topic -c setup.cfg -i list.csv -p NewWebTopicParent
+        
+        ```
+        
+        where `list.csv` is something like this:
+        
+        ```
+        "WebName/WebTopic1", "NewWebTopicParent1"
+        "WebName/WebTopic2", "NewWebTopicParent2"
+        
+        ```
+        
+        ## Renaming Topics
+        
+        ```sh
+        $ twiki-rename-topic -c setup.cfg -t WebName/WebTopic -n NewWebName/NewWebTopic
+        $ twiki-rename-topic -c setup.cfg -i list.csv
+        ```
+        
+        where `list.csv` is something like this:
+        
+        ```
+        "WebName/WebTopic1", "NewWebName/NewWebTopic1"
+        "WebName/WebTopic2", "NewWebName/NewWebTopic2"
+        ```
+        
+        
+        
+Keywords: python twiki csv
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content :: Wiki
