@@ -1,0 +1,75 @@
+<metal:banners use-macro="context/@@banner-base/macros/banners"
+    xmlns:tal="http://xml.zope.org/namespaces/tal"
+    xmlns:metal="http://xml.zope.org/namespaces/metal">
+
+    <metal:banner fill-slot="banner_body">
+        <tal:banner tal:define="link_url banner/getRemoteUrl;
+            has_link_url python:link_url and not link_url == 'http://';
+            scales banner/@@images;
+            width context/width;
+            height context/height;
+            image python: scales.scale('image', width=width, height=height);
+            image2x python: scales.scale('image', width=width*2, height=height*2);
+            image_url banner/getImageUrl;
+            has_image_url python:image_url and not image_url == 'http://';
+            lazyload settings/lazyload;">
+            <a class="carousel-image"
+                tal:condition="python:'image' in elements and (image or has_image_url)"
+                tal:omit-tag="not:has_link_url"
+                tal:attributes="href link_url;
+                                title banner/Title;">
+
+                <span class="carousel-image" tal:omit-tag="has_link_url">
+                  <tal:notlazy tal:condition="not:lazyload">
+                    <img tal:condition="not:has_image_url"
+                         tal:attributes="src image/url;
+                                         srcset python: image2x.url + ' 2x';
+                                         alt banner/Title" />
+                    <img tal:condition="has_image_url" src="" 
+                         tal:attributes="src image_url;
+                                         alt banner/Title;" />
+                  </tal:notlazy>
+
+                  <tal:lazy tal:condition="lazyload">
+                  <tal:comment replace="nothing">
+                      <!-- We give image source in special data-lazy-load-src attribute.
+                           Javascript is responsible for reading this attribute
+                           and triggering the actual image load.
+                      -->
+                  </tal:comment>
+
+                    <img tal:condition="not:has_image_url"
+                         tal:attributes="data-lazy-load-src image/url;
+                                         data-lazy-load-src-2x image2x/url;
+                                         width width;
+                                         height height"/>
+
+                    <img tal:condition="has_image_url" src=""
+                         tal:attributes="data-lazy-load-src image_url;"/>
+                  </tal:lazy>
+                </span>
+            </a>
+            <div tal:define="text banner/getText|nothing;"
+                tal:condition="python:'title' in elements or ('text' in elements and text)"
+                class="carousel-text">
+                <a class="carousel-title"
+                   tal:condition="python:'title' in elements"
+                   tal:omit-tag="not:has_link_url"
+                   tal:attributes="href link_url;">
+                    <span class="carousel-title" tal:omit-tag="has_link_url">
+                        <span tal:replace="banner/Title">Banner Title</span>
+                    </span>
+                </a>
+                <div class="carousel-body"
+                     tal:condition="python:text and 'text' in elements"
+                     tal:content="structure text">
+                    Body text
+                </div>
+            </div>
+            <a class="carousel-structural-link"
+               tal:attributes="href link_url;"
+              tal:omit-tag="not:has_link_url">
+            </a>
+        </tal:banner>
+    </metal:banner>
+</metal:banners>
