@@ -1,0 +1,203 @@
+Home-page: https://github.com/thombashi/pytablereader
+Author: Tsuyoshi Hombashi
+Author-email: gogogo.vm@gmail.com
+License: MIT License
+Description: pytablereader
+        =============
+        
+        .. image:: https://badge.fury.io/py/pytablereader.svg
+            :target: https://badge.fury.io/py/pytablereader
+        
+        .. image:: https://img.shields.io/pypi/pyversions/pytablereader.svg
+           :target: https://pypi.python.org/pypi/pytablereader
+        
+        .. image:: https://img.shields.io/travis/thombashi/pytablereader/master.svg?label=Linux
+            :target: https://travis-ci.org/thombashi/pytablereader
+            :alt: Linux CI test status
+        
+        .. image:: https://img.shields.io/appveyor/ci/thombashi/pytablereader/master.svg?label=Windows
+            :target: https://ci.appveyor.com/project/thombashi/pytablereader/branch/master
+            :alt: Windows CI test status
+        
+        .. image:: https://coveralls.io/repos/github/thombashi/pytablereader/badge.svg?branch=master
+            :target: https://coveralls.io/github/thombashi/pytablereader?branch=master
+        
+        .. image:: https://img.shields.io/github/stars/thombashi/pytablereader.svg?style=social&label=Star
+           :target: https://github.com/thombashi/pytablereader
+        
+        Summary
+        -------
+        
+        A python library to load structured table data from files/URL with various data format: CSV/Excel/HTML/JSON/LTSV/Markdown/TSV.
+        
+        Features
+        --------
+        
+        - Extract structured tabular data from various data format:
+            - CSV
+            - Microsoft Excel :superscript:`TM`
+            - HTML
+            - JSON
+            - `Labeled Tab-separated Values (LTSV) <http://ltsv.org/>`__
+            - Markdown
+            - MediaWiki
+            - Tab separated values (TSV)
+        - Supported data sources to read:
+            - Files on a local file system
+            - Accessible URL
+            - ``str`` instance
+        
+        
+        Examples
+        ========
+        
+        Load a CSV table
+        ----------------
+        
+        
+        .. code:: python
+        
+            import pytablereader as ptr
+            import pytablewriter as ptw
+        
+        
+            # prepare data ---
+            file_path = "sample_data.csv"
+            csv_text = "\n".join([
+                '"attr_a","attr_b","attr_c"',
+                '1,4,"a"',
+                '2,2.1,"bb"',
+                '3,120.9,"ccc"',
+            ])
+        
+            with open(file_path, "w") as f:
+                f.write(csv_text)
+        
+            # load from a csv file ---
+            loader = ptr.CsvTableFileLoader(file_path)
+            for table_data in loader.load():
+                print("\n".join([
+                    "load from file",
+                    "==============",
+                    "{:s}".format(ptw.dump_tabledata(table_data)),
+                ]))
+        
+            # load from a csv text ---
+            loader = ptr.CsvTableTextLoader(csv_text)
+            for table_data in loader.load():
+                print("\n".join([
+                    "load from text",
+                    "==============",
+                    "{:s}".format(ptw.dump_tabledata(table_data)),
+                ]))
+        
+        
+        .. code::
+        
+            load from file
+            ==============
+            .. table:: sample_data
+        
+                ======  ======  ======
+                attr_a  attr_b  attr_c
+                ======  ======  ======
+                     1     4.0  a
+                     2     2.1  bb
+                     3   120.9  ccc
+                ======  ======  ======
+        
+            load from text
+            ==============
+            .. table:: csv2
+        
+                ======  ======  ======
+                attr_a  attr_b  attr_c
+                ======  ======  ======
+                     1     4.0  a
+                     2     2.1  bb
+                     3   120.9  ccc
+                ======  ======  ======
+        
+        
+        For more information
+        --------------------
+        
+        More examples are available at 
+        http://pytablereader.rtfd.io/en/latest/pages/examples/index.html
+        
+        Installation
+        ============
+        
+        ::
+        
+            pip install pytablereader
+        
+        
+        Dependencies
+        ============
+        
+        Python 2.7+ or 3.3+
+        
+        Mandatory Python packages
+        ----------------------------------
+        - `beautifulsoup4 <https://www.crummy.com/software/BeautifulSoup/>`__
+        - `DataPropery <https://github.com/thombashi/DataProperty>`__ (Used to extract data types)
+        - `jsonschema <https://github.com/Julian/jsonschema>`__
+        - `mbstrdecoder <https://github.com/thombashi/mbstrdecoder>`__
+        - `pathvalidate <https://github.com/thombashi/pathvalidate>`__
+        - `path.py <https://github.com/jaraco/path.py>`__
+        - `requests <http://python-requests.org/>`__
+        - `six <https://pypi.python.org/pypi/six/>`__
+        - `typepy <https://github.com/thombashi/typepy>`__
+        - `xlrd <https://github.com/python-excel/xlrd>`__
+        
+        Optional Python packages
+        ------------------------------------------------
+        - `pypandoc <https://github.com/bebraw/pypandoc>`__
+            - required when loading MediaWiki file
+        - `pandas <http://pandas.pydata.org/>`__
+            - required to get table data as a pandas data frame
+        
+        Optional packages (other than Python packages)
+        ------------------------------------------------
+        - `lxml <http://lxml.de/installation.html>`__ (faster HTML convert if installed)
+        - `pandoc <http://pandoc.org/>`__ (required when loading MediaWiki file)
+        
+        
+        Test dependencies
+        -----------------
+        - `pytablewriter <https://github.com/thombashi/pytablewriter>`__
+        - `pytest <http://pytest.org/latest/>`__
+        - `pytest-runner <https://pypi.python.org/pypi/pytest-runner>`__
+        - `tox <https://testrun.org/tox/latest/>`__
+        - `XlsxWriter <http://xlsxwriter.readthedocs.io/>`__
+        
+        Documentation
+        =============
+        
+        http://pytablereader.rtfd.io/
+        
+        Related Project
+        ===============
+        
+        - `pytablewriter <https://github.com/thombashi/pytablewriter>`__
+            - Tabular data loaded by ``pytablereader`` can be written another tabular data format with ``pytablewriter``.
+        
+        
+Keywords: table,reader,pandas,CSV,Excel,HTML,JSON,LTSV,Markdown,MediaWiki,TSV
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Information Technology
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Database
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
