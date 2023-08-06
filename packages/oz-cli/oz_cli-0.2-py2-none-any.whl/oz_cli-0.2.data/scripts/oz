@@ -1,0 +1,254 @@
+#!python
+
+import yaml
+import subprocess
+from string import Template
+import sys
+import shlex
+import os
+
+DEBUG = False
+
+
+class OpsFile(object):
+    def __init__(self, fname, include_tree={}):
+        self.name = os.path.abspath(fname)
+        self.documents = {}
+        self.include_tree = include_tree
+        self.include_tree[self.name] = self
+
+    def __getitem__(self, item):
+        return self.documents[item]
+
+    def load(self):
+        if DEBUG:
+            print "Loading", self.name
+        with open(self.name, "r") as f:
+            documents = yaml.load_all(f)
+            for document in documents:
+                od = OpsDocument(document, self)
+                self.documents[od.name] = od
+
+
+class OpsDocument(object):
+    def __init__(self, document, opsfile):
+        self.opsfile = opsfile
+
+        if 'name' in document:
+            self.name = document['name']
+        else:
+            self.name = ''
+
+        if 'includes' in document:
+            if isinstance(document['includes'], basestring):
+                self.includes = [self.interpret_path(document['includes'])]
+            else:
+                self.includes = [self.interpret_path(include) for include in document['includes']]
+        else:
+            self.includes = []
+
+        if 'commands' in document:
+            self.commands = {k: self.interpret_path(str(v)) for k, v in document['commands'].iteritems()}
+        else:
+            self.commands = {}
+
+        self.commandnames = set(self.commands.keys())
+
+        if 'variables' in document:
+            self.variables = {k: self.interpret_path(str(v)) for k, v in document['variables'].iteritems()}
+        else:
+            self.variables = {}
+
+        self.symbols = {}
+        self.gathered = False
+        self.sources_gathered = False
+        self.symbols_evaluated = False
+
+    def gather_sources(self):
+        if self.sources_gathered:
+            return
+
+        self.sources = []
+        for include in self.includes:
+            if DEBUG:
+                print "Including:", include
+            if " " in include:
+                tokens = include.split(' ')
+                fname, docnames = tokens[0], tokens[1:]
+                if fname not in self.opsfile.include_tree:
+                    of = OpsFile(fname, self.opsfile.include_tree)
+                    of.load()
+                for docname in docnames:
+                    self.sources.append(self.opsfile.include_tree[ops.name][docname])
+            else:
+                if os.path.isfile(include):
+                    if include not in self.opsfile.include_tree:
+                        of = OpsFile(include, self.opsfile.include_tree)
+                        of.load()
+                        self.sources.append(self.opsfile.include_tree[include][''])
+                else:
+                    self.sources.append(self.opsfile[include])
+
+        for source in self.sources:
+            source.gather_sources()
+            self.sources.extend(source.sources)
+
+        self.sources.reverse()
+
+        self.sources_gathered = True
+
+    def gather(self):
+        if self.gathered:
+            return
+
+        self.expressions = {}
+
+        self.gather_sources()
+        for source in self.sources:
+            source.gather()
+            self.commandnames = self.commandnames | source.commandnames
+            self.expressions.update(source.expressions)
+
+        self.expressions.update(self.commands)
+        self.expressions.update(self.variables)
+        self.gathered = True
+
+    def interpret_path(self, line):
+        tokens = shlex.split(line)
+        new_tokens = []
+        for token in tokens:
+            token = os.path.expandvars(token)
+            token = os.path.expanduser(token)
+            if token.startswith("./") or token.startswith("../"):
+                opsfiledir = os.path.dirname(self.opsfile.name)
+                token = os.path.abspath(os.path.join(opsfiledir, token))
+            new_tokens.append(token)
+        new_line = " ".join(new_tokens)
+        if DEBUG:
+            print "Expression \"{}\" converted to \"{}\"".format(line, new_line)
+        return new_line
+
+    def evaluate_symbols(self):
+        if self.symbols_evaluated:
+            return
+
+        self.gather()
+
+        self.symbols = self.expressions.copy()
+
+        for _ in xrange(10):
+            for symbol in self.symbols:
+                t = Template(self.symbols[symbol])
+                self.symbols[symbol] = t.safe_substitute(self.symbols)
+
+        self.symbols_evaluated = True
+
+    def do_command(self, command, dry_run=False):
+        self.evaluate_symbols()
+
+        if command not in self.commandnames:
+            print "Command not found: {}".format(command)
+            return
+
+        commandline = self.symbols[command]
+
+        print "[ops] {}".format(commandline)
+
+        if (dry_run):
+            return
+
+        pid = os.fork()
+        if pid == 0:
+            # For now, let the shell handle piping, etc.
+            if "|" in commandline \
+                    or ">" in commandline \
+                    or "<" in commandline \
+                    or "&&" in commandline \
+                    or "||" in commandline \
+                    or "`" in commandline \
+                    or ";" in commandline:
+                retcode = subprocess.call(commandline, shell=True)
+                exit(retcode)
+            else:
+                args = shlex.split(commandline)
+                os.execvp(args[0], args)
+        else:
+            while (True):
+                try:
+                    return os.waitpid(pid, 0)[1] >> 8
+                except KeyboardInterrupt:
+                    pass
+
+    def lookup_command(self, prefix):
+        self.evaluate_symbols()
+
+        found = []
+        for command in list(self.commandnames):
+            if command == prefix:
+                return command
+            elif command.startswith(prefix):
+                found.append(command)
+
+        if len(found) == 1:
+            return found[0]
+        elif len(found) > 1:
+            print "Multiple commands found for {}: {}".format(prefix, found)
+            return None
+        else:
+            print "No matching command found for {}.".format(prefix)
+            return None
+
+
+def select_ops_file():
+    opsfile = "./.ops.yaml"
+    while not os.path.isfile(opsfile) and os.path.exists(os.path.dirname(opsfile)):
+        opsfile = "../" + opsfile;
+
+    if not os.path.isfile(opsfile):
+        return ""
+    else:
+        return opsfile
+
+
+def main():
+    base = OpsFile(select_ops_file())
+    base.load()
+
+    if "default" in base.documents:
+        current_document = base.documents["default"]
+    elif "" in base.documents:
+        current_document = base.documents[""]
+
+    dry_run = False
+    for arg in sys.argv[1:]:
+        if arg == "-l" or arg == "--list":
+            for doc in base.documents:
+                if base[doc].includes:
+                    print doc, "->", base[doc].includes
+                else:
+                    print doc
+                for command in base[doc].commandnames:
+                    print "   *", command
+            continue
+
+        if arg == "-d":
+            dry_run = True
+            continue
+
+        if arg in base.documents:
+            current_document = base[arg]
+            continue
+
+        command = current_document.lookup_command(arg)
+        if not command:
+            exit(1)
+
+        returncode = current_document.do_command(command, dry_run)
+        if returncode:
+            exit(returncode)
+
+    exit(0)
+
+
+if __name__ == '__main__':
+    main()
