@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>neurodynex.tools.InputFactory &mdash; Neuronaldynamics Exercises 0.1.1.dev48+ng29f36de.d20161122 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Neuronaldynamics Exercises 0.1.1.dev48+ng29f36de.d20161122 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Neuronaldynamics Exercises
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.1.dev48+ng29f36de.d20161122
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exercises/index.html">Exercises</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contents.html">Python exercise modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../licence.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">Neuronaldynamics Exercises</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>neurodynex.tools.InputFactory</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for neurodynex.tools.InputFactory</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">brian2</span> <span class="kn">as</span> <span class="nn">b2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+
+<span class="c1">###############</span>
+<span class="c1"># Input Currents</span>
+<span class="c1">###############</span>
+<div class="viewcode-block" id="get_step_current"><a class="viewcode-back" href="../../../modules/neurodynex.tools.html#neurodynex.tools.InputFactory.get_step_current">[docs]</a><span class="k">def</span> <span class="nf">get_step_current</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">unit_current</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">uamp</span><span class="p">,</span> <span class="n">unit_time</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">append_zero</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="c1"># creates a step current.</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="s1">&#39;t_start_ms must be of type int&#39;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_end</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="s1">&#39;t_end must be of type int&#39;</span>
+    <span class="n">tmp_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">t_end</span>  <span class="c1"># +1 for t=0</span>
+    <span class="k">if</span> <span class="n">append_zero</span><span class="p">:</span>
+        <span class="n">tmp_size</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">tmp_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">unit_current</span>
+    <span class="n">tmp</span><span class="p">[</span><span class="n">t_start</span><span class="p">:</span> <span class="n">t_end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">unit_current</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="n">b2</span><span class="o">.</span><span class="n">TimedArray</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">unit_time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">curr</span></div>
+
+
+<div class="viewcode-block" id="get_ramp_current"><a class="viewcode-back" href="../../../modules/neurodynex.tools.html#neurodynex.tools.InputFactory.get_ramp_current">[docs]</a><span class="k">def</span> <span class="nf">get_ramp_current</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">amplitude_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">,</span> <span class="n">amplitude_end</span><span class="p">,</span>
+                     <span class="n">unit_current</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">uamp</span><span class="p">,</span> <span class="n">unit_time</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">append_zero</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="c1"># creates a ramp current</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="s1">&#39;t_start_ms must be of type int&#39;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_end</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="s1">&#39;t_end must be of type int&#39;</span>
+    <span class="n">tmp_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">t_end</span>  <span class="c1"># +1 for t=0</span>
+    <span class="k">if</span> <span class="n">append_zero</span><span class="p">:</span>
+        <span class="n">tmp_size</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">tmp_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">unit_current</span>
+    <span class="k">if</span> <span class="n">t_end</span> <span class="o">&gt;</span> <span class="n">t_start</span><span class="p">:</span>  <span class="c1"># if deltaT is zero, we return a zero current</span>
+        <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="n">amplitude_end</span> <span class="o">-</span> <span class="n">amplitude_start</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">((</span><span class="n">t_end</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">))</span>
+        <span class="n">ramp</span> <span class="o">=</span> <span class="p">[</span><span class="n">amplitude_start</span> <span class="o">+</span> <span class="n">t</span> <span class="o">*</span> <span class="n">slope</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">t_end</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">t_start</span><span class="p">:</span> <span class="n">t_end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ramp</span> <span class="o">*</span> <span class="n">unit_current</span>
+
+    <span class="n">curr</span> <span class="o">=</span> <span class="n">b2</span><span class="o">.</span><span class="n">TimedArray</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">unit_time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">curr</span></div>
+
+
+<div class="viewcode-block" id="get_sinusoidal_current"><a class="viewcode-back" href="../../../modules/neurodynex.tools.html#neurodynex.tools.InputFactory.get_sinusoidal_current">[docs]</a><span class="k">def</span> <span class="nf">get_sinusoidal_current</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">frequency_Hz</span><span class="p">,</span> <span class="n">direct_current</span><span class="p">,</span>
+                           <span class="n">unit_current</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">uamp</span><span class="p">,</span> <span class="n">unit_time</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">us</span><span class="p">,</span>
+                           <span class="n">append_zero</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">phase_offset</span><span class="o">=</span><span class="mf">0.</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="s1">&#39;t_start_ms must be of type int&#39;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t_end</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="s1">&#39;t_end must be of type int&#39;</span>
+    <span class="n">tmp_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">t_end</span>  <span class="c1"># +1 for t=0</span>
+    <span class="k">if</span> <span class="n">append_zero</span><span class="p">:</span>
+        <span class="n">tmp_size</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">tmp_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">unit_current</span>
+    <span class="k">if</span> <span class="n">t_end</span> <span class="o">&gt;</span> <span class="n">t_start</span><span class="p">:</span>  <span class="c1"># if deltaT is zero, we return a zero current</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">t_end</span> <span class="o">-</span> <span class="n">t_start</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">*</span> <span class="n">unit_time</span> <span class="o">*</span> <span class="n">b2</span><span class="o">.</span><span class="n">Hz</span> <span class="o">*</span> <span class="n">frequency_Hz</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">*</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="n">phase_offset</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">direct_current</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">amplitude</span><span class="p">)</span> <span class="o">*</span> <span class="n">unit_current</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="n">t_start</span><span class="p">:</span> <span class="n">t_end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+    <span class="n">curr</span> <span class="o">=</span> <span class="n">b2</span><span class="o">.</span><span class="n">TimedArray</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">unit_time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">curr</span></div>
+
+
+<span class="c1">###############</span>
+<span class="c1"># Spike trains:</span>
+<span class="c1">###############</span>
+
+
+<div class="viewcode-block" id="plot_step_current_example"><a class="viewcode-back" href="../../../modules/neurodynex.tools.html#neurodynex.tools.InputFactory.plot_step_current_example">[docs]</a><span class="k">def</span> <span class="nf">plot_step_current_example</span><span class="p">():</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">get_step_current</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mf">5.</span><span class="p">,</span> <span class="n">unit_current</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">uamp</span><span class="p">,</span> <span class="n">unit_time</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">ms</span><span class="p">,</span> <span class="n">append_zero</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">values</span> <span class="o">/</span> <span class="n">b2</span><span class="o">.</span><span class="n">uamp</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">LineWidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;get_step_current(10, 30, 5, unit_current=uamp, unit_time=ms,append_zero=False)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="plot_ramp_current_example"><a class="viewcode-back" href="../../../modules/neurodynex.tools.html#neurodynex.tools.InputFactory.plot_ramp_current_example">[docs]</a><span class="k">def</span> <span class="nf">plot_ramp_current_example</span><span class="p">():</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">get_ramp_current</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">unit_current</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">uamp</span><span class="p">,</span> <span class="n">unit_time</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">append_zero</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">values</span> <span class="o">/</span> <span class="n">b2</span><span class="o">.</span><span class="n">uamp</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">LineWidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;get_ramp_current(10, 25, 20, 50, unit_current=uamp, unit_time=us, append_zero=True)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="plot_sinusoidal_current_example"><a class="viewcode-back" href="../../../modules/neurodynex.tools.html#neurodynex.tools.InputFactory.plot_sinusoidal_current_example">[docs]</a><span class="k">def</span> <span class="nf">plot_sinusoidal_current_example</span><span class="p">():</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">get_sinusoidal_current</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1100</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span>
+                                     <span class="n">unit_current</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">uamp</span><span class="p">,</span> <span class="n">unit_time</span><span class="o">=</span><span class="n">b2</span><span class="o">.</span><span class="n">us</span><span class="p">,</span> <span class="n">append_zero</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">phase_offset</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">values</span> <span class="o">/</span> <span class="n">b2</span><span class="o">.</span><span class="n">uamp</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">LineWidth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;get_sinusoidal_current(100, 1100, 2, 2000, unit_current=brian2.uamp, unit_time=brian2.us, </span><span class="se">\n</span><span class="s2"> &quot;</span>
+              <span class="s2">&quot;append_zero=True, phase_offset=math.pi/4)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># plot examples</span>
+    <span class="n">plot_sinusoidal_current_example</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">plot_step_current_example</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">plot_ramp_current_example</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, EPFL-LCN.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1.1.dev48+ng29f36de.d20161122',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
