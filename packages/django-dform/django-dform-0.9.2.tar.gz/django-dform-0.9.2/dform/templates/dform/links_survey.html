@@ -1,0 +1,94 @@
+{% extends "dform/base.html" %}
+{% load staticfiles %}
+{% block title %}{{title}}{% endblock title %}
+
+{% block contents %}
+<div class="row">
+  <div class="col-sm-10 col-sm-offset-1">
+    <h1>Links for "{{version.survey.name}}"</h1>
+
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        Latest Version of "{{version.survey.name}}"
+      </div>
+      <div class="panel-body">
+        <h4>Direct Link</h4>
+        <p>
+          The following is a link for users to answer the latest version of the
+          "{{version.survey.name}}" survey:
+
+        </p>
+<pre>
+&lt;a href="{{survey_latest_url}}"&gt;{{version.survey.name}}&lt;/a&gt;
+</pre>
+
+        <h4>Embed Survey in IFRAME</h4>
+        <p>
+          To insert the latest version of "{{version.survey.name}}" onto an
+          existing web page, use the 
+
+          <a target="_blank" href="http://blog.apps.npr.org/pym.js/">pym.js</a>
+
+          library and a IFRAME.  Copy the code below into the area where you
+          wish to insert the survey and pym.js will take care of the rest for
+          you.
+
+        </p>
+
+<pre>
+&lt;div id="dform1"&gt;&lt;/div&gt;
+&lt;script type="text/javascript" src="{{pym_url}}"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  var p = new pym.Parent('dform1', '{{embedded_survey_latest_url}}');
+&lt;/script&gt;
+</pre>
+
+
+      </div>
+    </div>
+
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+        Version {{version.version_num}} of "{{version.survey.name}}"
+      </div>
+      <div class="panel-body">
+        <h4>Link to Specific Survey Version</h4>
+        <p>
+          The following is a link for users to answer version
+          #{{version.version_num}} of the
+          "{{version.survey.name}}" survey:
+
+        </p>
+
+<pre>
+&lt;a href="{{survey_url}}"&gt;{{version.survey.name}}&lt;/a&gt;
+</pre>
+
+        <h4>Embed Survey in IFRAME</h4>
+        <p>
+          To insert the version #{{version.version_num}} of 
+          "{{version.survey.name}}" onto an existing web page, use the 
+
+          <a target="_blank" href="http://blog.apps.npr.org/pym.js/">pym.js</a>
+          library and a IFRAME.  Copy the code below into the area where you
+          wish to insert the survey and pym.js will take care of the rest for
+          you.
+
+        </p>
+
+<pre>
+&lt;div id="dform1"&gt;&lt;/div&gt;
+&lt;script type="text/javascript" src="{{pym_url}}"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+  var p = new pym.Parent('dform1', '{{embedded_survey_url}}');
+&lt;/script&gt;
+</pre>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock contents %}

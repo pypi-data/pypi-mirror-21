@@ -1,0 +1,65 @@
+{% for field in form %}
+  <!-- 
+    {{field}}
+    {{field.field.required}}
+    {{field.field.question}}
+    {{field.field.question.field}}
+    {{field.field.question.field.field_key}}
+  -->
+
+<div class="form-group {% if field.errors %}has-error{% endif %} {% if field.field.required %}required{% endif %}">
+  <label for="{{field.id}}" class="control-label"
+    >{{field.field.question.text}}</label>
+  {% if field.field.question.field.field_key == 'rd' %}
+      {% for choice in field %}
+        <div class="radio">
+          <label for="{{choice.id_for_label}}">
+            {{choice.tag}}
+            {{choice.choice_label}}
+          </label>
+        </div>
+      {% endfor %}
+      {% for error in field.errors %}
+        <span class="help-block">{{error}}</span>
+      {% endfor %}
+  {% elif field.field.question.field.field_key == 'ch' %}
+      {% for choice in field %}
+        <div class="checkbox">
+          <label>
+            {{choice.tag}}
+            {{choice.choice_label}}
+          </label>
+        </div>
+      {% endfor %}
+      {% for error in field.errors %}
+        <span class="help-block">{{error}}</span>
+      {% endfor %}
+  {% elif field.field.question.field.field_key == 'rt' %}
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="rating">
+          {% for choice in field %}
+            {{choice.tag}}<label for="{{choice.id_for_label}}"
+              >{{choice.label}}</label>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% if field.errors %}
+      <div class="row">
+        <div class="col-sm-12">
+          {% for error in field.errors %}
+            <span class="help-block">{{error}}</span>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    {{field}}
+
+    {% for error in field.errors %}
+      <span class="help-block">{{error}}</span>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endfor %}
