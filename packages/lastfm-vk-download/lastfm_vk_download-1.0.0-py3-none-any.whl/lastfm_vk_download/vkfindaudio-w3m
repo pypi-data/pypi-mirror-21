@@ -1,0 +1,16 @@
+#!/bin/bash
+# Usage: $0 "<search terms>"
+# You need to auth manually using w3m(1) before use
+
+# this code was originally taken from https://github.com/l29ah/w3crapcli/tree/master/vkontakte.ru
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"  # dir that contains this file
+
+for o in {0..500..50}
+do
+	w3m -o auto_uncompress=1 -O utf8 -dump_source \
+		"https://m.vk.com/audio?act=search&offset=$o&q=$(echo "$1" | ${DIR}/urlencode)" |
+		sed -ne '/ai_artist/{N;N;N;N;s#.*ai_artist">\(.*\)</span.*divider.*ai_title">\(.*\)</span.*value="\([^"]*mp3[^"]*\)">#\3     \1 - \2#;s#<[^>]*>##g;p}' |
+		${DIR}/htmldecode |
+		js -f "$(dirname "$(readlink -f "$(which "$0")")")/decode.js"
+done
