@@ -1,0 +1,351 @@
+# variables in header
+request_id:
+  description: |
+    A unique ID for tracking service request. The request ID associated
+    with the request by default appears in the service logs.
+  in: header
+  required: true
+  type: UUID
+abandon:
+  description: |
+    Indicates how to delete environment.
+    ``True`` is used when just database must be cleaned.
+    ``False`` is used if all resources used by environment must be destroyed.
+  in: path
+  required: false
+  default: false
+  type: boolean
+env_id_url:
+  description: |
+    The UUID of the environment.
+  in: path
+  required: true
+  type: string
+env_model_path:
+  description: |
+    Allows to get a specific section of the model, for example
+    ``defaultNetworks``, ``region`` or ``?`` or any of the subsections.
+  in: path
+  required: false
+  type: string
+env_name_update:
+  description: |
+    A name for the environment. Name must be at least
+    one non-white space symbol.
+  in: path
+  required: true
+  type: string
+pkg_id_url:
+  description: |
+    The UUID of the package.
+  in: path
+  required: true
+  type: string
+all_tenants:
+  description: |
+    Indicates whether environments from all projects are listed.
+    ``True`` environments from all projects are listed. Admin user required.
+    ``False`` environments only from current project are listed (default like
+    option unspecified).
+  in: query
+  required: false
+  default: false
+  type: boolean
+catalog:
+  description: |
+    If ``false`` (default) - search packages, that current user can edit
+    (own for non-admin, all for admin). If ``true`` - search packages,
+    that current user can deploy (i.e. his own + public).
+  in: query
+  required: false
+  default: false
+  type: boolean
+category:
+  description: |
+    Allows to filter by categories.
+  in: query
+  required: false
+  type: string
+class_name:
+  description: |
+    Search only for packages, that use specified class.
+  in: query
+  required: false
+  type: string
+fqn:
+  description: |
+    Allows to filter by fully qualified name.
+  in: query
+  required: false
+  type: string
+include_disabled:
+  description: |
+    Include disabled packages in the result.
+  in: query
+  required: false
+  default: false
+  type: boolean
+limit:
+  description: |
+    When present the maximum number of results returned will not exceed
+    the specified value. The typical pattern of limit and marker is to
+    make an initial limited request and then to use the ID of the last
+    package from the response as the marker parameter in a
+    subsequent limited request.
+  in: query
+  required: false
+  type: string
+marker:
+  description: |
+    A package identifier marker may be specified. When present only
+    packages which occur after the identifier ID will be listed
+  in: query
+  required: false
+  type: string
+order_by:
+  description: |
+    Allows to sort packages by ``fqn``, ``name``, ``created``.
+    Created is default value.
+  in: query
+  required: false
+  type: string
+owned:
+  description: |
+    Search only from packages owned by current project.
+  in: query
+  required: false
+  default: false
+  type: boolean
+pkg_id_query:
+  description: |
+    Allows to filter by package id.
+  in: query
+  required: false
+  type: string
+pkg_name_query:
+  description: |
+    Allows to filter by package name.
+  in: query
+  required: false
+  type: string
+pkg_type_query:
+  description: |
+    Allows to filter package by type, e.g. ``application``, ``library``.
+  in: query
+  required: false
+  type: string
+search:
+  description: |
+    Gives opportunity to search specified data by all the
+    package parameters and order packages.
+  in: query
+  required: false
+  type: string
+author:
+  description: |
+    The author of the package.
+  in: body
+  required: true
+  type: string
+categories:
+  description: |
+    The categories of the package.
+  in: body
+  required: true
+  type: array
+class_definitions:
+  description: |
+    The class_definitions of the package.
+  in: body
+  required: true
+  type: array
+created:
+  description: |
+    The date and time when the resource was created. The date and time stamp
+    format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_:
+
+    ::
+
+       CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``.
+
+    The ``±hh:mm`` value, if included, is the time zone as an offset
+    from UTC.
+  in: body
+  required: true
+  type: string
+description:
+  description: |
+    The description of the package.
+  in: body
+  required: true
+  type: string
+enabled:
+  description: |
+    Whether the package is browsed in the Application Catalog.
+  in: body
+  required: true
+  type: boolean
+env_default_networks:
+  description: |
+    The default networks of the environment.
+  in: body
+  required: true
+  type: array
+env_id:
+  description: |
+    The UUID of the environment.
+  in: body
+  required: true
+  type: string
+env_model:
+  description: |
+    The ``?`` sections of the environment..
+  in: body
+  required: true
+  type: array
+env_name:
+  description: |
+    A name for the environment. Name must be at least
+    one non-white space symbol.
+  in: body
+  required: true
+  type: string
+env_name_request:
+  description: |
+    A name for the environment. Name must be at least
+    one non-white space symbol.
+  in: body
+  required: true
+  type: string
+env_region:
+  description: |
+    Current region of the environment.
+  in: body
+  required: true
+  type: string
+env_status:
+  description: |
+    Current status of the environment.
+  in: body
+  required: true
+  type: string
+env_version:
+  description: |
+    Current version.
+  in: body
+  required: true
+  type: int
+environments:
+  description: |
+    A list of ``environment`` object.
+  in: body
+  required: true
+  type: array
+fully_qualified_name:
+  description: |
+    The fqn of the package.
+  in: body
+  required: true
+  type: string
+is_public:
+  description: |
+    Whether the package is shared for other projects.
+  in: body
+  required: true
+  type: boolean
+last_status_uuid:
+  description: |
+    A list of environment last status object.
+  in: body
+  required: true
+  type: array
+networking:
+  description: |
+    Current network of the environment.
+  in: body
+  required: true
+  type: string
+owner_id:
+  description: |
+    The owner id of the package.
+  in: body
+  required: true
+  type: string
+packages:
+  description: |
+    A list of ``package`` object.
+  in: body
+  required: true
+  type: array
+pkg_file:
+  description: |
+    The upload package file.
+  in: body
+  required: true
+  type: object
+pkg_id:
+  description: |
+    The UUID of the package.
+  in: body
+  required: true
+  type: string
+pkg_name:
+  description: |
+    The name of the package.
+  in: body
+  required: true
+  type: string
+pkg_supplier:
+  description: |
+    The supplier info of the package.
+  in: body
+  required: true
+  type: object
+pkg_type:
+  description: |
+    The type of the package.
+  in: body
+  required: true
+  type: string
+regions:
+  description: |
+    The regions detail of the cloud.
+  in: body
+  required: true
+  type: array
+services:
+  description: |
+    A list of ``services`` object.
+  in: body
+  required: true
+  type: array
+tags:
+  description: |
+    The tags of the package.
+  in: body
+  required: true
+  type: array
+tenant_id:
+  description: |
+    The UUID of the tenant. A tenant is also known as
+    a project.
+  in: body
+  required: true
+  type: string
+updated:
+  description: |
+    The date and time when the object was updated. The date and time stamp
+    format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_:
+
+    ::
+
+       CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``.
+
+    The ``±hh:mm`` value, if included, is the time zone as an offset from UTC.
+  in: body
+  required: true
+  type: string
