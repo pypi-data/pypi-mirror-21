@@ -1,0 +1,3 @@
+Bad Ideas for Python!
+
+
