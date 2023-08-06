@@ -1,0 +1,755 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial &mdash; django-comments-xtd 1.8.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="django-comments-xtd 1.8.0 documentation" href="index.html"/>
+        <link rel="next" title="Demo projects" href="example.html"/>
+        <link rel="prev" title="Quick start guide" href="quickstart.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> django-comments-xtd
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick start guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comment-confirmation">Comment confirmation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comments-tags">Comments tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#moderation">Moderation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#disallow-black-listed-domains">Disallow black listed domains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#moderate-on-bad-words">Moderate on bad words</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#threads">Threads</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#different-max-thread-levels">Different max thread levels</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#flags">Flags</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#removal-suggestion">Removal suggestion</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#getting-notifications">Getting notifications</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#liked-it-disliked-it">Liked it, Disliked it</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#show-the-list-of-users">Show the list of users</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#final-notes">Final notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Demo projects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic.html">Control Logic</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templatetags.html">Filters and Template Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Customizing django-comments-xtd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">Templates</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">django-comments-xtd</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/tutorial.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial">
+<span id="ref-tutorial"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial guides you through the steps to use every feature of django-comments-xtd together with the <a class="reference external" href="https://github.com/django/django-contrib-comments">Django Comments Framework</a>. The Django project used throughout the tutorial is available to <a class="reference external" href="https://github.com/danirus/django-comments-xtd/example/tutorial.tar.gz">download</a>. Following the tutorial will take about an hour, and it is highly recommended to get a comprehensive understanding of django-comments-xtd.</p>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title first">Table of Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#introduction" id="id5">Introduction</a></li>
+<li><a class="reference internal" href="#preparation" id="id6">Preparation</a></li>
+<li><a class="reference internal" href="#configuration" id="id7">Configuration</a></li>
+<li><a class="reference internal" href="#comment-confirmation" id="id8">Comment confirmation</a></li>
+<li><a class="reference internal" href="#comments-tags" id="id9">Comments tags</a></li>
+<li><a class="reference internal" href="#moderation" id="id10">Moderation</a><ul>
+<li><a class="reference internal" href="#disallow-black-listed-domains" id="id11">Disallow black listed domains</a></li>
+<li><a class="reference internal" href="#moderate-on-bad-words" id="id12">Moderate on bad words</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#threads" id="id13">Threads</a><ul>
+<li><a class="reference internal" href="#different-max-thread-levels" id="id14">Different max thread levels</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#flags" id="id15">Flags</a><ul>
+<li><a class="reference internal" href="#removal-suggestion" id="id16">Removal suggestion</a><ul>
+<li><a class="reference internal" href="#getting-notifications" id="id17">Getting notifications</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#liked-it-disliked-it" id="id18">Liked it, Disliked it</a><ul>
+<li><a class="reference internal" href="#show-the-list-of-users" id="id19">Show the list of users</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#final-notes" id="id20">Final notes</a></li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<span id="index-0"></span><h2><a class="toc-backref" href="#id5">Introduction</a><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Through the following sections the tutorial will cover the creation of a simple blog with stories to which we will add comments, exercising each and every feature provided by both, django-comments and django-comments-xtd, from comment post verification by mail to comment moderation and nested comments.</p>
+</div>
+<div class="section" id="preparation">
+<span id="index-1"></span><h2><a class="toc-backref" href="#id6">Preparation</a><a class="headerlink" href="#preparation" title="Permalink to this headline">¶</a></h2>
+<p>Before we install any package we will set up a virtualenv and install everything we need in it.</p>
+<blockquote>
+<div><div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>mkdir ~/django-comments-xtd-tutorial
+<span class="nv">$ </span><span class="nb">cd</span> ~/django-comments-xtd-tutorial
+<span class="nv">$ </span>virtualenv venv
+<span class="nv">$ </span><span class="nb">source </span>venv/bin/activate
+<span class="o">(</span>venv<span class="o">)</span><span class="nv">$ </span>pip install django-comments-xtd
+<span class="o">(</span>venv<span class="o">)</span><span class="nv">$ </span>wget https://github.com/danirus/django-comments-xtd/demo/tutorial.tar.gz
+<span class="o">(</span>venv<span class="o">)</span><span class="nv">$ </span>tar -xvzf tutorial.tar.gz
+<span class="o">(</span>venv<span class="o">)</span><span class="nv">$ </span><span class="nb">cd </span>tutorial
+</pre></div>
+</div>
+</div></blockquote>
+<p>By installing django-comments-xtd we install all its dependencies, Django and django-contrib-comments among them. So we are ready to work on the project. Take a look at the content of the tutorial directory, it contains:</p>
+<blockquote>
+<div><ul class="simple">
+<li>A <strong>blog</strong> app with a <strong>Post</strong> model. It uses two generic class-based views to list the posts, and to show a given post in detail.</li>
+<li>The <strong>templates</strong> directory, with a <strong>base.html</strong> template, a <strong>home.html</strong> template, and two templates for the blog app: <strong>blog/post_list.html</strong> and <strong>blog/post_detail.html</strong>.</li>
+<li>The <strong>static</strong> directory with a <strong>css/bootstrap.min.css</strong> file (this file is a static asset available, when the app is installed, under the path <strong>django_comments_xtd/css/bootstrap.min.css</strong>).</li>
+<li>The <strong>tutorial</strong> directory containing the <strong>settings</strong> and <strong>urls</strong> modules.</li>
+<li>And a <strong>fixtures</strong> directory with data files to create the <em>admin</em> superuser (with <em>admin</em> password), the default site and some blog posts.</li>
+</ul>
+</div></blockquote>
+<p>Let&#8217;s finish the initial setup, load the fixtures and run the development server:</p>
+<blockquote>
+<div><div class="highlight-bash"><div class="highlight"><pre><span class="o">(</span>venv<span class="o">)</span><span class="nv">$ </span>python manage.py migrate
+<span class="o">(</span>venv<span class="o">)</span><span class="nv">$ </span>python manage.py loaddata fixtures/*.json
+<span class="o">(</span>venv<span class="o">)</span><span class="nv">$ </span>python manage.py runserver
+</pre></div>
+</div>
+</div></blockquote>
+<p>Head to <a class="reference external" href="http://localhost:8000">http://localhost:8000</a> and visit the tutorial site. In the following section we will make changes to enable django-comments-xtd.</p>
+</div>
+<div class="section" id="configuration">
+<span id="id1"></span><h2><a class="toc-backref" href="#id7">Configuration</a><a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Now that the project is up and running we are ready to add comments. Edit the settings module, <code class="docutils literal"><span class="pre">tutorial/settings.py</span></code>, and make the following changes:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">INSTALLED_APPS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span>
+    <span class="s">&#39;django_comments_xtd&#39;</span><span class="p">,</span>
+    <span class="s">&#39;django_comments&#39;</span><span class="p">,</span>
+    <span class="s">&#39;blog&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="o">...</span>
+<span class="n">COMMENTS_APP</span> <span class="o">=</span> <span class="s">&#39;django_comments_xtd&#39;</span>
+
+<span class="c"># Either enable sending mail messages to the console:</span>
+<span class="n">EMAIL_BACKEND</span> <span class="o">=</span> <span class="s">&#39;django.core.mail.backends.console.EmailBackend&#39;</span>
+
+<span class="c"># Or set up the EMAIL_* settings so that Django can send emails:</span>
+<span class="n">EMAIL_HOST</span> <span class="o">=</span> <span class="s">&quot;smtp.mail.com&quot;</span>
+<span class="n">EMAIL_PORT</span> <span class="o">=</span> <span class="s">&quot;587&quot;</span>
+<span class="n">EMAIL_HOST_USER</span> <span class="o">=</span> <span class="s">&quot;alias@mail.com&quot;</span>
+<span class="n">EMAIL_HOST_PASSWORD</span> <span class="o">=</span> <span class="s">&quot;yourpassword&quot;</span>
+<span class="n">EMAIL_USE_TLS</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">DEFAULT_FROM_EMAIL</span> <span class="o">=</span> <span class="s">&quot;Helpdesk &lt;helpdesk@yourdomain&gt;&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Edit the urls module of the project, <code class="docutils literal"><span class="pre">democx/democx/urls.py</span></code>, to mount the URL patterns of django_comments_xtd to the path <code class="docutils literal"><span class="pre">/comments/</span></code>. The urls installed with django_comments_xtd include those required by django_comments too:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">django.conf.urls</span> <span class="kn">import</span> <span class="n">include</span><span class="p">,</span> <span class="n">url</span>
+
+<span class="n">urlpatterns</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="o">...</span>
+    <span class="n">url</span><span class="p">(</span><span class="s">r&#39;^comments/&#39;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="s">&#39;django_comments_xtd.urls&#39;</span><span class="p">)),</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now let Django create the tables for the two new applications:</p>
+<blockquote>
+<div><div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>python manage.py migrate
+</pre></div>
+</div>
+</div></blockquote>
+<p>Be sure that the domain field of the <code class="docutils literal"><span class="pre">Site</span></code> instance points to the correct domain, which for the development server is expected to be  <code class="docutils literal"><span class="pre">localhost:8000</span></code>. The value is used to create comment verifications, follow-up cancellations, etc. Edit the site instance in the admin interface in case you were using a different value.</p>
+<p>After these simple changes the project is ready to use comments, we just need to modify the blog templates.</p>
+</div>
+<div class="section" id="comment-confirmation">
+<h2><a class="toc-backref" href="#id8">Comment confirmation</a><a class="headerlink" href="#comment-confirmation" title="Permalink to this headline">¶</a></h2>
+<p>In order to make django-comments-xtd request comment confirmation by mail we need to set the <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_SALT"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_SALT</span></code></a> setting. This setting helps obfuscating the comment before the user has approved its publication.</p>
+<p>This is so because django-comments-xtd does not store comments in the server before they have been confirmed. This way there is little to none possible comment spam flooding in the database. Comments are encoded in URLs and sent for confirmation by mail. Only when the user clicks the confirmation URL the comment lands in the database.</p>
+<p>This behaviour is disabled for authenticated users, and can be disabled for anonymous users too by simply setting <code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_CONFIRM_MAIL</span></code> to <code class="docutils literal"><span class="pre">False</span></code>.</p>
+<p>Now let&#8217;s append the following entry to the settings module to help obfuscating the comment before it is sent for confirmation:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">COMMENTS_XTD_SALT</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="s">&quot;Timendi causa est nescire. &quot;</span>
+                     <span class="n">b</span><span class="s">&quot;Aequam memento rebus in arduis servare mentem.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="comments-tags">
+<h2><a class="toc-backref" href="#id9">Comments tags</a><a class="headerlink" href="#comments-tags" title="Permalink to this headline">¶</a></h2>
+<p>In order to be able to post comments to blog stories we need to edit the template file <code class="docutils literal"><span class="pre">blog/post_detail.html</span></code> and load the <code class="docutils literal"><span class="pre">comments</span></code> templatetag module, which is provided by the <a class="reference external" href="https://github.com/django/django-contrib-comments">Django Comments Framework</a>:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">load</span> <span class="nv">comments</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>We will apply changes in the the blog post detail template:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>To show the number of comments posted to the blog story,</li>
+<li>To list the comments already posted, and</li>
+<li>To show the comment form, so that people can post comments.</li>
+</ol>
+</div></blockquote>
+<p>By using the <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-get_comment_count" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">get_comment_count</span></code></a> tag we will show the number of comments posted. Change the code around the link element so that it looks like:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">get_comment_count</span> <span class="nv">for</span> <span class="nv">object</span> <span class="k">as</span> <span class="nv">comment_count</span> <span class="cp">%}</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;text-center&quot;</span> <span class="na">style=</span><span class="s">&quot;padding-top:20px&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">url</span> <span class="s1">&#39;blog:post-list&#39;</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="nt">&gt;</span>Back to the post list<span class="nt">&lt;/a&gt;</span>
+  <span class="ni">&amp;nbsp;&amp;sdot;&amp;nbsp;</span>
+  <span class="cp">{{</span> <span class="nv">comment_count</span> <span class="cp">}}</span> comments have been posted.
+<span class="nt">&lt;/div&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now let&#8217;s add the code to list the comments posted to the story. We can make use of two template tags, <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-render_comment_list" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">render_comment_list</span></code></a> and <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-get_comment_list" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">get_comment_list</span></code></a>. The former renders a template with the comments while the latter put the comment list in a variable in the context of the template.</p>
+<p>When using the first, <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-render_comment_list" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">render_comment_list</span></code></a>, with a <code class="docutils literal"><span class="pre">blog.post</span></code> object, Django will look for the template <code class="docutils literal"><span class="pre">list.html</span></code> in the following directories:</p>
+<blockquote>
+<div><div class="highlight-shell"><div class="highlight"><pre>comments/blog/post/list.html
+comments/blog/list.html
+comments/list.html
+</pre></div>
+</div>
+</div></blockquote>
+<p>Both, django-contrib-comments and django-comments-xtd, provide the last of the list. The one in django-comments-xtd includes <a class="reference external" href="http://getbootstrap.com">twitter-bootstrap</a> styling. Django will use the first template found, which depends on what application is listed first in <a class="reference external" href="http://docs.djangoproject.com/en/stable/ref/settings/#std:setting-INSTALLED_APPS" title="(in Django v1.11)"><code class="xref std std-setting docutils literal"><span class="pre">INSTALLED_APPS</span></code></a>, django-comments-xtd in this case.</p>
+<p>Let&#8217;s modify the <code class="docutils literal"><span class="pre">blog/blog_detail.html</span></code> template to make use of the <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-render_comment_list" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">render_comment_list</span></code></a> tag to add the list of comments. Add the following code at the end of the page, before the <code class="docutils literal"><span class="pre">endblock</span></code> tag:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">if</span> <span class="nv">comment_count</span> <span class="cp">%}</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;comments&quot;</span><span class="nt">&gt;</span>
+  <span class="cp">{%</span> <span class="k">render_comment_list</span> <span class="nv">for</span> <span class="nv">object</span> <span class="cp">%}</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Below the list of comments we want to display the comment form, so that users can send their own comments. There are two tags available for the purpose, the <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-render_comment_form" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">render_comment_form</span></code></a> and the <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-get_comment_form" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">get_comment_form</span></code></a>. The former renders a template with the comment form while the latter puts the form in the context of the template giving more control over the fields.</p>
+<p>At the moment we will use the first tag, <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/quickstart.html#std:templatetag-render_comment_form" title="(in Django Comments v1.7)"><code class="xref std std-ttag docutils literal"><span class="pre">render_comment_form</span></code></a>. Again, add the following code before the <code class="docutils literal"><span class="pre">endblock</span></code> tag:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">if</span> <span class="nv">object.allow_comments</span> <span class="cp">%}</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;comment&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">&quot;text-center&quot;</span><span class="nt">&gt;</span>Your comment<span class="nt">&lt;/h4&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;well&quot;</span><span class="nt">&gt;</span>
+    <span class="cp">{%</span> <span class="k">render_comment_form</span> <span class="nv">for</span> <span class="nv">object</span> <span class="cp">%}</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Finally, before completing this first set of changes, we could show the number of comments along with post titles in the blog&#8217;s home page. Let&#8217;s edit <code class="docutils literal"><span class="pre">blog/post_list.html</span></code> and make the following changes:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">extends</span> <span class="s2">&quot;base.html&quot;</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">load</span> <span class="nv">comments</span> <span class="cp">%}</span>
+
+...
+<span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">&quot;date&quot;</span><span class="nt">&gt;</span>
+  <span class="cp">{%</span> <span class="k">get_comment_count</span> <span class="nv">for</span> <span class="nv">object</span> <span class="k">as</span> <span class="nv">comment_count</span> <span class="cp">%}</span>
+  Published <span class="cp">{{</span> <span class="nv">object.publish</span> <span class="cp">}}</span>
+  <span class="cp">{%</span> <span class="k">if</span> <span class="nv">comment_count</span> <span class="cp">%}</span>
+  <span class="ni">&amp;sdot;&amp;nbsp;</span><span class="cp">{{</span> <span class="nv">comment_count</span> <span class="cp">}}</span> comments
+  <span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+<span class="nt">&lt;/p&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we are ready to send comments. If you are logged in the admin site, your comments won&#8217;t need to be confirmed by mail. To test the confirmation URL do logout of the admin interface. Bear in mind that <a class="reference external" href="http://docs.djangoproject.com/en/stable/ref/settings/#std:setting-EMAIL_BACKEND" title="(in Django v1.11)"><code class="xref std std-setting docutils literal"><span class="pre">EMAIL_BACKEND</span></code></a> is set up to send mail messages to the console, so look in the console after you post the comment and find the first long URL in the message. To confirm the comment copy the link and paste it in the location bar of the browser.</p>
+<p>The setting <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_MAX_THREAD_LEVEL"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_MAX_THREAD_LEVEL</span></code></a> is <code class="docutils literal"><span class="pre">0</span></code> by default, which means comments can not be nested. Later in the threads section we will enable nested comments. Now we will set up comment moderation.</p>
+</div>
+<div class="section" id="moderation">
+<span id="index-2"></span><span id="id3"></span><h2><a class="toc-backref" href="#id10">Moderation</a><a class="headerlink" href="#moderation" title="Permalink to this headline">¶</a></h2>
+<p>One of the differences between django-comments-xtd and other commenting applications is the fact that by default it requires comment confirmation by email when users are not logged in, a very effective feature to discard unwanted comments. However there might be cases in which we would prefer to follow a different approach. The Django Comments Framework has the <a class="reference external" href="http://django-contrib-comments.readthedocs.io/en/latest/moderation.html">moderation capabilities</a> upon which we can build our own comment filtering.</p>
+<p>Comment moderation is often established to fight spam, but may be used for other purposes, like triggering actions based on comment content, rejecting comments based on how old is the subject being commented and whatnot.</p>
+<p>In this section we want to set up comment moderation for our blog application, so that comments sent to a blog post older than a year will be automatically flagged for moderation. Also we want Django to send an email to registered <a class="reference external" href="http://docs.djangoproject.com/en/stable/ref/settings/#std:setting-MANAGERS" title="(in Django v1.11)"><code class="xref std std-setting docutils literal"><span class="pre">MANAGERS</span></code></a> of the project when the comment is flagged.</p>
+<p>Let&#8217;s start adding our email address to the <a class="reference external" href="http://docs.djangoproject.com/en/stable/ref/settings/#std:setting-MANAGERS" title="(in Django v1.11)"><code class="xref std std-setting docutils literal"><span class="pre">MANAGERS</span></code></a> in the <code class="docutils literal"><span class="pre">tutorial/settings.py</span></code> module:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">MANAGERS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">(</span><span class="s">&#39;Joe Bloggs&#39;</span><span class="p">,</span> <span class="s">&#39;joe.bloggs@example.com&#39;</span><span class="p">),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we will create a new <code class="docutils literal"><span class="pre">Moderator</span></code> class that inherits from Django Comments Frammework&#8217;s <code class="docutils literal"><span class="pre">CommentModerator</span></code>. This class enables moderation by defining a number of class attributes. Read more about it in <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/moderation.html#moderation-options">moderation options</a>, in the official documentation of the Django Comments Framework.</p>
+<p>We will also register our <code class="docutils literal"><span class="pre">Moderator</span></code> class with the django-comments-xtd&#8217;s <code class="docutils literal"><span class="pre">moderator</span></code> object. We use django-comments-xtd&#8217;s object instead of django-contrib-comments&#8217; because we still want to have confirmation by email for non-registered users, nested comments, follow-up notifications, etc.</p>
+<p>Let&#8217;s add those changes to the <code class="docutils literal"><span class="pre">blog/model.py</span></code> file:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="o">...</span>
+<span class="c"># Append these imports below the current ones.</span>
+<span class="kn">from</span> <span class="nn">django_comments.moderation</span> <span class="kn">import</span> <span class="n">CommentModerator</span>
+<span class="kn">from</span> <span class="nn">django_comments_xtd.moderation</span> <span class="kn">import</span> <span class="n">moderator</span>
+
+<span class="o">...</span>
+
+<span class="c"># Add this code at the end of the file.</span>
+<span class="k">class</span> <span class="nc">PostCommentModerator</span><span class="p">(</span><span class="n">CommentModerator</span><span class="p">):</span>
+    <span class="n">email_notification</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">auto_moderate_field</span> <span class="o">=</span> <span class="s">&#39;publish&#39;</span>
+    <span class="n">moderate_after</span> <span class="o">=</span> <span class="mi">365</span>
+
+
+<span class="n">moderator</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Post</span><span class="p">,</span> <span class="n">PostCommentModerator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>That makes it, moderation is ready. Visit any of the blog posts with a <code class="docutils literal"><span class="pre">publish</span></code> datetime older than a year and try to send a comment. After confirming the comment you will see the <code class="docutils literal"><span class="pre">django_comments_xtd/moderated.html</span></code> template, and your comment will be put on hold for approval.</p>
+<p>If on the other hand you send a comment to a blog post created within the last year your comment will not be put in moderation. Give it a try as a logged in user and as an anonymous user.</p>
+<p>When sending a comment to a blog post with a user logged in the comment doesn&#8217;t have to be confirmed. However, when you send it logged out the comment has to be confirmed by clicking on the confirmation link. Right after clicking on the confirmation link the comment will be put on hold, pending for approval.</p>
+<p>In both cases all mail addresses listed in the <a class="reference external" href="http://docs.djangoproject.com/en/stable/ref/settings/#std:setting-MANAGERS" title="(in Django v1.11)"><code class="xref std std-setting docutils literal"><span class="pre">MANAGERS</span></code></a> setting will receive a notification about the reception of a new comment. If you did not received such message, you might need to review your email settings, or the console output. Read about the mail settings above in the <a class="reference internal" href="#configuration"><span>Configuration</span></a> section.</p>
+<p>A last note on comment moderation: comments pending for moderation have to be reviewed and eventually approved. Don&#8217;t forget to visit the comments-xtd app in the <a class="reference external" href="http://localhost:8000/admin/">admin</a> interface. Tick the box to select those you want to approve, choose <strong>Approve selected comments</strong> in the <strong>action</strong> dropdown at the top left of the comment list and click on the <strong>Go</strong> button.</p>
+<div class="section" id="disallow-black-listed-domains">
+<h3><a class="toc-backref" href="#id11">Disallow black listed domains</a><a class="headerlink" href="#disallow-black-listed-domains" title="Permalink to this headline">¶</a></h3>
+<p>In the remote case you wanted to disable comment confirmation by mail you might want to set up some sort of control to reject spam.</p>
+<p>In this section we will go through the steps to disable comment confirmation while enabling a comment filtering solution based on Joe Wein&#8217;s <a class="reference external" href="http://www.joewein.net/spam/blacklist.htm">blacklist</a> of spamming domains. We will also add a moderation function that will put in moderation comments containing <a class="reference external" href="https://gist.github.com/ryanlewis/a37739d710ccdb4b406d">badwords</a>.</p>
+<p>Let us first disable comment confirmation, edit the <code class="docutils literal"><span class="pre">tutorial/settings.py</span></code> file and add:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">COMMENTS_XTD_CONFIRM_EMAIL</span> <span class="o">=</span> <span class="bp">False</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>django-comments-xtd comes with a <strong>Moderator</strong> class that inherits from <code class="docutils literal"><span class="pre">CommentModerator</span></code> and implements a method <code class="docutils literal"><span class="pre">allow</span></code> that will do the filtering for us. We just have to change <code class="docutils literal"><span class="pre">blog/models.py</span></code> and replace <code class="docutils literal"><span class="pre">CommentModerator</span></code> with <code class="docutils literal"><span class="pre">SpamModerator</span></code>, as follows:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="c"># Remove the CommentModerator imports and leave only this:</span>
+<span class="kn">from</span> <span class="nn">django_comments_xtd.moderation</span> <span class="kn">import</span> <span class="n">moderator</span><span class="p">,</span> <span class="n">SpamModerator</span>
+
+<span class="c"># Our class Post PostCommentModerator now inherits from SpamModerator</span>
+<span class="k">class</span> <span class="nc">PostCommentModerator</span><span class="p">(</span><span class="n">SpamModerator</span><span class="p">):</span>
+    <span class="o">...</span>
+
+<span class="n">moderator</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Post</span><span class="p">,</span> <span class="n">PostCommentModerator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we can add a domain to the <code class="docutils literal"><span class="pre">BlackListed</span></code> model in the <a class="reference external" href="http://localhost:8000/admin/">admin</a> interface. Or we could download a <a class="reference external" href="http://www.joewein.net/spam/blacklist.htm">blacklist</a> from Joe Wein&#8217;s website and load the table with actual spamming domains.</p>
+<p>Once we have a <code class="docutils literal"><span class="pre">BlackListed</span></code> domain, try to send a new comment and use an email address with such a domain. Be sure to log out before trying, otherwise django-comments-xtd will use the logged in user credentials and ignore the email given in the comment form. Also be sure to post the comment to a story with a publishing date within the last 365 days, otherwise it will enter in moderation regardless of the mail address domain.</p>
+<p>Sending a comment with an email address of the blacklisted domain triggers a <strong>Comment post not allowed</strong> response, which would have been a HTTP 400 Bad Request response with <code class="docutils literal"><span class="pre">DEBUG</span> <span class="pre">=</span> <span class="pre">False</span></code> in production.</p>
+</div>
+<div class="section" id="moderate-on-bad-words">
+<h3><a class="toc-backref" href="#id12">Moderate on bad words</a><a class="headerlink" href="#moderate-on-bad-words" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s now create our own Moderator class by subclassing <code class="docutils literal"><span class="pre">SpamModerator</span></code>. The goal is to provide a <code class="docutils literal"><span class="pre">moderate</span></code> method that looks in the content of the comment and returns <code class="docutils literal"><span class="pre">False</span></code> whenever it finds a bad word in the message. The effect of returning <code class="docutils literal"><span class="pre">False</span></code> is that comment&#8217;s <code class="docutils literal"><span class="pre">is_public</span></code> attribute will be put to <code class="docutils literal"><span class="pre">False</span></code> and therefore the comment will be in moderation.</p>
+<p>The blog application comes with a bad word list in the file <code class="docutils literal"><span class="pre">blog/badwords.py</span></code></p>
+<p>We assume we already have a list of <code class="docutils literal"><span class="pre">BlackListed</span></code> domains and we don&#8217;t need further spam control. So we will disable comment confirmation by email. Edit the <code class="docutils literal"><span class="pre">settings.py</span></code> file:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">COMMENTS_XTD_CONFIRM_EMAIL</span> <span class="o">=</span> <span class="bp">False</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now edit <code class="docutils literal"><span class="pre">blog/models.py</span></code> and add the code corresponding to our new <code class="docutils literal"><span class="pre">PostCommentModerator</span></code>:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="c"># Below the other imports:</span>
+<span class="kn">from</span> <span class="nn">django_comments_xtd.moderation</span> <span class="kn">import</span> <span class="n">moderator</span><span class="p">,</span> <span class="n">SpamModerator</span>
+<span class="kn">from</span> <span class="nn">blog.badwords</span> <span class="kn">import</span> <span class="n">badwords</span>
+
+<span class="o">...</span>
+
+<span class="k">class</span> <span class="nc">PostCommentModerator</span><span class="p">(</span><span class="n">SpamModerator</span><span class="p">):</span>
+    <span class="n">email_notification</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">moderate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comment</span><span class="p">,</span> <span class="n">content_object</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="c"># Make a dictionary where the keys are the words of the message and</span>
+        <span class="c"># the values are their relative position in the message.</span>
+        <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="n">word</span><span class="p">):</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">word</span>
+            <span class="k">if</span> <span class="n">word</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">word</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">):</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">word</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">if</span> <span class="n">word</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">word</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">):</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">word</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">ret</span>
+
+        <span class="n">lowcase_comment</span> <span class="o">=</span> <span class="n">comment</span><span class="o">.</span><span class="n">comment</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">clean</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">i</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lowcase_comment</span><span class="o">.</span><span class="n">split</span><span class="p">())])</span>
+        <span class="k">for</span> <span class="n">badword</span> <span class="ow">in</span> <span class="n">badwords</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">badword</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">locase_comment</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">badword</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lastindex</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">for</span> <span class="n">subword</span> <span class="ow">in</span> <span class="n">badword</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">subword</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">lastindex</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">msg</span><span class="p">[</span><span class="n">subword</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="n">lastindex</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                                <span class="n">lastindex</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="n">subword</span><span class="p">]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">lastindex</span> <span class="o">=</span> <span class="n">msg</span><span class="p">[</span><span class="n">subword</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">badword</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="ow">and</span> <span class="n">msg</span><span class="p">[</span><span class="n">badword</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">==</span> <span class="n">lastindex</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">PostCommentModerator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">moderate</span><span class="p">(</span><span class="n">comment</span><span class="p">,</span>
+                                                          <span class="n">content_object</span><span class="p">,</span>
+                                                          <span class="n">request</span><span class="p">)</span>
+
+<span class="n">moderator</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Post</span><span class="p">,</span> <span class="n">PostCommentModerator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we can try to send a comment with any of the bad words listed in <a class="reference external" href="https://gist.github.com/ryanlewis/a37739d710ccdb4b406d">badwords</a>. After sending the comment we will see the content of the <code class="docutils literal"><span class="pre">django_comments_xtd/moderated.html</span></code> template and the comment will be put in moderation.</p>
+<p>If you enable comment confirmation by email, the comment will be put on hold after the user clicks on the confirmation link in the email.</p>
+</div>
+</div>
+<div class="section" id="threads">
+<span id="index-3"></span><h2><a class="toc-backref" href="#id13">Threads</a><a class="headerlink" href="#threads" title="Permalink to this headline">¶</a></h2>
+<p>Up until this point in the tutorial django-comments-xtd has been configured to disallow nested comments. Every comment is at thread level 0. It is so because by default the setting <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_MAX_THREAD_LEVEL"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_MAX_THREAD_LEVEL</span></code></a> is set to 0.</p>
+<p>When the <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_MAX_THREAD_LEVEL"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_MAX_THREAD_LEVEL</span></code></a> is greater than 0, comments below the maximum thread level may receive replies that will be nested up to the maximum thread level. A comment in a the thread level below the <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_MAX_THREAD_LEVEL"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_MAX_THREAD_LEVEL</span></code></a> can show a <strong>Reply</strong> link that allows users to send nested comments.</p>
+<p>In this section we will enable nested comments by modifying <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_MAX_THREAD_LEVEL"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_MAX_THREAD_LEVEL</span></code></a> and apply some changes to our <code class="docutils literal"><span class="pre">blog_detail.html</span></code> template.</p>
+<p>We can make use of two template tags, <a class="reference internal" href="templatetags.html#std:templatetag-render_xtdcomment_tree"><code class="xref std std-ttag docutils literal"><span class="pre">render_xtdcomment_tree</span></code></a> and <a class="reference internal" href="templatetags.html#std:templatetag-get_xtdcomment_tree"><code class="xref std std-ttag docutils literal"><span class="pre">get_xtdcomment_tree</span></code></a>. The former renders a template with the comments while the latter put the comments in a nested data structure in the context of the template.</p>
+<p>We will also introduce the setting <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_LIST_ORDER"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_LIST_ORDER</span></code></a>, that allows altering the default order in which we get the list of comments. By default comments are ordered by thread and their position inside the thread, which turns out to be in ascending datetime of arrival. In this example we would like to list newer comments first.</p>
+<p>Let&#8217;s start by editing <code class="docutils literal"><span class="pre">tutorial/settings.py</span></code> to set up a maximum thread level of 1 and a comment ordering to retrieve newer comments first:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">COMMENTS_XTD_MAX_THREAD_LEVEL</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c"># default is 0</span>
+<span class="n">COMMENTS_XTD_LIST_ORDER</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;-thread_id&#39;</span><span class="p">,</span> <span class="s">&#39;order&#39;</span><span class="p">)</span>  <span class="c"># default is (&#39;thread_id&#39;, &#39;order&#39;)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Now we have to modify the blog post detail template to load the <code class="docutils literal"><span class="pre">comments_xtd</span></code> templatetag and make use of <a class="reference internal" href="templatetags.html#std:templatetag-render_xtdcomment_tree"><code class="xref std std-ttag docutils literal"><span class="pre">render_xtdcomment_tree</span></code></a>. We also want to move the comment form from the bottom of the page to a more visible position right below the blog post, followed by the list of comments.</p>
+<p>Edit <code class="docutils literal"><span class="pre">blog/post_detail.html</span></code> to make it look like follows:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="cp">{%</span> <span class="k">extends</span> <span class="s2">&quot;base.html&quot;</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">load</span> <span class="nv">comments</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">load</span> <span class="nv">comments_xtd</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">block</span> <span class="nv">title</span> <span class="cp">%}{{</span> <span class="nv">object.title</span> <span class="cp">}}{%</span> <span class="k">endblock</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">block</span> <span class="nv">content</span> <span class="cp">%}</span>
+<span class="nt">&lt;h3</span> <span class="na">class=</span><span class="s">&quot;page-header text-center&quot;</span><span class="nt">&gt;</span><span class="cp">{{</span> <span class="nv">object.title</span> <span class="cp">}}</span><span class="nt">&lt;/h3&gt;</span>
+<span class="nt">&lt;p</span> <span class="na">class=</span><span class="s">&quot;small text-center&quot;</span><span class="nt">&gt;</span><span class="cp">{{</span> <span class="nv">object.publish</span><span class="o">|</span><span class="nf">date</span><span class="s2">:&quot;l, j F Y&quot;</span> <span class="cp">}}</span><span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;p&gt;</span>
+  <span class="cp">{{</span> <span class="nv">object.body</span><span class="o">|</span><span class="nf">linebreaks</span> <span class="cp">}}</span>
+<span class="nt">&lt;/p&gt;</span>
+
+<span class="cp">{%</span> <span class="k">get_comment_count</span> <span class="nv">for</span> <span class="nv">object</span> <span class="k">as</span> <span class="nv">comment_count</span> <span class="cp">%}</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;text-center&quot;</span> <span class="na">style=</span><span class="s">&quot;padding-top:20px&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="k">url</span> <span class="s1">&#39;blog:post-list&#39;</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="nt">&gt;</span>Back to the post list<span class="nt">&lt;/a&gt;</span>
+  <span class="ni">&amp;nbsp;&amp;sdot;&amp;nbsp;</span>
+  <span class="cp">{{</span> <span class="nv">comment_count</span> <span class="cp">}}</span> comments have been posted.
+<span class="nt">&lt;/div&gt;</span>
+
+<span class="cp">{%</span> <span class="k">if</span> <span class="nv">object.allow_comments</span> <span class="cp">%}</span>
+<span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;comment&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;h4</span> <span class="na">class=</span><span class="s">&quot;text-center&quot;</span><span class="nt">&gt;</span>Your comment<span class="nt">&lt;/h4&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;well&quot;</span><span class="nt">&gt;</span>
+    <span class="cp">{%</span> <span class="k">render_comment_form</span> <span class="nv">for</span> <span class="nv">object</span> <span class="cp">%}</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+
+<span class="cp">{%</span> <span class="k">if</span> <span class="nv">comment_count</span> <span class="cp">%}</span>
+<span class="nt">&lt;hr/&gt;</span>
+<span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;media-list&quot;</span><span class="nt">&gt;</span>
+  <span class="cp">{%</span> <span class="k">render_xtdcomment_tree</span> <span class="nv">for</span> <span class="nv">object</span> <span class="cp">%}</span>
+<span class="nt">&lt;/ul&gt;</span>
+<span class="cp">{%</span> <span class="k">endif</span> <span class="cp">%}</span>
+<span class="cp">{%</span> <span class="k">endblock</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The tag <a class="reference internal" href="templatetags.html#std:templatetag-render_xtdcomment_tree"><code class="xref std std-ttag docutils literal"><span class="pre">render_xtdcomment_tree</span></code></a> renders the template <code class="docutils literal"><span class="pre">django_comments_xtd/comment_tree.html</span></code>.</p>
+<div class="section" id="different-max-thread-levels">
+<h3><a class="toc-backref" href="#id14">Different max thread levels</a><a class="headerlink" href="#different-max-thread-levels" title="Permalink to this headline">¶</a></h3>
+<p>There might be cases in which nested comments have a lot of sense and others in which we would prefer a plain comment sequence. We can handle both scenarios under the same Django project with django-comments-xtd.</p>
+<p>We just have to use both settings, the <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_MAX_THREAD_LEVEL"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_MAX_THREAD_LEVEL</span></code></a> and <a class="reference internal" href="settings.html#std:setting-COMMENTS_XTD_MAX_THREAD_LEVEL_BY_APP_MODEL"><code class="xref std std-setting docutils literal"><span class="pre">COMMENTS_XTD_MAX_THREAD_LEVEL_BY_APP_MODEL</span></code></a>. The former would be set to the default wide site thread level while the latter would be a dictionary of app.model keys and maximum thread level values.</p>
+<p>If we wanted to disable nested comments site wide, and enable nested comments up to level one for blog posts, we would need to set it up as follows in our <code class="docutils literal"><span class="pre">settings.py</span></code> module:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">COMMENTS_XTD_MAX_THREAD_LEVEL</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># site wide default</span>
+<span class="n">COMMENTS_XTD_MAX_THREAD_LEVEL_BY_MODEL</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c"># Objects of the app blog, model post, can be nested</span>
+    <span class="c"># up to thread level 1.</span>
+        <span class="s">&#39;blog.post&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="flags">
+<h2><a class="toc-backref" href="#id15">Flags</a><a class="headerlink" href="#flags" title="Permalink to this headline">¶</a></h2>
+<p>The Django Comments Framework supports <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/example.html#flagging">flagging</a> comments, so comments can be flagged for:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>Removal suggestion</strong>, when a registered user suggests the removal of a comment.</li>
+<li><strong>Moderator deletion</strong>, when a comment moderator marks the comment as deleted.</li>
+<li><strong>Moderator approval</strong>, when a comment moderator sets the comment as approved.</li>
+</ul>
+</div></blockquote>
+<p>django-comments-xtd expands flagging with two more flags:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>Liked it</strong>, when a registered user likes the comment.</li>
+<li><strong>Disliked it</strong>, when a registered user dislikes the comment.</li>
+</ul>
+</div></blockquote>
+<p>In this section we will see how to enable a user with the capacity to flag a comment for removal with the <strong>Removal suggestion</strong> flag, how to express likeability, conformity, acceptance or acknowledgement with the <strong>Liked it</strong> flag, and how to express the opposite with the <strong>Disliked it</strong> flag.</p>
+<p>One important requirement to flag a comment is that the user setting the flag must be authenticated. In other words, comments can not be flagged by anonymous users.</p>
+<div class="section" id="removal-suggestion">
+<h3><a class="toc-backref" href="#id16">Removal suggestion</a><a class="headerlink" href="#removal-suggestion" title="Permalink to this headline">¶</a></h3>
+<p>Let us enable the comment removal flag. Edit the <code class="docutils literal"><span class="pre">blog/post_detail.html</span></code> template, and at the bottom of the file change the <code class="docutils literal"><span class="pre">render_xtdcomment_tree</span></code> templatetag by adding the argument <strong>allow_flagging</strong>:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre>...
+<span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;media-list&quot;</span><span class="nt">&gt;</span>
+  <span class="cp">{%</span> <span class="k">render_xtdcomment_tree</span> <span class="nv">for</span> <span class="nv">object</span> <span class="nv">allow_flagging</span> <span class="cp">%}</span>
+<span class="nt">&lt;/ul&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The <strong>allow_flagging</strong> argument makes the templatetag populate a variable <code class="docutils literal"><span class="pre">allow_flagging</span> <span class="pre">=</span> <span class="pre">True</span></code> in the context in which <code class="docutils literal"><span class="pre">django_comments_xtd/comment_tree.html</span></code> is rendered.</p>
+<p>Now let&#8217;s suggest a removal. First we need to login in the <a class="reference external" href="http://localhost:8000/admin/">admin</a> interface so that we are not an anonymous user. Then we can visit any of the blog posts we sent comments to. When hovering the comments we must see a flag at the right side of the comment&#8217;s header. After we click on it we land in a page in which we are requested to confirm our removal suggestion. Finally, click on the red <strong>Flag</strong> button to confirm the request.</p>
+<p>Once we have flagged a comment we can find the flag entry in the <a class="reference external" href="http://localhost:8000/admin/">admin</a> interface, in the <strong>Comment flags</strong> model, under the Django Comments application.</p>
+<div class="section" id="getting-notifications">
+<h4><a class="toc-backref" href="#id17">Getting notifications</a><a class="headerlink" href="#getting-notifications" title="Permalink to this headline">¶</a></h4>
+<p>A user might want to flag a comment on the basis of a violation of our site&#8217;s terms of use, maybe on hate speech content, racism or the like. To prevent a comment from staying published long after it has been flagged we might want to receive notifications on flagging events.</p>
+<p>For such purpose django-comments-xtd provides the class <code class="xref std std-pclass docutils literal"><span class="pre">XtdCommentModerator</span></code>, which extends django-contrib-comments&#8217; <code class="xref std std-pclass docutils literal"><span class="pre">CommentModerator</span></code>.</p>
+<p>In addition to all the <a class="reference external" href="https://django-contrib-comments.readthedocs.io/en/latest/moderation.html#moderation-options">options</a> of its parent class, <code class="xref std std-pclass docutils literal"><span class="pre">XtdCommentModerator</span></code> offers the <code class="docutils literal"><span class="pre">removal_suggestion_notification</span></code> attribute, that when set to <code class="docutils literal"><span class="pre">True</span></code> makes Django send a mail to all the <a class="reference external" href="http://docs.djangoproject.com/en/stable/ref/settings/#std:setting-MANAGERS" title="(in Django v1.11)"><code class="xref std std-setting docutils literal"><span class="pre">MANAGERS</span></code></a> on every <strong>Removal suggestion</strong> flag created.</p>
+<p>Let&#8217;s use <code class="xref std std-pclass docutils literal"><span class="pre">XtdCommentModerator</span></code>, edit <code class="docutils literal"><span class="pre">blog/models.py</span></code> and if you are already using the class <code class="docutils literal"><span class="pre">SpamModerator</span></code>, which alreadt inherits from <code class="xref std std-pclass docutils literal"><span class="pre">XtdCommentModerator</span></code>, just add <code class="docutils literal"><span class="pre">removal_suggestion_notification</span> <span class="pre">=</span> <span class="pre">True</span></code> to your <code class="docutils literal"><span class="pre">PostCommentModeration</span></code> class. Otherwise add the following code:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">django_comments_xtd.moderation</span> <span class="kn">import</span> <span class="n">moderator</span><span class="p">,</span> <span class="n">XtdCommentModerator</span>
+
+<span class="o">...</span>
+<span class="k">class</span> <span class="nc">PostCommentModerator</span><span class="p">(</span><span class="n">XtdCommentModerator</span><span class="p">):</span>
+    <span class="n">removal_suggestion_notification</span> <span class="o">=</span> <span class="bp">True</span>
+
+<span class="n">moderator</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Post</span><span class="p">,</span> <span class="n">PostCommentModerator</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Be sure that <code class="docutils literal"><span class="pre">PostCommentModerator</span></code> is the only moderation class registered for the <code class="docutils literal"><span class="pre">Post</span></code> model, and be sure as well that the <a class="reference external" href="http://docs.djangoproject.com/en/stable/ref/settings/#std:setting-MANAGERS" title="(in Django v1.11)"><code class="xref std std-setting docutils literal"><span class="pre">MANAGERS</span></code></a> setting contains a valid email address. The message sent is based on the <code class="docutils literal"><span class="pre">django_comments_xtd/removal_notification_email.txt</span></code> template, already provided within django-comments-xtd. After these changes flagging a comment with a <strong>Removal suggestion</strong> will trigger a notification by mail.</p>
+</div>
+</div>
+<div class="section" id="liked-it-disliked-it">
+<h3><a class="toc-backref" href="#id18">Liked it, Disliked it</a><a class="headerlink" href="#liked-it-disliked-it" title="Permalink to this headline">¶</a></h3>
+<p>Django-comments-xtd adds two new flags: the <strong>Liked it</strong> and the <strong>Disliked it</strong> flags.</p>
+<p>Unlike the <strong>Removal suggestion</strong> flag, the <strong>Liked it</strong> and <strong>Disliked it</strong> flags are mutually exclusive. So that a user can&#8217;t like and dislike a comment at the same time, only the last action counts. Users can like/dislike at any time and only the last action will prevail.</p>
+<p>In this section we will make changes in the tutorial project to give our users the capacity to like or dislike comments. We will make changes in the <code class="docutils literal"><span class="pre">blog/post_detail.html</span></code> template to introduce a new argument in the <strong>render_xtdcomment_tree</strong> tag:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;media-list&quot;</span><span class="nt">&gt;</span>
+  <span class="cp">{%</span> <span class="k">render_xtdcomment_tree</span> <span class="nv">for</span> <span class="nv">object</span> <span class="nv">allow_flagging</span> <span class="nv">allow_feedback</span> <span class="cp">%}</span>
+<span class="nt">&lt;/ul&gt;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The <strong>allow_feedback</strong> argument makes the templatetag populate a variable <code class="docutils literal"><span class="pre">allow_feedback</span> <span class="pre">=</span> <span class="pre">True</span></code> in the context in which <code class="docutils literal"><span class="pre">django_comments_xtd/comment_tree.html</span></code> is rendered.</p>
+<p>Having the new like/dislike links in place, if we click on any of them we will end up in either the <code class="docutils literal"><span class="pre">django_comments_xtd/like.html</span></code> or the <code class="docutils literal"><span class="pre">django_comments_xtd/dislike.html</span></code> templates, which are meant to request the user a confirmation for the operation.</p>
+<div class="section" id="show-the-list-of-users">
+<span id="id4"></span><h4><a class="toc-backref" href="#id19">Show the list of users</a><a class="headerlink" href="#show-the-list-of-users" title="Permalink to this headline">¶</a></h4>
+<p>Once the like/dislike flagging is enabled we might want to display the users who actually liked/disliked comments.</p>
+<p>Again, by addind an argument to the <code class="docutils literal"><span class="pre">render_xtdcomment_tree</span></code> templatetag we can get rendered the <code class="docutils literal"><span class="pre">includes/django_comments_xtd/user_feedback.html</span></code> with the list of participants.</p>
+<p>Change the <code class="docutils literal"><span class="pre">blog/post_detail.html</span></code> to add the argument <code class="docutils literal"><span class="pre">show_feedback</span></code>. For this functionality to work we have to add a bit of JavaScript code. As django-comments-xtd templates use <a class="reference external" href="http://getbootstrap.com">twitter-bootstrap</a> we will load jQuery and twitter-bootstrap JavaScript libraries from their respective default CDNs too:</p>
+<blockquote>
+<div><div class="highlight-html+django"><div class="highlight"><pre><span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;media-list&quot;</span><span class="nt">&gt;</span>
+  <span class="cp">{%</span> <span class="k">render_xtdcomment_tree</span> <span class="nv">for</span> <span class="nv">object</span> <span class="nv">allow_flagging</span> <span class="nv">allow_feedback</span> <span class="nv">show_feedback</span> <span class="cp">%}</span>
+<span class="nt">&lt;/ul&gt;</span>
+
+<span class="cp">{%</span> <span class="k">block</span> <span class="nv">extra-js</span> <span class="cp">%}</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://code.jquery.com/jquery-3.2.1.slim.min.js&quot;</span>
+    <span class="na">integrity=</span><span class="s">&quot;sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=&quot;</span>
+    <span class="na">crossorigin=</span><span class="s">&quot;anonymous&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js&quot;</span>
+    <span class="na">integrity=</span><span class="s">&quot;sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa&quot;</span>
+    <span class="na">crossorigin=</span><span class="s">&quot;anonymous&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script&gt;</span>
+<span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;[data-toggle=&quot;popover&quot;]&#39;</span><span class="p">).</span><span class="nx">popover</span><span class="p">({</span><span class="s1">&#39;html&#39;</span><span class="o">:</span><span class="kc">true</span><span class="p">})</span>
+<span class="p">})</span><span class="nt">&lt;/script&gt;</span>
+<span class="cp">{%</span> <span class="k">endblock</span> <span class="cp">%}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="final-notes">
+<h2><a class="toc-backref" href="#id20">Final notes</a><a class="headerlink" href="#final-notes" title="Permalink to this headline">¶</a></h2>
+<p>We have reached the end of the tutorial. I hope you got enough to start using django-comments-xtd in your own project.</p>
+<p>The following page introduces the <strong>Demo projects</strong>. The <strong>simple</strong> demo is a straightforward project to provide comment confirmation by mail, with follow-up notifications and mute links. The <strong>custom</strong> demo is an example about how to extend django-comments-xtd Comment model with new attributes. The <strong>comp</strong> demo shows a project using the complete set of features provided by both django-contrib-comments and django-comments-xtd.</p>
+<p>Checkout the <strong>Control Logic</strong> page to understand how django-comments-xtd works along with django-contrib-comments. Read on <strong>Filters and Template Tags</strong> to see in detail the list of template tags and filters offered. The page on <strong>Customizing django-comments-xtd</strong> goes through the steps to extend the app with a quick example and little prose. Read the <strong>Settings</strong> page and the <strong>Templates</strong> page to get to know how you can customize the default behaviour and default look and feel.</p>
+<p>If you want to help, please, report any bug or enhancement directly to the <a class="reference external" href="https://github.com/danirus/django-comments-xtd">github</a> page of the project. Your contributions are welcome.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="example.html" class="btn btn-neutral float-right" title="Demo projects" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral" title="Quick start guide" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Daniel Rus Morales.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.8.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

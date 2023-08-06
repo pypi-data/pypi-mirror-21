@@ -1,0 +1,232 @@
+.. _ref-tutorial2:
+
+=========
+Tutorial2
+=========
+
+This tutorial guides you through the steps to use every feature of django-comments-xtd together with the `Django Comments Framework <https://github.com/django/django-contrib-comments>`_. The Django project used throughout the tutorial is available to `download <https://github.com/danirus/django-comments-xtd/demo/democx.tgz>`_. Following the tutorial will take over half an hour, but it is highly recommended to get a comprehensive understanding of django-comments-xtd.
+
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+
+.. index::
+   single: introduction
+   pair: tutorial; introduction
+
+Introduction
+============
+
+Through the following sections the tutorial will cover the creation of a simple blog, with stories and quotes, to which we will add comments, exercising each and every feature provided by both, django-comments and django-comments-xtd, from comment post verification by mail to comment moderation and nested comments.
+
+
+.. index::
+   single: preparation
+   pair: tutorial; preparation
+   
+Preparation
+===========
+
+Before we install any package we will set up a virtualenv and install everything we need in it.
+
+   .. code-block:: bash
+
+       $ virtualenv venv
+       $ source venv/bin/activate
+       (venv)$ pip install django-comments-xtd
+
+By installing django-comments-xtd we install all its dependencies, Django and django-contrib-comments among them. So we are ready to create our project.
+
+New project
+===========
+
+Let's start by creating a new django project:
+
+   .. code-block:: bash
+
+       (venv)$ django-admin.py startproject tutorial
+       (venv)$ cd tutorial
+
+And the blog application:
+
+   .. code-block:: bash
+
+       (venv)$ python manage.py startapp blog
+
+We have to add the new ``blog`` app along with ``django_comments`` and ``django_comments_xtd`` to :setting:`INSTALLED_APPS`. We also need to be sure that the ``sites`` framework is installed. Then we have to connect ``django_comments`` with ``django_comments_xtd`` and configure Django mailer settings.
+
+Edit the settings file, ``tutorial/settings.py``, and make the following changes:
+
+   .. code-block:: python
+
+       SITE_ID = 1
+                   
+       INSTALLED_APPS = [
+           ...
+           'django.contrib.contentypes',
+           'django.contrib.sessions',
+           'django.contrib.sites',  # Be sure you have the sites app installed.
+           ...
+           'django_comments_xtd',
+           'django_comments',
+
+           'blog',
+       ]
+       ...
+       COMMENTS_APP = 'django_comments_xtd'
+
+       # Either enable sending mail messages to the console:
+       EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+       # Or set up the EMAIL_* settings so that Django can send emails:
+       EMAIL_HOST = "smtp.mail.com"
+       EMAIL_PORT = "587"
+       EMAIL_HOST_USER = "alias@mail.com"
+       EMAIL_HOST_PASSWORD = "yourpassword"
+       EMAIL_USE_TLS = True
+       DEFAULT_FROM_EMAIL = "Helpdesk <helpdesk@yourdomain>"
+       
+
+In order to make django-comments-xtd request comment confirmation by mail we need to set the :setting:`COMMENTS_XTD_SALT` setting. This setting helps obfuscating the comment before the user has approved its publication.
+
+This is so because django-comments-xtd does not store comments in the server before they have been confirmed. This way there is little to none possible comment spam flooding in the database. Comments are encoded in URLs and sent for confirmation by mail. Only when the user clicks the confirmation URL the comment lands in the database.
+
+This behaviour is disabled for authenticated users, and can be disabled for anonymous users too by simply setting :setting:`COMMENTS_XTD_CONFIRM_MAIL` to ``False``. 
+
+Now let's append the following entry to the settings module to help obfuscating the comment before it is sent for confirmation:
+
+   .. code-block:: python
+
+       COMMENTS_XTD_SALT = (b"Timendi causa est nescire. "
+                            b"Aequam memento rebus in arduis servare mentem.")
+
+
+Blog models
+-----------
+
+For the purposes of this tutorial we will create a model ``Story`` within the ``blog`` app. Edit the ``blog/models.py`` file.
+
+   .. code-block:: python
+
+       from datetime import datetime
+
+       import django
+       from django.db import models
+       from django.db.models import permalink
+
+
+       class PublicManager(models.Manager):
+           """Returns published stories that are not in the future."""
+           def published(self):
+               return self.get_queryset().filter(publish__lte=datetime.now())
+
+
+       class Story(models.Model):
+           """Story that accepts comments."""
+           title = models.CharField('title', max_length=200)
+           slug = models.SlugField('slug', unique_for_date='publish')
+           body = models.TextField('body')
+           allow_comments = models.BooleanField('allow comments', default=True)
+           publish = models.DateTimeField('publish', default=datetime.now)
+           objects = PublicManager()
+
+           class Meta:
+               ordering = ('-publish',)
+
+           def __str__(self):
+               return self.title
+
+           @permalink
+           def get_absolute_url(self):
+               return ('stories-story-detail', (),
+                       {'year': self.publish.year,
+                        'month': int(self.publish.strftime('%m').lower()),
+                        'day': self.publish.day,
+                        'slug': self.slug})
+
+
+Let's create the initial migration for the ``blog`` app and run the migrate command:
+
+   .. code-block:: bash
+
+       (venv)$ python manage.py makemigrations blog
+       (venv)$ python manage migrate
+
+
+Blog admin module
+-----------------
+
+Let's add admin classes to both models. Edit ``blog/admin.py`` and add the following content:
+
+   .. code-block:: python
+
+       from django.contrib import admin
+
+       from blog.models import Story
+
+
+       @admin.register(Story)
+       class StoryAdmin(admin.ModelAdmin):
+           list_display  = ('title', 'publish', 'allow_comments')
+           list_filter   = ('publish',)
+           search_fields = ('title', 'body')
+           prepopulated_fields = {'slug': ('title',)}
+           fieldsets = ((None, 
+                         {'fields': ('title', 'slug', 'body', 
+                                     'allow_comments', 'publish',)}),)
+
+
+After adding the admin classes we can use the admin interface to add instances for our new models. Let's create a superuser for our project: 
+
+   .. code-block:: bash
+
+       (venv)$ python manage.py createsuperuser
+       Username (leave blank to use 'danirus'): admin
+       Email address: admin@example.com
+       Password: 
+       Password (again): 
+       Superuser created successfully.
+
+Now run the development server, visit http://localhost:8000/admin/ and add a sample story:
+
+   .. code-block:: bash
+
+       (venv)$ python manage.py runserver
+
+
+Blog views module
+-----------------
+
+After adding a story we need to add a detail view to the ``blog/views.py`` file:
+
+   .. code-block:: python
+
+       from django.core.urlresolvers import reverse
+       from django.views.generic import DateDetailView
+
+       from tutorial.blog.models import Story
+
+
+       class StoryDetailView(DateDetailView):
+           model = Story
+           date_field = "publish"
+           month_format = "%m"
+
+           def get_context_data(self, **kwargs):
+               context = super(StoryDetailView, self).get_context_data(**kwargs)
+               context.update({'next': reverse('comments-xtd-sent')})
+               return context
+
+Before we can make use of the views we need to create their associated templates.
+
+        
+Blog templates
+--------------
+
+Let's create the ``templates/blog`` directory. We are going to put in it the following templates:
+
+ * ``blog/story_list.html``
+ * ``blog/story_detail.html``
+
+   .. code-block:: html+django
+
