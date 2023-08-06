@@ -1,0 +1,282 @@
+Metadata-Version: 1.1
+Name: challenge.uccs
+Version: 1.0.2
+Summary: Running baseline experiments and evaluations for the IJCB 2017 UCCS challenge
+Home-page: https://bitbucket.org/vastlab/challenge.uccs
+Author: Manuel Gunther
+Author-email: siebenkopf@googlemail.com
+License: BSD
+Description: UCCS Face Detection and Recognition Challenge
+        =============================================
+        
+        This package implements the baseline algorithms and evaluation for part 2 and 3 of the face recognition challenge.
+        This package relies on the signal processing and machine learning library Bob_.
+        For installation instructions and requirements of Bob_, please refer to the Bob_ web page.
+        
+        .. note::
+           Due to limitations of Bob_, this package will run only under Linux and MacOS operating systems.
+           Particularly, it will not work under any version of Microsoft Windows, and maybe not under some other exotic operating systems.
+           If you experience problems with the installation, we would suggest to run the experiments in a virtual environment, e.g., using `Oracle's VirtualBox`_.
+           On request, we will generate a virtual image with this package pre-installed.
+        
+        .. note::
+           We have observed issues with the latest version of Matplotlib_ (2.0.0) in the conda environment.
+           After installing Bob_, please downgrade the version of Matplotlib_ in your conda environment by activating the bob conda environment and by using:
+        
+             ``source activate bob_env_py27``
+        
+             ``conda install "matplotlib<2"``
+        
+        Dataset
+        -------
+        
+        This package does not include the original image and protocol files for the competition.
+        Please register on the `competition website`_ and download the UCCS dataset from there.
+        
+        Please extract all zip files **into the same directory** (the .zip files contain the appropriate directory structure).
+        This includes all ``training_*.zip`` and ``validation_*.zip`` files, as well as the ``protocol.zip`` and possibly the ``SampleDataSet.zip``.
+        The directory will be refereed to as ``YOUR-DATA-DIRECTORY`` below.
+        
+        
+        Installation
+        ------------
+        
+        The installation of this package follows the Buildout_ structure.
+        After installing Bob_ and extracting this package, please run the following command lines to install this package:
+        
+          ``python bootstrap-buildout.py``
+        
+          ...
+        
+          ``./bin/buildout``
+        
+          ...
+        
+        The installation procedure automatically generates executable files inside the ``bin`` directory, which can be used to run the baseline algorithms or to evaluate the baselines (and your) algorithm.
+        
+        Running the Baselines
+        ---------------------
+        
+        There are two scripts to run the baseline, one for each part.
+        
+        Face Detection
+        ~~~~~~~~~~~~~~
+        
+        The first script is a face detection script, which will detect the faces in the validation (and test) set.
+        The baseline face detector simply uses Bob_'s built-in face detector `bob.ip.facedetect`_, which is neither optimized for blurry faces nor for profiles.
+        Hence, there are lots of misdetections (false negatives) and detected background areas (false positives).
+        
+        You can call the face detector baseline script using:
+        
+          ``./bin/baseline_detector.py``
+        
+        Please refer to ``./bin/baseline_detector.py -h`` for possible options.
+        Here is a subset of options that you might want/need to use/change:
+        
+          ``--data-directory``: Specify the directory, where you have downloaded the UCCS dataset into
+        
+          ``--result-file``: The file to write the detection results into; this will be in the required format
+        
+          ``--which-set``: The set, for which the baseline detector should be run; possible values: ``training, validation, test, sample``; default: ``validation``
+        
+          ``--verbose``: Increase the verbosity of the script; using ``--verbose --verbose`` or ``-vv`` is recommended; ``-vvv`` will write more information
+        
+          ``--debug``: Run only over the specified number of images; for debug purposes only
+        
+          ``--display``: Display the detected bounding boxes and the ground truth; for debug purposes only
+        
+          ``--parallel``: Run in the given number of parallel processes; can speed up the processing tremendously
+        
+        On a machine with 32 cores, a good command line for the full baseline experiment would be:
+        
+          ``./bin/baseline_detector.py --data-directory YOUR-DATA-DIRECTORY -vv --parallel 32``
+        
+        To run a small-scale experiment, i.e., to display the detected faces on 20 images, a good command line might be:
+        
+          ``./bin/baseline_detector.py --data-directory YOUR-DATA-DIRECTORY -vvv --display --debug 20``
+        
+        .. note::
+           The ``--display`` option requires Matplotlib_ to be installed and set up properly.
+           Display does not work properly in parallel mode.
+        
+        By default, the face detection score file will be written to ``./results/UCCS-detection-baseline.txt``.
+        
+        Face Recognition
+        ~~~~~~~~~~~~~~~~
+        
+        For face recognition, we simply adopt a PCA+LDA pipeline on top of LBPHS features.
+        The PCA+LDA projection matrix is estimated from the faces in the training set.
+        For each person, the images of the training set build one class.
+        Open-set recognition is performed by using all training faces of unknown identities in a separate class.
+        
+        First, the faces in the training images are re-detected, to assure that the bounding boxes of training and test images have similar content.
+        Then, the faces are rescaled and cropped to a resolution of 64x80 pixels.
+        Afterwards, LPBHS features are extracted from these crops, and a PCA+LDA projection matrix is computed.
+        All training features are projected into the PCA+LDA subspace.
+        For each identity (including the unknown identity ``-1``), the average of the projected features is stored as a template.
+        
+        During testing, in each image all faces are detected, cropped, and LBPHS features are extracted.
+        Those probe features are projected into the same PCA+LDA subspace, and compared to all templates using Euclidean distance.
+        For each detected face, the 10 identities with the smallest distances are obtained -- if identity ``-1`` is included, all less similar images are not considered anymore.
+        These scores are written into the score file in the desired format.
+        
+        You can call the face recognition baseline script using:
+        
+          ``./bin/baseline_recognizer.py``
+        
+        Please refer to ``./bin/baseline_recognizer.py -h`` for possible options.
+        Here is a subset of options that you might want/need to use/change:
+        
+          ``--data-directory``: Specify the directory, where you have downloaded the UCCS dataset into
+        
+          ``--result-file``: The file to write the recognition results into; this will be in the required format
+        
+          ``--detector-result-file``: The result file of the detector; if not specified, validation set images will be (re-)detected
+        
+          ``--verbose``: Increase the verbosity of the script; using ``--verbose --verbose`` or ``-vv`` is recommended; ``-vvv`` will write more information
+        
+          ``--temp-dir``: Specify the directory, where temporary files are stored; these files will be computed only once and reloaded if present
+        
+          ``--force``: Ignore existing temporary files and always recompute everything
+        
+          ``--debug``: Run only over the specified number of identities; for debug purposes only; will modify file names of temporary files and result file
+        
+          ``--display``: Display the detected bounding boxes and the ground truth; for debug purposes only
+        
+          ``--parallel``: Run in the given number of parallel processes; can speed up the processing tremendously
+        
+        On a machine with 32 cores, a good command line would be:
+        
+          ``./bin/baseline_recognizer.py --data-directory YOUR-DATA-DIRECTORY -vv --parallel 32``
+        
+        .. warning::
+           The processing, particularly the face detection, will take a long runtime.
+           Even with 32 parallel processes, several hours of processing will be required.
+        
+        .. note::
+           During training image detection, you will observe several warnings of training faces not being detected.
+           This is normal as the face detector was designed to detect frontal faces only.
+           The processing will work without these faces being detected.
+        
+        By default, the face recognition score file will be written to ``./results/UCCS-recognition-baseline.txt``.
+        
+        Evaluation
+        ----------
+        
+        The provided evaluation scripts will be usable to evaluate the validation set only, not the test set.
+        You can use the evaluation scripts for two purposes:
+        
+        1. To plot the baseline results in comparison to your results.
+        2. To make sure that your score file is in the desired format.
+        
+        If you are unable to run the baseline experiments on your machine, we provide the score files for the validation set on the `competition website`_.
+        
+        Face Detection
+        ~~~~~~~~~~~~~~
+        
+        As the ground-truth is usually larger than the face, we do not punish bounding boxes that are smaller than the ground truth.
+        Therefore, the union (the denominator) takes into account only one fourth of the ground truth bounding box -- or the intersection area, whichever is larger:
+        
+        .. math::
+           O(G,D) = \frac{|G \cap D|}{|G \cup D|} = \frac{G \cap D}{\max\{\frac{|G|}4, |G \cap D|\} + |D| - |G \cap D|}
+        
+        where :math:`|\cdot|` is the area operator.
+        Hence, when the detected bounding box :math:`D` covers at least a fourth of the ground-truth bounding box :math:`G` and is entirely contained inside :math:`G`, an overlap of 1 is reached.
+        
+        The face detection is evaluated using the Free Receiver Operator Characteristic (FROC) curve, which plots the percentage of correctly detected faces over the total number of false positives (false alarms).
+        This plot can be created using:
+        
+          ``./bin/evaluate_detector.py``
+        
+        This script has several options, some of which need to be specified, see ``./bin/evaluate_detector.py -h``:
+        
+          ``--data-directory``: Specify the directory, where you have downloaded the UCCS dataset into
+        
+          ``--result-files``: A list of all files containing detection (or recognition) results
+        
+          ``--labels``: A list of labels for the algorithms; must be the same number and in the same order as ``--result-files``
+        
+          ``--froc-file``: The name of the output .pdf file containing the FROC plot
+        
+          ``--log-x``: will plot the horizontal axis in logarithmic scale
+        
+          ``--only-present``: will ignore any file for which no detection exists (for debug purposes only, i.e., when detector ran with the ``--debug`` option)
+        
+          ``--verbose``: Increase the verbosity of the script; using ``--verbose --verbose`` or ``-vv`` is recommended
+        
+        To plot the baseline FROC curve (which is shown on the `competition website`_), execute:
+        
+          ``./bin/evaluate_detector.py --data-directory YOUR-DATA-DIRECTORY --result-files results/UCCS-detection-baseline.txt --labels Baseline -vv``
+        
+        .. note::
+           If you have run the face recognition baseline, you can also use the face recognition result file for plotting the FROC curve::
+        
+             ``./bin/evaluate_detector.py --data-directory YOUR-DATA-DIRECTORY --result-files results/UCCS-recognition-baseline.txt --labels Baseline -vv``
+        
+        Face Recognition
+        ~~~~~~~~~~~~~~~~
+        
+        Open set face recognition is evaluated using the Detection and Identification Rate (DIR) curve, which plots the percentage of correctly detected and identified faces over the false alarm rate (FAR).
+        Based on various values of the FAR, several score thresholds are computed.
+        A face is said to be identified correctly if the recognition score is greater than the threshold and the correct identity has the highest recognition score for that face.
+        The number of correctly identified faces is computed, and divided by the total number of recognition scores greater than the threshold.
+        For more details, please refer to [1]_.
+        
+        .. note::
+          By default only rank 1 recognition is performed, but the evaluation can be done using any rank up to 10 (the upper bound of allowed labels per face).
+          Providing more than one identity label per face will increase the number of false alarms, and may only have an impact on higher rank evaluations.
+        
+        .. note::
+          Unknown identities or background regions labeled with label -1 or not labeled at all will be ignored (i.e., will not decrease performance).
+          Labeling an unknown identity or a background region with any other label than -1 will result in a false alarm -- only the maximum score per bounding box will be considered.
+        
+        The DIR plot can be created using:
+        
+          ``./bin/evaluate_recognizer.py``
+        
+        As usual, the script has several options, which are similar to ``./bin/evaluate_detector.py`` above, see ``./bin/evaluate_recognizer.py -h`` for a complete list:
+        
+          ``--data-directory``: Specify the directory, where you have downloaded the UCCS dataset into
+        
+          ``--result-files``: A list of all files containing recognition results
+        
+          ``--labels``: A list of labels for the algorithms; must be the same number and in the same order as ``--result-files``
+        
+          ``--dir-file``: The name of the output .pdf file containing the DIR plot
+        
+          ``--log-x``: will plot the horizontal axis in logarithmic scale
+        
+          ``--only-present``: will ignore any file for which no detection exists (for debug purposes only, i.e., when recognizer ran with the ``--debug`` option)
+        
+          ``--verbose``: Increase the verbosity of the script; using ``--verbose --verbose`` or ``-vv`` is recommended
+        
+          ``--rank``: Use the given rank to plot the DIR curve
+        
+        
+        To plot the baseline Rank 1 DIR curve (which is shown on the `competition website`_), execute::
+        
+          ``./bin/evaluate_recognizer.py --data-directory YOUR-DATA-DIRECTORY --result-files results/UCCS-recognition-baseline.txt --labels Baseline -vv``
+        
+        
+        Trouble Shooting
+        ----------------
+        
+        In case of trouble with running the baseline algorithm or the evaluation, please contact us via email under: opensetface@vast.uccs.edu
+        
+        
+        .. _bob: http://www.idiap.ch/software/bob
+        .. _oracle's virtualbox: https://www.virtualbox.org
+        .. _matplotlib: http://matplotlib.org
+        .. _buildout: http://www.buildout.org
+        .. _bob.ip.facedetect: http:/pythonhosted.org/bob.ip.facedetect
+        .. _competition website: http://vast.uccs.edu/Opensetface
+        
+        .. [1] **P. Jonathon Phillips, Patrick Grother, and Ross Micheals** "Evaluation Methods in Face Recognition" in *Handbook of Face Recognition*, Second Edition, 2011.
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Natural Language :: English
+Classifier: Programming Language :: Python
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
