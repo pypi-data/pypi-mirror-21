@@ -1,0 +1,166 @@
+metadata:
+  name: "PRCCDC 2016 Competition Scenario definition"
+  description: "The competition scenario environment that students will use to compete"
+  activity: "Pacific Rim Collegiate Cyber Defense Competition"
+  prefix: "PRCCDC"
+  date-created: "2016-11-01"
+  version: "2.11.1"
+  infrastructure-config-file: "infra.yaml"
+  folder-name: "Competitions/PRCCDC/prccdc-2016"
+
+groups:
+  Blue Team:  # Defenders
+    instances: 14
+    filename: "examples/blue-teams.json"
+  Red Team:   # Attackers
+    ad-group: "Red Team"
+  Black Team: # Infrastructure team
+    ad-group: "Black Team"
+
+# Blue and Red teams know from their team packets what the default logins are for all services
+services:
+  score-bot:
+    template: "PRCCDC Score Bot"
+  evil-host:
+    template: "Kali 2.0 (64-bit)"
+  host-type-a:
+    template: "Windows 7 (64-bit)"
+  host-type-b:
+    template: "Windows 10 (64-bit)"
+  host-type-c:
+    template: "Ubuntu Desktop 14.04 (64-bit)"
+  firewall:
+    template: "VyOS 1.1.7 (64-bit)"
+    note: "Default Username: vyos   Password: vyos"
+  domain-controller:
+    template: "Windows Server 2012 R2 (64-bit)"
+  web-server:
+    template: "Ubuntu Server 14.04 (64-bit)"
+  database-server:
+    template: "Fedora 22 (64-bit)"
+  file-server:
+    template: "Windows Server 2008 R2 (64-bit)"
+  mail-server:
+    template: "Windows Server 2003 (32-bit)"
+  hvac-server:
+    template: "Solaris 9 (32-bit)"
+
+networks:
+  unique-networks:
+    competition:
+      subnet: "172.30.0.0/16"
+      vswitch: "competition_vswitch"
+    outside-world: 
+      subnet: "172.20.0.0/16"
+      vswitch: "competition_vswitch"
+    management: 
+      subnet: "10.10.10.0/24"
+      vswitch: "competition_vswitch"
+  generic-networks:
+    blue-hosts:
+      subnet: "10.0.0.0/24"
+      vswitch: "competition_vswitch"
+    blue-services: 
+      subnet: "192.168.0.0/24"
+      vswitch: "competition_vswitch"
+      increment: yes
+
+folders:
+  external:
+    group: "Black Team"
+    description: "The open competition network, where red team and the score bot sit" 
+    services:
+      edge-router: 
+        description: "Connection to outside internet"
+        service: firewall
+        networks: ["outside-world", "competition", "management"]
+      competition-dc: 
+        description: "Provides DNS and DHCP"
+        service: domain-controller
+        networks: ["competition", "management"]
+      # Scorebots communicate over management network to randomly select which team gets pinged from which scorebot
+      score-bot:  
+        description: "Used to score teams"
+        service: score-bot
+        networks: ["competition", "management"]
+        instances:
+          number: 14
+          prefix: "Scorebot "
+  blue-team:
+    instances:
+      number: 14
+      prefix: "Blue Team "
+    group: "Blue Team"
+    services:
+      gateway:
+        description: "Gateway connecting Blue team networks to the larger competition network"
+        service: firewall
+        networks: ["competition", "blue-hosts", "blue-services"]
+      windows-hosts:
+        description: "Windows hosts that the blue team members use to access their services"
+        instances: 
+          prefix: "Host "
+          number: 6
+        service: host-type-a
+        networks: ["blue-hosts"]
+      linux-hosts:
+        description: "Linux hosts that the Blue team members use to access their services"
+        instances: 
+          prefix: "Linux Host "
+          number: 2
+        service: host-type-b
+        networks: ["blue-hosts"]
+      dc: 
+        description: "Domain Controller for Blue Team network. Runs DNS, DHCP, and Active Directory."
+        service: domain-controller
+        networks: ["blue-services"]
+      web:
+        description: "Web server hosting the team's page"
+        service: web-server
+        networks: ["blue-services"]
+        scoring:
+          ports: [80, 443]
+          protocols: ["http", "https"]
+          criteria: "criteria-file.yaml"
+      db:
+        description: "Database"
+        service: database-server
+        networks: ["blue-services"]
+      mail:
+        description: "Mail Server"
+        service: mail-server
+        networks: ["blue-services"]
+        scoring:
+          ports: [25]
+          protocols: ["smtp"]
+          criteria: "criteria-file.yaml"
+      hvac:
+        description: "HVAC Server"
+        service: hvac-server
+        networks: ["blue-services"]
+        scoring:
+          ports: [22]
+          protocols: ["ssh"]
+          criteria: "criteria-file.yaml"
+      file:
+        description: "File Server"
+        service: file-server
+        networks: ["blue-services"]
+        scoring:
+          ports: [21, 445]
+          protocols: ["sftp", "smb"]
+          criteria: "criteria-file.yaml"
+  red-team:    
+    group: "Red Team"
+    services:
+      attacker-hosts:
+        instances:
+          number: 40
+          prefix: "Attacker "
+        description: "Host used by Red Team to attack Blue teams"
+        service: evil-host
+        networks: ["competition"]
+      collaboration-server:
+        description: "Server for Red Team collaboration, including Armitage, SFTP, and IRC"
+        service: web-server
+        networks: ["competition"]
