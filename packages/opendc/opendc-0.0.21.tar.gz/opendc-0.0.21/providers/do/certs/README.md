@@ -1,0 +1,1 @@
+The opendc CA cert will be written into this directory when using `opendc config`.
