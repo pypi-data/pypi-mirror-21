@@ -1,0 +1,58 @@
+---
+resources:
+    EsDomain:
+        Type: "AWS::Elasticsearch::Domain"
+        Properties:
+            DomainName: {{_env.name|lower}}-{{_env.stage|lower}}-{{domain_name|lower}}
+            ElasticsearchVersion: {{es_version}}
+            EBSOptions:
+                EBSEnabled: true
+                Iops: {{volume_iops}}
+                VolumeSize: {{volume_size}}
+                VolumeType: {{volume_type}}
+            AccessPolicies:
+                Version: "2012-10-17"
+                Statement:
+                    # Access to IAM users and roles
+                    - Effect: Allow
+                      Principal:
+                        AWS:
+                            # We always give access to the root account
+                            - "Fn::Join":
+                              - ""
+                              - ["arn:aws:iam::", {"Ref": "AWS::AccountId"}, ":", "root"]
+                            # Give access to IAM users
+                            {% for user_arn in iam_users_arn %}
+                            - "{{user_arn}}"
+                            {% endfor %}
+                            # Give access to IAM roles 
+                            {% for role_arn in iam_roles_arn %}
+                            - "{{role_arn}}"
+                            {% endfor %}
+                      Action: "es:*"
+                      Resource:
+                        "Fn::Join":
+                          - ""
+                          - ["arn:aws:es:",
+                            {"Ref": "AWS::Region"},
+                            ":",
+                            {"Ref": "AWS::AccountId"},
+                            ":",
+                            "domain/{{_env.name|lower}}-{{_env.stage|lower}}-{{domain_name|lower}}/*"]
+                    # Whitelisted IPs
+                    {% if whitelisted_ips %}
+                    - Effect: Allow
+                      Principal:
+                        AWS: "*"
+                      Action: "es:*"
+                      Resource:
+                        "Fn::Join":
+                          - ""
+                          - ["arn:aws:es:", {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"}, ":", "domain/{{_env.name|lower}}-{{_env.stage|lower}}-{{domain_name|lower}}/*"]
+                      Condition:
+                        IpAddress:
+                            "aws:SourceIp":
+                                {% for ip in whitelisted_ips %}
+                                - {{ip}}
+                                {% endfor %}
+                    {% endif %}
