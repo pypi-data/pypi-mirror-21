@@ -1,0 +1,34 @@
+rule snpeff:
+    """ snpeff adds annotation of variants detected in a VCF file.
+
+    Required input:
+        - __snpeff__input: vcf file
+
+    Required output:
+        - __snpeff__output: vcf file
+
+    Required configuration:
+        .. code-block:: yaml
+
+            snpeff:
+                reference:  # the genbank file
+                options:    # result filters options 
+
+    """
+    input:
+        vcf = __snpeff__input, 
+        ann = config["snpeff"]["reference"],
+        config = __snpeff__config
+    output:
+        ann = __snpeff__output,
+        html = __snpeff__html
+    log:
+        log = __snpeff__log
+    params:
+        options = config["snpeff"]["options"]
+    run:
+        from sequana import SnpEff
+
+        mydata = SnpEff(reference=input.ann, log=log.log)
+        mydata.launch_snpeff(input.vcf, output.ann, html_output=output.html,
+                             options=params.options)

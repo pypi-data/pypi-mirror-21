@@ -1,0 +1,20 @@
+
+
+rule fastq_sampling:
+    """A sample from raw FastQ files
+
+    Input: *gz
+    Output: fastq_sampling/*gz
+
+    Uses **sequana_fastq_head** utility.
+
+    """
+    input: __fastq_sampling__input_fastq
+    output: __fastq_sampling__output_fastq
+    params:
+        N = config["fastq_sampling"]['N']
+    message: "fastq_sampling extracting %s reads" % config['fastq_sampling']['N']
+    run:
+        for i,o in zip(input, output):
+            shell("fastq_head %s %s %s" % (i, params.N * 4, o))
+

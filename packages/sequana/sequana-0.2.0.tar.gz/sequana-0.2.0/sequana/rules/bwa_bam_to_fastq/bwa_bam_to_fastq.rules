@@ -1,0 +1,31 @@
+
+rule bwa_bam_to_fastq:
+    """Converts mapped BAM into fastq
+
+
+    """
+    message: """
+    -- Extracting the fastq from the BAM/SAM files
+    -- information saved in {log}
+    """
+    input:
+        bam = __bwa_bam_to_fastq__input
+    params:
+        wkdir = __bwa_bam_to_fastq__wkdir
+    output:
+        fastq = __bwa_bam_to_fastq__fastq_output,
+        stats = __bwa_bam_to_fastq__stats_output
+    threads: 4
+    run:
+        # save some stats for later
+        from sequana.tools import StatsBAM2Mapped
+        stats = StatsBAM2Mapped(input["bam"], wkdir=params.wkdir)
+        stats.to_json(output["stats"])
+
+        # zip the fastq files
+        import glob
+        for filename in glob.glob("%s/*.fastq" % params.wkdir):
+            shell("pigz -f %s -p {threads}" % filename)
+
+
+

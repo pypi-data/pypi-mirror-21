@@ -1,0 +1,48 @@
+rule bowtie2_mapping:
+
+    """
+    Read mapping for either single end and paired end data using Bowtie2.
+
+    Required input:
+        __bowtie2_mapping__input: list with one or two fastq.gz
+
+    Required output:
+        __bowtie2_mapping__sort: output sorted bam file
+
+    Config:
+
+        __bowtie2_mapping__outdir: output directory
+        __bowtie2_mapping__sam: output file in SAM format (temporary file)
+
+        .. code-block:: yaml
+
+            bowtie2_mapping:
+                prefix_index: "" #path to the index file of reference genome
+                options:  "" #options for bowtie1 you want use
+    """
+
+    input:
+        fastq = __bowtie2_mapping__input,
+        index = __bowtie2_mapping__index_done
+    output:
+        sort = __bowtie2_mapping__sort
+    log:
+        err = __bowtie2_mapping__logs_err,
+        out = __bowtie2_mapping__logs_out
+    params:
+        outdir = __bowtie2_mapping__outdir,
+        prefix_index = config["bowtie2_mapping"]["prefix_index"],
+        options = config["bowtie2_mapping"]["options"],
+        sam = temp(__bowtie2_mapping__sam)
+    threads:
+        config["bowtie2_mapping"]["threads"]
+    shell:
+        """
+
+        bowtie2 -p {threads} -X2000  --end-to-end \
+        -D 20 -R 3 -N 1 -L 20 -i S,1,0.50 -x {params.prefix_index} \
+        -1 {input.R1} -2 {input.R2} -S {params.sam} > {log.out} 2> {log.err}
+
+        samtools view -bhS {params.sam} | samtools sort -o {output.sort} - >> {log.out} 2>> {log.err}
+        samtools index {output.sort} >> {log.out} 2>> {log.err}
+        """
