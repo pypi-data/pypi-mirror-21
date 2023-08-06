@@ -1,0 +1,69 @@
+{% extends 'constellation_base/base.html' %}
+{% load get_item %}
+
+{% block title %}Results{% endblock%}
+
+{% block content %}
+{% load guardian_tags %}
+<div class="mdl-grid board" id="board" style="width:100%">
+    <div class="mdl-cell mdl-cell--12-col mdl-shadow--2dp mdl-card mdl-grid mdl-card" id="poll-pane">
+        <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">{{ poll.title }}</h2>
+        </div>
+        <div class="mdl-card__supporting-text">
+            {% get_obj_perms request.user for poll as "poll_perms" %}
+            {% if poll.results_visible or "poll_owned_by" in poll_perms %}
+            {% if poll.mechanism == -1 %}
+            <p>This poll does not have a summation mechanism defined, results cannot be tabulated!</p>
+            {% else %}
+            <p>This poll is summed using the {{ poll.MECHANISMS|get_item:poll.mechanism|get_item:"name" }} mechanism.  A total of {{ num_votes }} votes have been cast.  The results are as follows:</p>
+            <p>Final Results:</p>
+            <ul class="mdl-list">
+                {% if results.winners != None %}
+                {% for winner in results.winners %}
+                <li class="mdl-list__item">
+                    <span class="mdl-list__item-primary-content">
+                        <i class="material-icons mdl-list__item-icon">done</i>
+                        {{ winner }}
+                    </span>
+                </li>
+                {% endfor %}
+                {% else %}
+                <li>{{ results.winner }}</li>
+                {% endif %}
+            </ul>
+            {% endif %}
+                        {% if results.rounds != None %}
+            <ol>
+                {% for round in results.rounds %}
+                {% if round.winners != None or round.winner != None %}
+                <li>Round Winner(s):</li>
+                <ul>
+                    {% for winner in round.winners %}
+                    <li>{{ winner }}</li>
+                    {% endfor %}
+                    {% if round.winner %}
+                    <li>{{ round.winner }}</li>
+                    {% endif %}
+                </ul>
+                {% elif round.losers != None or round.loser != None %}
+                <li>Round Loser(s):</li>
+                <ul>
+                    {% for loser in round.losers %}
+                    <li>{{ loser }}</li>
+                    {% endfor %}
+                    {% if round.loser %}
+                    <li>{{ round.loser }}</li>
+                    {% endif %}
+                 </ul>
+                {% endif %}
+                {% endfor %}
+            </ol>
+            {% endif %}
+            {% else %}
+            <p>Thank you for voting!  This poll has private results which you do not have permission to view.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
