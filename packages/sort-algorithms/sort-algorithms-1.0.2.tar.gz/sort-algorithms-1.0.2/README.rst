@@ -1,0 +1,57 @@
+Sorting Algorithms
+==================
+
+|Build Status|
+
+Description
+-----------
+
+This project includes a various number or sorting algorithms written in
+Python. It was tested with Python >= 3.4.
+
+The repository, where all the commits will be pushed, is on
+`Bitbucket`_. On `GitHub`_ appear only the already tested releases. So
+if you want to keep up-to-date you should have a look at `Bitbucket`_
+once in a while. If you just want to see the tested releases available
+on `PyPI`_ you have to have a look at `GitHub`_.
+
+version 1.0.2
+
+Algorithms
+----------
+
+-  Bubble-Sort (slow)
+-  Ripple-Sort (slow)
+-  Min-Sort (better than previous ones)
+-  Quick-Sort (very fast and efficient)
+
+Additional
+----------
+
+-  sorting of non-nested tuples (very fast)
+
+Installation
+------------
+
+The current version is available via ``pip``
+
+.. code:: bash
+
+    pip install sort-algorithms
+
+Upgrade
+-------
+
+You also can upgrade on the latest version with additional algorithms
+and features with:
+
+.. code:: bash
+
+    pip install sort-algorithms --upgrade
+
+.. _Bitbucket: https://bitbucket.org/Train132/sortingalgorithms
+.. _GitHub: https://github.com/DahlitzFlorian/SortingAlgorithms
+.. _PyPI: https://pypi.python.org
+
+.. |Build Status| image:: https://travis-ci.org/DahlitzFlorian/SortingAlgorithms.svg?branch=master
+   :target: https://travis-ci.org/DahlitzFlorian/SortingAlgorithms
