@@ -3,7 +3,7 @@
 This repo contains 40000 packages uploaded to PyPI between 
 2017-03-29 15:15 and 2017-05-02 05:17.
 
-The repo is 64% (25995/40000) complete.
+The repo is 69% (27991/40000) complete.
 
 Package contents can be found [in the code branch](https://github.com/pypi-data/pypi-mirror-21/tree/code/packages).
 
