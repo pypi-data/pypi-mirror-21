@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+from compaslib import ReadTWBFile
+import argparse
+import os
+import sys
+import csv
+
+if __name__ == "__main__":
+
+    argparser = argparse.ArgumentParser(description="Convert a COMPAS TWB file to CSV.")
+    argparser.add_argument("-i", "--input-file", required=True,
+                           help="input filename, e.g. 'anns.twb'")
+    argparser.add_argument("-o", "--output-file",
+                           help="output filename, e.g. 'anns.csv'")
+    args = argparser.parse_args()
+
+    if args.output_file:
+        outFile = args.output_file
+    else:
+        # No output filename specified, we'll make it input_filename.csv.
+        outFile = os.path.splitext(args.input_file)[0]
+        outFile += '.csv'
+
+    # Skip existing files:
+    if os.path.isfile(outFile):
+        sys.exit("Output file (" + outFile + ") already exists; exiting.")
+
+    fileName = str( args.input_file )
+    results, headers = ReadTWBFile(fileName)
+
+    # save results to CSV:
+    with open(outFile, 'w') as csvfile:  # existing file will be overwritten (if we didn't check above)
+        csvwriter = csv.writer(csvfile, delimiter=',')
+        csvwriter.writerow(headers)
+        for row in results:
+            day = row[0].strftime("%a %b %d %Y")
+            time = row[1].strftime("%H:%M:%S")
+            csvwriter.writerow([day, time] + row[2:])
+
+# TODO: should also accept COMPAS .txt files?  may be no point, since they are
+# already tab-delimited.  instead, rename this to twb2csv?
