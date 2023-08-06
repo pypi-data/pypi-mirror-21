@@ -1,0 +1,37 @@
+from __future__ import division, print_function
+import argparse
+import os
+import re
+
+from PyPDF2 import PdfFileWriter, PdfFileReader
+
+def append_pdf(input,output):
+    [output.addPage(input.getPage(page_num)) for page_num in range(input.numPages)]
+
+
+def merge_pdf(pdf_files):
+	output = PdfFileWriter()
+	for i in pdf_files:
+		append_pdf(PdfFileReader(open(i,"rb")),output)
+		
+	output.write(open("combined.pdf","wb"))
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description="Merge multiple PDF's"
+    )
+
+    parser.add_argument("dir", default=".", type=str, nargs='*',
+                        help="PDF files in the current directory")
+
+    args = parser.parse_args()
+    
+    pdf_files = []
+    for directory in args.dir:
+        if directory.endswith(".pdf"):
+            pdf_files.append("./"+directory)
+    merge_pdf(pdf_files)
+
+    print("Merged thd PDF's.")
