@@ -1,0 +1,122 @@
+{% extends "omCmsMain/theme/elevate/base.html" %}
+
+{% load includeif_template_exists %}
+
+{% block head-title %}
+    {{siteInfoData.siteName}}
+{% endblock %}
+
+{% block body-header %}
+    {% include 'omCmsMain/theme/elevate/header.html' %}
+{% endblock %}
+
+{% block body-main %}
+<div class="tm-main-content">
+
+    
+    <!-- Sections -->
+    {% if articleListHomePage %}
+    <!-- Default articles section -->
+    <section id="home" class="tm-content-box tm-banner margin-b-10">
+        <div class="container">
+            
+                
+                <!--h2>{{item.itemDescription}}</h2>
+                <h4>{{item.onMouseOverDescription}}</h4-->
+                    
+                    {% for articleitem in articleList %}
+                        
+                        {% if articleitem.articleCategory|stringformat:"s" == "homepage" %}
+                            <div class="row">
+                                {% with "omCmsMain/theme/"|add:siteInfoData.siteTheme|add:"/sectionLayouts/"|add:articleitem.articleCategory.itemCategory|add:".html" as nameTemplate %}
+                                    {% if nameTemplate|template_exists %}
+                                        {% include nameTemplate %}
+                                    {% else %}
+                                        {% with "omCmsMain/theme/"|add:siteInfoData.siteTheme|add:"/sectionLayouts/default.html" as defaultTemplate %}
+                                            {# include defaultTemplate %}
+                                        {% endwith %}    
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+                        
+                    {% endfor %}
+                    
+            
+            <!--div style="text-align:center;"><a href="#">TOP</a></div>
+            <hr /-->
+        </div>
+    </section><!-- end of Home Page  section -->
+    {% endif %}
+
+    <!-- Slider -->
+    {% if siteInfoData.displaySlideShow %}
+        {% include 'omCmsMain/theme/elevate/sectionLayouts/slider.html' %}
+    {% endif %}
+    <!-- End Slider -->
+
+    {% for item in itemList %} 
+        <!--section id="{{item.itemCategory}}">
+            <div class="row">
+                <div class="col">
+                    <h1> Section {{item.itemOrder}}: {{item.itemCategory}} </h1>
+                    - Order: {{item.itemOrder}} - Category: {{item.itemCategory}} - Key: {{item.Key}}- Logged: {{item.loggedOnly}}  <br />
+                </div>
+            </div>
+        </section-->
+
+        <!--  Artcles for home page -->
+        <!--section class="thSection" id="homePage"-->
+        
+        <section class="tm-content-box flex-2-col" id="{{item.itemCategory}}">
+
+            <div class="container">
+                <div class="row">
+                    
+                    <!--h2>{{item.itemDescription}}</h2>
+                    <h4>{{item.onMouseOverDescription}}</h4-->
+                        
+                        {% for articleitem in articleList %}
+                            {% if articleitem.articleCategory|stringformat:"s" == item.itemCategory|stringformat:"s" %}
+                            
+                                {% if item.itemTemplate %}
+                                    {% with "omCmsMain/theme/"|add:siteInfoData.siteTheme|add:"/sectionLayouts/"|add:item.itemTemplate.itemLayoutName|add:".html" as nameTemplate %}
+                                        {% if nameTemplate|template_exists %}
+                                            {% include nameTemplate %}
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    {% with "omCmsMain/theme/"|add:siteInfoData.siteTheme|add:"/sectionLayouts/"|add:item.itemCategory|add:".html" as nameTemplate %}
+                                        {% if nameTemplate|template_exists %}
+                                            {% include nameTemplate %}
+                                        {% else %}
+                                            {% with "omCmsMain/theme/"|add:siteInfoData.siteTheme|add:"/sectionLayouts/default.html" as nameTemplate %}
+                                                {% include nameTemplate %}
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endwith %}
+
+                                {% endif %}
+                            
+                            {% endif %}
+                        {% endfor %}
+                        
+                </div>
+                <hr />
+                <!--div style="text-align:center;"><a href="#">TOP</a></div>
+                <hr /-->
+            </div>
+        </section><!-- end of team section -->
+
+
+
+
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block body-footer %}
+    {% with "omCmsMain/theme/"|add:siteInfoData.siteTheme|add:"/footer.html" as footerTemplate %}
+        {% include footerTemplate %}
+    {% endwith %}
+{% endblock %}

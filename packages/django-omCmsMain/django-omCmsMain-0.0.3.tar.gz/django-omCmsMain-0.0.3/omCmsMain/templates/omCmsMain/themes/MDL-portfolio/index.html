@@ -1,0 +1,108 @@
+{% extends "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/base.html" %}
+
+{% block head-description %}
+    {{siteInfoData.siteName}}
+    {% if siteInfoData.siteShortDescription %}, {{siteInfoData.siteShortDescription}}{% endif %} 
+    {% if siteInfoData.siteTagLine1 %}, {{siteInfoData.siteTagLine1}}{% endif %}
+    {% if siteInfoData.siteTagLine2 %}, {{siteInfoData.siteTagLine2}}{% endif %}
+{% endblock %}
+
+{% load includeif_template_exists %}
+
+{% block head-title %}
+    {{siteInfoData.siteName}}
+{% endblock %}
+
+{% block body-header %}
+    {% include "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/header.html" %}
+{% endblock %}
+
+{% block body-main %}
+<div class="mdl-layout__content">
+
+    
+    <!-- Sections -->
+    {% if articlesListHomePage %}
+        <!-- Default articles section -->
+        <div class="mdl-grid portfolio-max-width">
+            <!--h4>{{item.onMouseOverDescription}}</h4-->
+            {% for articleitem in articlesList %}
+                
+                {% if articleitem.articleCategory|stringformat:"s" == "homepage" %}
+                    <div class="mdl-cell mdl-cell--12-col mdl-card mdl-shadow--4dp">
+                        {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/sectionLayouts/"|add:articleitem.articleCategory.itemCategory|add:".html" as nameTemplate %}
+                            {% if nameTemplate|template_exists %}
+                                {% include nameTemplate %}
+                            {% else %}
+                                {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/sectionLayouts/default.html" as defaultTemplate %}
+                                    {# include defaultTemplate %}
+                                {% endwith %}    
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                {% endif %}
+                
+            {% endfor %}
+        </div><!-- end of Home Page  section -->
+    {% endif %}
+
+    <!-- Slider -->
+    {% if siteInfoData.displaySlideShow %}
+        {% include 'omCmsMain/themes/elevate/sectionLayouts/slider.html' %}
+    {% endif %}
+    <!-- End Slider -->
+
+    {% for item in categorysList %} 
+        
+        <div class="mdl-grid portfolio-max-width">                        
+            <div class="mdl-cell mdl-cell--12-col" id="{{item.itemCategory}}"><h4>
+                {% if item.itemDescription %}
+                    {{item.itemDescription}}
+                {% else %}
+                    {{item.itemCategory}}
+                {% endif %}
+            </h4></div>
+            {% if item.itemsByLine <= 0 %}
+                <div class="mdl-cell mdl-cell--12-col mdl-card mdl-shadow--4dp" ">
+            {%  endif %}
+                {% for articleitem in articlesList %}
+                    {% if articleitem.articleCategory|stringformat:"s" == item.itemCategory|stringformat:"s" %}
+
+                            {% if item.itemTemplate %}
+                                {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/sectionLayouts/"|add:item.itemTemplate.itemLayoutName|add:".html" as nameTemplate %}
+                                    {% if nameTemplate|template_exists %}
+                                        {% include nameTemplate %}
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/sectionLayouts/"|add:item.itemCategory|add:".html" as nameTemplate %}
+                                    {% if nameTemplate|template_exists %}
+                                        {% include nameTemplate %}
+                                    {% else %}
+                                        {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/sectionLayouts/default.html" as nameTemplate %}
+                                            {% include nameTemplate %}
+                                        {% endwith %}
+                                    {% endif %}
+                                {% endwith %}
+
+                            {% endif %}
+                
+                    {% endif %}
+                {% endfor %}
+            {% if item.itemsByLine <= 0 %}
+                </div>
+            {%  endif %}
+    
+        </div>
+
+
+    {% endfor %}
+</div> <!-- class="mdl-layout__content" -->
+
+{% endblock %}
+
+{% block body-footer %}
+    {% with "omCmsMain/themes/"|add:siteInfoData.siteTheme.themeName|add:"/footer.html" as footerTemplate %}
+        {% include footerTemplate %}
+    {% endwith %}
+{% endblock %}
