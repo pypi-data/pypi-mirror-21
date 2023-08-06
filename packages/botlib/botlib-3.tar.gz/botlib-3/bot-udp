@@ -1,0 +1,41 @@
+#!/usr/bin/python3
+#
+#
+
+""" udp client program. """
+
+import os, sys, warnings
+sys.path.insert(0, os.getcwd())
+
+warnings.simplefilter("ignore", UserWarning)
+
+from botlib.trace import get_exception
+from botlib.utils import strip_html
+from botlib.template import udp
+
+import logging
+import select
+import socket
+
+def out(txt):
+    txt = strip_html(txt)
+    data = '%s %s' % (udp.password, txt.strip())
+    sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(bytes(data, "utf-8"), (udp.host, udp.port))
+
+def main():
+    while 1:
+        (i, o, e) = select.select([sys.stdin],[],[sys.stderr,])
+        for sock in i + e:
+            try:
+                txt = sock.readline()
+                out(txt)
+            except:
+                logging.error(get_exception())
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
