@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+        <title>plutonium-axis demo</title>
+
+        <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+        <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+        <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+        <link rel="import" href="../plutonium-visualization.html">
+
+        <style is="custom-style" include="demo-pages-shared-styles">
+        </style>
+    </head>
+    <body>
+        <div class="vertical-section-container centered">
+            <h3>plutonium-axis demo</h3>
+
+            <!--<template is="dom-bind" >-->
+
+
+            <demo-snippet>
+    <template is="dom-bind" >
+        <div>
+            <label>Axis #0 title</label>
+            <input id="testTitle0"  type="text" />
+            <button id="updateTitleButton">OK</button>
+        </div>
+        <div>
+                            <label>Axis #0 unit</label>
+                        <input id="unitInput"  type="text" />
+                        <button id="updateUnitButton">OK</button>
+                        </div>
+                        
+                        <div>
+                            <label>Axis #0 center</label>
+                        <input id="centerInput"  type="number" />
+                        <button id="updateCenterButton">OK</button>
+                        </div>
+                        
+                        <div>
+                            <label>Axis #0 span</label>
+                        <input id="spanInput"  type="number" />
+                        <button id="updateSpanButton">OK</button>
+                        </div>
+
+
+                    <plutonium-datasource source-url="./waterfall.json" source-type="json" last-data="{{waterfallData}}"></plutonium-datasource>
+                    <div is="plutonium-thin-chart" data="[[waterfallData]]">
+                        <plutonium-axis
+                            id="yAxis"
+                            class="scale"
+                            label="Frekvencia"
+                            unit="dB"
+                            orientation="left"
+                            domain="vertical"
+                            center="-50" 
+                            span="100">
+                        </plutonium-axis>
+                    </div>
+
+                    <script>
+var input = document.querySelector('#testTitle0');
+var unitInput = document.querySelector('#unitInput');
+var centerInput = document.querySelector('#centerInput');
+var spanInput = document.querySelector('#spanInput');
+var axis = document.querySelector('#yAxis');
+var titleButton = document.querySelector('#updateTitleButton');
+var unitButton = document.querySelector('#updateUnitButton');
+var spanButton = document.querySelector('#updateSpanButton');
+var centerButton = document.querySelector('#updateCenterButton');
+
+titleButton.addEventListener('click', function () {
+    axis.label = input.value;
+});
+unitButton.addEventListener('click', function () {
+    axis.unit = unitInput.value;
+});
+spanButton.addEventListener('click', function () {
+    axis.span = parseFloat(spanInput.value);
+});
+centerButton.addEventListener('click', function () {
+    axis.center = parseFloat(centerInput.value);
+});
+                    </script>   
+                </template> 
+
+            </demo-snippet>
+
+            <!--</template>-->
+        </div>
+    </body>
+</html>

@@ -1,0 +1,94 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+
+
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="hedgehog-plot-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+      }
+        </style>
+        ddd
+        <iron-ajax id="updaterAjax" method="GET" url="{{url}}" last-response="{{graph}}" on-response="onUpdaterResponse" auto></iron-ajax>
+        <div id="figure"></div>
+    </template>
+
+    <script src="/static/visaweb/d3.v3.min.js"></script>
+    <script src="/static/visaweb/mpld3.v0.3.js"></script>
+
+    <script>
+    Polymer({
+      is: 'hedgehog-plot-view',
+      properties: {
+        endpoint: {
+            type: String,
+            notify: true
+        },
+        url: {
+            type: String,
+            notify: true
+        },
+        graph: {
+            type: Object,
+            notify: true
+        },
+        displayModel:{
+            type: Object,
+            notify: true,
+            value: {
+                center: 100.0,
+                span: 40.0
+            }
+        },
+        figureId: {
+            type: String,
+            notify: true,
+            value: function() {
+                function s4() {
+                    return Math.floor((1 + Math.random()) * 0x10000)
+                      .toString(16)
+                      .substring(1);
+                  }
+                  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                    s4() + '-' + s4() + s4() + s4();
+            }
+        }
+      },
+      observers: [
+        '_computeUrl(endpoint, displayModel)'
+      ],
+      _computeUrl: function(endpoint, displayModel) {
+        console.log('New backend endpoint url:', endpoint, displayModel);
+        this.url = endpoint + this.convertObjectToQueryString(displayModel);
+      },
+
+      convertObjectToQueryString: function(obj) {
+        if (obj) return '?' + Object.keys(obj).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(obj[k])).join('&');
+        else return '';
+      },
+
+      onUpdaterResponse: function(event, details) {
+
+        mpld3.draw_figure(this.$.figure, details.response);
+        console.debug('haha', details.response);
+      }
+    });
+
+
+    </script>
+</dom-module>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+        <title>plutonium-waterfall-chart demo</title>
+
+        <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+        <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+        <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+        <!--<link rel="import" href="../../plutonium-websocket/plutonium-websocket.html">-->
+        <link rel="import" href="../plutonium-visualization.html">
+
+        <style is="custom-style" include="demo-pages-shared-styles">
+        </style>
+    </head>
+    <body>
+        <div class="vertical-section-container centered">
+
+
+
+
+            <h3>Basic plutonium-waterfall-chart demo</h3>
+
+
+
+
+            <demo-snippet>
+                <template>
+                    <button id="updateButton">Update</button>
+                    <plutonium-websocket id="dataWs" url="ws://localhost:9006/data" as-json auto-close></plutonium-websocket>
+                    <!--<plutonium-websocket id="dataWs" url="ws://localhost:8080/hedgehog-visualization-ms-0.0.1-SNAPSHOT/data" as-json auto-close></plutonium-websocket>-->
+                    <div id="chart1" is="plutonium-waterfall-chart" class="card" x-axis-name="Idő" y-axis-name="Hely" z-axis-name="Sebesség"></div>
+                    <script>
+                        var updateButton = document.querySelector('#updateButton');
+                        var chart1 = document.querySelector('div#chart1');
+                        updateButton.addEventListener('click', function () {
+                            console.log('Update waterfall');
+                            chart1.update({
+                                "deltaRows": 1, 
+                                "resolution": { "width": 1, "height": 1},
+                                "domains": {
+                                    "x": [{"name": "0", "value": 0}, {"name": "1", "value": 1}, {"name": "2", "value": 2}, {"name": "3", "value": 3}, {"name": "4", "value": 4}, {"name": "5", "value": 5}, {"name": "6", "value": 6}, {"name": "7", "value": 7}, {"name": "8", "value": 8}, {"name": "9", "value": 9}], 
+                                    "y": [{"name": "0", "value": 0}, {"name": "1", "value": 1}, {"name": "2", "value": 2}, {"name": "3", "value": 3}, {"name": "4", "value": 4}, {"name": "5", "value": 5}, {"name": "6", "value": 6}, {"name": "7", "value": 7}, {"name": "8", "value": 8}, {"name": "9", "value": 9}, {"name": "10", "value": 10}, {"name": "11", "value": 11}, {"name": "12", "value": 12}, {"name": "13", "value": 13}, {"name": "14", "value": 14}, {"name": "15", "value": 15}, {"name": "16", "value": 16}, {"name": "17", "value": 17}, {"name": "18", "value": 18}, {"name": "19", "value": 19}], 
+                                    "z": [{"name": "red", "value": 0}, {"name": "green", "value": 1}, {"name": "blue", "value": 2}, {"name": "yellow", "value": 3}]
+                                }, 
+                                "data": [
+                                    {"x": 0, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 1, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 2, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 3, "y": 9, "z":  Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 4, "y": 9, "z":  Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 5, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 6, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 7, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 8, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 9, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 10, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}, 
+                                    {"x": 11, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 12, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 13, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 14, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 15, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 16, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 17, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 18, "y": 9, "z": Math.floor((Math.random() * 10) + 1)},
+                                    {"x": 19, "y": 9, "z": Math.floor((Math.random() * 10) + 1)}
+                                ]
+                            });
+                        });
+
+                        var wsElement = document.querySelector("plutonium-websocket");
+                        wsElement.addEventListener('ws-error', function (error) {
+                            console.log('Ws throw error');
+                            throw new Error(error);
+                        });
+                        wsElement.addEventListener('ws-open', function () {
+                            console.log('Ws send');
+                        });
+                        wsElement.addEventListener('ws-message', function (message) {
+                            console.log('Ws message');
+                            chart1.update(message.detail);
+                        });
+                    </script>
+                </template>
+
+            </demo-snippet>
+
+
+
+
+
+
+            <demo-snippet>
+                <template is="dom-bind">
+                    <!--<template>-->
+                    <plutonium-datasource source-url="./waterfall.json" source-type="json" last-data="{{waterfallData}}"></plutonium-datasource>
+                    <div id="chart0" is="plutonium-waterfall-chart" data="[[waterfallData]]"></div>
+
+
+                </template>
+
+            </demo-snippet>
+
+
+
+
+        </div>
+    </body>
+</html>
