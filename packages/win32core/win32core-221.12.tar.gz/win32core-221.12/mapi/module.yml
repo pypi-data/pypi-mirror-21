@@ -1,0 +1,58 @@
+libraries: [version, user32, advapi32, netapi32, oleaut32, ole32, mapi32]
+windows_h_version: 1280
+modules: [win32types, _win32com]
+
+# class WinExt_win32com_mapi(WinExt_win32com):
+
+
+  # WinExt_win32com('mapi', libraries='mapi32', pch_header='_win32com.h',
+  #                    sources=('''
+  #                        %(mapi)s/mapi.i                 %(mapi)s/mapi.cpp
+  #                        %(mapi)s/PyIABContainer.i       %(mapi)s/PyIABContainer.cpp
+  #                        %(mapi)s/PyIAddrBook.i          %(mapi)s/PyIAddrBook.cpp
+  #                        %(mapi)s/PyIAttach.i            %(mapi)s/PyIAttach.cpp
+  #                        %(mapi)s/PyIDistList.i          %(mapi)s/PyIDistList.cpp
+  #                        %(mapi)s/PyIMailUser.i          %(mapi)s/PyIMailUser.cpp
+  #                        %(mapi)s/PyIMAPIContainer.i     %(mapi)s/PyIMAPIContainer.cpp
+  #                        %(mapi)s/PyIMAPIFolder.i        %(mapi)s/PyIMAPIFolder.cpp
+  #                        %(mapi)s/PyIMAPIProp.i          %(mapi)s/PyIMAPIProp.cpp
+  #                        %(mapi)s/PyIMAPISession.i       %(mapi)s/PyIMAPISession.cpp
+  #                        %(mapi)s/PyIMAPIStatus.i        %(mapi)s/PyIMAPIStatus.cpp
+  #                        %(mapi)s/PyIMAPITable.i         %(mapi)s/PyIMAPITable.cpp
+  #                        %(mapi)s/PyIMessage.i           %(mapi)s/PyIMessage.cpp
+  #                        %(mapi)s/PyIMsgServiceAdmin.i   %(mapi)s/PyIMsgServiceAdmin.cpp
+  #                        %(mapi)s/PyIMsgStore.i          %(mapi)s/PyIMsgStore.cpp
+  #                        %(mapi)s/PyIProfAdmin.i         %(mapi)s/PyIProfAdmin.cpp
+  #                        %(mapi)s/PyIProfSect.i          %(mapi)s/PyIProfSect.cpp
+  #                        %(mapi)s/PyIConverterSession.i	%(mapi)s/PyIConverterSession.cpp
+  #                        %(mapi)s/PyIMAPIAdviseSink.cpp
+  #                        %(mapi)s/mapiutil.cpp
+  #                        %(mapi)s/mapiguids.cpp
+  #                        ''' % dirs).split()),
+  #    WinExt_win32com_mapi('exchange', libraries='mapi32',
+  #                         sources=('''
+  #                                  %(mapi)s/exchange.i         %(mapi)s/exchange.cpp
+  #                                  %(mapi)s/PyIExchangeManageStore.i %(mapi)s/PyIExchangeManageStore.cpp
+  #                                  ''' % dirs).split()),
+  #    WinExt_win32com_mapi('exchdapi', libraries='mapi32',
+  #                         sources=('''
+  #                                  %(mapi)s/exchdapi.i         %(mapi)s/exchdapi.cpp
+  #                                  ''' % dirs).split()),
+
+#   In PyIMAPISession.cpp, in PyIMAPISession::Advise(PyObject *self, PyObject *args), I changed:
+# 
+#                 unsigned long connection;
+# To:
+#                 ULONG_PTR connection;
+# 
+# In PyIMAPITable.cpp, I switched:
+# 
+#           _result = (HRESULT )_swig_self->Advise(_arg0,_arg1,_arg2);
+# To:
+#           _result = (HRESULT )_swig_self->Advise(_arg0,_arg1,reinterpret_cast<ULONG_PTR *>(_arg2));
+# 
+# And:
+# 
+#           _result = (HRESULT )_swig_self->CreateBookmark(_arg0);
+# To:
+#           _result = (HRESULT )_swig_self->CreateBookmark(reinterpret_cast<BOOKMARK *>(_arg0));
