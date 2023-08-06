@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: azureml-fe
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        azuremlappname: frontend
+    spec:
+      containers:
+        - name: azureml-fe
+          image: azuremlintfe.azurecr.io/azureml-fe
+          imagePullPolicy: Always
+          command: ["/bin/bash"]
+          args: ["-c", "cd /code/fe; mix run --no-halt"]
+          ports:
+            - containerPort: 8001
+      imagePullSecrets:
+        - name: amlintfeacrkey
