@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" xmlns:i18n="http://xml.zope.org/namespaces/i18n" xmlns:tal="http://xml.zope.org/namespaces/tal" xmlns:metal="http://xml.zope.org/namespaces/metal" metal:use-macro="api.macro('kotti:templates/view/master.pt')">
+
+<article metal:fill-slot="content" class="content custom-content-alternative-view" i18n:domain="kotti_controlpanel">
+
+  <div class="row">
+    <div class="col-md-10 col-sm-8">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h2 class="panel-title">Control Panel</h2>
+        </div>
+        <div class="panel-body row">
+          <div tal:condition="settings" class="col-md-4" tal:repeat="setting settings">
+            <a href="?setting_id=${setting.slug_id}">
+              <span class="image-holder"><img width="20px" src="${request.static_url(setting.icon or 'kotti_controlpanel:static/gears.png')}" /></span>
+              <span class="setting-title" >${setting.title}</span>
+            </a>
+          </div>
+          <div tal:condition="not settings">
+            <h4>No settings available for the installed add-ons</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-2 col-sm-4" tal:condition="UCP_LINKS">
+      <ul class="list-group" >
+         <li class="list-group-item" tal:repeat="link UCP_LINKS">
+          <a href="${link.url(context, request)}" target="${link.target}">
+            ${link.title}
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</article>
+
+</html>
