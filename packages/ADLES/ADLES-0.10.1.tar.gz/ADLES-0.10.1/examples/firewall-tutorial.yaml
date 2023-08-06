@@ -1,0 +1,67 @@
+metadata:
+  name: "Network Firewalls"
+  description: "A tutorial on the usage and configuration of network firewalls"
+  activity: "CS 439 - Applied Security Concepts"
+  prefix: "CS439-TR03-TU16"
+  version: "0.3.0"
+  infrastructure-config-file: "infra.yaml"
+  folder-name: "CS-439/TR-02/TU-11"  # CS 439, Tutorial Round 2, Tutorial 11
+
+groups:
+  Students: 
+    ad-group: "CS439 Students"
+  Instructors:
+    user-list: ["gibl", "hotc"]
+
+# Default passwords are preserved from templates
+services:
+  pfsense:
+    template: "PFSense 2.2.3 (64-bit)"
+  ubuntu:
+    template: "Ubuntu 16.04 (64-bit)"
+  vyos:
+    template: "VyOS 1.1.7 (64-bit)"
+  win-workstation:
+    template: "Windows 10 (64-bit)"
+  win-server:
+    template: "Windows Server 2012 R2 (64-bit)"
+  seed:
+    template: "Ubuntu 12.04 SEED (32-bit)"
+
+networks:
+  generic-networks:
+    Internal:
+      description: "Internal 'Local' network that is being protected"
+      subnet: "192.168.0.0/24"
+      vswitch: "cs439_vswitch"
+    External:
+      description: "External untrusted network that is treated as the 'Internet' for this exercise"
+      subnet: "172.16.0.0/16"
+      vswitch: "cs439_vswitch"
+
+folders:
+  workstations:
+    group: Students
+    master-group: Instructors
+    instances:
+      number: 15
+      prefix: "WS-"
+    services:
+      PFSense Firewall:
+        service: pfsense
+        networks: ["Internal", "External"]
+      VyOS Firewall:
+        service: vyos
+        networks: ["Internal", "External"]
+      Linux Server:
+        service: ubuntu
+        networks: ["Internal"]
+      Windows Server:
+        service: win-server
+        networks: ["Internal"]
+      Windows Workstation:
+        service: win-workstation
+        networks: ["Internal"]
+      SEED Workstation:
+        service: seed
+        networks: ["Internal"]

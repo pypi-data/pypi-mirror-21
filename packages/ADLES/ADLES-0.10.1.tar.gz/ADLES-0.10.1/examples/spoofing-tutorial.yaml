@@ -1,0 +1,65 @@
+metadata:
+  name: "Spoofing Tutorial"
+  description: "Learning about ARP spoofing and DNS spoofing, and implementing DNSSEC and DNSCrypt" 
+  activity: "CS 439 - Applied Security Concepts"
+  prefix: "CS439"
+  date-created: "2016-11-06"
+  version: "0.6.1"
+  infrastructure-config-file: "infra.yaml"
+  folder-name: "CS-439/TR-01/TU-03"  # CS 439, Tutorial Round 1,Tutorial 03
+
+groups:
+  Students:
+    ad-group: "CS 439 Students"
+  Instructors:
+    filename: "examples/tutorial_instructors.json"
+
+services:
+  windows:
+    note: "Username: User   Password: Windows1"
+    template: "Windows 7 SP2 (64-bit)"
+  kalibox:
+    note: "Username: root   Password: toor"
+    template: "Kali 2.0 (64-bit)"
+  server:
+    template: "Ubuntu Server 14.04 (64-bit)"
+  router:
+    template: "VyOS 1.1.7 (64-bit)"
+
+networks:
+  generic-networks:
+    SPOOFING-LAN:
+      description: "Used for spoofing tutorial"
+      subnet: "192.168.1.0/24"
+      vswitch: "cs439_vswitch"
+
+folders:
+  hidden:
+    description: "Services for each student that they do not see"
+    group: Instructors
+    hidden-services:
+      group: Instructors
+      instances:
+        number: 15 # size-of: Students
+        prefix: "HIDDEN-SERVICE-"
+      services:
+        server:
+          service: server
+          networks: ["SPOOFING-LAN"]
+        router:
+          service: router
+          networks: ["SPOOFING-LAN"]
+  workstations:
+    description: "Workstations students use for the tutorial"
+    group: Students
+    master-group: Instructors
+    instances: 
+      number: 15 # size-of: Students
+      prefix: "WS-"
+    services:
+      host:
+        service: windows
+        networks: ["SPOOFING-LAN"]
+      attacker:
+        service: kalibox
+        networks: ["SPOOFING-LAN"]
