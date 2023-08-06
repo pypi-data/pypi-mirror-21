@@ -1,0 +1,47 @@
+<configure
+    xmlns="http://pylonshq.com/pyramid"
+    xmlns:zcml="http://namespaces.zope.org/zcml"
+    >
+
+  <include package="pyramid_zcml" />
+
+  <view
+      view=".views.fixture_view"
+      />
+
+  <view
+      view=".views.exception_view"
+      for="RuntimeError"
+      />
+
+  <view
+      view=".views.protected_view"
+      name="protected.html"
+      />
+
+  <view
+      view=".views.erroneous_view"
+      name="error.html"
+      />
+
+  <view
+      view=".views.fixture_view"
+      name="dummyskin.html"
+      request_type=".views.IDummy"
+      />
+
+   <utility
+      component=".models.fixture"
+      provides=".models.IFixture"
+    />
+
+   <utility
+      zcml:condition="have feature1"
+      component=".models.fixture"
+      provides=".models.IFixture"
+      name="feature1"
+    />
+
+  <include file="another.zcml"/>
+
+</configure>
