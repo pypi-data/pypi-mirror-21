@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      metal:use-macro="api.macro('kotti:templates/view/master.pt')">
+
+  <article metal:fill-slot="content"
+           class="content custom-content-default-view"
+           i18n:domain="kotti_controlpanel">
+
+    <h1>System Settings for ${context.title}</h1>
+    <div class="row" tal:repeat="app_setting app_settings">
+      <div class="col-sm-4 col-md-4">
+        ${app_setting.option}
+      </div>
+      <div class="col-sm-8 col-md-8">
+        ${app_setting.value}
+      </div>
+    </div>
+    <br/>
+    <div>
+      <a href="${request.resource_url(context, 'add-option')}" class="btn btn-primary add-option">
+        Add Option
+      </a>
+      <a href="${request.resource_url(context, 'update-settings')}" class="btn btn-success update-option">
+        Edit Options
+      </a>
+    </div>
+  </article>
+</html>

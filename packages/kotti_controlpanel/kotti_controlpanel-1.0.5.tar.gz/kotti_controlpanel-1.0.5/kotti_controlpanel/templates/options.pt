@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      metal:use-macro="api.macro('kotti:templates/view/master.pt')">
+
+  <article metal:fill-slot="content"
+           class="content custom-content-default-view"
+           i18n:domain="kotti_controlpanel">
+
+   <h1>System Settings for ${context.title}</h1>
+    <form method="post" action="${request.resource_url(context, 'update-settings')}">
+      <div class="row" tal:repeat="app_setting app_settings">
+        <div class="col-sm-4 col-md-4">
+          <h4 class="option">
+            ${app_setting.option}
+          </h4>
+        </div>
+        <div class="col-sm-8 col-md-8">
+          <input type="text" name="${app_setting.id}" value="${app_setting.value}" class="form-control value" />
+        </div>
+      </div>
+      <br/>
+      <br/>
+      <div>
+        <button type="submit" class="btn btn-primary">
+          Update
+        </button>
+        <a href="${request.resource_url(context, 'add-option')}" class="btn btn-default add-option">
+          Add Option
+        </a>
+        <a href="${request.resource_url(api.root, '@@site-settings')}" class="btn btn-default add-option">
+          View All Settings
+        </a>
+      </div>
+    </form>
+  </article>
+</html>

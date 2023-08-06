@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      metal:use-macro="api.macro('kotti:templates/view/master.pt')">
+
+  <article metal:fill-slot="content"
+           class="content custom-content-alternative-view"
+           i18n:domain="kotti_controlpanel">
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Module</th>
+                <th>Setting</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr tal:repeat="setting all_settings">
+                <tal:block tal:define="smod setting.split('-')">
+                    <td>${smod[0].replace('_', ' ').capitalize()}</td>
+                    <td>${smod[1].replace('_', ' ').capitalize()}</td>
+                    <td>${all_settings[setting]}</td>
+                </tal:block>
+            </tr>
+        </tbody>
+    </table>
+
+  </article>
+</html>
