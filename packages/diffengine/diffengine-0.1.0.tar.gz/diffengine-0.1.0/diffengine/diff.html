@@ -1,0 +1,114 @@
+<html>
+  <head>
+    <meta charset="UTF-8"></meta>
+    <title>{{ title }}</title>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script>
+
+      function clip() {
+        // get the best clip we can find
+        var c = getClip();
+
+        // if we can't find a clip leave the page alone
+        if (c.length == 0) {
+          return;
+        }
+
+        // hide everything
+        $('header').hide();
+        $('.diff').children().hide();
+
+        // show our clip and its immediate siblings
+        c.show();
+        c.next().show();
+        c.prev().show();
+      }
+
+      function getClip() {
+        var p = null;
+        var largest = 0;
+        $("p").each(function(i, e) {
+          var len = changesLength(e);
+          if (len > largest) {
+            p = e;
+            largest = len;
+          }
+        });
+        return $(p);
+      }
+
+      function changesLength(p) {
+        return count(p, 'del') + count(p, 'ins');
+      }
+
+      function count(e, sel) {
+        var length = 0;
+        $(e).children(sel).each(function(i, c) {
+          length += $(c).text().length; 
+        });
+        return length;
+      }
+    </script>
+
+    <style>
+
+      body {
+        font-size: 15pt;
+        margin: 0px;
+        background-color: white;
+      }
+
+      del {
+          background-color: pink;
+      }
+
+      del p {
+          background-color: pink;
+      }
+
+      ins {
+          background-color: lightgreen;
+      }
+
+      ins p {
+          background-color: lightgreen;
+      }
+
+      .diff {
+          margin: 10%;
+      }
+
+      header {
+          text-align: center;
+          background-color: #eeeeee;
+          padding: 10px;
+          border-bottom: thin solid #dddddd;
+      }
+
+      header .archive {
+          margin-top: 10px;
+          vertical-align: middle;
+      }
+
+      .archive a {
+          text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+
+    <header>
+      <div class="url"><a href="{{ url }}">{{ url }}</a></div>
+      <div class="archive">
+        <a href="{{ old_url }}">{{ old_time.strftime("%Y-%m-%d %H:%M:%S GMT") }}</a> 
+        ≠ 
+        <a href="{{ new_url }}">{{ new_time.strftime("%Y-%m-%d %H:%M:%S GMT") }}</a>
+      </div>
+    </header>
+
+    {{ diff|safe }}
+
+  </body>
+
+</html>
+
