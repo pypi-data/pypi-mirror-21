@@ -1,0 +1,96 @@
+import 'normalize.css';
+import React from 'react';
+import {render} from 'react-dom';
+import io from 'socket.io-client';
+import 'antd/dist/antd.css'
+
+import AntProgress from './progress';
+
+{% for component in components %}
+import {{ component.component }} from './{{ component.module }}';
+{% endfor %}
+
+var msgpack = require('msgpack-lite');
+var socket = io({path: '/{{ socketio }}socket.io'});
+
+class Dashboard extends React.Component {
+    constructor(props) {
+        super(props);
+        this.cache = {};
+        socket.emit('INITIALIZE');
+    }
+
+    saveValue = data => {
+        var arr = new Uint8Array(data['key']);
+        var key = msgpack.decode(arr);
+        this.cache[key] = data['data'];
+    }
+
+    loadValue = (data, fn) => {
+        var arr = new Uint8Array(data['data']);
+        var key = msgpack.decode(arr);
+        if (this.cache.hasOwnProperty(key)) {
+            fn(this.cache[key]);
+        } else {
+            var buffer = new ArrayBuffer(1);
+            var x = new DataView(buffer, 0);
+            // msgpack encodes null to 0xc0
+            x.setUint8(0, 0xc0);
+            fn(buffer);
+        }
+    }
+
+    componentDidMount() {
+        socket.on('cache_save', this.saveValue);
+        socket.on('cache_load', this.loadValue);
+        {% for page in pages %}
+        socket.on('page#{{ page._uuid }}', function () {socket.emit('resp#{{ page._uuid }}')});
+        {% endfor %}
+    }
+
+    render() {
+        return (
+            <div style={{ '{{' }}display: 'grid',
+                    gridTemplateColumns: '{{ columns|join(' ') }}',
+                    gridTemplateRows: '{{ rows|join(' ') }}',
+                    width: '100%', height: '100%',
+                    minHeight: '100vh', maxHeight: '100%',
+                    minWidth: '100vw', maxWidth: '100%'{{ '}}' }}>
+
+                {% if sidebar %}
+                <div style={{ '{{' }}padding: '7px', backgroundColor: '{{background_color}}',
+                        gridColumn: '1 / 2',
+                        gridRow: '1 / -1'
+                        {{ '}}' }}>
+                    {{ description }}
+
+                    {% for control in controls %}
+                    <div style={{ '{{' }}paddingBottom: '3px'{{ '}}' }}>
+                    {{ control.caption }}
+                    </div>
+
+                    <div style={{ '{{' }}paddingBottom: '7px'{{ '}}' }}>
+                    {{ control.instantiate }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% for widget, span in widgets %}
+                <div style={{ '{{' }}
+                        gridColumn: '{{ span.column_start + sidebar }} / {{ span.column_end + sidebar }}',
+                        gridRow: '{{ span.row_start }} / {{ span.row_end }}',
+                        position: 'relative'
+                        {{ '}}' }}>
+                    {{ widget }}
+                </div>
+                {% endfor %}
+            </div>
+        );
+    }
+}
+
+                    // <!-- gridTemplateColumns: '18em {% for x in size %}{{x}}{% endfor %}', -->
+//  minWidth: '{{ min_width }}px',
+
+render(<Dashboard />, document.getElementById('app'));
