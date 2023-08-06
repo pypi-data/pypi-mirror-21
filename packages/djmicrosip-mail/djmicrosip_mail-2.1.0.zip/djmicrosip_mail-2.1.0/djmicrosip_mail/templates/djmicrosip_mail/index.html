@@ -1,0 +1,77 @@
+{% extends "djmicrosip_mail\base.html" %}
+{% block title %}Inicio{% endblock %}
+
+<!-- CSS Code -->
+{% block style_css %}{% endblock %}
+
+<!-- JavaScript Code -->
+{% block js_code %}
+{% endblock %}
+
+{% block breadcrumb %}{{ block.super }} {% endblock %}
+{% block content %}
+<h1 align="center"><strong>Envío de Correos Electrónicos </strong><small>v2.1.0</small></h1> 
+<hr>
+{%if errors %}
+<div class="alert alert-warning fade in">
+<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+<strong>:/ Configuracion de aplicacion invalida</strong>
+
+{% for error in errors %}
+  <br>
+  {% autoescape off %} {{ error }} {% endautoescape %}
+{% endfor %}
+</div>
+{% endif %}
+<div class="panel-group visible-xs" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          <i class="glyphicon glyphicon-usd"></i> <span for="">Envío de Saldos</span>
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+      	<ul>
+	      	<a href="/mail/saldos/todos/" class="btn btn-default"><i class="glyphicon glyphicon-align-justify"></i> A Todos los Clientes</a>
+	      	<a href="/mail/saldos/por_seleccion" class="btn btn-default"><i class="glyphicon glyphicon-tasks"></i> A Clientes Especificos</a></a>
+      	</ul>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingTwo">
+      <h4 class="panel-title">
+        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+          <i class="glyphicon glyphicon-pencil"></i> <span for="">Envío Personalizado</span>
+      </h4>
+    </div>
+    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+      <div class="panel-body">
+      	<ul>
+      		<a href="/mail/personalizados/todos" class="btn btn-default"><i class="glyphicon glyphicon-align-justify"></i> A Todos los Clientes</a>
+      		<a href="/mail/personalizados/por_zona" class="btn btn-default"><i class="glyphicon glyphicon-globe"></i> Por zona</a>
+      		<a href="/mail/personalizados/por_seleccion" class="btn btn-default"><i class="glyphicon glyphicon-tasks"></i> A Clientes Especificos</a>
+      		<a href="/mail/personalizados/archivo" class="btn btn-default"><i class="glyphicon glyphicon-file"></i>Desde Archivo</a>
+		</ul>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingThree">
+      <h4 class="panel-title">
+        <a  role="button" href="/mail/personalizados/abierto/" aria-expanded="false" aria-controls="collapseThree">
+          <i class="glyphicon glyphicon-envelope"></i> <span for="">Envío de Mensajes Abiertos</span>
+        </a>
+      </h4>
+    </div>
+    <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+      <div class="panel-body">
+       
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
