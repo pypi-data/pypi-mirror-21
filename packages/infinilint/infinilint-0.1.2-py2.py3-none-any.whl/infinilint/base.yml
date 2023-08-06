@@ -1,0 +1,53 @@
+---
+timeout: 1200
+linters:
+  flake8:
+    enabled: false
+    image: eeacms/flake8
+    command:
+      - flake8
+      - --config=.lint/flake8
+      - .
+  shellcheck:
+    enabled: false
+    image: koalaman/shellcheck
+    find: "*.sh"
+    command: shellcheck -x
+  hadolint:
+    enabled: false
+    image: rzarouali/hadolint:develop
+    find: "Dockerfile"
+    command:
+      - /usr/local/bin/hadolint
+      - --ignore DL4000
+  jsonlint:
+    enabled: false
+    image: sahsu/docker-jsonlint
+    find: "*.json"
+    command: "jsonlint --quiet"
+  rubocop:
+    enabled: false
+    image: codeclimate/codeclimate-rubocop
+    command: rubocop
+  foodcritic:
+    enabled: false
+    image: chef/chefdk
+    find: "*.rb"
+    command: foodcritic
+  yamllint:
+    enabled: false
+    image: patricktoelle/yamllint
+    find: "*.yml"
+    command: yamllint
+  tflint:
+    enabled: false
+    image: wata727/tflint
+    find: "*.tf"
+    command: tflint
+  cfn-lint:
+    enabled: false
+    image: cfn-lint
+    find: "*.json"
+    command: cfn-lint
+
+
