@@ -1,0 +1,36 @@
+language: python
+dist: trusty
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - sudo apt-add-repository 'deb http://archive.ubuntu.com/ubuntu trusty-backports universe'
+  - sudo apt-get update -qq
+  - sudo apt-get install -y shellcheck
+  - pip install --upgrade setuptools
+
+script:
+  # Intall Ansible here, even though it's part of test rquirements.
+  #  If not, `python ./setup.py test` fails while installing pycparser
+  - pip install https://github.com/ansible/ansible/archive/devel.tar.gz#egg=ansible-2.4.0
+  - ansible --version
+
+  # Install Ansible Container 
+  - pip install -e .[docker]
+
+  # Establish a tmp directory
+  - mkdir tmp 
+  - export TMPDIR=${PWD}/tmp
+
+  # run tests 
+  - python ./setup.py test
+  - if [ -f ./task.output ]; then cat task.output; fi
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -F unit        -f test/reports/unit/coverage.xml
+  - bash <(curl -s https://codecov.io/bash) -F integration -f test/reports/integration/coverage.xml
+
+notifications:
+  email: false
