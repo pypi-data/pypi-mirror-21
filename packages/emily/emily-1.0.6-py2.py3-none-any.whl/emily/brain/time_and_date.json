@@ -1,0 +1,43 @@
+{
+  "intent": "time_and_date",
+  "conversations": {
+    "default": {
+      "get_time": {
+        "node_type": "simple_logic",
+        "pattern": "current time",
+        "utterances": [
+          "what time is it",
+          "what is the time",
+          "do you have the time"
+        ],
+        "command": "datetime.now().strftime('%I:%M %p')",
+        "next_node": "current_time"
+      },
+      "current_time": {
+        "node_type": "response",
+        "responses": [
+          "It is currently {command_response}",
+          "The time is currently {command_response}"
+        ]
+      },
+      "get_date": {
+        "node_type": "simple_logic",
+        "pattern": "current date",
+        "utterances": [
+          "what is today",
+          "what is todays date",
+          "what is the date"
+        ],
+        "command": "datetime.now().strftime('%B %d, %Y')",
+        "next_node": "current_date"
+      },
+      "current_date": {
+        "node_type": "response",
+        "responses": [
+          "Today is {command_response}",
+          "Today's date is {command_response}"
+        ]
+      }
+    }
+  }
+}
