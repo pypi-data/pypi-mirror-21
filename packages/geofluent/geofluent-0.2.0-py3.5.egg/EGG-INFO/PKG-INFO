@@ -1,0 +1,102 @@
+Metadata-Version: 1.1
+Name: geofluent
+Version: 0.2.0
+Summary: Unnoficial Python Client to access the GeoFluent API
+Home-page: UNKNOWN
+Author: Sergio Fernández
+Author-email: sergio.fernandez@redlink.co
+License: UNKNOWN
+Description: # GeoFluent Python Client
+        
+        Unofficial Python Client to access the [GeoFluent API](http://www.lionbridge.com/geofluent/). 
+        
+        It has been developed by [Redlink GmbH](http://redlink.co/) in the context of the [SSIX Project](https://ssix-project.eu/);
+        further details at [this blog post](https://ssix-project.eu/opensourcing-java-and-python-clients-geofluent-api/).
+        
+        ## API
+        
+        Upon usage of the [GeoFluent API](http://www.lionbridge.com/geofluent/) you **need to register** an account there.
+        
+        You can find further technical documentation at:
+        
+        * [API v3 Swagger Documentation](https://api.geofluent.com/Translation/swagger/docs/v3)
+        * [API v3 Swagger UI](https://api.geofluent.com/Translation/swagger/ui/index)
+        
+        The current status of implementation of the [GeoFluent API](http://www.lionbridge.com/geofluent/)
+        is the following:
+        
+        | Feature  	        |Status   	|
+        |---	            |---	    |
+        | Detect  	        | not implemented |
+        | HealthCheck  	    | not implemented |
+        | Interpret  	    | not implemented |
+        | Languages         | **implemented** |
+        | Profile           | not implemented |
+        | TermsOfService    | not implemented |
+        | Transcribe        | **implemented** |
+        
+        
+        ## Installation
+        
+        The modules is [available from PyPI](https://pypi.python.org/pypi/geofluent),
+        so you just need to install it:
+        
+            pip install geofluent
+        	
+        ## Usage
+        
+        ### Library
+        
+            from geofluent import GeoFluent
+        
+            gf = GeoFluent(key=key, secret=secret)
+        	
+            // retrieve available languages
+            languages = gf.languages()
+            print("Languages supported:" + ", ".join(["%s->%s" % language for language in languages]))
+            
+            // translate from German to English
+            translation = gf.translate("Ich werde es testen", "de-de", "en-xn");
+            print("Translation: " + translation);
+        
+        ### Command-Line
+        
+        You can can use the CLI tool to translate each line of file and get the translations back as CSV:
+        
+            geofluent key secret source target file.txt
+        
+        With `geofluent -h` you get some additional help of its usage.
+        
+        Notice that you may need to address it as `python3 geofluent/cli.py` if you didn't globally install the library.
+        
+        ### Microservice
+        
+        In case you need to locally expose it as a microservice, the modules provides a dedicated utility to proxy that:
+        
+            python3 geofluent/cli.py key secret [port]
+        
+        
+        ## License
+        
+        This tool is available under [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+        
+        ## Disclaimer
+        
+        Notice that this implementation is **not an official client supported by the API provider**, so it is available without 
+        any warranty nor liability. Please report to the issue trackers any issue you may find to improve upcoming releases.
+        
+        ## Acknowledgements
+        
+        This work is in part funded by the [SSIX](http://ssix-project.eu/) [Horizon 2020](https://ec.europa.eu/programmes/horizon2020/) project
+        (grant agreement No 645425).
+        
+        [![H2020](https://bytebucket.org/ssix-project/brexit-gold-standard/raw/master/assets/eu.png)](https://ec.europa.eu/programmes/horizon2020/)
+        
+Keywords: client api translation geofluent ssix
+Platform: any
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Environment :: Console
