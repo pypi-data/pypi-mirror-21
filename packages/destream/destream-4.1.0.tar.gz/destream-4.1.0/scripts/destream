@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+
+import sys
+import errno
+import argparse
+import destream
+
+from os import isatty
+from os.path import join as join_path, basename, isdir
+from shutil import copyfileobj
+
+
+def extract_stream(stdin, stdout=sys.stdout, output_dir=None):
+    with destream.open(fileobj=stdin) as in_:
+        if isinstance(in_, destream.ArchivePack):
+            if output_dir is None:
+                for member in in_.members():
+                    with in_.open(member) as fh_member:
+                        copyfileobj(fh_member, stdout)
+            else:
+                in_.extractall(output_dir)
+        else:
+            if output_dir is None:
+                copyfileobj(in_, stdout)
+            else:
+                if stdin is sys.stdin:
+                    filename = "stdout"
+                else:
+                    filename = basename(in_.realname)
+                with open(join_path(output_dir, filename), 'w') as out:
+                    copyfileobj(in_, out)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--force", "-f", action='store_true',
+                    help="Decompress input file even if the input is a tty")
+parser.add_argument("--output", "-o",
+                    help="File or directory for output")
+parser.add_argument("files", nargs='*', type=argparse.FileType('rb'),
+                    help="List of files to extract.")
+
+def run(args):
+    if not args.output:
+        stdout, output_dir = sys.stdout, None
+    elif isdir(args.output):
+        stdout, output_dir = None, args.output
+    else:
+        stdout, output_dir = open(args.output, 'w'), None
+    if args.files:
+        for file_ in args.files:
+            extract_stream(file_, stdout=stdout, output_dir=output_dir)
+    else:
+        if not args.force and isatty(sys.stdin.fileno()):
+            sys.stderr.write("%s: compressed data not read from a terminal. "
+                             "Use -f to force decompression.\n"
+                             % basename(sys.argv[0]))
+            sys.exit(1)
+        extract_stream(sys.stdin, stdout=stdout, output_dir=output_dir)
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+    try:
+        run(args)
+    except KeyboardInterrupt:
+        sys.stderr.write("KeyboardInterrupt\n")
+        sys.exit(1)
+    except IOError as exc:
+        if exc.errno == errno.EPIPE:
+            sys.stderr.write("Broken pipe\n")
+            sys.exit(1)
+        else:
+            raise
