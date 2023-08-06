@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+#
+# Agalma - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of Agalma.
+#
+# Agalma is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Agalma is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Agalma.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import os
+import sys
+
+import matplotlib
+matplotlib.use('agg')
+from matplotlib.pyplot import *
+from matplotlib.ticker import FuncFormatter
+
+from agalma import config
+from biolite import diagnostics
+from biolite import utils
+
+def report(outdir, id, run_ids):
+	"""
+	Generates a figure showing the reduction of sequences across a phylogeny
+	run for the given ID.
+	"""
+	if id:
+		run_ids = [
+			run.id for run in diagnostics.lookup_runs(id)
+			if run.done and not run.hidden] + run_ids
+	else:
+		id = 'phylogeny'
+
+	nseqs = []
+	for run_id in run_ids:
+		nseqs.extend(diagnostics.lookup_attribute(run_id, 'nseqs'))
+
+	stages = ['{0}\n({2})'.format(*x[0].partition('.')) for x in nseqs]
+
+	figure(figsize=(12,6), dpi=72)
+	plot([int(x[1]) for x in nseqs], 'k.-')
+	title("Reduction in Sequences")
+	xlim(-0.5, len(stages)-0.5)
+	xticks(range(len(stages)), stages, fontsize=8, rotation=66)
+	xlabel("Pipeline (Stage)")
+	ylim(bottom=0)
+	ylabel("# of Sequences")
+	gca().yaxis.set_major_formatter(FuncFormatter('{:,.0f}'.format))
+	grid(axis='y')
+	tight_layout()
+
+	out = os.path.join(outdir, id+'.pdf')
+	savefig(out)
+	print "Saved figure to '%s'" % out
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description=report.__doc__)
+	parser.add_argument('--outdir', '-o', default='./',
+		type=utils.safe_mkdir, help="""
+  		write PDF output to OUTDIR [default: ./]""")
+	parser.add_argument('--id', '-i', help="""
+		include all runs associated with phylogeny ID""")
+	parser.add_argument('run_ids', metavar='RUN_ID', nargs='*', help="""
+		include the specified list of run IDs""")
+	args = parser.parse_args()
+
+	report(args.outdir, args.id, args.run_ids)
+
+# vim: noexpandtab sw=4 ts=4

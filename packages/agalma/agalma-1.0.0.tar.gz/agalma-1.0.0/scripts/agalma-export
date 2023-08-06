@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+#
+# Agalma - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of Agalma.
+#
+# Agalma is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Agalma is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Agalma.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import os
+import sys
+from agalma import config
+from agalma import database
+from biolite import utils
+
+def export_alignments(args):
+	outdir = utils.safe_mkdir(args.outdir)
+	for id, seq in database.select_alignments(args.RUN_ID):
+		with open(os.path.join(outdir, str(id)+".fa"), "w") as f:
+			f.write(seq)
+
+def export_trees(args):
+	outdir = utils.safe_mkdir(args.outdir)
+	for id, newick in database.select_trees(args.RUN_ID):
+		with open(os.path.join(outdir, str(id)+".newick"), "w") as f:
+			f.write(newick)
+
+if __name__ == "__main__":
+
+	parser = argparse.ArgumentParser(description="""
+		Export data (such as assemblies, trees, and supermatrices) from the
+		Agalma database to a local file.""")
+
+	subparsers = parser.add_subparsers(title="commands")
+
+	alignments_parser = subparsers.add_parser("alignments", help="""
+		Export each alignment from the given run as a fasta file.""")
+	alignments_parser.add_argument("-o", "--outdir", default=".")
+	alignments_parser.add_argument("RUN_ID")
+	alignments_parser.set_defaults(func=export_alignments)
+
+	trees_parser = subparsers.add_parser("trees", help="""
+		Export each tree from the given run as a newick file.""")
+	trees_parser.add_argument("-o", "--outdir", default=".")
+	trees_parser.add_argument("RUN_ID")
+	trees_parser.set_defaults(func=export_trees)
+
+	args = parser.parse_args()
+	args.func(args)
+
+# vim: noexpandtab sw=4 ts=4

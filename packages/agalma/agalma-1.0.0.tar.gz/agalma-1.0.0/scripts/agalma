@@ -1,0 +1,190 @@
+#!/bin/bash
+# Agalma - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+# 
+# This file is part of Agalma.
+# 
+# Agalma is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Agalma is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Agalma.  If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+IFS=","
+resources=($BIOLITE_RESOURCES)
+for resource in ${resources[@]}
+do
+	case "$resource" in
+	threads=*)
+		threads=${resource#threads=}
+		;;
+	memory=*)
+		memory=${resource#memory=}
+		;;
+	esac
+done
+
+if [ -z "$threads" ]
+then
+	threads=$(getconf _NPROCESSORS_ONLN)
+fi
+
+if [ -z "$memory" ]
+then
+	if [ -f /proc/meminfo ]; then
+		memory=$(($(awk -F' ' 'NR==1 {print $2}' /proc/meminfo)/1024))
+	else
+		if [ $(hash sysctl 2>/dev/null) == 0]; then
+			memory=$(($(sysctl -n hw.memsize)/1048576))
+		else
+			memory=1024
+		fi
+	fi
+	memory="$((memory*9/10))M"
+fi
+
+usage() {
+	echo "
+usage: agalma [OPTIONS] COMMAND [ARGS]
+
+OPTIONS:
+ -d path  Set path to database (or set 'AGLAMA_DB=path' in your env)
+ -t n     Use n threads (default: $threads)
+ -m xM    Use x MB of memory (default: $memory)
+
+This is a wrapper script for the various components that come
+with agalma, a suite of tools for de novo assembly and annotation
+of transcriptomes from paired-end sequence data. The following
+commands are available:
+
+  help       Print this help message
+  version    Print the version
+  cite       Print information on citing agalma
+  testdata   Unzip 8MB of test data in the current directory
+  test       Unzip 8MB of test data and run a regression test for both the
+             transciptome and phylogeny pipelines in the current directory
+
+Utilities:
+  catalog       Manage the metadata associated with your sequence data
+  diagnostics   Query the global diagnostics database
+  export        Export data (such as assemblies, trees, and supermatrices) from the
+                Agalma database to a local file
+  matrix2genes  Extract genes from a supermatrix
+
+Reports:
+  report            Generate an HTML report for a single catalog ID
+  resources         Generate an HTML report showing resource usage across a run
+  tabular_report    Generate an HTML report comparing several catalog IDs
+  phylogeny_report  Generate a PDF figure showing reduction in genes
+  export_expression Generates a JSON file containing expression tables, gene trees
+                    and a species tree for downstream analysis in R.
+
+RNA-seq Pipelines:
+  qc            Quality control analysis for raw Illumina reads
+  insert_size   Estimates the insert size of paired-end Illumina data
+  rrna          Identifies ribosomal RNA and filters reads containing it
+  assemble      Assembles Illumina data and removes contaminants
+  import        Imports sequence data into the database
+  translate     Translates nucleotide sequences and annotates them
+  annotate      Annotates imported amino acid sequences
+  expression    Maps reads to an assembly and estimates expression levels
+
+RNA-seq Meta-pipelines:
+  transcriptome  [insert_size, rrna, assemble, translate]
+
+Pylogeny Pipelines:
+  homologize    Clusters homologous sequences across datasets
+  multalign     Multiple alignment of homologous clusters
+  genetree      Builds gene trees for aligned homologous clusters
+  treeinform    Use gene trees to inform assembly by reassigning genes
+  treeprune     Performs monophyly masking and paralogy pruning
+  supermatrix   Concatenates multiple alignments
+  speciestree   Builds species tree from a supermatrix
+
+To print a help message for a specific command, use:
+  agalma COMMAND -h
+"
+	exit ${1:0}
+}
+
+while getopts ":d:t:m:h" opt; do
+	case "$opt" in
+	d)	export AGALMA_DB="$OPTARG"
+		;;
+	t)	threads="$OPTARG"
+		;;
+	m)	memory="$OPTARG"
+		;;
+	h)	usage
+		;;
+	\?)	echo "unrecognized option -$OPTARG"
+		usage 1
+		;;
+	:)	echo "option -$OPTARG requires an argument"
+		usage 1
+		;;
+	esac
+done
+shift $((OPTIND-1))
+
+if [ $# -lt 1 ]; then usage; fi
+
+export BIOLITE_RESOURCES="threads=$threads,memory=$memory"
+
+command=$1
+prefix=$(python -c "import agalma; print agalma.__path__[0]")
+case $command in
+help|-h|--help)
+	usage
+	;;
+cite)
+	python -c "import agalma; print agalma.__cite__"
+	;;
+version)
+	python -c "import agalma; print agalma.__version__"
+	;;
+testdata)
+	cp -v $prefix/testdata/* .
+	;;
+test)
+	shift
+	agalma-test-transcriptome "$@"
+	agalma-test-phylogeny "$@"
+	agalma-test-expression "$@"
+	agalma-test-tutorial "$@"
+	echo "Test ran successfully."
+	;;
+test-*)
+	shift
+	"agalma-${command}" "$@"
+	echo "Test ran successfully."
+	;;
+catalog|diagnostics)
+	shift
+	if [ -n "$AGALMA_DB" ]; then
+		export BIOLITE_RESOURCES="database=$AGALMA_DB"
+	fi
+	"bl-$command" "$@"
+	;;
+export|matrix2genes|export_expression|report|resources|tabular_report|phylogeny_report)
+	shift
+	"agalma-${command/_/-}" "$@"
+	;;
+annotate|assemble|expression|genetree|homologize|insert_size|import|multalign|qc|rrna|speciestree|supermatrix|transcriptome|translate|treeinform|treeprune)
+	shift
+	python "$prefix/${command}.py" "$@"
+	;;
+*)
+	echo "unknown command or pipeline: $command"
+	usage 1
+	;;
+esac

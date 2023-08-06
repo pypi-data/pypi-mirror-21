@@ -1,0 +1,70 @@
+#!/bin/bash
+
+set -e
+
+LEVEL=${1-"1"}
+
+if [ $LEVEL -lt 3 ]; then
+	echo "$0: skipping"
+	exit 0
+fi
+
+DIR=`mktemp -d $PWD/agalma-test-tutorial-XXX`
+
+echo "Created temp directory '$DIR'"
+cd $DIR
+
+mkdir -p agalma/data
+mkdir -p agalma/scratch
+mkdir -p agalma/reports
+export AGALMA_DB=$PWD/agalma/data/agalma.sqlite
+cd agalma/data
+agalma testdata
+agalma catalog insert --paths SRX288285_1.fq SRX288285_2.fq --species "Agalma elegans" --ncbi_id 316166 --itis_id 51383
+export BIOLITE_RESOURCES="threads=8,memory=20G"
+cd ../scratch
+agalma transcriptome --id HWI-ST625-73-C0JUVACXX-7
+agalma report --id HWI-ST625-73-C0JUVACXX-7 --outdir ../reports/HWI-ST625-73-C0JUVACXX-7
+agalma resources --id HWI-ST625-73-C0JUVACXX-7 --outdir ../reports/HWI-ST625-73-C0JUVACXX-7
+cd ../data
+agalma catalog insert --id SRX288285 --paths SRX288285_1.fq SRX288285_2.fq --species "Agalma elegans" --ncbi_id 316166
+agalma catalog insert --id SRX288432 --paths SRX288432_1.fq SRX288432_2.fq --species "Craseoa lathetica" --ncbi_id 316205
+agalma catalog insert --id SRX288431 --paths SRX288431_1.fq SRX288431_2.fq --species "Physalia physalis" --ncbi_id 168775
+agalma catalog insert --id SRX288430 --paths SRX288430_1.fq SRX288430_2.fq --species "Nanomia bijuga" --ncbi_id 168759
+agalma catalog insert --id JGI_NEMVEC --paths JGI_NEMVEC.fa --species "Nematostella vectensis" --ncbi_id 45351
+cd ../scratch
+agalma assemble --id SRX288285
+agalma assemble --id SRX288430
+agalma assemble --id SRX288431
+agalma assemble --id SRX288432
+agalma translate --id SRX288285
+agalma translate --id SRX288430
+agalma translate --id SRX288431
+agalma translate --id SRX288432
+agalma import --id JGI_NEMVEC --seq_type aa
+agalma annotate --id JGI_NEMVEC
+agalma homologize --id PhylogenyTest
+agalma multalign --id PhylogenyTest
+agalma genetree --id PhylogenyTest
+agalma treeinform --id PhylogenyTest
+agalma homologize --id PhylogenyTest
+agalma multalign --id PhylogenyTest
+agalma genetree --id PhylogenyTest
+agalma treeprune --id PhylogenyTest
+agalma multalign --id PhylogenyTest
+agalma supermatrix --id PhylogenyTest
+agalma speciestree --id PhylogenyTest --outgroup "Nematostella vectensis"
+agalma report --id PhylogenyTest --outdir ../reports/PhylogenyTest
+agalma resources --id PhylogenyTest --outdir ../reports/PhylogenyTest
+agalma phylogeny_report --id PhylogenyTest --outdir ../reports/PhylogenyTest
+agalma diagnostics list
+cd ../data
+agalma catalog insert --id SRX033366 --paths SRX033366.fq --species "Nanomia bijuga" --ncbi_id 168759 --itis_id 51389 --treatment gastrozooids --individual specimen-1
+agalma catalog insert --id SRX036876 --paths SRX036876.fq --species "Nanomia bijuga" --ncbi_id 168759 --itis_id 51389 --treatment gastrozooids --individual specimen-2
+cd ../scratch
+agalma expression --id SRX033366 SRX288430
+agalma expression --id SRX036876 SRX288430
+agalma report --id SRX033366 --outdir ../reports/SRX033366
+agalma report --id SRX036876 --outdir ../reports/SRX036876
+IDS=$(agalma diagnostics runid -n assemble -i SRX288430)
+agalma export_expression --sequences $IDS >../reports/export.json

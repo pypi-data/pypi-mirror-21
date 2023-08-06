@@ -1,0 +1,292 @@
+#!/usr/bin/env python
+#
+# Agalma - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of Agalma.
+#
+# Agalma is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Agalma is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Agalma.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import codecs
+import os
+import re
+import sys
+
+from collections import namedtuple, defaultdict
+from copy import deepcopy
+
+from biolite import catalog
+from biolite import diagnostics
+from biolite import report
+from biolite import utils
+
+from agalma import config
+from agalma import agalma_report
+from agalma import insert_size
+from agalma import rrna
+from agalma import assemble
+
+
+catalog_schema = [
+	('id', "Catalog ID"),
+	('species', "Species (ITIS ID)"),
+	('library_id', "Library ID"),
+	('note', "Note"),
+	('sample_prep', "Sample Prep")]
+
+profile_schema = report.profile_schema[2:]
+profile_aggregators = report.profile_aggregators
+
+Group = namedtuple('Group', "name entity fields")
+
+groups = (
+	(insert_size, 'insert', report.insert_schema),
+	(rrna, 'exclude', report.exclude_schema),
+	(assemble, 'filter', report.filter_schema),
+	(assemble, 'transcripts', assemble.transcripts_schema))
+
+def csv_str(value):
+	"""Reformat CSV output for easy import into R."""
+	s = unicode(value)
+	if s == u'-' or s == u'None' or s == u'':
+		# Change blank values to the special string 'NA'.
+		return u'NA'
+	else:
+		# Remove percent signs and commas from all values.
+		return s.replace('%', '').replace(',','')
+
+def csv_header(name, schema):
+	"""Writes header as 'name.field_title' with spaces as underscores."""
+	return [csv_str('%s.%s' % (name, field[1].replace(' ', '_').lower())) \
+														for field in schema]
+
+def profile_aggregate(profiles):
+	profile = list()
+	agg = report.profile_aggregate(profiles)
+	for field in profile_schema:
+		if field.key in profile_aggregators:
+			try:
+				profile.append(field.format.format(field.type(agg[field.key])))
+			except:
+				profile.append('-')
+	return profile
+
+def print_headers(html, csv):
+	# print header of pipelines
+	html += [
+		"<tr><th colspan=\"1\"><h4>Run</h4></th>",
+		"<th colspan=\"{:d}\"><h4>catalog</h4></th>".format(len(catalog_schema))]
+	for pipeline, _, schema in groups:
+		html.append(
+			"<th colspan=\"{}\"><h5><em>{}</em></h5></th>".format(int(len(schema)), pipeline.__name__))
+	html += [
+		"<th colspan=\"{:d}\"><h4>profile_aggregate</h4></th>".format(len(profile_schema)),
+		"</tr>"]
+
+	# print header with fields for each pipeline
+	html.append("<tr><th><h6>ID</h6></th>")
+	csv.append(['ID'])
+	html += ["<th><h6>{}</h6></th>".format(field[1]) for field in catalog_schema]
+	csv[-1] += csv_header('catalog', catalog_schema)
+	for pipeline, _, schema in groups:
+		html += ["<th><h6>{}</h6></th>".format(field.title) for field in schema]
+		csv[-1] += csv_header(pipeline.__name__, schema)
+	html += ["<th><h6>{}</h6></th>".format(field.title) for field in profile_schema]
+	csv[-1] += csv_header('profile_aggregate', profile_schema)
+	html.append("</tr>")
+
+def row(id, run_id):
+	cells = list()
+	profiles = list()
+	nfound = 0
+	for pipeline, entity, schema in groups:
+		run_report = pipeline.Report(id, run_id)
+		for field in schema:
+			try:
+				data = run_report.data[entity]
+				cells.append(field.format.format(field.type(data[field.key])))
+				nfound += 1
+			except KeyError:
+				cells.append('-')
+		profiles += run_report.data.get('profile', {}).values()
+	if nfound:
+		cells += profile_aggregate(profiles)
+		return cells
+	else:
+		return None
+
+def row_one_line(id, run_ids):
+	nfound = 0
+	cells = list()
+	profiles = list()
+	# fill in cells list with blanks
+	for _, _, schema in groups:
+		for _ in schema:
+			cells.append('-')
+	for run_id in run_ids:
+		# Reset cell index for each run_id processed
+		i = 0
+		for pipeline, entity, schema in groups:
+			run_report = pipeline.Report(id, run_id)
+			for field in schema:
+				try:
+					data = run_report.data[entity]
+					cells[i] = field.format.format(field.type(data[field.key]))
+					nfound += 1
+				except KeyError:
+					pass
+				# Try the next cell
+				i += 1
+			profiles += run_report.data.get('profile', {}).values()
+	if nfound:
+		cells += profile_aggregate(profiles)
+		return cells
+	else:
+		return None
+
+def print_row(html, csv, cells, id, run_id, name):
+	html.append("<tr><td>{}</td>".format(run_id))
+	csv.append([csv_str(run_id)])
+	record = catalog.select(id)
+	if not record:
+		record = catalog.make_record(id=id)
+	csv[-1] += map(csv_str, [getattr(record, f[0]) for f in catalog_schema])
+	csv[-1] += map(csv_str, cells)
+	# Insert URLs into HTML output.
+	record = record._asdict()
+	record['id'] = "<a href=\"./{0}/index.html\">{0}</a>".format(record['id'])
+	record['itis_id'] = "<a href=\"http://www.itis.gov/servlet/SingleRpt/SingleRpt?search_topic=TSN&search_value={0}\">{0}</a>".format(record['itis_id'])
+	record['species'] = "<em>%s</em> <small>(%s)</small>" % (record['species'], record['itis_id'])
+	html += ['<td class="collapsed" onclick="toggle_cell(this)">%s</td>' % record[f[0]] for f in catalog_schema]
+	html += map("<td class=\"right\">{}</td>".format, cells)
+	html.append("</tr>")
+
+def tabular_report(outdir, run_ids, all_reports=False, show_hidden=False, one_line=False):
+	outdir = os.path.abspath(outdir)
+	utils.safe_mkdir(outdir)
+
+	if run_ids:
+		runs = map(diagnostics.lookup_run, run_ids)
+	else:
+		runs = diagnostics.lookup_runs()
+
+	if one_line:
+		ids = defaultdict(list)
+		for run in runs:
+			if (not show_hidden) and run.hidden > 0:
+				utils.info("skipping hidden run %d" % run.id)
+				continue
+			ids[run.catalog_id].append(run)
+	else:
+		ids = set()
+
+	html = ["""<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Agalma Diagnostics</title>
+<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+<style>
+#container {padding: 20px;}
+.sticky {
+ position: -webkit-sticky;
+ position: -moz-sticky;
+ position: -ms-sticky;
+ position: -o-sticky;
+ top: 15px;
+}
+th, td { white-space: nowrap; border: 1px solid #ddd; }
+tr td {
+ line-height: 20px;
+ font-size: 13px;
+ font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+}
+td.right {text-align:right;}
+tr td.collapsed:not(.open_cell) {
+ overflow: hidden;
+ text-overflow: ellipsis;
+ max-width: 200px;
+}
+</style>
+<script type="text/javascript">
+function toggle_cell (cell) {
+  cell.classList.toggle('open_cell');
+}
+</script>
+</head>
+<body>
+<div id="container">
+<table class="table table-striped">"""]
+	csv = []
+
+	print_headers(html, csv)
+
+	if one_line:
+		for id, runs in ids.iteritems():
+			run_ids = [run.id for run in runs]
+			print "%s %s" % (id, str(run_ids))
+			cells = row_one_line(id, run_ids)
+			if cells:
+				print_row(html, csv, cells, id,
+					','.join(utils.number_range(run_ids)),
+					','.join(run.name for run in runs))
+	else:
+		for run in runs:
+			if (not show_hidden) and run.hidden > 0:
+				utils.info("skipping hidden run %d" % run.id)
+				continue
+			ids.add(run.catalog_id)
+			cells = row(run.catalog_id, run.id)
+			if cells:
+				print_row(html, csv, cells, run.catalog_id, run.id, run.name)
+
+	html.append("</table></div></body></html>")
+
+	# Final output.
+	with codecs.open(os.path.join(outdir, 'index.html'), 'w', 'utf-8') as f:
+		f.write('\n'.join(line.replace('\t','') for line in html if line))
+	with codecs.open(os.path.join(outdir, 'index.csv'), 'w', 'utf-8') as f:
+		f.write('\n'.join(map(','.join, csv)))
+	report.copy_css(outdir)
+
+	# Generate reports for each catalog ID.
+	if all_reports:
+		for id in ids:
+			print "Generating report for catalog ID '{}'".format(id)
+			try:
+				agalma_report.report_runs(str(id), os.path.join(outdir, str(id)),
+					show_hidden=show_hidden, bootstrap_css='../css/bootstrap.min.css')
+			except:
+				utils.info("Error gernerating report for '{}'".format(id))
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description="""
+		Generates an HTML report comparing in tabular format all runs in the
+		agalma diagnostics database (by default), or of only the specified list
+		of RUN_IDs.""")
+	parser.add_argument('--outdir', '-o', default='./', help="""
+  		write HTML output to OUTDIR [default: ./]""")
+	parser.add_argument('--line', '-l', action='store_true', help="""
+		one line per catalog ID, with the most recent runs of each pipeline""")
+	parser.add_argument('--all', '-a', action='store_true', help="""
+		in addition to the tabular report, generate and link to individual
+		reports for each catalog ID [warning: increases runtime]""")
+	parser.add_argument('--hidden', action='store_true', help="""
+		include runs that are marked as hidden [default: False]""")
+	parser.add_argument('run_ids', metavar='RUN_ID', nargs='*', help="""
+		include only the specified list of run IDs""")
+	args = parser.parse_args()
+	tabular_report(args.outdir, args.run_ids, args.all, args.hidden, args.line)
+
+# vim: noexpandtab sw=4 ts=4

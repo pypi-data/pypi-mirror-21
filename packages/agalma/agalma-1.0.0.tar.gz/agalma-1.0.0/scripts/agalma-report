@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+#
+# Agalma - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of Agalma.
+#
+# Agalma is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Agalma is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Agalma.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+from agalma import agalma_report
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description="""
+		Generates an HTML report of all runs in the agalma diagnostics database
+		for the given agalma catalog ID (by default), or of only the specific
+		list of RUN_IDS""")
+	parser.add_argument('--outdir', '-o', default='./', help="""
+  		write HTML output to OUTDIR [default: ./]""")
+	parser.add_argument('--verbose', '-v', action='store_true', help="""
+		include verbose output with additional plots and information, but
+		with a longer report generation time [default: False]""")
+	parser.add_argument('--hidden', action='store_true', help="""
+		include runs that are marked as hidden [default: False]""")
+	parser.add_argument('--id', '-i', metavar='ID', help="""
+		catalog ID""")
+	parser.add_argument('run_ids', metavar='RUN_ID', nargs='*', help="""
+		include only the specified list of run IDs""")
+	args = parser.parse_args()
+	agalma_report.report_runs(args.id, args.outdir, args.run_ids, args.verbose, args.hidden)
+
+# vim: noexpandtab sw=4 ts=4

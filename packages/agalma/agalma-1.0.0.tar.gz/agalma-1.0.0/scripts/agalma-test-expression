@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -e
+
+TESTDATA=$(python -c "import agalma; print agalma.__path__[0]")/testdata
+LEVEL=${1-"1"}
+DIR=`mktemp -d $PWD/agalma-test-expression-XXX`
+
+echo "Created temp directory '$DIR'"
+cd $DIR
+
+export AGALMA_DB=$DIR/agalma.sqlite
+
+agalma catalog insert --id "SRX033366" --paths $TESTDATA/SRX033366.fq --species "Nanomia bijuga" --ncbi_id "168759" --library_id "SRR081276" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina Genome Analyzer IIx" --seq_center "Dunnlab" --note "mRNA directly extracted from youngest gastrozooids from Nanomia bijuga specimen #1" --sample_prep "Illumina mRNA-seq sample kit (#RS-930-1001, Illumina Inc.)" --treatment "gastrozooids" --individual "specimen-1"
+agalma catalog insert --id "SRX036876" --paths $TESTDATA/SRX036876.fq --species "Nanomia bijuga" --ncbi_id "168759" --library_id "SRR089297" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina Genome Analyzer IIx" --seq_center "Dunnlab" --note "mRNA directly extracted from youngest gastrozooids from Nanomia bijuga specimen #2" --sample_prep "Illumina mRNA-seq sample kit (#RS-930-1001, Illumina Inc.)" --treatment "gastrozooids" --individual "specimen-2"
+agalma catalog insert --id "SRX288430" --paths $TESTDATA/SRX288430_1.fq $TESTDATA/SRX288430_2.fq --species "Nanomia bijuga" --ncbi_id 168759
+
+cd $DIR
+
+agalma qc --id SRX288430
+agalma transcriptome --id SRX288430
+
+for ID in SRX033366 SRX036876
+do
+	agalma qc --id $ID
+	agalma expression --id $ID SRX288430
+	agalma report --id $ID --outdir report-$ID
+done
+
+IDS=$(agalma diagnostics runid -n transcriptome)
+agalma export_expression --sequences $IDS >export.json

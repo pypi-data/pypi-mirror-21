@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+# Agalma - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+# 
+# This file is part of Agalma.
+# 
+# Agalma is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Agalma is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Agalma.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Extracts individual genes from a supermatrix in PHYLIP format. Only extracts
+cells from the matrix that are not all gaps. Exports the AA sequences in
+FASTA format to stdout, with the filename, species, and partition offset as
+the header.
+"""
+
+import sys
+import os
+
+from Bio import AlignIO
+
+if len(sys.argv) < 3:
+	print >>sys.stderr, "\nusage: %s <supermatrix.phy> <partitions.txt>\n%s" % (
+		os.path.basename(sys.argv[0]), __doc__)
+	sys.exit(0)
+
+filename = os.path.basename(sys.argv[1])
+alignment = AlignIO.read(open(sys.argv[1]), 'phylip-relaxed')
+
+partition = []
+for line in open(sys.argv[2]):
+	# Parse the range specifier in the RAxML partition format:
+	#  WAG,genename=i-j
+	# and decrement i by one to get 0-based, exclusive ranges.
+	i, j = map(int, line.rstrip().partition('=')[2].split('-'))
+	partition.append((i-1, j))
+
+for record in alignment:
+	for i, j in partition:
+		seq = str(record.seq[i:j]).strip('-').replace('-', 'X')
+		if seq:
+			print '>%s|%s|%d' % (filename, record.id.replace(' ', '_'), i)
+			print seq
+
+# vim: noexpandtab sw=4 ts=4

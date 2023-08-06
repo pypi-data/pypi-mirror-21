@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -e
+
+TESTDATA=$(python -c "import agalma; print agalma.__path__[0]")/testdata
+LEVEL=${1-"1"}
+DIR=`mktemp -d $PWD/agalma-test-phylogeny-XXX`
+
+echo "Created temp directory '$DIR'"
+cd $DIR
+
+export AGALMA_DB=$DIR/agalma.sqlite
+
+agalma catalog insert --id "SRX288285" --paths $TESTDATA/SRX288432_1.fq $TESTDATA/SRX288432_2.fq --species "Agalma elegans" --ncbi_id "316166" --library_id "SRR871526" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina HiSeq 2000" --seq_center "Dunnlab" --sample_prep "Trizol | Illumina TruSeq RNA Sample Prep Kit RNA Purification Beads ; 2 rounds | Illumina TruSeq RNA Sample Prep Kit"
+agalma catalog insert --id "SRX288432" --paths $TESTDATA/SRX288432_1.fq $TESTDATA/SRX288432_2.fq --species "Craseoa lathetica" --ncbi_id "316205" --library_id "SRR871529" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina HiSeq 2000" --seq_center "Dunnlab" --sample_prep "Invitrogen Dynabeads mRNA TESTDATAECT kit ; 1 round | Illumina TruSeq RNA Sample Prep Kit"
+agalma catalog insert --id "SRX288431" --paths $TESTDATA/SRX288431_1.fq $TESTDATA/SRX288431_2.fq --species "Physalia physalis" --ncbi_id "168775" --library_id "SRR871528" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina HiSeq 2000" --seq_center "Dunnlab" --sample_prep "Trizol | Illumina TruSeq RNA Sample Prep Kit RNA Purification Beads ; 2 rounds | Illumina TruSeq RNA Sample Prep Kit"
+agalma catalog insert --id "SRX288430" --paths $TESTDATA/SRX288430_1.fq $TESTDATA/SRX288430_2.fq --species "Nanomia bijuga" --ncbi_id "168759" --library_id "SRR871527" --library_type "TRANSCRIPTOMIC" --sequencer "Illumina HiSeq 2000" --seq_center "Dunnlab" --sample_prep "Trizol | Invitrogen Dynabeads mRNA Purification Kit ; 2 rounds | Illumina TruSeq RNA Sample Prep Kit"
+agalma catalog insert --id "JGI_NEMVEC" --paths $TESTDATA/JGI_NEMVEC.fa --species "Nematostella vectensis" --ncbi_id "45351" --itis_id "52498" --library_type "genome" --note "Gene predictions from genome sequencing"
+agalma catalog insert --id "NCBI_HYDMAG" --paths $TESTDATA/NCBI_HYDMAG.pfa --species "Hydra magnipapillata" --ncbi_id "6085" --itis_id "50845" --library_type "genome" --note "Gene predictions from genome sequencing"
+
+cd $DIR
+
+for ID in SRX288285 SRX288430 SRX288431 SRX288432
+do
+	agalma assemble --id $ID
+	agalma translate --id $ID
+done
+
+for ID in JGI_NEMVEC
+do
+	agalma import --id $ID
+	agalma translate --id $ID
+	agalma annotate --id $ID
+done
+
+for ID in NCBI_HYDMAG
+do
+	agalma import --id $ID --seq_type aa
+	agalma annotate --id $ID
+done
+
+ID=AllByAllTest
+
+agalma homologize --id $ID
+agalma multalign --id $ID
+agalma genetree --id $ID
+agalma treeinform --id $ID
+agalma homologize --id $ID
+agalma multalign --id $ID
+
+if [ $LEVEL -gt 1 ]; then
+agalma genetree --id $ID --bootstrap 10
+else
+agalma genetree --id $ID
+fi
+
+agalma treeprune --id $ID
+agalma multalign --id $ID
+
+if [ $LEVEL -gt 1 ]; then
+agalma supermatrix --id $ID --proportion 0.5
+fi
+
+agalma supermatrix --id $ID
+
+if [ $LEVEL -gt 1 ]; then
+agalma speciestree --id $ID --outgroup Nematostella_vectensis
+else
+agalma speciestree --id $ID
+agalma speciestree --id $ID --outgroup Nematostella_vectensis --bootstrap 10
+fi
+
+agalma report --id $ID --outdir report
+agalma resources --id $ID --outdir report
+agalma phylogeny_report --id $ID --outdir report
