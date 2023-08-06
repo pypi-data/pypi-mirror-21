@@ -1,0 +1,60 @@
+{% extends "constellation_base/base.html" %}
+{% block title %}{{ template_settings.organization }} -- Vote{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_vote/css/vote.css' %}">
+{% endblock %}
+
+{% block js %}
+<div id="message-toast" class="mdl-js-snackbar mdl-snackbar">
+  <div class="mdl-snackbar__text"></div>
+  <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{{ block.super }}
+{% load static %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/Sortable/1.5.1/Sortable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+{% load get_item %}
+<script>
+{% if poll.MECHANISMS|get_item:poll.mechanism|get_item:"limit_ballot" %}
+const maxWinners = {{ poll.required_winners }};
+{% endif %}
+
+const urlResults = "{% url 'constellation_vote:view_poll_results' poll.pk %}";
+</script>
+<script src="{% static 'constellation_vote/js/ballot.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mdl-grid board" id="board" style="width:100%">
+  <div class="mdl-cell mdl-cell--12-col mdl-shadow--2dp mdl-card mdl-grid mdl-card" id="poll-pane">
+    <div class="mdl-card__title">
+      <h2 class="mdl-card__title-text">{{ poll.title }}</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+      {{ poll.desc|safe|linebreaksbr }}
+    </div>
+    <div id="source-box-container" class="mdl-cell mdl-cell--6-col">
+      <h4>Candidates</h4>
+      <div id="source-box" class="source-box">
+        {% for option in poll_options %}{% include "constellation_vote/ballotItem.html" %}{% endfor %}
+      </div>
+    </div>
+    <div id="dest-box-container" class="mdl-cell mdl-cell--6-col">
+      <h4>Ballot</h4>
+      <div id="dest-box" class="dest-box mdl-shadow--4dp">
+        {% for option in selected_options %}{% include "constellation_vote/ballotItem.html" %}{% endfor %}
+      </div>
+      <br/>
+      {% if can_cast %}
+      <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" onclick="submitPoll()">
+        Submit Ballot
+      </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

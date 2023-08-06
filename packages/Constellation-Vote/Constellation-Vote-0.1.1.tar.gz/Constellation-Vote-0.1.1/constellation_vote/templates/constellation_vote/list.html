@@ -1,0 +1,53 @@
+{% extends "constellation_base/base.html" %}
+{% load guardian_tags %}
+{% block title %}Vote | List {{ list_type }}{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_vote/css/vote.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="voteCard" class="mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">Polls</h2>
+    </div>
+    {% if perms.constellation_vote.add_poll %}
+    <div class="mdl-card__menu">
+        <a href="{% url 'constellation_vote:manage_poll' %}">
+            <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+                <i class="material-icons">add</i>
+            </button>
+        </a>
+    </div>
+    {% endif %}
+    <div class="mdl-card__supporting-text">
+        <div class="mdl-list">
+            {% for item in polls %}
+            <div class="mdl-list__item">
+                <span class="mdl-list__item-primary-content">
+                    <a href="{% url 'constellation_vote:view_ballot' item.id|safe %}">{{ item.title }}</a>
+                    {% if item.ends is not None %}
+                    &nbsp;<small><em>Closes: {{ item.ends }}</em></small>
+                    {% endif %}
+                </span>
+                <span class="mdl-list__item-secondary-content">
+                    <span class="mdl-list__item-secondary-action">
+                        {% get_obj_perms request.user for item as "poll_perms" %}
+                        {% if "poll_owned_by" in poll_perms %}
+                        <a href="{% url 'constellation_vote:manage_poll' item.id|safe %}"><i class="material-icons">edit</i></a>
+                        {% endif %}
+                        {% if item.results_visible or "poll_owned_by" in poll_perms %}
+                        <a href="{% url 'constellation_vote:view_poll_results' item.id|safe %}"><i class="material-icons">poll</i></a>
+                        {% endif %}
+                    </span>
+                </span>
+            </div>
+            {% empty %}
+            There are no polls at this time.
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
