@@ -1,0 +1,106 @@
+{% extends "../bootstrap/layout.html" %}
+
+{%- block extrahead %}
+    <!-- Extra header for Murdock -->
+    <!-- Load DataTables (https://datatables.net). -->
+    <link rel="stylesheet" type="text/css"
+        href="_static/DataTables/datatables.min.css"/>
+    <script type="text/javascript" src="_static/DataTables/datatables.min.js">
+    </script>
+    <!-- Load Slimbox 2 (http://www.digitalia.be/software/slimbox2). -->
+    <link rel="stylesheet" href="_static/slimbox/slimbox2.css" type="text/css"
+        media="screen"/>
+    <!-- Customize CSS styling for Murdock reports. -->
+    <style type="text/css" title="currentStyle">
+        /* Style main container. */
+        .container {
+            width: 100% !important;
+        }
+        /* Style section headlines. */
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        /* Style subsection headlines. */
+        h3 {
+            font-size: 18px;
+            line-height: 18px;
+            margin: 0px 0px 10px 0px;
+        }
+        /* Style citations. */
+        cite {
+            font-style: italic;
+        }
+        /* Style images. */
+        img {
+            max-height: 300px
+        }
+        /* Style table fields (workaround for DataTables `nowrap`). */
+        td {
+            white-space: nowrap
+        }
+        /* Style section and subsection content. */
+        .section > .section > p, .section > p {
+            padding-left: 10px;
+            font-size: 14px;
+        }
+        /* Style section content (inline blocks). */
+        .section > .section {
+            width: 100%;
+            display: inline-block;
+        }
+        /* Style subsection content (floating frames). */
+        .section > .section > .section {
+            float: left;
+            border: 1px solid lightgray;
+            border-radius: 5px;
+            box-shadow: 6px 6px 4px gray;
+            padding: 10px;
+            margin: 0px 20px 30px 10px;
+            width: -moz-fit-content;
+            width: -webkit-fit-content;
+            width: fit-content;
+            max-width: 100% !important;
+        }
+    </style>
+    <!-- Customize JavaScript features for Murdock reports. -->
+    <script type="text/javascript" charset="utf-8">
+        // Set DataTables default options.
+        $.extend(true, $.fn.dataTable.defaults, {
+            "searching": false,
+            "paging": false,
+            "scrollX": true,
+            "bInfo": false,
+            "nowrap": true, // does not work, needs fix
+            "hover": true // does not work, needs fix
+        } );
+        $(document).ready(function() {
+            // Set DataTables options for CSS class `table-murdock-default`.
+            $("table.table-murdock-default").DataTable( {
+                "stripe": false,
+                "ordering": false,
+            } );
+            // Set DataTables options for CSS class `table-murdock-slim`.
+            $("table.table-murdock-slim").DataTable( {
+                "stripe": true, // does not work, needs fix
+                "ordering": false,
+            } );
+            // Set DataTables options for CSS class `table-murdock-large`.
+            $("table.table-murdock-large").DataTable( {
+                "stripe": true, // does not work, needs fix
+                "ordering": true,
+                "dom": "frtipB",
+                "buttons": [
+                    'colvis', 'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+                "scrollY": "50vh",
+                "scrollCollapse": true,
+                "select": "multi",
+            } );
+            // Mark pictures in tables for `slimbox` handling.
+            $("td a").attr("rel", "lightbox");
+        } );
+    </script>
+    <!-- Activate slimbox. -->
+    <script type="text/javascript" src="_static/slimbox/slimbox2.js"></script>
+{% endblock %}
