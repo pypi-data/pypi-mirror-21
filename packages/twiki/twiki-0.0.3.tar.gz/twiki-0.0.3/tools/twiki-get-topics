@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+#
+# Author: Pablo Saavedra
+# Maintainer: Pablo Saavedra
+# Contact: psaavedra at igalia.com
+
+import argparse
+from twiki import utils
+
+## vars #############################################################
+conffile = "twiki.cfg"
+outputfile = "output.csv"
+web = None
+
+## command line options parser #######################################
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--conffile", dest="conffile", default=conffile,
+                    help="Conffile (default: %s)" % conffile)
+parser.add_argument("-o", "--outputfile", dest="outputfile", default=outputfile,
+                    help="Output file (default: %s)" % outputfile)
+parser.add_argument("-w", "--web", dest="web",
+                    default=web,
+                    help="web (default: %s)" % web)
+a = parser.parse_args()
+
+# setting up #########################################################
+settings = utils.get_default_settings()
+utils.setup(a.conffile, settings)
+
+## main ##############################################################
+if __name__ == '__main__':
+    t = utils.Twiki(settings)
+    with open(a.outputfile, 'wb') as outputfile_d:
+        for topic in t.get_topics(a.web):
+            outputfile_d.write("\"%s\",\n" % topic)
