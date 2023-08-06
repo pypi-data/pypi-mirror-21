@@ -1,0 +1,62 @@
+{
+   "sparks":[
+       {
+          "id": "vpc",
+          "description": "allspark virtual network",
+          "infra": {
+             "src": "github.com/broomyocymru/tf_azurerm_allspark_vpc",
+             "params": {
+               "name" : "<name>"
+             },
+             "list_params": {
+               "subnet_names": ["web", "biz", "data"],
+               "subnets": ["11.10.0.0", "11.11.0.0", "11.12.0.0"]
+             },
+             "outputs": {
+                "<name>_vpc_out": "${module.<name>.allspark_data}"
+             }
+          }
+       },
+       {
+          "id": "vdi",
+          "description": "Virtual Desktop",
+          "infra": {
+             "src": "github.com/broomyocymru/tf_azurerm_allspark_vm",
+             "params": {
+               "name" : "<name>",
+               "vm": "desktop_win10"
+             },
+             "list_params": {
+                "vpc_inbound_ports": ["22", "3389"]
+             },
+             "outputs": {
+                "<name>_vm_out": "${module.<name>.allspark_data}"
+             }
+          }
+       },
+       {
+         "id": "jenkins",
+         "description": "Jenkins v2",
+         "infra": {
+            "src": "github.com/broomyocymru/tf_azurerm_allspark_vm",
+            "params": {
+              "allspark": "${module.<vpc>.allspark_data}",
+              "bastion": "${module.<vpc>.bastion_data}",
+              "username": "<random_username>",
+              "password": "<random_password>",
+              "role"    : "jenkins2",
+              "subnet"  : "admin"
+            },
+            "list_params": {
+                "vpc_inbound_ports": ["22", "80", "443"]
+            },
+            "outputs": {
+              "<name>_vm_out": "${module.<name>.allspark_data}"
+            }
+         },
+         "software": {
+            "src": "https://github.com/broomyocymru/allspark.common"
+         }
+      }
+   ]
+}
