@@ -1,0 +1,96 @@
+Metadata-Version: 2.0
+Name: wide-product
+Version: 0.0.1
+Summary: Wide (partial Khatri-Rao) sparse matrix product
+Home-page: https://github.com/thread/wide-product
+Author: Thread Tech
+Author-email: tech@thread.com
+License: MIT
+Keywords: numpy,scipy,matrix,sparse,khatri-rao,product,science,feature,courgette
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Natural Language :: English
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: Topic :: Software Development :: Libraries
+Requires-Dist: numpy
+Requires-Dist: scipy
+
+wide-product
+============
+
+`wide-product` implements a partial, column-wise Khatri-Rao product. It is fast,
+and works on sparse matrices.
+
+It can be useful for engineering of cross-features for machine learning.
+
+Definition
+----------
+
+For a pair of scalars (~ one by one matrices), the wide product is
+multiplication:
+
+.. code:: python
+
+  wide_product ( [[a]], [[b]] ) == [[a * b]]
+
+Where matrices are constructed by *vertical stacking*, the product is row-wise:
+
+.. code:: python
+
+    wide_product ( vstack((A, B)), vstack((C, D)) ) ==
+        vstack((wide_product(A, C),
+                wide_product(B, D)))
+
+Where matrices are constructed by *horizontal stacking*, the product contains
+all the products of the subcomponents up to permutation of columns:
+
+.. code:: python
+
+    wide_product ( hstack((A, B)), hstack((C, D)) ) ==
+        hstack((wide_product(A, C),
+                wide_product(A, D),
+                wide_product(B, C),
+                wide_product(B, D)))
+
+Installation
+------------
+
+.. code:: bash
+
+  pip install wide-product
+
+Development
+-----------
+
+To build the module:
+
+.. code:: bash
+
+  python setup.py build
+
+To test:
+
+.. code:: bash
+
+  PYTHONPATH=$(echo build/lib*):. py.test
+
+To install:
+
+.. code:: bash
+
+  pip install .
+
+
