@@ -1,0 +1,18 @@
+---
+
+- hosts: service-deploy
+  become: yes
+  tasks:
+    - include: deploy.yml
+    - include: crontab.yml
+
+  handlers:
+    - name: Restart rsyslog
+      service:
+        name: rsyslog
+        state: restarted
+
+    - name: Restart service
+      supervisorctl:
+        name: "{{ app_name }}"
+        state: restarted

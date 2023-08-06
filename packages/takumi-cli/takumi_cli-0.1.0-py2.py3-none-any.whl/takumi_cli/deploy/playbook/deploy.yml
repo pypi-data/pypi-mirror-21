@@ -1,0 +1,124 @@
+---
+
+# Takumi services are owned by www-data:www-data
+- name: Create www-data group
+  group: name=www-data state=present
+  tags: deploy
+- name: Create www-data user
+  user: name=www-data group=www-data createhome=no
+  tags: deploy
+
+- name: Create working directory
+  file:
+    path: /srv/{{ app_name }}
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: 0755
+  tags: deploy
+
+- name: Checkout to temp dir
+  become: no
+  local_action:
+    module: git
+    repo: '{{ app_repo }}'
+    dest: /tmp/{{ app_name }}
+    version: '{{ version }}'
+  tags: deploy
+  register: checkout_result
+
+- name: Save commit file
+  become: no
+  local_action:
+    module: lineinfile
+    dest: /tmp/{{ app_name }}/.commit
+    regexp: '^'
+    create: yes
+    line: "{{ checkout_result.after }}"
+  tags: deploy
+
+- name: Synchronize application
+  synchronize:
+    src: /tmp/{{ app_name }}/
+    dest: /srv/{{ app_name }}
+    delete: yes
+    checksum: yes
+    archive: no
+    recursive: yes
+    rsync_opts:
+      - "--filter='+ .commit'"
+      - "--filter='- env.yaml'"
+      - "--filter='- hosts'"
+      - "--filter='- .git/'"
+      - "--filter=':- .gitignore'"
+  tags: deploy,sync
+  notify: Restart service
+
+- name: Change application owner to www-data
+  file:
+    dest: /srv/{{ app_name }}
+    recurse: yes
+    owner: www-data
+    group: www-data
+  tags: deploy
+
+- name: Create virtualenv
+  pip:
+    name: IPython
+    chdir: /srv/{{ app_name }}
+    virtualenv: /srv/{{ app_name }}_venv
+    virtualenv_python: "{{ python_version | default('python3') }}"
+  tags: deploy,venv
+
+- name: Pip install
+  pip:
+    chdir: /srv/{{ app_name }}
+    requirements: requirements.txt
+    executable: /srv/{{ app_name }}_venv/bin/pip
+    extra_args: "-i {{ pypi | default('https://pypi.douban.com/simple') }}"
+  tags: deploy,req
+  notify: Restart service
+
+- name: Create log directory
+  file:
+    path: /var/log/{{ app_name }}
+    state: directory
+    owner: syslog
+    group: adm
+    mode: 0755
+  tags: deploy
+
+- name: Sync logrotate config
+  template:
+    src: files/logrotate.j2
+    dest: /etc/logrotate.d/{{ app_name }}
+    owner: root
+    group: root
+    mode: 0644
+  tags: deploy
+
+- name: Config rsyslog
+  template:
+    src: files/rsyslog.j2
+    dest: /etc/rsyslog.d/20-{{ app_name }}.conf
+    owner: syslog
+    group: adm
+    mode: 0644
+  tags: deploy
+  notify: Restart rsyslog
+
+- name: Add supervisor config
+  template:
+    src: files/supervisor.j2
+    dest: /etc/supervisord.d/{{ app_name }}.ini
+    owner: root
+    group: root
+    mode: 0644
+  tags: deploy
+  notify: Restart service
+
+- name: Add service to supervisor
+  supervisorctl:
+    name: "{{ app_name }}"
+    state: present
+  tags: deploy

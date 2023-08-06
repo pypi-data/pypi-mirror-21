@@ -1,0 +1,17 @@
+---
+
+- name: Install cron jobs
+  cron:
+    name: "{{ item.name }}"
+    minute: "{{ item.get('minute', '*') }}"
+    hour: "{{ item.get('hour', '*') }}"
+    day: "{{ item.get('day', '*') }}"
+    weekday: "{{ item.get('weekday', '*') }}"
+    month: "{{ item.get('month', '*') }}"
+    job: "{{ item.work_job }}"
+    user: www-data
+    cron_file: "{{ app_name }}"
+    state: "{{ item.get('state', 'present') }}"
+    disabled: "{{ item.get('disabled', 'no') }}"
+  tags: cron
+  with_items: "{{ crontabs }}"

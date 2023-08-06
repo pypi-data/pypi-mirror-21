@@ -1,0 +1,14 @@
+/var/log/{{ app_name }}/*.log
+{
+    rotate 7
+    daily
+    dateext
+    dateformat .%Y%m%d
+    compress
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+      /usr/bin/killall -HUP rsyslogd >/dev/null 2>&1 || true
+    endscript
+}

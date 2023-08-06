@@ -1,0 +1,19 @@
+[program:{{ app_name }}]
+command=/srv/{{ app_name }}_venv/bin/takumi serve
+priority=999
+autostart=false
+autorestart=unexpected
+startsecs=3
+startretries=3
+exitcodes=0,2
+stopsignal=TERM
+stopwaitsecs=10
+directory=/srv/{{ app_name }}
+user=www-data
+stopasgroup=true
+killasgroup=true
+redirect_stderr=true
+redirect_stdout=true
+stdout_logfile=syslog
+stderr_logfile=syslog
+environment=TAKUMI_ENV={{ env }},LC_ALL=en_US.utf-8,LANG=en_US.utf-8
