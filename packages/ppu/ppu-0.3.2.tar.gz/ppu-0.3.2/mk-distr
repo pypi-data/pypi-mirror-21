@@ -1,0 +1,14 @@
+#! /bin/sh
+
+umask 022 &&
+
+git archive --format=tar --prefix=ppu/ "${1:-HEAD}" |
+   (cd "$HOME/tmp" && exec tar xf -) &&
+
+cp -ap docs "$HOME/tmp/ppu" &&
+
+cd "$HOME/tmp/ppu" &&
+chmod -R u=rwX,go=rX docs &&
+
+python setup.py sdist --formats=bztar &&
+cd dist && mv ppu-*.tar.bz2 ../.. && cd ../.. && exec rm -rf ppu
