@@ -1,0 +1,32 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:i18n="http://namespaces.zope.org/i18n"
+    i18n_domain="ftw.usermigration">
+
+
+    <permission
+        id="ftw.usermigration.migrateUsers"
+        title="ftw.usermigration: Migrate users"
+        />
+
+    <include package=".browser" />
+
+    <utility
+        provides="zope.schema.interfaces.IVocabularyFactory"
+        factory=".vocabularies.MappingSourcesVocabularyFactory"
+        name="ftw.usermigration.mapping_sources"
+        />
+
+    <utility
+        provides="zope.schema.interfaces.IVocabularyFactory"
+        factory=".vocabularies.PreMigrationHooksVocabularyFactory"
+        name="ftw.usermigration.pre_migration_hooks"
+        />
+
+    <utility
+        provides="zope.schema.interfaces.IVocabularyFactory"
+        factory=".vocabularies.PostMigrationHooksVocabularyFactory"
+        name="ftw.usermigration.post_migration_hooks"
+        />
+
+</configure>
