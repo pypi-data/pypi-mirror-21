@@ -1,0 +1,544 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>omxplayer.player &mdash; omxplayer-wrapper 0.0.1alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="omxplayer-wrapper 0.0.1alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">omxplayer-wrapper 0.0.1alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for omxplayer.player</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">decorator</span> <span class="kn">import</span> <span class="n">decorator</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
+<span class="kn">from</span> <span class="nn">dbus</span> <span class="kn">import</span> <span class="n">DBusException</span><span class="p">,</span> <span class="n">Int64</span><span class="p">,</span> <span class="n">ObjectPath</span>
+
+<span class="kn">import</span> <span class="nn">omxplayer.bus_finder</span>
+<span class="kn">from</span> <span class="nn">omxplayer.dbus_connection</span> <span class="kn">import</span> <span class="n">DBusConnection</span><span class="p">,</span> \
+                                      <span class="n">DBusConnectionError</span>
+
+<span class="c1">#### CONSTANTS ####</span>
+<span class="n">RETRY_DELAY</span> <span class="o">=</span> <span class="mf">0.05</span>
+
+
+<span class="c1">#### FILE GLOBAL OBJECTS ####</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<span class="c1">#### CLASSES ####</span>
+<div class="viewcode-block" id="FileNotFoundError"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.FileNotFoundError">[docs]</a><span class="k">class</span> <span class="nc">FileNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="FileCleaner"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.FileCleaner">[docs]</a><span class="k">class</span> <span class="nc">FileCleaner</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+<div class="viewcode-block" id="FileCleaner.clean"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.FileCleaner.clean">[docs]</a>    <span class="k">def</span> <span class="nf">clean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="nb">file</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="nb">file</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="OMXPlayer"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer">[docs]</a><span class="k">class</span> <span class="nc">OMXPlayer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    OMXPlayer controller</span>
+
+<span class="sd">    This works by speaking to OMXPlayer over DBus sending messages.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename (str): Path to the file you wish to play</span>
+<span class="sd">        args (list): used to pass option parameters to omxplayer.</span>
+<span class="sd">        multiple argument example:</span>
+<span class="sd">        # OMXPlayer(&#39;path.mp4&#39;, args=[&#39;--no-osd&#39;, &#39;--no-keys&#39;, &#39;-b&#39;])</span>
+<span class="sd">        info: https://github.com/popcornmix/omxplayer#synopsis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span>
+                 <span class="n">args</span><span class="o">=</span><span class="p">[],</span>
+                 <span class="n">bus_address_finder</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">Connection</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                 <span class="n">cleaner</span><span class="o">=</span><span class="n">FileCleaner</span><span class="p">(</span><span class="s1">&#39;/tmp/*omxplayer*&#39;</span><span class="p">)):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Instantiating OMXPlayer&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cleaner</span> <span class="o">=</span> <span class="n">cleaner</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clean_old_files</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bus_address_finder</span><span class="p">:</span>
+            <span class="n">bus_address_finder</span> <span class="o">=</span> <span class="n">omxplayer</span><span class="o">.</span><span class="n">bus_finder</span><span class="o">.</span><span class="n">BusFinder</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">Connection</span><span class="p">:</span>
+            <span class="n">Connection</span> <span class="o">=</span> <span class="n">DBusConnection</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_playing</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setup_omxplayer_process</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setup_dbus_connection</span><span class="p">(</span><span class="n">Connection</span><span class="p">,</span>
+                                                     <span class="n">bus_address_finder</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c1"># Wait for the DBus interface to be initialised</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_clean_old_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Removing old OMXPlayer pid files etc&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cleaner</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_run_omxplayer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">devnull</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">on_exit</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;OMXPlayer process is dead, all DBus calls from here &quot;</span>
+                        <span class="s2">&quot;will fail&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">monitor</span><span class="p">(</span><span class="n">process</span><span class="p">,</span> <span class="n">on_exit</span><span class="p">):</span>
+            <span class="n">process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="n">on_exit</span><span class="p">()</span>
+
+        <span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;omxplayer&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">+</span> <span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Opening omxplayer with the command: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">command</span><span class="p">)</span>
+        <span class="n">process</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">command</span><span class="p">,</span>
+                                   <span class="n">stdout</span><span class="o">=</span><span class="n">devnull</span><span class="p">,</span>
+                                   <span class="n">preexec_fn</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">setsid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process_monitor</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">monitor</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">process</span><span class="p">,</span>
+                                                               <span class="n">on_exit</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process_monitor</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">process</span>
+
+    <span class="k">def</span> <span class="nf">_setup_omxplayer_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Setting up OMXPlayer process&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Could not find: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">devnull</span><span class="p">:</span>
+                <span class="n">process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_omxplayer</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">devnull</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Process opened with PID </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">process</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">process</span>
+
+    <span class="k">def</span> <span class="nf">_setup_dbus_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Connection</span><span class="p">,</span> <span class="n">bus_address_finder</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Trying to connect to OMXPlayer via DBus&#39;</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;DBus connect attempt: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tries</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">connection</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span><span class="n">bus_address_finder</span><span class="o">.</span><span class="n">get_address</span><span class="p">())</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s1">&#39;Connected to OMXPlayer at DBus address: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">connection</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">connection</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="n">DBusConnectionError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Failed to connect to OMXPlayer DBus address&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tries</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">RETRY_DELAY</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">SystemError</span><span class="p">(</span><span class="s1">&#39;DBus cannot connect to the OMXPlayer process&#39;</span><span class="p">)</span>
+
+    <span class="sd">&quot;&quot;&quot; Utilities &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_check_player_is_active</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+        <span class="c1"># wraps is a decorator that improves debugging wrapped methods</span>
+        <span class="k">def</span> <span class="nf">wrapped</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking if process is still alive&#39;</span><span class="p">)</span>
+            <span class="c1"># poll determines whether the process has terminated,</span>
+            <span class="c1"># if it hasn&#39;t it returns None.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">poll</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;OMXPlayer is running, so execute </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                             <span class="n">fn</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Process is no longer alive, can</span><span class="se">\&#39;</span><span class="s1">t run command&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">decorator</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
+
+    <span class="sd">&quot;&quot;&quot; ROOT INTERFACE METHODS &quot;&quot;&quot;</span>
+
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_quit"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_quit">[docs]</a>    <span class="k">def</span> <span class="nf">can_quit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_root_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanQuit</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_set_fullscreen"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_set_fullscreen">[docs]</a>    <span class="k">def</span> <span class="nf">can_set_fullscreen</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_root_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanSetFullscreen</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.identity"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.identity">[docs]</a>    <span class="k">def</span> <span class="nf">identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the ID of the media player</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_root_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Identity</span><span class="p">())</span>
+</div>
+    <span class="sd">&quot;&quot;&quot; PLAYER INTERFACE PROPERTIES &quot;&quot;&quot;</span>
+
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_go_next"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_go_next">[docs]</a>    <span class="k">def</span> <span class="nf">can_go_next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: Whether the player can move to the next item in the playlist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanGoNext</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_go_previous"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_go_previous">[docs]</a>    <span class="k">def</span> <span class="nf">can_go_previous</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: Whether the player can move to the previous item in the</span>
+<span class="sd">            playlist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanGoPrevious</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_seek"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_seek">[docs]</a>    <span class="k">def</span> <span class="nf">can_seek</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: Whether the player can seek &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanSeek</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_control"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_control">[docs]</a>    <span class="k">def</span> <span class="nf">can_control</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanControl</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_play"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_play">[docs]</a>    <span class="k">def</span> <span class="nf">can_play</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanPlay</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.can_pause"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.can_pause">[docs]</a>    <span class="k">def</span> <span class="nf">can_pause</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">CanPause</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.playback_status"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.playback_status">[docs]</a>    <span class="k">def</span> <span class="nf">playback_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: One of (&quot;Playing&quot; | &quot;Paused&quot; | &quot;Stopped&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">PlaybackStatus</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.volume"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.volume">[docs]</a>    <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            volume (float): Volume in millibels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Volume</span><span class="p">())</span>
+        <span class="k">return</span> <span class="mi">2000</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">vol</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.set_volume"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.set_volume">[docs]</a>    <span class="k">def</span> <span class="nf">set_volume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volume</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            volume (float): Volume in millibels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Volume</span><span class="p">(</span>
+            <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">volume</span><span class="o">/</span><span class="mf">2000.0</span><span class="p">)</span>
+        <span class="p">))</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.mute"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.mute">[docs]</a>    <span class="k">def</span> <span class="nf">mute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Turns mute on, if the audio is already muted, then this does not do</span>
+<span class="sd">        anything</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Mute</span><span class="p">()</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.unmute"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.unmute">[docs]</a>    <span class="k">def</span> <span class="nf">unmute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unmutes the video, if the audio is already unmuted, then this does</span>
+<span class="sd">        not do anything</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Unmute</span><span class="p">()</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.position"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.position">[docs]</a>    <span class="k">def</span> <span class="nf">position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The position in seconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Position</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1000</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">)</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+    <span class="k">def</span> <span class="nf">_duration_us</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            long: The duration in microseconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">long</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Duration</span><span class="p">())</span>
+
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.duration"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.duration">[docs]</a>    <span class="k">def</span> <span class="nf">duration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The duration in seconds</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duration_us</span><span class="p">()</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1000</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">)</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.minimum_rate"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.minimum_rate">[docs]</a>    <span class="k">def</span> <span class="nf">minimum_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The minimum playback rate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">MinimumRate</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.maximum_rate"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.maximum_rate">[docs]</a>    <span class="k">def</span> <span class="nf">maximum_rate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: The maximum playback rate</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_properties_interface</span><span class="p">()</span><span class="o">.</span><span class="n">MaximumRate</span><span class="p">())</span>
+</div>
+    <span class="sd">&quot;&quot;&quot; PLAYER INTERFACE METHODS &quot;&quot;&quot;</span>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.pause"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.pause">[docs]</a>    <span class="k">def</span> <span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Pause</span><span class="p">()</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.play_pause"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.play_pause">[docs]</a>    <span class="k">def</span> <span class="nf">play_pause</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">PlayPause</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_playing</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_playing</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.stop"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.stop">[docs]</a>    <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Stop</span><span class="p">()</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.seek"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.seek">[docs]</a>    <span class="k">def</span> <span class="nf">seek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">relative_position</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            relative_position (float): The position in seconds to seek to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Seek</span><span class="p">(</span><span class="n">Int64</span><span class="p">(</span><span class="n">relative_position</span><span class="p">))</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.set_position"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.set_position">[docs]</a>    <span class="k">def</span> <span class="nf">set_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">position</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            position (float): The position in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">SetPosition</span><span class="p">(</span><span class="n">ObjectPath</span><span class="p">(</span><span class="s2">&quot;/not/used&quot;</span><span class="p">),</span> <span class="n">Int64</span><span class="p">(</span><span class="n">position</span><span class="o">*</span><span class="mi">1000</span><span class="o">*</span><span class="mi">1000</span><span class="p">))</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.list_video"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.list_video">[docs]</a>    <span class="k">def</span> <span class="nf">list_video</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [str]: A list of all known video streams, each item is in the</span>
+<span class="sd">            format: ``&lt;index&gt;:&lt;language&gt;:&lt;name&gt;:&lt;codec&gt;:&lt;active&gt;``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">ListVideo</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.list_audio"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.list_audio">[docs]</a>    <span class="k">def</span> <span class="nf">list_audio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [str]: A list of all known audio streams, each item is in the</span>
+<span class="sd">            format: ``&lt;index&gt;:&lt;language&gt;:&lt;name&gt;:&lt;codec&gt;:&lt;active&gt;``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">ListAudio</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.list_subtitles"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.list_subtitles">[docs]</a>    <span class="k">def</span> <span class="nf">list_subtitles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            [str]: A list of all known subtitles, each item is in the</span>
+<span class="sd">            format: ``&lt;index&gt;:&lt;language&gt;:&lt;name&gt;:&lt;codec&gt;:&lt;active&gt;``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">ListSubtitles</span><span class="p">())</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.action"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.action">[docs]</a>    <span class="k">def</span> <span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes a keyboard command via a code</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            code (int): The key code you wish to emulate</span>
+<span class="sd">                        refer to ``keys.py`` for the possible keys</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_get_player_interface</span><span class="p">()</span><span class="o">.</span><span class="n">Action</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.is_playing"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.is_playing">[docs]</a>    <span class="k">def</span> <span class="nf">is_playing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_is_playing</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">playback_status</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Playing&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Playing?: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_playing</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_playing</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.play_sync"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.play_sync">[docs]</a>    <span class="k">def</span> <span class="nf">play_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Playing synchronously&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Wait for playing to start&quot;</span><span class="p">)</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_playing</span><span class="p">():</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">DBusException</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot play synchronously any longer as DBus calls timed out.&quot;</span>
+            <span class="p">)</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.play"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.play">[docs]</a>    <span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            None:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_playing</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">play_pause</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_root_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">root_interface</span>
+
+    <span class="k">def</span> <span class="nf">_get_player_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">player_interface</span>
+
+    <span class="k">def</span> <span class="nf">_get_properties_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">properties_interface</span>
+
+<div class="viewcode-block" id="OMXPlayer.quit"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.quit">[docs]</a>    <span class="k">def</span> <span class="nf">quit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Quitting OMXPlayer&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">killpg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_process_monitor</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;SIGINT Sent to pid: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Could not find the process to kill&#39;</span><span class="p">)</span>
+</div>
+    <span class="nd">@_check_player_is_active</span>
+<div class="viewcode-block" id="OMXPlayer.get_filename"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.player.OMXPlayer.get_filename">[docs]</a>    <span class="k">def</span> <span class="nf">get_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            str: filename currently playing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span>
+
+
+<span class="c1">#  MediaPlayer2.Player types:</span>
+<span class="c1">#    Track_Id: DBus ID of track</span>
+<span class="c1">#    Plaback_Rate: Multiplier for playback speed (1 = normal speed)</span>
+<span class="c1">#    Volume: 0--1, 0 is muted and 1 is full volume</span>
+<span class="c1">#    Time_In_Us: Time in microseconds</span>
+<span class="c1">#    Playback_Status: Playing|Paused|Stopped</span>
+<span class="c1">#    Loop_Status: None|Track|Playlist</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">omxplayer-wrapper 0.0.1alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Will Price.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

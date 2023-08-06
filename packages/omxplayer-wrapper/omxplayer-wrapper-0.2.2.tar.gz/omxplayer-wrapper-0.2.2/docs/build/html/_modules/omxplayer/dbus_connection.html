@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>omxplayer.dbus_connection &mdash; omxplayer-wrapper 0.0.1alpha documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1alpha',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="omxplayer-wrapper 0.0.1alpha documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">omxplayer-wrapper 0.0.1alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for omxplayer.dbus_connection</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">dbus</span>
+
+
+<div class="viewcode-block" id="DBusConnectionError"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.dbus_connection.DBusConnectionError">[docs]</a><span class="k">class</span> <span class="nc">DBusConnectionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Connection error raised when DBusConnection can&#39;t set up a connection</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="DBusConnection"><a class="viewcode-back" href="../../omxplayer.html#omxplayer.dbus_connection.DBusConnection">[docs]</a><span class="k">class</span> <span class="nc">DBusConnection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        proxy:  The proxy object by which one interacts  with a dbus object,</span>
+<span class="sd">                this makes communicating with a similar to that of communicating</span>
+<span class="sd">                with a  POJO.</span>
+<span class="sd">        root_interface:  org.mpris.MediaPlayer2 interface proxy object</span>
+<span class="sd">        player_interface: org.mpris.MediaPlayer2.Player interface  proxy object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bus_address</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_interface</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">player_interface</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_address</span> <span class="o">=</span> <span class="n">bus_address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_connection</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_proxy</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_create_connection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dbus</span><span class="o">.</span><span class="n">bus</span><span class="o">.</span><span class="n">BusConnection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_address</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># introspection fails so it is disabled</span>
+            <span class="n">proxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bus</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="s1">&#39;org.mpris.MediaPlayer2.omxplayer&#39;</span><span class="p">,</span>
+                                         <span class="s1">&#39;/org/mpris/MediaPlayer2&#39;</span><span class="p">,</span>
+                                         <span class="n">introspect</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_media_interfaces_on_proxy</span><span class="p">(</span><span class="n">proxy</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">proxy</span>
+        <span class="k">except</span> <span class="n">dbus</span><span class="o">.</span><span class="n">DBusException</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DBusConnectionError</span><span class="p">(</span><span class="s1">&#39;Could not get proxy object&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_media_interfaces_on_proxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root_interface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="s1">&#39;org.mpris.MediaPlayer2&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">player_interface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span>
+                                                <span class="s1">&#39;org.mpris.MediaPlayer2.Player&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">properties_interface</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interface</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span>
+                                                    <span class="s1">&#39;org.freedesktop.DBus.Properties&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_interface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proxy</span><span class="p">,</span> <span class="n">interface</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dbus</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">interface</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">omxplayer-wrapper 0.0.1alpha documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Will Price.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
