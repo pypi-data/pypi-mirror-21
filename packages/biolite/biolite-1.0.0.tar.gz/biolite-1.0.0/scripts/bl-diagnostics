@@ -1,0 +1,187 @@
+#!/usr/bin/env python
+#
+# BioLite - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of BioLite.
+#
+# BioLite is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# BioLite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BioLite.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import os
+import shutil
+import sys
+
+from biolite import diagnostics
+from biolite import utils
+
+from biolite.config import get_resource, set_database
+
+def list_runs(id=None, name=None, hidden=False, incomplete=False, **kwargs):
+	star = {'1': '*', '0': ' '}
+	rows = []
+	header = None
+	for row in diagnostics.lookup_runs(id, name, hidden=hidden):
+		if incomplete and row[0]:
+			continue
+		if not header:
+			header = [field.upper() for field in row._fields]
+			header[1] = 'RUN'
+			header[-1] = 'HID'
+			rows.append(header)
+		row = map(str, row)
+		row[0] = star[row[0]]
+		row[-1] = star[row[-1]]
+		rows.append(row)
+	for row in utils.table(rows, convert=False):
+		print row
+
+def list_run_ids(id=None, name=None, **kwargs):
+	for run in diagnostics.lookup_runs(id, name, hidden=False):
+		if not run[0]:
+			continue
+		print run.id
+
+def dump_all(**kwargs):
+	diagnostics.dump_all()
+
+def dump_by_id(id=id, **kwargs):
+	diagnostics.dump_by_id(id)
+
+def dump_run(run=None, commands=False, **kwargs):
+	if commands:
+		diagnostics.dump_commands(run)
+	else:
+		diagnostics.dump(run)
+
+def delete(runs, force=False, dryrun=False, **kwargs):
+	for run in runs:
+		entity = diagnostics.lookup(run, diagnostics.INIT)
+		if entity:
+			try:
+				outdir = entity['outdir']
+			except KeyError:
+				utils.info("could not lookup 'outdir' key for run " + run)
+		else:
+			utils.info("no initial entity for run", run)
+			id = diagnostics.lookup_run(run).id
+			outdir = os.path.join(get_resource('outdir'), id, run)
+			utils.info("trying", outdir)
+		if dryrun:
+			for root, _, relpaths in os.walk(outdir):
+				for relpath in relpaths:
+					print os.path.join(root, relpath)
+		else:
+			if not force:
+				confirm = raw_input("delete all files in %s? " % outdir)
+				if not (confirm.startswith('y') or confirm.startswith('Y')):
+					sys.exit(0)
+			if os.path.isdir(outdir):
+				shutil.rmtree(outdir)
+			diagnostics.hide_run(run)
+
+def hide(runs, **kwargs):
+	diagnostics.hide_run(*runs)
+
+def unhide(runs, **kwargs):
+	diagnostics.unhide_run(*runs)
+
+def dump_programs(**kwargs):
+	diagnostics.dump_programs()
+
+if __name__ == '__main__':
+
+	parser = argparse.ArgumentParser(description="""
+		Command-line tool for interacting with the BioLite global
+		diagnostics database. Default behavior is to dump all runs.""")
+	parser.add_argument('--db', '-d', metavar='PATH', help="""
+		use the BioLite diagnostics database at PATH or PATH/biolite.sqlite""")
+
+	subparsers = parser.add_subparsers(title='commands')
+
+	list_parser = subparsers.add_parser('list', help="""
+		print a summary table of all runs""")
+	list_parser.add_argument('--hidden', action='store_true', help="""
+		include runs that are marked as hidden [default: False]""")
+	list_parser.add_argument('--incomplete', action='store_true', help="""
+		only show runs that are incomplete [default: False]""")
+	list_parser.add_argument('-n', '--name', help="""
+		only show runs for the given pipeline name""")
+	list_parser.add_argument('-i', '--id', help="""
+		only show runs for the given catalog ID""")
+	list_parser.set_defaults(func=list_runs)
+
+	all_parser = subparsers.add_parser('all', help="""
+		dump all diagnostics""")
+	all_parser.set_defaults(func=dump_all)
+
+	id_parser = subparsers.add_parser('id', help="""
+		dump diagnostics for all runs of a catalog ID""")
+	id_parser.add_argument('id', metavar='ID')
+	id_parser.set_defaults(func=dump_by_id)
+
+	run_parser = subparsers.add_parser('run', help="""
+		dump diagnostics for a particular run""")
+	run_parser.add_argument('run', metavar='RUN_ID')
+	run_parser.add_argument('-c', '--commands', action='store_true', help="""
+		dump a list of commands called by this run""")
+	run_parser.set_defaults(func=dump_run)
+
+	runid_parser = subparsers.add_parser('runid', help="""
+		list run IDs for completed, unhidden runs""")
+	runid_parser.add_argument('-n', '--name', help="""
+		only show run IDs for the given pipeline name""")
+	runid_parser.add_argument('-i', '--id', help="""
+		only show runs IDs for the given catalog ID""")
+	runid_parser.set_defaults(func=list_run_ids)
+
+	delete_parser = subparsers.add_parser('delete', help="""
+		delete permanent files associated with a run and hide the run
+		from reporting""")
+	delete_parser.add_argument('-f', '--force', action='store_true', help="""
+		force a delete, without prompting for each file""")
+	delete_parser.add_argument('-n', '--dryrun', action='store_true', help="""
+		show which files would be deleted without actually deleting them""")
+	delete_parser.add_argument('runs', nargs='+', metavar='RUN_ID')
+	delete_parser.set_defaults(func=delete)
+
+	hide_parser = subparsers.add_parser('hide', help="""
+		mark a run as hidden in the runs table""")
+	hide_parser.add_argument('runs', nargs='+', metavar='RUN_ID')
+	hide_parser.set_defaults(func=hide)
+
+	unhide_parser = subparsers.add_parser('unhide', help="""
+		mark a run as visible in the runs table""")
+	unhide_parser.add_argument('runs', nargs='+', metavar='RUN_ID')
+	unhide_parser.set_defaults(func=unhide)
+
+	programs_parser = subparsers.add_parser('programs', help="""
+		dump all versions of programs tracked by the diagnostics""")
+	programs_parser.set_defaults(func=dump_programs)
+
+	merge_parser = subparsers.add_parser('merge', help="""
+		merge the 'diagnostics.txt' and 'programs.txt' files in the CWD
+		into the diagnostics database""")
+	merge_parser.add_argument('run_id', metavar='RUN_ID')
+	merge_parser.set_defaults(func=diagnostics.merge_cwd)
+
+	args = parser.parse_args()
+	func = args.func
+	kwargs = vars(args)
+	db = kwargs.pop('db')
+	if db: set_database(db)
+	kwargs.pop('func')
+	func(**kwargs)
+
+# vim: syntax=python ts=4

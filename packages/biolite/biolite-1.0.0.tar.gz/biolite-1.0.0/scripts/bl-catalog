@@ -1,0 +1,189 @@
+#!/usr/bin/env python
+#
+# BioLite - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of BioLite.
+#
+# BioLite is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# BioLite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BioLite.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import gzip
+import os
+import re
+
+from operator import itemgetter
+from Bio import SeqIO
+
+from biolite import catalog
+from biolite import database as db
+from biolite import utils
+
+
+def insert(**kwargs):
+	paths = kwargs.get('paths', [])
+	if paths:
+		for path in paths:
+			if catalog.path_sep in path:
+				utils.info("path '%s' contains illegal char '%c'" % \
+													(path, catalog.path_sep))
+	if kwargs['id'] is None and paths:
+		if paths[0].endswith(".gz"):
+			record = SeqIO.parse(gzip.open(paths[0]), "fastq").next()
+		else:
+			record = SeqIO.parse(open(paths[0]), "fastq").next()
+		# Sample headers:
+		# HWI-ST625:51:C02UNACXX:7:1101:1179:1962.1:N:0:TTAGGC
+		# HWI-ST625:54:C026EACXX:8:1101:1328:1830 1:N:0:CAGATC
+		# HWI-ST625:73:C0JUVACXX:7:1101:19288:2596/1
+		# (dot can come from fasta_to_fastq)
+		tokens = record.description.split(':')
+		if len(tokens) == 10:
+			kwargs['id'] = '-'.join(tokens[:4] + [tokens[9]])
+		elif len(tokens) == 7:
+			kwargs['id'] = '-'.join(tokens[:4])
+		else:
+			utils.die("FASTQ path does not appear to be an Illumina HiSeq file: please specify an id manually with --id")
+	if kwargs['id']:
+		if paths:
+			kwargs['paths'] = catalog.path_sep.join(map(os.path.abspath, paths))
+		kwargs['id'] = utils.safe_str(kwargs['id'])
+		kwargs['id'] = catalog.insert(**kwargs)
+		# Print out the new or modified record.
+		catalog.print_record(kwargs['id'])
+	elif kwargs['id'] == '':
+		utils.die("id specified is blank")
+	else:
+		utils.die("no id specified, and no FASTQ paths to query an id from")
+
+def select_all(**kwargs):
+	for record in catalog.select_all():
+		catalog.print_record(record)
+
+def search(**kwargs):
+	for record in catalog.search('%{}%'.format(kwargs['string'].replace('*', '%'))):
+		catalog.print_record(record)
+
+def sizes(**kwargs):
+	paths = list()
+	for record in catalog.select_all():
+		if record.paths:
+			for path in catalog.split_paths(record.paths):
+				p = (-1, )
+				try:
+					size = os.stat(path).st_size
+				except OSError:
+					utils.info("could not stat file '%s'" % path)
+				if kwargs['max'] and size > p[0]:
+					p = (size, path, record.id)
+				else:
+					paths.append((size, path, record.id))
+			if kwargs['max']:
+				paths.append(p)
+	for row in sorted(paths, key=itemgetter(0)):
+		print "{:,d}\t{}\t{}".format(*row)
+
+
+def import_catalog(**kwargs):
+	import_db = db.sqlite3.connect(kwargs['path'], timeout=60.0, isolation_level=None)
+	import_db.row_factory = db.sqlite3.Row
+	db.execute('BEGIN')
+	for row in import_db.execute("SELECT * FROM catalog;"):
+		catalog.insert(**row)
+	db.execute('COMMIT')
+
+
+def export_commands(**kwargs):
+	for record in catalog.search('%{}%'.format(kwargs['string'].replace('*', '%'))):
+		cmd = ['catalog', 'insert']
+		for i, val in enumerate(record):
+			if val and catalog.fields[i] != 'timestamp':
+				cmd += ['--' + catalog.fields[i], '"{0}"'.format(val)]
+		print ' '.join(cmd)
+
+
+if __name__ == '__main__':
+
+	parser = argparse.ArgumentParser( \
+		formatter_class=argparse.RawDescriptionHelpFormatter,\
+		description="""
+Command-line tool for interacting with the BioLite catalog.
+
+BioLite maintains a 'catalog' stored in an SQLite database of metadata
+associated with your raw Illumina data, including:
+
+- A unique ID that you make up to reference this data set.
+- Paths to the FASTQ files containing the raw forward and reverse reads.
+- The species name and NCBI ID.
+- The sequencing center where the data was collected.
+""")
+
+	subparsers = parser.add_subparsers(title='commands')
+
+	insert_parser = subparsers.add_parser('insert', help="""
+		Add a new record to the catalog, or overwrite the existing record
+		with the same id.""")
+	insert_parser.add_argument('-i', '--id', help="""
+		a unique id for the catalog entry (defaults to the FASTQ id line if a
+		path is specified)""")
+	insert_parser.add_argument('-p', '--paths', nargs='*', help="""
+		a list of sequence data files to associate with this entry""")
+	insert_parser.add_argument('-s', '--species', help="""
+		species name, or genus name with 'Sp.'""")
+	insert_parser.add_argument('-n', '--ncbi_id', type=int)
+	insert_parser.add_argument('-d', '--itis_id', type=int)
+	insert_parser.add_argument('-e', '--extraction_id')
+	insert_parser.add_argument('-l', '--library_id')
+	insert_parser.add_argument('-b', '--library_type')
+	insert_parser.add_argument('-v', '--individual')
+	insert_parser.add_argument('-t', '--treatment')
+	insert_parser.add_argument('-q', '--sequencer')
+	insert_parser.add_argument('-c', '--seq_center')
+	insert_parser.add_argument('--note')
+	insert_parser.add_argument('--sample_prep')
+	insert_parser.set_defaults(func=insert)
+
+	all_parser = subparsers.add_parser('all', help="""
+		List all catalog entries.""")
+	all_parser.set_defaults(func=select_all)
+
+	search_parser = subparsers.add_parser('search', help="""
+		Search all fields (except 'paths') for entries matching the
+		provided pattern, which can include * as a wildcard.""")
+	search_parser.add_argument('string')
+	search_parser.set_defaults(func=search)
+
+	sizes_parser = subparsers.add_parser('sizes', help="""
+		List all paths in the catalog, ordered by size on disk.""")
+	sizes_parser.add_argument('--max', action='store_true', help="""
+		Print only the largest path for each catalog entry.""")
+	sizes_parser.set_defaults(func=sizes)
+
+	import_parser = subparsers.add_parser('import', help="""
+		Import catalog entries from another BioLite database.""")
+	import_parser.add_argument('path')
+	import_parser.set_defaults(func=import_catalog)
+
+	export_parser = subparsers.add_parser('export', help="""
+		Export catalog entries as catalog script commands.""")
+	export_parser.add_argument('string', help="""
+		Search all fields (except 'paths') for entries matching the
+		provided pattern, which can include * as a wildcard.""")
+	export_parser.set_defaults(func=export_commands)
+
+	kwargs = vars(parser.parse_args())
+	func = kwargs.pop('func')
+	func(**kwargs)
+
+# vim: syntax=python ts=4

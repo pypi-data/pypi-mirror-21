@@ -1,0 +1,344 @@
+#!/usr/bin/env python
+#
+# BioLite - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of BioLite.
+#
+# BioLite is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# BioLite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BioLite.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import os
+import shutil
+import subprocess
+import wget
+
+from collections import defaultdict
+from string import Template
+
+from biolite import catalog
+from biolite import config
+from biolite import diagnostics
+from biolite import utils
+from biolite.workflows import sra
+
+### SRA output ###
+
+# Templates from EBI instructions here:
+# http://www.ebi.ac.uk/ena/about/sra_preparing_metadata
+
+xml_start = """<?xml version="1.0" encoding="UTF-8"?>
+<%s_SET xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="ftp://ftp.sra.ebi.ac.uk/meta/xsd/sra_1_5/SRA.%s.xsd">"""
+xml_end = "</%s_SET>"
+
+biosample_columns = ["*age", "*biomaterial_provider", "*organism", "*sample_name", "*sex", "*tissue", "bioproject_id", "birth_date", "birth_location", "breed", "breeding_history", "breeding_method", "cell_line", "cell_subtype", "cell_type", "collected_by", "collection_date", "culture_collection", "death_date", "description", "dev_stage", "disease", "disease_stage", "genotype", "geo_loc_name", "growth_protocol", "health_state", "isolation_source", "lat_lon", "phenotype", "sample_title", "sample_type", "specimen_voucher", "store_cond", "strain", "stud_book_number", "treatment"]
+
+templates = {
+
+	'submission': Template("""
+	<SUBMISSION alias="sub_${study}" center_name="${center}">
+		<ACTIONS>
+			<ACTION>
+				<ADD source="experiment.xml" schema="experiment"/>
+			</ACTION>
+			<ACTION>
+				<ADD source="run.xml" schema="run"/>
+			</ACTION>
+		</ACTIONS>
+	</SUBMISSION>
+"""),
+
+	'experiment': Template("""
+	<EXPERIMENT alias="exp_${id}" center_name="${center}">
+		<TITLE>exp_${id}</TITLE>
+		<STUDY_REF accession="${study}"/>
+		<DESIGN>
+			<DESIGN_DESCRIPTION></DESIGN_DESCRIPTION>
+			<SAMPLE_DESCRIPTOR accession="${extraction_id}"/>
+			<LIBRARY_DESCRIPTOR>
+				<LIBRARY_NAME>${library_id}</LIBRARY_NAME>
+				<LIBRARY_STRATEGY>${library_strategy}</LIBRARY_STRATEGY>
+				<LIBRARY_SOURCE>${library_source}</LIBRARY_SOURCE>
+				<LIBRARY_SELECTION>RANDOM</LIBRARY_SELECTION>
+				<LIBRARY_LAYOUT>
+					${library_layout}
+				</LIBRARY_LAYOUT>
+				<LIBRARY_CONSTRUCTION_PROTOCOL>${sample_prep}</LIBRARY_CONSTRUCTION_PROTOCOL>
+			</LIBRARY_DESCRIPTOR>
+		</DESIGN>
+		<PLATFORM>
+			<${platform}>
+				<INSTRUMENT_MODEL>${sequencer}</INSTRUMENT_MODEL>
+			</${platform}>
+		</PLATFORM>
+	</EXPERIMENT>
+"""),
+
+	'run': Template("""
+	<RUN alias="run_${id}" center_name="${center}">
+		<TITLE>run_${id}</TITLE>
+		<EXPERIMENT_REF refname="exp_${id}"/>
+		<PLATFORM>
+			<${platform}>
+				<INSTRUMENT_MODEL>${sequencer}</INSTRUMENT_MODEL>
+			</${platform}>
+		</PLATFORM>
+		<DATA_BLOCK>
+			<FILES>
+				${files}
+			</FILES>
+		</DATA_BLOCK>
+		<RUN_ATTRIBUTES>
+			<RUN_ATTRIBUTE>
+				<TAG>loader</TAG>
+				<VALUE>${loader}</VALUE>
+			</RUN_ATTRIBUTE>
+		</RUN_ATTRIBUTES>
+	</RUN>
+"""),
+
+	'file': '<FILE filename="%s" filetype="fastq" checksum_method="MD5" checksum="%s"/>'
+
+}
+
+def validate_sra(**kwargs):
+	"""
+	Validate five XML files in the specified `workdir` against the appropriate
+	SRA schema:
+
+	* submission.xml
+	* experiment.xml
+	* run.xml
+	"""
+	for name in ('submission', 'experiment', 'run'):
+		subprocess.call([
+			'xmllint', '--noout', '--schema',
+			os.path.join(config.datadir, 'SRA.%s.xsd' % name),
+			os.path.abspath(name + '.xml')],
+			cwd=kwargs.get('workdir', None))
+
+
+def export_sra(**kwargs):
+	"""
+	Create XML files for experiment and run with entries from the catalog, and
+	make local uncompressed copies of the sequence files.  Create a submission
+	XML file for upload to SRA.
+	"""
+	content = defaultdict(list)
+	outdir = utils.safe_mkdir(kwargs['outdir'])
+	os.chdir(outdir)
+	records = []
+	for id in kwargs['IDS']:
+		record = catalog.select(id)
+		if record:
+			record = record._asdict()
+			record["center"] = kwargs["center"]
+			record["study"] = kwargs["study"]
+			if record["sequencer"].startswith("454"):
+				record["platform"] = "LS454"
+				record["loader"] = "sff-load"
+			elif record["sequencer"].startswith("Illumina"):
+				record["platform"] = "ILLUMINA"
+				record["loader"] = "latf-load"
+			else:
+				utils.die("unknown 'sequencer' for entry", id)
+			records.append(record)
+		else:
+			utils.info("warning: no catalog entry for", id)
+
+	with open(os.path.join(outdir, "biosamples.tsv"), "w") as f:
+		print >>f, '\t'.join(biosample_columns)
+		for record in records:
+			biosample = {
+				"*age": "not available",
+				"*biomaterial_provider": "not available",
+				"*organism": record["species"],
+				"*sample_name": record["library_id"],
+				"*sex": "not available",
+				"*tissue": record["treatment"],
+				"sample_title": record["id"]}
+			for column in biosample:
+				if biosample[column] is None:
+					biosample[column] = "not available"
+			print >>f, '\t'.join(biosample.get(column, "") for column in biosample_columns)
+
+	with open(os.path.join(outdir, "experiment.xml"), "w") as f:
+		print >>f, xml_start % ("EXPERIMENT", "experiment")
+		for record in records:
+			# Infer a few additional SRA attributes from the library type.
+			if record["library_type"] == "genome":
+				record["library_strategy"] = "WGS"
+				record["library_source"] = "GENOMIC"
+			elif record["library_type"] == "transcriptome":
+				record["library_strategy"] = "RNA-Seq"
+				record["library_source"] = "TRANSCRIPTOMIC"
+			else:
+				utils.die(
+					"unknown library type '%s' in catalog for '%s'" % (
+						record["library_type"], record["id"]))
+			paths = catalog.split_paths(record["paths"])
+			if len(paths) == 1:
+				record["library_layout"] = "<SINGLE/>"
+			elif len(paths) == 2:
+				layout = ["<PAIRED"]
+				# Look for insert size estimates in the diagnostics
+				insert_size = diagnostics.lookup_by_id(
+						record["id"], "insert_size.estimate_insert.insert_stats")
+				if "mean" in insert_size:
+					layout.append(
+						'NOMINAL_LENGTH="%.0f"' % float(insert_size["mean"]))
+				if "stddev" in insert_size:
+					layout.append(
+						'NOMINAL_SDEV="%.f"' % float(insert_size["stddev"]))
+				layout.append("/>")
+				record["library_layout"] = ' '.join(layout)
+			else:
+				utils.die("expecting either 1 (SE) or 2 (PE) paths")
+			print >>f, templates["experiment"].substitute(record)
+		print >>f, xml_end % "EXPERIMENT"
+
+	with open(os.path.join(outdir, "run.xml"), "w") as f:
+		print >>f, xml_start % ("RUN", "run")
+		for record in records:
+			# Make local copy of files and checksum them
+			paths = catalog.split_paths(record["paths"])
+			files = []
+			for i, path in enumerate(paths, start=1):
+				if record["platform"] == "LS454":
+					dst = "%s_%d.sff" % (record["id"], i)
+				else:
+					dst = "%s_%d.fastq" % (record["id"], i)
+				if not os.path.exists(dst):
+					if path.endswith('.gz'):
+						utils.info("uncompressing '%s'" % path)
+						os.system("gzip -dc %s >%s" % (path, dst))
+					else:
+						utils.info("copying '%s'" % path)
+						shutil.copyfile(path, dst)
+				else:
+					utils.info("found '%s'" % dst)
+				if not os.path.exists(dst+".md5"):
+					md5 = utils.md5sum(dst)
+					open(dst+".md5", 'w').write(md5)
+				files.append(templates["file"] % (dst, open(dst+'.md5').readline()))
+			record["files"] = "\n\t\t\t\t".join(files)
+			print >>f, templates["run"].substitute(record)
+		print >>f, xml_end % "RUN"
+
+	with open(os.path.join(outdir, "submission.xml"), "w") as f:
+		print >>f, xml_start % ("SUBMISSION", "submission")
+		print >>f, templates["submission"].substitute(kwargs)
+		print >>f, xml_end % "SUBMISSION"
+
+	validate_sra(workdir=outdir)
+
+
+def import_sra(**kwargs):
+	"""
+	Retrieve and catalog all data sets associated with the SRA accession
+	number, which can be for a study, sample, experiment or individual run.
+	"""
+	if 'email' in kwargs:
+		sra.Entrez.email = kwargs['email']
+	clean = kwargs.get('clean', False)
+	gzip = kwargs.get('gzip', False)
+	datadir = kwargs.get('datadir', None)
+
+	ids = sra.all_ids(kwargs['ACCESSION'])
+
+	if datadir:
+		os.chdir(datadir)
+
+	for xml in sra.download_xmls(ids):
+		record = sra.xml_metadata(xml)
+		utils.info('found experiment', record['id'])
+		if not kwargs['metadata']:
+			new_paths = []
+			for run_id in record['paths']:
+				ftp_path = sra.ftp_url(run_id)
+				path = run_id+'.sra'
+				utils.info('downloading', ftp_path)
+				dl_path = wget.download(ftp_path)
+				shutil.move(dl_path, path)
+				utils.info('converting', path, 'to FASTQ')
+				fastq_dump = [
+					'fastq-dump', '--split-files', '--defline-seq', '@$sn/$ri',
+					'--defline-qual', '+', './%s.sra' % run_id]
+				if gzip:
+					fastq_dump.insert(-1, '--gzip')
+					new_paths += [run_id+'_1.fastq.gz', run_id+'_2.fastq.gz']
+				else:
+					new_paths += [run_id+'_1.fastq', run_id+'_2.fastq']
+				subprocess.check_call(fastq_dump)
+				print ""
+				if clean:
+					os.unlink(path)
+			record['paths'] = catalog.path_sep.join(map(os.path.abspath, new_paths))
+		else:
+			record.pop('paths')
+		catalog.insert(**record)
+		catalog.print_record(record['id'])
+
+
+if __name__ == '__main__':
+
+	parser = argparse.ArgumentParser( \
+		formatter_class=argparse.RawDescriptionHelpFormatter,\
+		description="""
+Command-line tool for interfacing the BioLite catalog with the Sequence Read
+Archive (SRA).
+""")
+
+	subparsers = parser.add_subparsers(title='commands')
+
+	export_parser = subparsers.add_parser('export', help=export_sra.__doc__)
+	export_parser.add_argument('IDS', nargs='+', help="""
+		The list of catalog IDs to export.""")
+	export_parser.add_argument('--outdir', '-o', default='.', help="""
+		Directory in which to copy sequence files and write XML files,
+		which can then be tarred up for submission to SRA. [default='.']""")
+	export_parser.add_argument('--study', '-s', required=True, help="""
+		The BioProject study accession.""")
+	export_parser.add_argument('--center', '-c', required=True, help="""
+		The SRA username for your center.""")
+	export_parser.set_defaults(func=export_sra)
+
+	validate_parser = subparsers.add_parser('validate', help=validate_sra.__doc__)
+	validate_parser.add_argument('--workdir', '-d', metavar='DIR', help="""
+		XML files are located in DIR.""")
+	validate_parser.set_defaults(func=validate_sra)
+
+	import_parser = subparsers.add_parser('import', help=import_sra.__doc__)
+	import_parser.add_argument('ACCESSION')
+	import_parser.add_argument('--datadir', '-d', help="""
+		Download SRA files to a directory hierarchy in the root directory
+		DATADIR (default: '.')""")
+	import_parser.add_argument('--clean', '-c', action='store_true', help="""
+		Remove .sra files after they have been successfully converted to
+		FASTQ.""")
+	import_parser.add_argument('--email', '-e', help="""
+		Email address to register for Entrez queries (default: 'email' value
+		in BioLite configuration file).""")
+	import_parser.add_argument('--gzip', '-z', action='store_true', help="""
+		gzip the converted FASTQ files to save space.""")
+	import_parser.add_argument('--metadata', '-m', action='store_true', help="""
+		Only update metadata without downloading data.""")
+	import_parser.set_defaults(func=import_sra)
+
+	kwargs = vars(parser.parse_args())
+	func = kwargs.pop('func')
+	func(**kwargs)
+
+# vim: noexpandtab ts=4 sw=4

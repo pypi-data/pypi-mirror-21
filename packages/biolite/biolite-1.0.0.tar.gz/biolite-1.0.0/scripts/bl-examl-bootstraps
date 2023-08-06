@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import random
+import shutil
+import sys
+import tempfile
+from Bio import AlignIO
+from biolite import config
+from biolite import utils
+from subprocess import check_call as call
+from time import time
+
+
+def examl_bootstraps(alignment, N, model, timeout, seed, dryrun, output):
+	"""Run ExaML with bootstrap replicates"""
+
+	if "PROT" in model:
+		parser_model = "PROT"
+	else:
+		parser_model = "DNA"
+
+	if "GAMMA" in model:
+		examl_model = "GAMMA"
+	else:
+		examl_model = "PSR"
+
+	if seed:
+		random.seed(seed)
+	else:
+		random.seed(utils.md5seed(open(alignment, "rb").read(65536)))
+	seed = lambda : str(random.random())[2:]
+
+	# Lookup program paths
+	raxml = config.get_command("raxml")
+	parser = config.get_command("parse-examl")
+	examl = config.get_command("examl")
+	sumtrees = config.get_command("sumtrees.py")
+
+	# Setup tmp directory
+	tmpdir = tempfile.mkdtemp(prefix="bl-examl-bootstraps-")
+	utils.info("tmpdir:", tmpdir)
+	os.chdir(tmpdir)
+
+	# Skip empty alignments
+	if os.path.getsize(alignment) <= 0:
+		utils.info("warning: skipping empty alignment:", alignment)
+		return os.EX_NOINPUT
+
+	# Convert alignment from fasta to phylip
+	AlignIO.convert(alignment, "fasta", "alignment.phy", "phylip-relaxed")
+
+	# Create a simple partition
+	size = open("alignment.phy").readline().strip().partition(" ")[2]
+	if "PROT" in model:
+		with open("partition.txt", "w") as f: print >>f, "WAG, p1=1-%s" % size
+	else:
+		with open("partition.txt", "w") as f: print >>f, "DNA, p1=1-%s" % size
+
+	# Generate an ML target tree with ExaML
+	call(raxml + ["-y", "-s", "alignment.phy", "-m", model, "-n", "target", "-p", seed()])
+	call(parser + ["-s", "alignment.phy", "-m", parser_model, "-q", "partition.txt", "-n", "alignment.phy"])
+	cmd = examl + ["-s", "alignment.phy.binary", "-n", "target", "-B", "1", "-m", examl_model, "-t", "RAxML_parsimonyTree.target"]
+	if dryrun:
+		print ' '.join(cmd)
+	else:
+		call(cmd)
+
+	# If no bootstraps were requested, stop here.
+	if N <= 0:
+		shutil.copy("ExaML_result.target", output)
+		utils.info("no bootstraps were requested: used target tree as output")
+		return os.EX_OK
+
+	# Generate alignments for bootstrap replicates with RAxML
+	call(raxml + ["-s", "alignment.phy", "-N", str(N), "-m", model, "-n", "BS", "-f", "j", "-b", seed()])
+
+	if timeout:
+		start = time()
+
+	for i in xrange(N):
+		name = "alignment.phy.BS%d" % i
+		# Generate parsimony trees for each boostrap replicate with RAxML
+		call(raxml + ["-y", "-s", name, "-m", model, "-n", "T%d" % i, "-p", seed()])
+		# Convert alignments to binary format for ExaML
+		call(parser + ["-s", name, "-m", parser_model, "-q", "partition.txt", "-n", name])
+		# Run searches with ExaML
+		cmd = examl + ["-s", "%s.binary" % name, "-n", str(i), "-B", "1", "-m", examl_model, "-t", "RAxML_parsimonyTree.T%d" % i]
+		if dryrun:
+			print ' '.join(cmd)
+		else:
+			call(cmd)
+		if timeout:
+			elapsed = time() - start
+			if elapsed > timeout:
+				utils.info("reached timeout threshold after %s seconds" % elapsed)
+				break
+
+	# Annotate target tree with bootstrap support using DendroPy
+	cmd = sumtrees + [
+				"--decimals=0",
+				"--percentages",
+				"--output-tree-format=newick",
+				"--replace",
+				"--output=%s" % output,
+				"--target-tree=ExaML_result.target"] + \
+				["ExaML_result.%d" % j for j in xrange(i+1)]
+	if dryrun:
+		print ' '.join(cmd)
+	else:
+		call(cmd)
+
+	# Cleanup tmp directory
+	if not dryrun:
+		shutil.rmtree(tmpdir)
+
+	if i < N-1:
+		return os.EX_UNAVAILABLE
+
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(
+		formatter_class=argparse.RawDescriptionHelpFormatter,
+		description="""
+Wrapper for running ExaML with bootstrap replicates:
+
+* convert FASTA input to phylip
+* create a target tree from the alignment using RAxML/parser/ExaML
+* generate a randomized alignment for each bootstrap run with RAxML
+* generate parsimony trees with RAxML
+* convert each alignment to binary format with parser from ExaML
+* run ExaML searches on each alignment/parsimony tree
+* use sumtrees.py from DendroPy to annotate the target tree with bootstrap
+  support values
+""")
+	parser.add_argument("--alignment", "-a", type=os.path.abspath, required=True,
+		help="""
+		Input alignment in FASTA format.""")
+	parser.add_argument("-N", type=int, required=True, help="""
+		Number of replicates.""")
+	parser.add_argument("--model", "-m", required=True, help="""
+		RAxML model of subsitution.""")
+	parser.add_argument("--timeout", "-t", type=int, default=0, help="""
+		Timeout in seconds for aborting ExaML bootstrap searches and continuing
+		to tree annotation. At least one search will always run. [default: off]""")
+	parser.add_argument("--seed", "-s", help="""
+		Use an explicit seed, used to generate additional random seeds for
+		ExaML runs. [default: use a hash of the alignment file]""")
+	parser.add_argument("--dryrun", "-n", action="store_true", help="""
+		Prepare bootstraps and print examl commands instead of running.""")
+	parser.add_argument("--output", "-o", type=os.path.abspath, required=True,
+		help="""
+		Output destination for Newick file.""")
+	args = parser.parse_args()
+	sys.exit(
+		examl_bootstraps(
+			args.alignment, args.N, args.model, args.timeout,
+			args.seed, args.dryrun, args.output))
+
+# vim: noexpandtab ts=4 sw=4

@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import random
+import shutil
+import sys
+import tempfile
+from Bio import AlignIO
+from subprocess import check_call
+
+from biolite import config
+from biolite import utils
+from biolite import wrappers
+
+
+def examl(alignment, model, seed, output):
+
+	if "PROT" in model:
+		parser_model = "PROT"
+	else:
+		parser_model = "DNA"
+
+	if "GAMMA" in model:
+		examl_model = "GAMMA"
+	else:
+		examl_model = "PSR"
+
+	if seed:
+		random.seed(seed)
+	else:
+		random.seed(utils.md5seed(open(alignment, "rb").read(65536)))
+	seed = lambda : str(random.random())[2:]
+
+	# Lookup program paths
+	raxml = config.get_command("raxml-pthreads")
+	parser = config.get_command("parse-examl")
+	examl = config.get_command("examl")
+
+	# Setup tmp directory
+	tmpdir = tempfile.mkdtemp(prefix="bl-examl-")
+	utils.info("tmpdir:", tmpdir)
+	os.chdir(tmpdir)
+
+	# Create a simple partition
+	size = open(alignment).readline().strip().partition(" ")[2]
+	if "PROT" in model:
+		with open("partition.txt", "w") as f: print >>f, "WAG, p1=1-%s" % size
+	else:
+		with open("partition.txt", "w") as f: print >>f, "DNA, p1=1-%s" % size
+
+	# Generate parsimony tree with RAxML
+	check_call(raxml + ["-y", "-s", alignment, "-m", model, "-n", "T0", "-p", seed(), "-T", config.get_resource('threads')])
+
+	# Convert alignments to binary format for ExaML
+	check_call(parser + ["-s", alignment, "-m", parser_model, "-q", "partition.txt", "-n", "alignment"])
+
+	# Run searches with ExaML
+	check_call(examl + ["-s", "alignment.binary", "-n", "T1", "-B", "1", "-m", examl_model, "-t", "RAxML_parsimonyTree.T0"])
+
+	shutil.copy(os.path.join(tmpdir, "ExaML_result.T1"), output)
+	shutil.rmtree(tmpdir)
+
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(
+		formatter_class=argparse.RawDescriptionHelpFormatter,
+		description="""
+Wrapper for running ExaML:
+
+* generates a parsimony tree with RAxML
+* converts the FASTA alignment to binary format with examl-parser
+* runs an ExaML searches on the binary alignment and parsimony tree
+""")
+	parser.add_argument("--alignment", "-a", type=os.path.abspath, required=True,
+		help="""
+		Input alignment in PHYLIP format.""")
+	parser.add_argument("--model", "-m", required=True, help="""
+		RAxML model of subsitution.""")
+	parser.add_argument("--seed", "-s", help="""
+		Use an explicit seed, used to generate additional random seeds for
+		ExaML runs. [default: use a hash of the alignment file]""")
+	parser.add_argument("--output", "-o", type=os.path.abspath, required=True,
+		help="""
+		Output destination for Newick file.""")
+	args = parser.parse_args()
+	examl(args.alignment, args.model, args.seed, args.output)
+
+# vim: noexpandtab ts=4 sw=4

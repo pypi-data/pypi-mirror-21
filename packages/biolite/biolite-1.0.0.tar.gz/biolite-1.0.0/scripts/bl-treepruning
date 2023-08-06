@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+#
+# BioLite - Tools for processing gene sequence data and automating workflows
+# Copyright (c) 2012-2017 Brown University. All rights reserved.
+#
+# This file is part of BioLite.
+#
+# BioLite is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# BioLite is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with BioLite.  If not, see <http://www.gnu.org/licenses/>.
+
+import dendropy
+import sys
+
+from biolite import workflows
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print "usage: bl-treepruning <newickfile>"
+		sys.exit(0)
+	infile = sys.argv[1]
+	tree = dendropy.Tree(stream=open(infile), schema='newick')
+	masked_tree = workflows.phylogeny.monophyly_masking(tree)
+	masked_tree.write_to_path(infile+'.mm', 'newick', as_unrooted=True)
+	pruned_trees = []
+	workflows.phylogeny.paralogy_prune(masked_tree, pruned_trees)
+	for i, tree in enumerate(pruned_trees):
+		tree.write_to_path('%s.pp.%d' % (infile, i), 'newick', as_unrooted=True)
+
