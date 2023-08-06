@@ -1,0 +1,180 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="hedgehog-app.html"></head><body><div hidden="" by-vulcanize=""><script>window.MomentJs=window.MomentJs||{},MomentJs.MomentImportBehavior={ready:function(){void 0===window.moment?window._downloading_moment?this._waitToLoadMomentJs():(window._downloading_moment=!0,this._loadMomentJs()):this.fire("moment-is-ready")},_loadMomentJs:function(){var o=document.createElement("script");o.src=this.resolveUrl("../moment/min/moment.min.js"),o.onload=function(){this.fire("moment-is-ready")}.bind(this),document.body.appendChild(o)},_waitToLoadMomentJs:function(){void 0!==window.moment?this.fire("moment-is-ready"):window.setTimeout(function(){this._waitToLoadMomentJs()}.bind(this),1)}};</script><dom-module id="moment-js" assetpath="../bower_components/moment-js/">
+  <template>
+    <span hidden$="[[hide]]">[[output]]</span>
+  </template>
+
+  <script>Polymer({is:"moment-js",behaviors:[MomentJs.MomentImportBehavior],properties:{date:{type:String,observer:"_dateChanged"},dateFormat:{type:String,value:null,observer:"_updateFormattedDateMoment"},format:String,formattedDate:{type:String,readOnly:!0,notify:!0},formattedDateMoment:{type:String,readOnly:!0,notify:!0},utc:{type:Boolean,value:!1,observer:"_updateFormattedDateMoment"},hide:{type:Boolean,value:!1},isValid:{type:Boolean,value:!1},startOf:String,endOf:String,relativeTime:{type:String,readOnly:!0,notify:!0},fromNow:Boolean,calendarTime:Boolean,toNow:Boolean,output:{type:String,readOnly:!0,notify:!0},isMomentReady:{type:Boolean,value:!1,notify:!0}},listeners:{"moment-is-ready":"_momentIsReady"},_dateChanged:function(t){this.isMomentReady===!0&&(isNaN(t)?this.set("date",this.date):this.set("date",Number(this.date)),this._updateFormattedDateMoment())},_updateFormattedDateMoment:function(){this.isMomentReady===!0&&(this.dateFormat?this.utc?this._setFormattedDateMoment(moment.utc(this.date,this.dateFormat)):this._setFormattedDateMoment(moment(this.date,this.dateFormat)):this.utc?this._setFormattedDateMoment(moment.utc(this.date)):this._setFormattedDateMoment(moment(this.date)),this._updateFormattedDate(),this._updateRelativeTime())},_updateFormattedDate:function(){this.formattedDateMoment&&(this._setFormattedDate(this.formattedDateMoment.format(this.format)),this.relativeTime||this._setOutput(this.formattedDate))},_updateRelativeTime:function(){this.formattedDateMoment&&(this.fromNow?this._setRelativeTime(this.formattedDateMoment.fromNow()):this.toNow?this._setRelativeTime(this.formattedDateMoment.toNow()):this.calendarTime&&this._setRelativeTime(this.formattedDateMoment.calendar()),this.relativeTime&&this._setOutput(this.relativeTime))},_updateIsValid:function(){this.dateFormat?this.set("isValid",moment(this.date,this.dateFormat).isValid()):this.set("isValid",moment(this.date).isValid())},_startOfChanged:function(){this._setFormattedDateMoment(this.formattedDateMoment.startOf(this.startOf)),this._updateFormattedDate()},_endOfChanged:function(){this._setFormattedDateMoment(this.formattedDateMoment.endOf(this.endOf)),this._updateFormattedDate()},_momentIsReady:function(){this.set("isMomentReady",!0),void 0===this.format&&this.set("format",moment.defaultFormat),this.observers=["_updateFormattedDate(format)","_startOfChanged(startOf)","_endOfChanged(endOf)","_updateRelativeTime(fromNow)","_updateRelativeTime(toNow)","_updateRelativeTime(calendarTime)","_updateIsValid(date, dateFormat)"],this._dateChanged(this.date),this._updateFormattedDate(this.format),this._startOfChanged(this.startOf),this._endOfChanged(this.endOf),this._updateIsValid(this.date,this.dateFormat)}});</script>
+</dom-module>
+<iron-iconset-svg size="24" name="plutonium-breadcrumbs-icons">
+    <svg><defs>
+    <g id="chevron-right"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></g>
+    </defs></svg>
+</iron-iconset-svg><dom-module id="plutonium-breadcrumbs" assetpath="../bower_components/plutonium-breadcrumbs/">
+    <template>
+        <style>
+            :host {
+                display: inline-block;
+            }
+
+            .label {
+                display: inline-block;
+                vertical-align: middle;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .label > a {
+                text-decoration: none;
+                color: var(--plutonium-breadcrumbs-primary-text-color, #aaa);
+            }
+
+            .label:last-of-type > a {
+                color: var(--plutonium-breadcrumbs-primary-text-color, black);
+            }
+
+            a[disabled] {
+                pointer-events: none;
+            }
+
+            li.label:last-of-type iron-icon {
+                display: none !important;
+            }
+        </style>
+        <div id="crumbs">
+            <iron-selector selected="0">
+                <template is="dom-repeat" items="{{crumbs}}" as="crumb">
+                    <li class="label">
+                        <a href="{{crumb.href}}" disabled="{{!crumb.href}}">{{crumb.label}}</a>
+
+                        <iron-icon icon="plutonium-breadcrumbs-icons:chevron-right"></iron-icon>
+                    </li>
+                </template>
+            </iron-selector>
+
+        </div>
+    </template>
+
+    <script>Polymer({is:"plutonium-breadcrumbs",properties:{crumbs:{type:Array,notify:!0,value:[]}}});</script>
+</dom-module>
+</div><dom-module id="hedgehog-task-details-view">
+    <template>
+        <style include="shared-styles">
+          :host {
+            display: inline-block;
+            //width: 100%;
+
+            --task-pending-color: yellow;
+            --task-initialized-color: white;
+            --task-running-color: blue;
+            --task-disabled-color: gray;
+            --task-done-color: green;
+            --task-failure-color: red;
+          }
+
+          :host paper-card {
+            width: 100%;
+          }
+
+          :host paper-card div.card-content {
+            @apply(--paper-font-common-nowrap);
+          }
+
+          .pending {
+            background: var(--task-pending-color);
+          }
+          .initialized {
+            background: var(--task-initialized-color);
+          }
+          .disabled {
+            background: var(--task-disabled-color);
+          }
+          .done {
+            background: var(--task-done-color);
+          }
+          .failure {
+            background: var(--task-failure-color);
+          }
+          .running {
+            background: var(--task-running-color);
+          }
+
+          .avatar {
+            display: inline-block;
+            position: relative;
+          }
+
+
+
+
+
+        </style>
+
+        <app-route route="{{route}}" pattern="/:id" data="{{routeData}}"></app-route>
+        <iron-ajax url="/processengine/definitions/[[routeData.id]]" auto="" last-response="{{task}}"></iron-ajax>
+
+        <iron-ajax id="runProcessDefinitionAjax" url="/processengine/definition/[[task.id]]/run" method="POST" body="[[currentActionModel]]" headers="[[headers]]" content-type="application/json" as-json="" on-error="_onManualRunDefinitionError" on-response="_onManualRunDefinitionResponse" last-response="{{task}}"></iron-ajax>
+
+        <app-toolbar>
+            <plutonium-breadcrumbs crumbs="[[crumbs]]"></plutonium-breadcrumbs>
+        </app-toolbar>
+
+        <paper-card heading="[[displayName]]" class$="[[task.status]]">
+            <div class="card-content">
+                [[task.description]]
+            </div>
+            <div class="card-actions">
+                <paper-icon-button icon="shared-icons:play" alt="Mérés indítása." on-tap="_onManualRunDefinition"></paper-icon-button>
+                <a href="#/task-details-view/[[task.id]]" tabindex="-1">
+                    <paper-icon-button icon="shared-icons:history" alt="Már végrehajtott mérések."></paper-icon-button>
+                </a>
+                <a href="#/task-scheduler-view/[[task.id]]" tabindex="-1">
+                    <paper-icon-button icon="shared-icons:schedule" alt="Mérés ütemezése."></paper-icon-button>
+                </a>
+            </div>
+        </paper-card>
+
+        <paper-card heading="Jelenleg futó">
+            <div class="card-content">
+                <template is="dom-repeat" items="[[task.executions]]" as="execution" filter="isRunning" observe="status execution.status">
+                    <paper-icon-item>
+                        <div class$="avatar [[execution.status]]" item-icon="">
+                            <iron-icon icon="shared-icons:[[execution.status]]"></iron-icon>
+                        </div>
+                        <paper-item-body two-line="" class="flex">
+                            <div>Mérés #[[execution.id]]</div>
+                            <div secondary="">Indítva <moment-js date="[[execution.begins]]" format="LLLL" date-format="YYYY-MM-DDTHH:mm:ss.SSSSSSZ" utc="" to-now=""></moment-js></div>
+                        </paper-item-body>
+                        <a href$="#/results-view/[[execution.id]]" tabindex="-1">
+                            <paper-icon-button icon="shared-icons:visibility" alt="Eredmények megtekintése"></paper-icon-button>
+                        </a>
+                    </paper-icon-item>
+                </template>
+            </div>
+        </paper-card>
+
+
+
+        <paper-card heading="Előzmények">
+            <div class="card-content">
+                <template is="dom-repeat" items="[[task.executions]]" as="execution" filter="isHistory" observe="status execution.status">
+                    <paper-icon-item>
+                        <div class$="avatar [[execution.status]]" item-icon="">
+                            <iron-icon icon="shared-icons:[[execution.status]]"></iron-icon>
+                        </div>
+                        <paper-item-body two-line="" class="flex">
+                            <div>Mérés #[[execution.id]]</div>
+                            <div secondary="">Végrehajtva <moment-js date="[[execution.begins]]" format="LLLL" date-format="YYYY-MM-DDTHH:mm:ss.SSSSSSZ" utc="" to-now=""></moment-js></div>
+                        </paper-item-body>
+                        <a href$="#/results-view/[[execution.id]]" tabindex="-1">
+                            <paper-icon-button icon="shared-icons:visibility" alt="Eredmények megtekintése"></paper-icon-button>
+                        </a>
+                    </paper-icon-item>
+                </template>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>Polymer({is:"hedgehog-task-details-view",properties:{task:{type:Object,notify:!0},displayName:{type:String,computed:"_computeDisplayName(task)"},currentActionModel:{type:Object,notify:!0,value:function(){return{}}},headers:{type:Object,notify:!0,reflectToAttribute:!0},crumbs:{type:Array,computed:"_computeCrumbs(task, displayName)"}},_computeDisplayName:function(e){return e.display_name?e.display_name:e.name?e.name:e.id},_onManualRunDefinition:function(e,n){console.log(this.headers),this.$.runProcessDefinitionAjax.generateRequest()},_onManualRunDefinitionResponse:function(e,n){this.fire("plutonium-notification",{level:"info",message:this.get("displayName")+" elindítva."})},_onManualRunDefinitionError:function(e,n){this.fire("plutonium-notification",{level:"error",message:n.error.message})},_computeCrumbs:function(e,n){var t=[{label:"Mérés",href:"#/measurementjournal-view"}];return e&&t.push({label:n,href:"#/task-details-view/"+e.id}),t},isRunning:function(e){return"running"==e.status},isHistory:function(e){return e.result||"running"!=e.status}});</script>
+</dom-module>
+</body></html>

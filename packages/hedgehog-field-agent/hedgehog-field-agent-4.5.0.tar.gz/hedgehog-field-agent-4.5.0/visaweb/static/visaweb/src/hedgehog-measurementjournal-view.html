@@ -1,0 +1,794 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="hedgehog-app.html"></head><body><div hidden="" by-vulcanize=""><dom-module id="app-grid-style" assetpath="../bower_components/app-layout/app-grid/">
+  <template>
+    <style>
+
+      :host,
+      :host ::content {
+        /**
+         * The width for the expandible item is:
+         * ((100% - subPixelAdjustment) / columns * itemColumns - gutter
+         *
+         * - subPixelAdjustment: 0.1px (Required for IE 11)
+         * - gutter: var(--app-grid-gutter)
+         * - columns: var(--app-grid-columns)
+         * - itemColumn: var(--app-grid-expandible-item-columns)
+         */
+        --app-grid-expandible-item: {
+          -webkit-flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
+          flex-basis: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
+          max-width: calc((100% - 0.1px) / var(--app-grid-columns, 1) * var(--app-grid-expandible-item-columns, 1) - var(--app-grid-gutter, 0px)) !important;
+        };
+      }
+
+      .app-grid,
+      :host ::content .app-grid {
+        display: -ms-flexbox;
+        display: -webkit-flex;
+        display: flex;
+
+        -ms-flex-direction: row;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+
+        -ms-flex-wrap: wrap;
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+
+        padding-top: var(--app-grid-gutter, 0px);
+        padding-left: var(--app-grid-gutter, 0px);
+        box-sizing: border-box;
+      }
+
+      .app-grid > *,
+      :host ::content .app-grid > * {
+        /* Required for IE 10 */
+        -ms-flex: 1 1 100%;
+        -webkit-flex: 1;
+        flex: 1;
+
+        /* The width for an item is: (100% - subPixelAdjustment - gutter * columns) / columns */
+        -webkit-flex-basis: calc((100% - 0.1px - (var(--app-grid-gutter, 0px) * var(--app-grid-columns, 1))) / var(--app-grid-columns, 1));
+        flex-basis: calc((100% - 0.1px - (var(--app-grid-gutter, 0px) * var(--app-grid-columns, 1))) / var(--app-grid-columns, 1));
+
+        max-width: calc((100% - 0.1px - (var(--app-grid-gutter, 0px) * var(--app-grid-columns, 1))) / var(--app-grid-columns, 1));
+        margin-bottom: var(--app-grid-gutter, 0px);
+        margin-right: var(--app-grid-gutter, 0px);
+        height: var(--app-grid-item-height);
+        box-sizing: border-box;
+      }
+
+      .app-grid[has-aspect-ratio] > *,
+      :host ::content .app-grid[has-aspect-ratio] > * {
+        position: relative;
+      }
+
+      .app-grid[has-aspect-ratio] > *::before,
+      :host ::content .app-grid[has-aspect-ratio] > *::before {
+        display: block;
+        content: "";
+        padding-top: var(--app-grid-item-height, 100%);
+      }
+
+      .app-grid[has-aspect-ratio] > * > *,
+      :host ::content .app-grid[has-aspect-ratio] > * > * {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+      }
+
+    </style>
+  </template>
+</dom-module>
+<script>console.warn("This file is deprecated. Please use `iron-flex-layout/iron-flex-layout-classes.html`, and one of the specific dom-modules instead");</script>
+
+<style>
+
+  /*******************************
+            Flex Layout
+  *******************************/
+
+  html /deep/ .layout.horizontal,
+  html /deep/ .layout.horizontal-reverse,
+  html /deep/ .layout.vertical,
+  html /deep/ .layout.vertical-reverse {
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+  }
+
+  html /deep/ .layout.inline {
+    display: -ms-inline-flexbox;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+  }
+
+  html /deep/ .layout.horizontal {
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+  }
+
+  html /deep/ .layout.horizontal-reverse {
+    -ms-flex-direction: row-reverse;
+    -webkit-flex-direction: row-reverse;
+    flex-direction: row-reverse;
+  }
+
+  html /deep/ .layout.vertical {
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+  }
+
+  html /deep/ .layout.vertical-reverse {
+    -ms-flex-direction: column-reverse;
+    -webkit-flex-direction: column-reverse;
+    flex-direction: column-reverse;
+  }
+
+  html /deep/ .layout.wrap {
+    -ms-flex-wrap: wrap;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
+  
+  html /deep/ .layout-no-wrap {
+    -ms-flex-wrap: nowrap;
+    -webkit-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+  }
+
+  html /deep/ .layout.wrap-reverse {
+    -ms-flex-wrap: wrap-reverse;
+    -webkit-flex-wrap: wrap-reverse;
+    flex-wrap: wrap-reverse;
+  }
+
+  html /deep/ .flex-auto {
+    -ms-flex: 1 1 auto;
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+  }
+
+  html /deep/ .flex-none {
+    -ms-flex: none;
+    -webkit-flex: none;
+    flex: none;
+  }
+
+  html /deep/ .flex,
+  html /deep/ .flex-1 {
+    -ms-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+  }
+
+  html /deep/ .flex-2 {
+    -ms-flex: 2;
+    -webkit-flex: 2;
+    flex: 2;
+  }
+
+  html /deep/ .flex-3 {
+    -ms-flex: 3;
+    -webkit-flex: 3;
+    flex: 3;
+  }
+
+  html /deep/ .flex-4 {
+    -ms-flex: 4;
+    -webkit-flex: 4;
+    flex: 4;
+  }
+
+  html /deep/ .flex-5 {
+    -ms-flex: 5;
+    -webkit-flex: 5;
+    flex: 5;
+  }
+
+  html /deep/ .flex-6 {
+    -ms-flex: 6;
+    -webkit-flex: 6;
+    flex: 6;
+  }
+
+  html /deep/ .flex-7 {
+    -ms-flex: 7;
+    -webkit-flex: 7;
+    flex: 7;
+  }
+
+  html /deep/ .flex-8 {
+    -ms-flex: 8;
+    -webkit-flex: 8;
+    flex: 8;
+  }
+
+  html /deep/ .flex-9 {
+    -ms-flex: 9;
+    -webkit-flex: 9;
+    flex: 9;
+  }
+
+  html /deep/ .flex-10 {
+    -ms-flex: 10;
+    -webkit-flex: 10;
+    flex: 10;
+  }
+
+  html /deep/ .flex-11 {
+    -ms-flex: 11;
+    -webkit-flex: 11;
+    flex: 11;
+  }
+
+  html /deep/ .flex-12 {
+    -ms-flex: 12;
+    -webkit-flex: 12;
+    flex: 12;
+  }
+
+  /* alignment in cross axis */
+
+  html /deep/ .layout.start {
+    -ms-flex-align: start;
+    -webkit-align-items: flex-start;
+    align-items: flex-start;
+  }
+
+  html /deep/ .layout.center,
+  html /deep/ .layout.center-center {
+    -ms-flex-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+  }
+
+  html /deep/ .layout.end {
+    -ms-flex-align: end;
+    -webkit-align-items: flex-end;
+    align-items: flex-end;
+  }
+
+  /* alignment in main axis */
+
+  html /deep/ .layout.start-justified {
+    -ms-flex-pack: start;
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
+  }
+
+  html /deep/ .layout.center-justified,
+  html /deep/ .layout.center-center {
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+  }
+
+  html /deep/ .layout.end-justified {
+    -ms-flex-pack: end;
+    -webkit-justify-content: flex-end;
+    justify-content: flex-end;
+  }
+
+  html /deep/ .layout.around-justified {
+    -ms-flex-pack: around;
+    -webkit-justify-content: space-around;
+    justify-content: space-around;
+  }
+
+  html /deep/ .layout.justified {
+    -ms-flex-pack: justify;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+  }
+
+  /* self alignment */
+
+  html /deep/ .self-start {
+    -ms-align-self: flex-start;
+    -webkit-align-self: flex-start;
+    align-self: flex-start;
+  }
+
+  html /deep/ .self-center {
+    -ms-align-self: center;
+    -webkit-align-self: center;
+    align-self: center;
+  }
+
+  html /deep/ .self-end {
+    -ms-align-self: flex-end;
+    -webkit-align-self: flex-end;
+    align-self: flex-end;
+  }
+
+  html /deep/ .self-stretch {
+    -ms-align-self: stretch;
+    -webkit-align-self: stretch;
+    align-self: stretch;
+  }
+
+  /*******************************
+            Other Layout
+  *******************************/
+
+  html /deep/ .block {
+    display: block;
+  }
+
+  /* IE 10 support for HTML5 hidden attr */
+  html /deep/ [hidden] {
+    display: none !important;
+  }
+
+  html /deep/ .invisible {
+    visibility: hidden !important;
+  }
+
+  html /deep/ .relative {
+    position: relative;
+  }
+
+  html /deep/ .fit {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  body.fullbleed {
+    margin: 0;
+    height: 100vh;
+  }
+
+  html /deep/ .scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow: auto;
+  }
+
+  .fixed-bottom,
+  .fixed-left,
+  .fixed-right,
+  .fixed-top {
+    position: fixed;
+  }
+
+  html /deep/ .fixed-top {
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  html /deep/ .fixed-right {
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  html /deep/ .fixed-bottom {
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  html /deep/ .fixed-left {
+    top: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+</style>
+<script>console.warn("This file is deprecated. Please use `iron-flex-layout/iron-flex-layout-classes.html`, and one of the specific dom-modules instead");</script><style>
+
+  /*******************************
+            Flex Layout
+  *******************************/
+
+  .layout.horizontal,
+  .layout.horizontal-reverse,
+  .layout.vertical,
+  .layout.vertical-reverse {
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+  }
+
+  .layout.inline {
+    display: -ms-inline-flexbox;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+  }
+
+  .layout.horizontal {
+    -ms-flex-direction: row;
+    -webkit-flex-direction: row;
+    flex-direction: row;
+  }
+
+  .layout.horizontal-reverse {
+    -ms-flex-direction: row-reverse;
+    -webkit-flex-direction: row-reverse;
+    flex-direction: row-reverse;
+  }
+
+  .layout.vertical {
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+  }
+
+  .layout.vertical-reverse {
+    -ms-flex-direction: column-reverse;
+    -webkit-flex-direction: column-reverse;
+    flex-direction: column-reverse;
+  }
+
+  .layout.wrap {
+    -ms-flex-wrap: wrap;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
+  
+  .layout.no-wrap {
+    -ms-flex-wrap: nowrap;
+    -webkit-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+  }
+
+  .layout.wrap-reverse {
+    -ms-flex-wrap: wrap-reverse;
+    -webkit-flex-wrap: wrap-reverse;
+    flex-wrap: wrap-reverse;
+  }
+
+  .flex-auto {
+    -ms-flex: 1 1 auto;
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+  }
+
+  .flex-none {
+    -ms-flex: none;
+    -webkit-flex: none;
+    flex: none;
+  }
+
+  .flex,
+  .flex-1 {
+    -ms-flex: 1;
+    -webkit-flex: 1;
+    flex: 1;
+  }
+
+  .flex-2 {
+    -ms-flex: 2;
+    -webkit-flex: 2;
+    flex: 2;
+  }
+
+  .flex-3 {
+    -ms-flex: 3;
+    -webkit-flex: 3;
+    flex: 3;
+  }
+
+  .flex-4 {
+    -ms-flex: 4;
+    -webkit-flex: 4;
+    flex: 4;
+  }
+
+  .flex-5 {
+    -ms-flex: 5;
+    -webkit-flex: 5;
+    flex: 5;
+  }
+
+  .flex-6 {
+    -ms-flex: 6;
+    -webkit-flex: 6;
+    flex: 6;
+  }
+
+  .flex-7 {
+    -ms-flex: 7;
+    -webkit-flex: 7;
+    flex: 7;
+  }
+
+  .flex-8 {
+    -ms-flex: 8;
+    -webkit-flex: 8;
+    flex: 8;
+  }
+
+  .flex-9 {
+    -ms-flex: 9;
+    -webkit-flex: 9;
+    flex: 9;
+  }
+
+  .flex-10 {
+    -ms-flex: 10;
+    -webkit-flex: 10;
+    flex: 10;
+  }
+
+  .flex-11 {
+    -ms-flex: 11;
+    -webkit-flex: 11;
+    flex: 11;
+  }
+
+  .flex-12 {
+    -ms-flex: 12;
+    -webkit-flex: 12;
+    flex: 12;
+  }
+
+  /* alignment in cross axis */
+
+  .layout.start {
+    -ms-flex-align: start;
+    -webkit-align-items: flex-start;
+    align-items: flex-start;
+  }
+
+  .layout.center,
+  .layout.center-center {
+    -ms-flex-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+  }
+
+  .layout.end {
+    -ms-flex-align: end;
+    -webkit-align-items: flex-end;
+    align-items: flex-end;
+  }
+
+  /* alignment in main axis */
+
+  .layout.start-justified {
+    -ms-flex-pack: start;
+    -webkit-justify-content: flex-start;
+    justify-content: flex-start;
+  }
+
+  .layout.center-justified,
+  .layout.center-center {
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+  }
+
+  .layout.end-justified {
+    -ms-flex-pack: end;
+    -webkit-justify-content: flex-end;
+    justify-content: flex-end;
+  }
+
+  .layout.around-justified {
+    -ms-flex-pack: around;
+    -webkit-justify-content: space-around;
+    justify-content: space-around;
+  }
+
+  .layout.justified {
+    -ms-flex-pack: justify;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+  }
+
+  /* self alignment */
+
+  .self-start {
+    -ms-align-self: flex-start;
+    -webkit-align-self: flex-start;
+    align-self: flex-start;
+  }
+
+  .self-center {
+    -ms-align-self: center;
+    -webkit-align-self: center;
+    align-self: center;
+  }
+
+  .self-end {
+    -ms-align-self: flex-end;
+    -webkit-align-self: flex-end;
+    align-self: flex-end;
+  }
+
+  .self-stretch {
+    -ms-align-self: stretch;
+    -webkit-align-self: stretch;
+    align-self: stretch;
+  }
+
+  /*******************************
+            Other Layout
+  *******************************/
+
+  .block {
+    display: block;
+  }
+
+  /* IE 10 support for HTML5 hidden attr */
+  [hidden] {
+    display: none !important;
+  }
+
+  .invisible {
+    visibility: hidden !important;
+  }
+
+  .relative {
+    position: relative;
+  }
+
+  .fit {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  body.fullbleed {
+    margin: 0;
+    height: 100vh;
+  }
+
+  .scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow: auto;
+  }
+
+  /* fixed position */
+
+  .fixed-bottom,
+  .fixed-left,
+  .fixed-right,
+  .fixed-top {
+    position: fixed;
+  }
+
+  .fixed-top {
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .fixed-right {
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .fixed-bottom {
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .fixed-left {
+    top: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+</style><dom-module id="hedgehog-task-card-view" assetpath="./">
+    <template>
+        <style include="shared-styles">
+          :host {
+            display: inline-block;
+            //width: 100%;
+
+            --task-pending-color: yellow;
+            --task-initialized-color: white;
+            --task-running-color: blue;
+            --task-disabled-color: gray;
+            --task-done-color: green;
+            --task-failure-color: red;
+          }
+
+          :host paper-card {
+            width: 100%;
+          }
+
+          :host paper-card div.card-content {
+            @apply(--paper-font-common-nowrap);
+          }
+
+          .pending {
+            background: var(--task-pending-color);
+          }
+          .initialized {
+            background: var(--task-initialized-color);
+          }
+          .disabled {
+            background: var(--task-disabled-color);
+          }
+          .done {
+            background: var(--task-done-color);
+          }
+          .failure {
+            background: var(--task-failure-color);
+          }
+          .running {
+            background: var(--task-running-color);
+          }
+
+
+
+
+
+        </style>
+
+        <iron-ajax id="runProcessDefinitionAjax" url="/processengine/definition/[[task.id]]/run" method="POST" body="[[currentActionModel]]" headers="[[headers]]" content-type="application/json" as-json="" on-error="_onManualRunDefinitionError" on-response="_onManualRunDefinitionResponse" last-response="{{task}}"></iron-ajax>
+
+        <paper-card heading="[[displayName]]" class$="[[task.status]]">
+            <div class="card-content" title="[[task.description]]">
+                [[task.description]]
+            </div>
+            <div class="card-actions">
+                <paper-icon-button icon="shared-icons:play" title="Mérés indítása. Első szabad időablak 1 másodperc műlva." on-tap="_onManualRunDefinition"></paper-icon-button>
+                <a href="#/task-details-view/[[task.id]]" tabindex="-1" title="Mérés részletei, végrehajtások, előzmények.">
+                    <paper-icon-button icon="shared-icons:history"></paper-icon-button>
+                </a>
+                <a href="#/task-scheduler-view/[[task.id]]" tabindex="-1" title="Mérés ütemezése egy későbbi időpontba.">
+                    <paper-icon-button icon="shared-icons:schedule"></paper-icon-button>
+                </a>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>Polymer({is:"hedgehog-task-card-view",properties:{task:{type:Object,notify:!0},displayName:{type:String,computed:"_computeDisplayName(task)"},currentActionModel:{type:Object,notify:!0,value:function(){return{}}},headers:{type:Object,notify:!0,reflectToAttribute:!0}},_computeDisplayName:function(e){return e.display_name?e.display_name:e.name?e.name:e.id},_onManualRunDefinition:function(e,n){console.log(this.headers),this.$.runProcessDefinitionAjax.generateRequest()},_onManualRunDefinitionResponse:function(e,n){this.fire("plutonium-notification",{level:"info",message:this.get("displayName")+" elindítva."})},_onManualRunDefinitionError:function(e,n){this.fire("plutonium-notification",{level:"error",message:n.error.message})}});</script>
+</dom-module>
+</div><dom-module id="hedgehog-measurementjournal-view">
+    <template>
+        <style include="shared-styles app-grid-style custom-style">
+          :host {
+            display: block;
+            --app-grid-columns: 4;
+            --app-grid-item-height: 50%;
+            --app-grid-gutter: 16px;
+            --app-grid-expandible-item-columns: 2;
+          }
+
+          :host .item {
+            padding: 0;
+          }
+
+          @media (max-width: 800px) {
+            :host .item {
+                @apply(--app-grid-expandible-item);
+            }
+          }
+        </style>
+
+        <iron-ajax url="/processengine/definitions" headers="[[headers]]" last-response="{{processDefinitions}}" auto=""></iron-ajax>
+
+        <app-toolbar>
+            <h1>Mérés definíciók</h1>
+        </app-toolbar>
+
+        <div class="app-grid">
+            <template is="dom-repeat" items="[[processDefinitions]]" as="processDefinition">
+                <hedgehog-task-card-view task="[[processDefinition]]" headers="[[headers]]"></hedgehog-task-card-view>
+            </template>
+        </div>
+
+        <template is="dom-id" if="[[empty]]">
+            Nincsenek mérés definíciók.
+        </template>
+    </template>
+
+    <script>Polymer({is:"hedgehog-measurementjournal-view",properties:{processDefinitions:{type:Array,notify:!0,value:function(){return[]}},empty:{type:Boolean,computed:"_isEmpty(processDefinitions.splices)"},headers:{type:Object,notify:!0,reflectToAttribute:!0}},listeners:{error:"_onError"},observers:["elementsAddedOrRemoved(processDefinitions.splices)"],_isEmpty:function(e){try{return this.processDefinitions.length>0}catch(e){return!0}},elementsAddedOrRemoved:function(e){e&&e.indexSplices.forEach(function(e){e.removed.forEach(function(e){console.log(e.name+" was removed")});for(var o=0;o<e.addedCount;o++){var r=e.index+o,n=e.object[r];console.log("User "+n.name+" added at index "+r)}},this)},_onError:function(e,o){this.fire("plutonium-notification",{level:"error",message:JSON.stringify(o.response)})}});</script>
+</dom-module>
+</body></html>
