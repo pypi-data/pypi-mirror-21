@@ -1,0 +1,25 @@
+<configure xmlns="http://namespaces.zope.org/zope"
+           xmlns:browser="http://namespaces.zope.org/browser"
+           i18n_domain="jalon.content">
+
+    <include package="plone.app.contentmenu" />
+
+    <browser:page name="firstpage_view"
+                  for="Products.CMFPlone.interfaces.siteroot.IPloneSiteRoot"
+                  template="templates/first_page.pt"
+                  permission="zope2.View"
+                  class=".scripts.first_page.FirstPage"/>
+
+    <browser:page name="jalon_forum_search"
+                  for="Products.Ploneboard.interfaces.IPloneboard"
+                  class=".view_script_4_5.search.SearchView"
+                  permission="zope2.View"/>
+
+    <!-- Viewlets registration -->
+    <browser:viewlet name="jalon.analytics"
+                     manager="plone.app.layout.viewlets.interfaces.IPortalFooter"
+                     template="templates/analytics.pt"
+                     class=".scripts.analytics.JalonAnalytics"
+                     permission="zope2.View"/>
+
+</configure>
