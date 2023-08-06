@@ -1,0 +1,73 @@
+<html><head><meta charset="UTF-8"><link rel="import" href="hedgehog-app.html"></head><body><dom-module id="hedgehog-task-scheduler-view">
+    <template>
+        <style include="shared-styles">
+          :host {
+            display: inline-block;
+            //width: 100%;
+
+            --task-pending-color: yellow;
+            --task-initialized-color: white;
+            --task-running-color: blue;
+            --task-disabled-color: gray;
+            --task-done-color: green;
+            --task-failure-color: red;
+          }
+
+          :host paper-card {
+            width: 100%;
+          }
+
+          :host paper-card div.card-content {
+            @apply(--paper-font-common-nowrap);
+          }
+
+          .pending {
+            background: var(--task-pending-color);
+          }
+          .initialized {
+            background: var(--task-initialized-color);
+          }
+          .disabled {
+            background: var(--task-disabled-color);
+          }
+          .done {
+            background: var(--task-done-color);
+          }
+          .failure {
+            background: var(--task-failure-color);
+          }
+          .running {
+            background: var(--task-running-color);
+          }
+
+
+
+
+
+        </style>
+
+
+        <app-route route="{{route}}" pattern="/:id" data="{{routeData}}"></app-route>
+        <iron-ajax url="/processengine/definitions/[[routeData.id]]" auto="" last-response="{{task}}"></iron-ajax>
+
+        <iron-ajax id="runProcessDefinitionAjax" url="/processengine/definition/[[task.id]]/run" method="POST" body="[[currentActionModel]]" headers="[[headers]]" content-type="application/json" as-json="" on-error="_onManualRunDefinitionError" on-response="_onManualRunDefinitionResponse" last-response="{{task}}"></iron-ajax>
+
+        <paper-card heading="[[displayName]]" class$="[[task.status]]">
+            <div class="card-content">
+                [[task.description]]
+            </div>
+            <div class="card-actions">
+                <paper-icon-button icon="shared-icons:play" alt="Mérés indítása." on-tap="_onManualRunDefinition"></paper-icon-button>
+                <a href="#/task-details-view/[[task.id]]" tabindex="-1">
+                    <paper-icon-button icon="shared-icons:history" alt="Már végrehajtott mérések."></paper-icon-button>
+                </a>
+                <a href="#/task-scheduler-view/[[task.id]]" tabindex="-1">
+                    <paper-icon-button icon="shared-icons:schedule" alt="Mérés ütemezése."></paper-icon-button>
+                </a>
+            </div>
+        </paper-card>
+    </template>
+
+    <script>Polymer({is:"hedgehog-task-scheduler-view",properties:{task:{type:Object,notify:!0},displayName:{type:String,computed:"_computeDisplayName(task)"},currentActionModel:{type:Object,notify:!0,value:function(){return{}}},headers:{type:Object,notify:!0,reflectToAttribute:!0}},_computeDisplayName:function(e){return e.display_name?e.display_name:e.name?e.name:e.id},_onManualRunDefinition:function(e,n){console.log(this.headers),this.$.runProcessDefinitionAjax.generateRequest()},_onManualRunDefinitionResponse:function(e,n){this.fire("plutonium-notification",{level:"info",message:this.get("displayName")+" elindítva."})},_onManualRunDefinitionError:function(e,n){this.fire("plutonium-notification",{level:"error",message:n.error.message})}});</script>
+</dom-module>
+</body></html>

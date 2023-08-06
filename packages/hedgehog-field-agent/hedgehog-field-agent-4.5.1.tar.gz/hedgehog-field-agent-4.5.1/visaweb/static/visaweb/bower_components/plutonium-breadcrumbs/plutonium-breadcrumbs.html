@@ -1,0 +1,57 @@
+<html><head><link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-selector/iron-selector.html">
+<link rel="import" href="../iron-icon/iron-icon.html">
+<link rel="import" href="plutonium-breadcrumbs-icons.html">
+
+
+
+
+</head><body><dom-module id="plutonium-breadcrumbs">
+    <template>
+        <style>
+            :host {
+                display: inline-block;
+            }
+
+            .label {
+                display: inline-block;
+                vertical-align: middle;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .label > a {
+                text-decoration: none;
+                color: var(--plutonium-breadcrumbs-primary-text-color, #aaa);
+            }
+
+            .label:last-of-type > a {
+                color: var(--plutonium-breadcrumbs-primary-text-color, black);
+            }
+
+            a[disabled] {
+                pointer-events: none;
+            }
+
+            li.label:last-of-type iron-icon {
+                display: none !important;
+            }
+        </style>
+        <div id="crumbs">
+            <iron-selector selected="0">
+                <template is="dom-repeat" items="{{crumbs}}" as="crumb">
+                    <li class="label">
+                        <a href="{{crumb.href}}" disabled="{{!crumb.href}}">{{crumb.label}}</a>
+
+                        <iron-icon icon="plutonium-breadcrumbs-icons:chevron-right"></iron-icon>
+                    </li>
+                </template>
+            </iron-selector>
+
+        </div>
+    </template>
+
+    <script>Polymer({is:"plutonium-breadcrumbs",properties:{crumbs:{type:Array,notify:!0,value:[]}}});</script>
+</dom-module>
+</body></html>
