@@ -1,0 +1,87 @@
+Metadata-Version: 2.0
+Name: pyciscospa
+Version: 0.1.2
+Summary: A package to interface with Cisco SPA ATA devices
+Home-page: https://github.com/davejcameron/pyciscospa
+Author: David Cameron
+Author-email: dave.j.cameron+pip@gmail.com
+License: Apache Software License 2.0
+Keywords: cisco ata
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Requires-Dist: lxml
+Requires-Dist: requests
+Requires-Dist: xmljson
+Provides-Extra: dev
+Requires-Dist: check-manifest; extra == 'dev'
+Requires-Dist: requests-mock; extra == 'dev'
+
+Cisco SPA ATA devices |Build Status| |PyPi Version|
+===================================================
+
+A library to interact with the SPA112 ATA to gather phone line status details and reboot the device remotely.
+
+
+Command Line Usage
+------------------
+
+1. Install PyCiscoSPA.
+
+   .. code:: python
+
+      pip install pyciscospa
+
+2. Get the status of the connected phone lines (default admin/admin)
+
+   .. code:: bash
+
+      pyciscospa --host 192.168.1.20
+      pyciscospa --host 192.168.1.20 -u admin -p admin
+
+3. Reboot the ATA
+
+   .. code:: bash
+
+      pyciscospa --host 192.168.1.20 --reboot
+      pyciscospa --host 192.168.1.20 -u admin -p admin --reboot
+
+
+Module Usage
+------------
+
+1. Get phone lines status
+
+   .. code:: python
+
+      from pyciscospa import CiscoClient
+
+      client = CiscoClient(192.168.1.20)
+      phone_lines = client.phones()
+
+2. Reboot the ATA
+
+   .. code:: python
+
+      from pyciscospa import CiscoClient
+
+      client = CiscoClient(192.168.1.20)
+      client.reboot()
+
+
+
+
+.. |Build Status| image:: https://travis-ci.org/davejcameron/pyciscospa.svg?branch=master
+   :target: https://travis-ci.org/davejcameron/pyciscospa
+
+.. |PyPi Version| image:: https://img.shields.io/pypi/v/pyciscospa.svg
+   :target: https://pypi.python.org/pypi/pyciscospa/
+
