@@ -1,0 +1,34 @@
+{% extends "constellation_base/base.html" %}
+
+{% block title %}{{ template_settings.organization }} -- Login{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_base/css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="section-center mdl-card mdl-shadow--2dp mdl-cell--6-col-desktop mdl-cell--6-col-tablet mdl-cell--12-col-phone mdl-grid">
+    <div class="mdl-card__title mdl-color--primary-dark">
+        <h2 class="mdl-card__title-text mdl-color-text--primary-contrast">Login</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        <form method="post" action="" id="login">
+            {% csrf_token %}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:100%">
+                {{ form.username }}
+                <label class="mdl-textfield__label" for="{{ form.username.id_for_label }}">Username</label>
+            </div><br>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" style="width:100%">
+                {{ form.password }}
+                <label class="mdl-textfield__label" for="{{ form.password.id_for_label }}">Password</label>
+            </div>
+            <input type="hidden" name="next" value="{{ next }}" />
+            <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+                Log in
+            </button>
+        </form>
+    </div>
+</section>
+{% endblock %}
