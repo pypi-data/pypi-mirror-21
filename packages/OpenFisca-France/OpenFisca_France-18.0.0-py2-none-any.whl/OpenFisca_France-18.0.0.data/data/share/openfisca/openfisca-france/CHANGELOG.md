@@ -1,0 +1,874 @@
+# Changelog
+
+## 18.0.0 - [#718](https://github.com/openfisca/openfisca-france/pull/718)
+
+* Évolution du système socio-fiscal
+* Périodes concernées : toutes
+* Zones impactées: `prestations/aides_logement`
+* Détails :
+    - Corrige l'erreur de frappe sur le nom de la variable `aide_logement_participation_personelle` qui devient donc `aide_logement_participation_personnelle`
+
+## 17.2.0 - [#726](https://github.com/openfisca/openfisca-france/pull/726)
+
+* Évolution du système socio-fiscal
+* Périodes concernées : à partir du 01/04/2017.
+* Zones impactées: `prelevements_obligatoires/prelevements_sociaux/contributions_sociales/versement_transport`
+* Détails :
+    - Mise à jour des taux de versement transport
+
+* Changement mineur
+* Zones impactées: `/assets/versement_transport`
+* Détails :
+    - Suppression de fichiers inutilisés (quelques mégas)
+
+## 17.1.0 - [#724](https://github.com/openfisca/openfisca-france/pull/724)
+
+* Amélioration technique.
+* Détails :
+  - Permet d'installer OpenFisca-France avec une API web compatible via `pip install openfisca_france[api]`
+  - Redéploie `api.openfisca.fr` à chaque publication de version
+
+### 17.0.1 - [#730](https://github.com/openfisca/openfisca-france/pull/730)
+
+* Amélioration technique
+* Détails :
+  - Supprime les tests non exécutés par la CI
+    - Ceux ignorés via le prefixe `IGNORE_` ou la propriété `ignore`
+    - Ceux qui n'étaient pas mentionnés dans `test_yaml.py`
+  - Exécute dans la CI tous les tests YAML présents dans le répertoire `tests`
+  - Déplace les tests hors du package principal
+  - Déplace les configurations par dossier des tests YAML vers les fichiers de tests.
+  - Simplifie en conséquence `test_yaml.py`
+
+# 17.0.0
+
+* Évolution du système socio-fiscal.
+* Périodes concernées : à partir du 01/01/2003.
+* Zones impactées : `prestations/prestations_familiales/aeeh`.
+* Détails :
+  - Retourne pour `aeeh` un montant mensuel et non annuel
+
+### 16.1.1 - [#632](https://github.com/openfisca/openfisca-france/pull/632)
+
+* Changement mineur
+* Détails :
+    - Arrête d'importer de numpy des fonctions qui sont déjà fournies par `openfisca_core.model_api`
+
+## 16.1.0 - [#707](https://github.com/openfisca/openfisca-france/pull/707))
+
+* Évolution du système socio-fiscal
+* Périodes concernées : à partir du 01/07/2016.
+    - Les changements prennent effet à partir de la rentrée scolaire 2016
+* Zones impactées: `prestations/education`
+* Détails :
+    - Met à jour le mode de calcul des bourses de collège et lycée, entré en vigueur à la rentrée 2016.
+    - Introduit les variables `bourse_college_echelon` et `bourse_lycee_echelon`
+
+# 16.0.0 - [#710](https://github.com/openfisca/openfisca-france/pull/710)
+* Amélioration technique **non-rétrocompatible**
+* Détails :
+    - Restreint les périodes acceptées par OpenFisca
+    - La liste des périodes autorisées est disponible dans la [documentation](https://doc.openfisca.fr/periodsinstants.html)
+
+<!-- -->
+
+* Amélioration technique
+* Détails :
+  - Adapte `france` à  la version `9.0.0` de `core`.
+
+## 15.1.0 - [#699](https://github.com/openfisca/openfisca-france/pull/699)
+
+> Version précédemment publiée à tort en tant que 14.2.0
+
+* Amélioration technique
+* Détails :
+  - Adapte `france` à  la version `7.0.0` de `core`.
+  - Spécifie toujours une période dans les appels de variables, dans les formules et dans les tests.
+
+<!-- -->
+
+* Évolution du système socio-fiscal
+* Périodes concernées : toutes
+* Zones impactées : `revenus/activite/salarie`
+* Détails :
+  - Corrige le calcul de `salaire_net_a_payer`
+  - Dans certains cas, on utilisait la valeur de `depense_cantine_titre_restaurant_employe` pour une autre période que celle demandée.
+
+### 15.0.1 - [#697](https://github.com/openfisca/openfisca-france/pull/697)
+
+> Version précédemment publiée à tort en tant que 14.1.1
+
+* Amélioration technique
+* Utilise le module `core.model_api` plutôt que de réimporter un par un tous les objets Python nécessaires pour écrire une formule
+    - Aucun impact pour les ré-utilisateurs
+
+# 15.0.0 - [#685](https://github.com/openfisca/openfisca-france/pull/685)
+
+> Version précédemment publiée à tort en tant que 14.1.0
+
+* Amélioration technique **non-rétrocompatible**
+* Détails :
+  - Interdit par défaut de calculer ou de définir une variable pour une période qui ne correspond pas à sa période de définition.
+    - Par exemple, interdit de définir une variable annuelle, comme l'impôt sur le revenu, sur un mois.
+  - Renforce le contrôle de cohérence des entrées d'une simulation.
+  - Interdit de déclarer, pour une entrée de la simulation, à la fois un montant annuel et les douze montants mensuels correspondants s'ils ne sont pas parfaitement cohérents.
+
+<!-- -->
+
+* Amélioration technique
+* Détails :
+  - Adapte `france` à  la version `6.0.0` de `core`.
+  - Évolution du format de retour des formules : `return result` à la place de `return period, result`.
+  - Ajout d'un attribut `definition_period` pour toutes les variables.
+
+# 14.0.0 - [#690](https://github.com/openfisca/openfisca-france/pull/690)
+
+* Évolution du système socio-fiscal.
+* Périodes concernées : toutes.
+* Zones impactées : aucune.
+* Détails :
+  - Retire la variable  `nbptr_n_2`. Elle est inutilisée et obsolète depuis l'introduction des `period`.
+  - Cette variable n'intervenant dans aucune formule, elle n'a donc aucun impact.
+
+### 13.2.2 - [#695](https://github.com/openfisca/openfisca-france/pull/695)
+
+* Évolution du système socio-fiscal.
+* Périodes concernées : toutes.
+* Zones impactées : `mesures`.
+* Détails :
+  - Correction du calcul de `type_menage`.
+  - Des erreurs peuvent subsister quand ménage et famille ne coincide pas (cas des ménages complexes).
+  - Cette variable est utilisée à des fins statistiques et n'entre dans le calcul d'aucune prestation.
+
+### 13.2.1 — [#687](https://github.com/openfisca/openfisca-france/pull/687)
+
+* Évolution du système socio-fiscal.
+* Périodes concernées : Jusqu'au 31/12/2015.
+* Zones impactées : `prelevements_obligatoires/impot_revenu/ppe`.
+* Détails :
+  - Corrige la valeur erronnée retournée par `ppe_tp_sa`.
+  - Le calcul de l'indicatrice de travail à temps plein `ppe_tp_sa` renvoyait une valeur érronée, provoquant des erreurs dans le calcul de la prime pour l'emploi `ppe`.
+
+## 13.2.0 - [#676](https://github.com/openfisca/openfisca-france/pull/676)
+
+* Amélioration technique
+* Détails :
+  - Cette évolution est a priori transparente pour les utilisateurs.
+  - Déplace la transformation du JSON en test case du module `scenarios` de `france` vers `core`
+  - Adapte `france` à  la version `5.0.0` de `core`.
+
+### 13.1.5 - [#684](https://github.com/openfisca/openfisca-france/pull/684)
+
+* Évolution du système socio-fiscal
+* Périodes concernées : à partir du 01/01/2017.
+* Zones impactées : `prelevements_obligatoires/prelevements_sociaux/cotisations_sociales`
+* Détails :
+  - Corrige le taux de la réduction générale sur les bas salaires (Fillon) au 01/01/2017.
+  - Corrige le taux de la cotisation maladie MMID employeur au 01/01/2017.
+
+### 13.1.4 - [#682](https://github.com/openfisca/openfisca-france/pull/682)
+
+* Évolution du système socio-fiscal
+* Périodes concernées : à partir du 01/01/2017.
+* Zones impactées : `prelevements_obligatoires/prelevements_sociaux/cotisations_sociales/travail_prive`
+* Détails :
+  - Met à jour la valeur de l'AGS au 01/01/2017.
+  - La mise à jour de l'AGS de la version 10.0.1 n'a pas fonctionné, pour cause de duplication de paramètres.
+
+### 13.1.3
+
+* Fix `rsa_has_ressources_substitution` `Column` attribute
+
+### 13.1.2
+
+* Refactor TaxBenefitSystem decomposition attributes
+
+### 13.1.1
+
+* Update taux CICE 2017 : from 6% to 7%
+
+## 13.1.0
+
+* Use `individu` `revenus_locatifs` if any to compute `f4ba` (revenus fonciers imposables)
+
+This may change any variable related to impot sur le revenu if `revenus_locatifs` is not zero and f4ba is not initialized.
+
+### 13.0.2
+
+* Add `pensions_invalidite` to pensions imposables
+
+### 13.0.1
+
+* Fix `ppe`
+
+# 13.0.0
+
+* Deprecate `nbsala`
+* Deprecate `tva_ent`
+
+These changes are low impact since the two deprecated variables were not used.
+
+## 12.0.6
+
+* Fix `rsa_activite`
+
+## 12.0.5
+
+* Change `af` to DatedVariable to take into account the introduction of degressivite
+
+## 12.0.4
+
+* Change `aige_aine` column from IntCol to AgeCol.
+
+## 12.0.3
+
+* Rename `CAT` to `CATEGORIE_SALARIE` to be more explicit.
+
+## 12.0.2
+
+* Don't consider handicaped demandeur/conjoint as personne à charge in aides logement.
+
+## 12.0.1
+
+* Fix `aide_logement_montant_brut_avant_degressivite` returned `period` to month.
+
+## 12.0.0
+
+* Use core `test_runner` for yaml tests
+* Return yearly amount for `acs`, `bourse_college`, `bourse_lycee` instead of artificially divide it by 12 (breaking change).
+
+## 11.1.0
+
+ * Implement "Aides au logement" degression when rent is above a threshold.
+
+## 11.0.2
+
+* Fix typo in `casa` variable label
+
+## 11.0.1
+
+* Add a `sans_objet` level to variable `contrat_de_travail`
+
+## 11.0.0
+
+* Rename `cotsoc_noncontrib` to `cotisations_non_contibutives`
+
+## 10.1.1
+
+* Fix combination rule for aide 1er salarié / aide PME
+
+## 10.1.0
+
+* Add cotisation pénibilité
+
+## 10.0.2
+
+* Fix csg legislation link in `inversion_directe_salaires` reform.
+
+## 10.0.1
+
+* Update the following rates that changed on the first of january 2017:
+	- SMIC
+	- Plafond de la sécurité sociale
+	- Taux AGIRC-GMP
+	- Taux AGS
+	- Prolongation Aide embauche PME 2017
+
+## 10.0.0
+
+* From 2017, for RSA, remove CA and number of employees conditions.
+* Calculate RSA for Travailleurs Non Salariés
+* Introduce RSA fictif mechanism
+* Deprecate:
+	- `rsa_majore`
+	- `rsa_non_majore`
+* Introduce inputs:
+	- `primes_salaires_net`
+	- `indemnite_fin_contrat_net`
+
+## 9.0.1
+
+* Add `fuzzy` in some `ppa` parameters, needed to run calculations in 2017
+
+## 9.0.0
+
+* Continue mesures migration
+* Complete remplacement migration
+* Rename `impo` to `impots_directs`
+* Rename `revnet` to `revenu_net`
+* Rename `revini` to `revenu_initial`
+
+## 8.0.1
+
+* Introduce echelon_bourse
+
+## 8.0.0
+
+* Rename `paje_clmg` to `paje_cmg`
+
+## 7.0.1
+
+* Improving CASA
+
+## 7.0.0
+
+* Introduce minimum_vieillesse
+* Rename `mini` to `minima_sociaux`
+* Rename `nivvie` to `niveau_de_vie`
+* Rename `nivvie_net` to `niveau_de_vie_net`
+* Rename `nivvie_ini` to `niveau_de_vie_initial`
+* Rename `pfam` to `prestations_familiales`
+* Rename `psoc` to `prestations_sociales`
+* Rename `pen` to `pensions`
+* Rename `rev_cap` to `reveunus_du_capital`
+* Rename `rev_trav` to `revenus_du_travail`
+* Rename `revdisp` to `revenu_disponible`
+* Rename `typ_men` to `type_menage`
+* Cleaning:
+   * remove superfluous `default = 0` in `FloatCol` and `IntCol`
+   * remove superfluous comments
+   * migrate some formulas
+
+## 6.1.0
+
+* Add the local regime Alsace-Moselle through the boolean variable `salarie_regime_alsace_moselle`.
+* Impacts the cotisations :
+	* Maladie (MMID)
+	* Taxe apprentissage
+	* Contribution supplémentaire à l'apprentissage.
+
+## 6.0.7
+
+* Remove wrong max numbers of enfants in entities
+
+## 6.0.6
+
+* Deprecate `entreprise_assujettie_tva`
+
+## 6.0.5
+
+* Add effectif_entreprise exclusion condition to Contribution Supplémentaire Apprentissage
+
+## 6.0.4
+
+* Fix some regressions in parameters introcduced by 6.0.0
+    * Re-apply RSA revalorisation from september
+    * Correct bonification rate for PPA
+
+## 6.0.3
+
+* Migrate some formulas to new syntax
+    * `aefa.py`
+    * `af.py`
+    * `anciens_ms.py`
+    * `ars.py`
+    * `base_ressource.py`
+    * `cf.py`
+    * `paje.py`
+    * `rsa.py`
+
+## 6.0.2
+
+* Fix legislation parameter call for RMI-RSA transition
+
+## 6.0.1
+
+* Fix packaging of 6.0.0
+
+## 6.0.0
+
+* Use legislation parameters from IPP
+
+* Rename variables:
+	* `cd_penali` -> `pensions_alimentaires_deduites`
+	* `cd_percap` -> `pertes_capital_societes_nouvellespertes_capital_societes_nouvelles`
+	* `cd_cinema` -> `souscriptions_cinema_audiovisuel`
+	* `cd_ecodev` -> `epargne_codeveloppement`
+	* `cd_grorep` -> `grosses_reparations`
+
+* Add variables for allocation pour demandeur d'asile (ADA):
+	* `asile_demandeur`
+	* `place_hebergement`
+	* `ada`
+
+## 5.0.0b0
+
+* Adapt France to Openfisca-Core#v4
+	* Declare entities in the new way
+
+* Deprecate all conversion variables:
+	* `cotsoc_bar_declarant1`
+	* `cotsoc_lib_declarant1`
+	* `crds_cap_bar_declarant1`
+	* `crds_cap_lib_declarant1`
+	* `csg_cap_bar_declarant1`
+	* `csg_cap_lib_declarant1`
+	* `loyer_famille`
+	* `loyer_individu`
+	* `maj_cga_individu`
+	* `pensions_alimentaires_versees_declarant1`
+	* `prelsoc_cap_bar_declarant1`
+	* `prelsoc_cap_lib_declarant1`
+	* `retraite_titre_onereux_declarant1`
+	* `retraite_titre_onereux_net_declarant1`
+	* `rev_microsocial_declarant1`
+	* `statut_occupation_famille`
+	* `statut_occupation_logement_individu`
+	* `zone_apl_famille`
+	* `zone_apl_individu`
+
+* Deprecate entity structure variables:
+	* `idmen`
+	* `idfoy`
+	* `idfam`
+	* `quimen`
+	* `quifoy`
+	* `quifam`
+
+* Change some variables entity:
+	* `FoyersFiscaux` -> `Individus`
+		* `maj_cga`
+	* `Individus` -> `FoyersFiscaux
+		* `rev_coll`
+	* `Individus` -> `Menages`
+		* `coloc`
+		* `logement_chambre`
+	* `Familles` -> `Individus`
+		* `aah_non_calculable`
+	* `Familles` -> `Menages`
+		* `residence_dom`
+		* `residence_guadeloupe`
+		* `residence_martinique`
+		* `residence_guyane`
+		* `residence_reunion`
+		* `residence_mayotte`
+
+* Introduce:
+    * `cotsoc_bar`
+    * `cotsoc_lib`
+
+## 4.1.20
+
+ * Set `set_input` attribute to `set_input_divide_by_period` for variables `heures_remunerees_volume` et `heures_non_remunerees_volume`.
+
+## 4.1.19
+
+* Introduce MVA
+
+## 4.1.18
+
+* Introduce PCH
+
+## 4.1.17
+
+* Reimplement `rsa_indemnites_journalieres_activite` and `date_arret_de_travail` using `datetime.date.min`.
+
+## 4.1.16
+
+* Correct wrong behaviour in the combination of exemptions with the dispositif Jeune Entreprise Innovante (JEI)
+
+
+## 4.1.15
+
+* Consider some indemnités journalieres as revenus de remplacement in PPA (and RSA), according to the date of the arret de travail.
+* Introduce
+	* `rsa_indemnites_journalieres_hors_activite`
+	* `rsa_indemnites_journalieres_activite`
+	* `date_arret_de_travail`
+
+## 4.1.14
+
+* Add cerfa boxe : 3vt (PEA)
+
+## 4.1.13
+
+* Increase RSA base amount to 535.17 from September 2016
+
+## 4.1.12
+
+* Fix links in README
+
+## 4.1.11
+
+* Remove end dates where not necessary
+
+## 4.1.10
+
+* Refactor asi_aspa.py
+* Fix abattement for conjoint salary
+* Adjust interaction with AAH
+* Small fix on RSA: don't use euclidian division because of rounding issues
+* Small fix on PPA: don't take into acccount more AF that it have been declared (see 4.1.8)
+
+## 4.1.9
+
+* Tighten CMU/ACS eligibility conditions when when person is less than 25
+* Introduce `cmu_acs_eligibilite`, `habite_chez_parents`
+
+## 4.1.8
+
+* Refactor rsa.py
+* Do not take stages gratification into account
+* Do not take into acccount more AF that it have been declared
+
+## 4.1.7
+
+* Fix bug in CMU forfait_logement
+* Refactor CMU computation
+
+## 4.1.6
+
+* Fix bugs in RSA:
+  * One need to be **strictly** more that 25 to benefit it.
+  * Apply rsa_forfait_asf accordingly to the asf actually being paid.
+* Deprecate rsa_forfait_asf_individu
+
+## 4.1.5
+
+* Follow OpenFisca-Core major release
+
+## 4.1.4
+
+* Update travis procedures
+
+## 4.1.3
+
+* Delete rfr_n_1
+
+## 4.1.2
+
+* Use "python -m compileall" to check for syntax errors, not flake8
+
+## 4.1.1
+
+* Add labels to several variables
+
+## 4.1.0
+
+* Run yaml tests from CLI
+	* Exemple: `openfisca-run-test my_test.yaml`
+
+## 4.0.11
+
+* Enhance and move getting-started notebook
+
+## 4.0.10 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.9..4.0.10)
+
+* Fix Landais, Piketty, Saez reform
+
+## 4.0.9 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.8..4.0.9)
+
+* Adapt plfr2014 reform to new Reform API
+
+## 4.0.8 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.7..4.0.8)
+
+* Adapt PPA to avoid antedating paramameters of 3 months.
+
+## 4.0.7 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.6..4.0.7)
+
+* Include ppa in minimas sociaux (mini) and update decompositions accordingly
+
+## 4.0.6 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.5..4.0.6)
+
+* Add back extensions folder and README
+
+## 4.0.5 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.4..4.0.5)
+
+* Fix inversion-directe-salaires reform
+
+## 4.0.4 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.3..4.0.4)
+
+* Fix plf2016 and ayrault_muet reforms
+
+## 4.0.3 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.2..4.0.3)
+
+* Update numpy dependency to 1.11
+* Upgrade pip to >= 8.0 in travis
+* Do not install numpy from apt in travis
+* Install scipy by wheels
+* Fix semver version number towards OpenFisca-Core
+
+## 4.0.2 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.1..4.0.2)
+
+* Remove wrong stop date of `aeeh`
+
+## 4.0.1 - [diff](https://github.com/openfisca/openfisca-france/compare/4.0.0..4.0.1)
+
+* Correct bug in `switch_on_allegement_mode`
+
+## 4.0.0 - [diff](https://github.com/openfisca/openfisca-france/compare/3.4.1..4.0.0)
+
+* Apply core API changes introduced by [openfisca-core 2.0](https://github.com/openfisca/openfisca-core/pull/388)
+* Change the way the France tax benefit system is built
+* Change the way reforms are built
+* Move extensions from `./model/extensions` to `./extensions`
+* Warning : relatives imports are now impossible in model files.
+
+## 3.4.1 - [diff](https://github.com/openfisca/openfisca-france/compare/3.4.1..3.4.0)
+
+* Only enforce version and changelog update in CI when PR target is master.
+
+## 3.4.0 - [diff](https://github.com/openfisca/openfisca-france/compare/3.4.0..3.3.0)
+
+* Introduce the `entreprise_est_association_non_lucrative` boolean input variable
+* Null the CICE and taxe d'apprentissage (taxe + contribution supplémentaire) when this input is True
+* Force the computing of taxe sur les salaires when this input is True
+* Implement franchise, décôte and abattement associations non lucratives in Taxe sur les salaires
+
+## 3.3.0 - [diff](https://github.com/openfisca/openfisca-france/compare/3.3.0..3.2.0)
+
+* Add variables for `complémentaire santé`, compulsory in 2016 :
+	* `complementaire_sante_taux_employeur`
+	* `complementaire_sante_employeur`
+	* `complementaire_sante_salarie`
+It is included in the bases of the following variables.
+
+* Correct `forfait_social` and link it to the `cotisations`, test it.
+* Correct `taxe_salaires` and update its rates
+* Test CSG-CRDS
+
+## 3.2.0 - [diff](https://github.com/openfisca/openfisca-france/compare/3.2.0..3.1.0)
+
+* Consolidate the case of `temps partiel` for the input of a number of hours per month, based on the legal duration of 151.67 per month
+* Specifically, correct the proratisation of `plafond de la sécurité sociale` and `coefficient de proratisation`.
+* See issue #496 for details
+
+## 3.1.0 - [diff](https://github.com/openfisca/openfisca-france/compare/3.1.0..3.0.0)
+
+* Update the rates of the versement transport contribution
+* Introduce an history of rates
+* Move its code to a new file (~ 5 functions)
+
+## 3.0.0 - [diff](https://github.com/openfisca/openfisca-france/compare/3.0.0..2.0.0)
+
+* Make `enfant_a_charge` usable in monthly mode so that we can re-use it in mes-aides, and broaden its definition so that in includes children in `garde_alternee`.
+* Refactor and test nbF, nbG, nbH, nbI.
+* Deprecate:
+	* `nombre_enfants_a_charge_menage`
+	* `enfant_a_charge_invalide`
+	* `enfant_a_charge_garde_alternee`
+	* `enfant_a_charge_garde_alternee_invalide`
+* Rename:
+    * `statmarit` -> `statut_marital`
+    * `marpac` -> `maries_ou_pacses`
+    * `celdiv` -> `celibataire_ou_divorce`
+    * `jveuf` -> `jeune_veuf`
+
+## 2.0.0 - [diff](https://github.com/openfisca/openfisca-france/compare/1.3.1..2.0.0)
+
+* Deprecate Paris reform
+* Introduce enfant_place
+
+## 1.3.1 – [diff](https://github.com/openfisca/openfisca-france/compare/1.3.1rc0...1.3.1)
+
+* Adjust ppa computation
+
+## 1.3.1rc0 – [diff](https://github.com/openfisca/openfisca-france/compare/1.3.0..1.3.1rc0)
+
+* Fix versioning enforcement
+
+## 1.3.0 – [diff](https://github.com/openfisca/openfisca-france/compare/1.2.0...1.3.0)
+
+* Introduce mechanism to blacklist variables so that they are not cached
+* Refactor AL computation, and implement special DOM rules
+* Introduce:
+	* `aide_logement_loyer_retenu`
+	* `al_couple`
+	* `aide_logement_charges`
+	* `aide_logement_R0`
+	* `aide_logement_taux_famille`
+	* `aide_logement_taux_loyer`
+	* `aide_logement_participation_personnelle`
+
+## 1.2.0 – [diff](https://github.com/openfisca/openfisca-france/compare/1.1.0...1.2.0)
+
+* Force version number incrementation through CI
+* Force changelog editing through CI
+* Publish tag after merging
+* Publish on pypi after tagging
+
+## 1.1.0 – [diff](https://github.com/openfisca/openfisca-france/compare/1.0...1.1.0)
+
+* Replace `build_column` function calls by `Variable` classes (see [#384](https://github.com/openfisca/openfisca-core/pull/384))
+
+## 1.0 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.5...1.0)
+
+* Add tests yaml for cotisations sociales
+* Introduction of `invalidite`
+* Depreciation of `af_enfant_a_charge`, `asf_enfant`, `isol`, `pfam_ressources_i`, `rmi_nbp`, `sal_pen_net`.
+* Massive renaming:
+	* `abat_sal_pen` -> `abattement_salaires_pensions`
+	* `af_forf_complement_degressif` -> `af_allocation_forfaitaire_complement_degressif`
+	* `af_forf_nbenf` -> `af_allocation_forfaitaire_nb_enfants`
+	* `af_forf_taux_modulation` -> `af_allocation_forfaitaire_taux_modulation`
+	* `af_forf` -> `af_allocation_forfaitaire`
+	* `af_majo` -> `af_majoration`
+	* `al_pac` -> `al_nb_personnes_a_charge`
+	* `als_nonet` -> `als_non_etudiant`
+	* `alset` -> `als_etudiant`
+	* `ape_temp` -> `ape_avant_cumul`
+	* `apje_temp` -> `apje_avant_cumul`
+	* `asi_aspa_base_ressources_i` -> `asi_aspa_base_ressources_individu`
+	* `asi_elig` -> `asi_eligibilite`
+	* `aspa_elig` -> `aspa_eligibilite`
+	* `ass_base_ressources_i` -> `ass_base_ressources_individu`
+	* `ass_eligibilite_i` -> `ass_eligibilite_individu`
+	* `biact` -> `biactivite`
+	* `birth` -> `date_naissance`
+	* `br_mv_i` -> `asi_aspa_base_ressources_i`
+	* `br_mv` -> `asi_aspa_base_ressources`
+	* `br_pf_i` -> `prestations_familiales_base_ressources_i`
+	* `br_pf` -> `prestations_familiales_base_ressources`
+	* `categ_inv` -> `aeeh_niveau_handicap`
+	* `cf_ressources_i` -> `cf_ressources_individu`
+	* `cmu_base_ressources_i` -> `cmu_base_ressources_individu`
+	* `concub` -> `en_couple`
+	* `invalide` -> `handicap`
+	* `maj_cga_i` -> `maj_cga_individu`
+	* `nb_enfant_rsa` -> `rsa_nb_enfants`
+	* `nb_par` -> `nb_parents`
+	* `pen_net` -> `revenu_assimile_pension_apres_abattements`
+	* `pfam_enfant_a_charge` -> `prestations_familiales_enfant_a_charge`
+	* `ppa_ressources_hors_activite_i` -> `ppa_ressources_hors_activite_individu`
+	* `ppa_revenu_activite_i` -> `ppa_revenu_activite_individu`
+	* `ppe_elig_i` -> `ppe_elig_individu`
+	* `prestations_familiales_base_ressources_i` -> `prestations_familiales_base_ressources_individu`
+	* `rev_act_nonsal` -> `revenu_activite_non_salariee`
+	* `rev_act_sal` -> `revenu_activite_salariee`
+	* `rev_pen` -> `revenu_assimile_pension`
+	* `rev_sal` -> `revenu_assimile_salaire`
+	* `rpns_i` -> `rpns_individu`
+	* `rsa_act_i` -> `rsa_activite_individu`
+	* `rsa_act` -> `rsa_activite`
+	* `rsa_base_ressources_i` -> `rsa_base_ressources_individu`
+	* `rsa_base_ressources_patrimoine_i` -> `rsa_base_ressources_patrimoine_individu`
+	* `rsa_forfait_asf_i` -> `rsa_forfait_asf_individu`
+	* `rsa_non_calculable_tns_i` -> `rsa_non_calculable_tns_individu`
+	* `rsa_revenu_activite_i` -> `rsa_revenu_activite_individu`
+	* `rto_declarant1` -> `retraite_titre_onereux_declarant1`
+	* `rto_net_declarant1` -> `retraite_titre_onereux_net_declarant1`
+	* `rto_net` -> `retraite_titre_onereux_net`
+	* `salcho_imp` -> `revenu_assimile_salaire_apres_abattements`
+	* `smic55` -> `autonomie_financiere`
+	* `statut_occupation_famille` -> `statut_occupation_logement_famille`
+	* `statut_occupation_individu` -> `statut_occupation_logement_i`
+	* `statut_occupation_logement_i` -> `statut_occupation_logement_individu`
+	* `statut_occupation` -> `statut_occupation_logement`
+	* `tns_employe` -> `tns_avec_employe`
+	* `tspr` -> `traitements_salaires_pensions_rentes`
+	* `type_sal` -> `categorie_salarie`
+
+## 0.5.5 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.4.3...0.5.5)
+
+* Prime d'activité fiabilization
+* Implementation of Indemnite de fin de contrat
+* Prolongation of aidper, credit_impots, reductions
+* Remove detailes logs in CI
+* Update prestations parameters (2016/04/01 revalorisation)
+* Add net -> brut reform
+
+## 0.5.4.2, 0.5.4.3 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.4.1...0.5.4.3)
+
+* Update OpenFisca-Core requirement version
+
+## 0.5.4.1 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.4...0.5.4.1)
+
+* Add missing assets for versement_transport
+
+## 0.5.4 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.3...0.5.4)
+
+* Many updates
+
+## 0.5.3 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.2...0.5.3)
+
+* Fix vieillesse deplafonnee baremes
+* Fix some dates in arrco and formation prof. baremes
+* Remove obsolete or unuseful comment which induces indentation problem when using parameters fusion scripts
+* Improve decote legislation parameters
+* Removing unused obsolete reform parameters still in param.xml
+* Add tests
+* Round ceilings values
+* Resources need to be non superior to ceilings, not inferior
+* update bourse_college params
+* flake8
+* Do not pre-initialize reforms cache
+* Remove licence from code files
+* Introduce asi_aspa_condition_nationalite Introduce rsa_condition_nationalite
+* Introduce ressortissant_eee Introduce duree_possession_titre_sejour
+* change it in the tests too...
+* Change name and description of the prestation
+* add a test for decote where the individual is below the first tax threshold
+* implement true_decote that is the decote amount provided by dgfip (at list on their simulator) which is the fiscal gain accountable to the decote mechanism
+* add a test for irpp couples
+* Actualize legislation for min/max abattements pour frais pro add a test for IR 2015 ; change label of reform plf 2015.
+* Change reforms.plf2015 decote to a DatedVariable
+* Conform to instructions given by @benjello for PR
+* add empty line
+* add an empty line for two empty lines between two classes
+* add decote ir2014 on income 2014 from reform plf hardcoded.
+* Small changes, trash plf2015 reform
+* Put reforms/plf2015.py into legislation. WIP still need a proper test on decote
+* Return ape_temp for a month, not for a weird period
+* Repair imports in test_basics.py
+* Remove irrelevant calculate_divide and calculate_add_divide in rsa.py, cf.py, asi_aspa.py
+* Merge formulas and formulas_mes_aides folder
+* Typo in cerfa field
+* Add test for psoc formula
+* Clean test_plf2015
+* NOT WORKING Reform plf2015 on revenus 2013
+* Rename paje_nais to paje_naissance
+* Fix params references
+* Redefine period in functions
+* Fix indentation in params
+* Fix param for retro-compatibility
+* Kid age need to be *strictly* < 3
+* Réécriture et update de la paje
+* Rename cf_temp to cf_montant Rename paje_base_temp to paje_base_montant
+* Refactor aide_logement_montant_brut
+* Add clean-mo target
+* Add make clean target
+* Add MANIFEST.in
+* Do not package tests
+* Remove unnecessary __init__.py in scripts
+* Add data_files in setup.py
+* Use extras_require in setup.py
+* Remove nose section from setup.cfg
+* Add CONTRIBUTING.md file
+
+## 0.5.2 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.1...0.5.2)
+
+* Merge pull request #304 from sgmap/taille_entreprise
+* Remove unmaintainable tests
+* Merge pull request #307 from sgmap/al-abattement-30-retraite
+* Merge pull request #301 from sgmap/several-updates
+* Move doc to openfisca-gitbook
+* Massive test update
+* Rename asf_elig_i to asf_elig_enfant Rename asf_i to asf_enfant
+* Rename fra to frais_reels Rename cho_ld to chomeur_longue_duree
+* Give RSA to young people with kids
+* Enhance error when loading a cached reform which was undeclared
+* Merge remote-tracking branch 'sgmap/executable-test' into next
+* Merge remote-tracking branch 'origin/master' into next
+* Merge pull request #303 from sgmap/plafonds-fillon
+* Display YAML file path on test error
+* Use relative error margin in fillon test
+* Add tests for fillon from embauche.sgmap.fr
+* Update end date for fillon seuil
+* Update plafonds for fillon
+* Merge remote-tracking branch 'sgmap/plafonds-fillon' into next
+* Add tests for fillon from embauche.sgmap.fr
+* Make test_yaml.py executable
+* Merge pull request #302 from sgmap/no-bom
+* Remove leading U+FEFF from param.xml
+* Update travis according to http://docs.travis-ci.com/user/migrating-from-legacy/
+* Do not install scipy in travis
+* Do not use relative import in script (__main__)
+* Add biryani extra require
+
+## 0.5.1 – [diff](https://github.com/openfisca/openfisca-france/compare/0.5.0...0.5.1)
+
+* Remove scipy by default
+
+## 0.5.0
+
+* First release uploaded to PyPI
