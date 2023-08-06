@@ -1,0 +1,14 @@
+#!/bin/bash
+
+EXTERNAL_FOLDER=${EXTERNAL_FOLDER:-/var/www/euer.krebsco.de/graphs/retiolum}
+INTERNAL_FOLDER=${INTERNAL_FOLDER:-/var/www/euer/graphs/retiolum}
+export GEODB="${GEODB:-}"
+export TINC_HOSTPATH=${TINC_HOSTPATH:-~/painload/retiolum/hosts}
+mapfile="$INTERNAL_FOLDER/map.html"
+
+if test -n "$GEODB";then
+    echo "creating geodata database"
+    tinc-stats2json | add-geodata > "$INTERNAL_FOLDER/marker.json"
+fi
+build-graphs anonymous "$EXTERNAL_FOLDER"
+build-graphs complete "$INTERNAL_FOLDER"
