@@ -1,0 +1,237 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+import click
+
+import hokusai
+from hokusai.common import print_red, set_output
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+@click.option('--kubectl-version', type=click.STRING, default='1.5.2')
+@click.option('--platform', type=click.STRING, default='darwin')
+@click.option('--install-to', type=click.STRING, default='/usr/local/bin')
+@click.option('--install-kubeconfig-to', type=click.STRING, default=os.path.join(os.environ.get('HOME'), '.kube'))
+@click.option('--s3-bucket', type=click.STRING, required=True, help="The S3 bucket name containing your org's kubectl config file")
+@click.option('--s3-key', type=click.STRING, required=True, help="The S3 key of your org's kubectl config file")
+@click.option('--s3-bucket-region', type=click.STRING, default='us-east-1', help="The S3 bucket region")
+def install(kubectl_version, platform, install_to, install_kubeconfig_to, s3_bucket, s3_key, s3_bucket_region):
+  """
+  Install and configure kubectl
+  """
+  sys.exit(hokusai.install(kubectl_version, platform, install_to, install_kubeconfig_to, s3_bucket, s3_key, s3_bucket_region))
+
+@cli.command()
+@click.option('--project-name', type=click.STRING, default=os.path.basename(os.getcwd()), help='The project name (default: name of current directory)')
+@click.option('--aws-account-id', type=click.STRING, required=True, envvar='AWS_ACCOUNT_ID', help='Your AWS account ID (default: $AWS_ACCOUNT_ID')
+@click.option('--aws-ecr-region', type=click.STRING, default='us-east-1', envvar='AWS_REGION', help='Your AWS ECR region (default: $AWS_REGION or \'us-east-1\')')
+@click.option('--framework', type=click.Choice(['rack', 'nodejs', 'elixir']), required=True, help='The project framework')
+@click.option('--base-image', type=click.STRING, required=True, help='The base image')
+@click.option('--run-command', type=click.STRING, help='Override the default run command')
+@click.option('--development-command', type=click.STRING, help='Override the default development command')
+@click.option('--test-command', type=click.STRING, help='Override the default test command')
+@click.option('--port', type=click.INT, default=80, help='The port to access on the host machine (default: 80)')
+@click.option('--target-port', type=click.INT, default=80, help='The port to expose on the app container (default: 80)')
+@click.option('--with-memcached', type=click.BOOL, is_flag=True, help='Include a Memcached service')
+@click.option('--with-redis', type=click.BOOL, is_flag=True, help='Include a Redis service')
+@click.option('--with-mongo', type=click.BOOL, is_flag=True, help='Include a MongoDB service')
+@click.option('--with-postgres', type=click.BOOL, is_flag=True, help='Include a Postgres service')
+@click.option('--with-rabbitmq', type=click.BOOL, is_flag=True, help='Include a RabbitMQ service')
+def init(project_name, aws_account_id, aws_ecr_region, framework, base_image,
+          run_command, development_command, test_command, port, target_port,
+            with_memcached, with_redis, with_mongo, with_postgres, with_rabbitmq):
+  """
+  Configure Hokusai for the current project
+  """
+  hokusai.init(project_name, aws_account_id, aws_ecr_region, framework, base_image,
+                run_command, development_command, test_command, port, target_port,
+                  with_memcached, with_redis, with_mongo, with_postgres, with_rabbitmq)
+
+@cli.command()
+def check():
+  """
+  Check hokusai dependencies and configuration
+  """
+  sys.exit(hokusai.check())
+
+@cli.command()
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def dev(verbose):
+  """
+  Boot the development stack
+  """
+  set_output(verbose)
+  sys.exit(hokusai.development())
+
+@cli.command()
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def test(verbose):
+  """
+  Boot the test stack and run the test suite
+  """
+  set_output(verbose)
+  sys.exit(hokusai.test())
+
+@cli.command()
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def build(verbose):
+  """
+  Build the latest docker image for the project
+  """
+  set_output(verbose)
+  sys.exit(hokusai.build())
+
+@cli.command()
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def pull(verbose):
+  """
+  Pull all images and tags from the ECR
+  """
+  set_output(verbose)
+  sys.exit(hokusai.pull())
+
+@cli.command()
+@click.argument('tag', type=click.STRING)
+@click.option('--test-build', type=click.BOOL, is_flag=True, help="Push the latest image output by 'test' - otherwise the latest image output by 'build'")
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def push(tag, test_build, verbose):
+  """
+  Push a docker image to ECR with the given tag
+  """
+  set_output(verbose)
+  sys.exit(hokusai.push(tag, test_build))
+
+@cli.command()
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def images(verbose):
+  """
+  Show images and tags
+  """
+  set_output(verbose)
+  sys.exit(hokusai.images())
+
+@cli.command()
+@click.argument('action', type=click.STRING)
+@click.argument('context', type=click.STRING)
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def config(action, context, verbose):
+  """
+  Actions:\n
+  pull - Pull config from the kubectl {CONTEXT} and write to hokusai/{CONTEXT}-config.yml\n
+  push - Push config from hokusai/{CONTEXT}-config.yml to the kubectl {CONTEXT}
+  """
+  set_output(verbose)
+  if action == 'pull':
+    sys.exit(hokusai.pull_config(context))
+  elif action == 'push':
+    sys.exit(hokusai.push_config(context))
+  else:
+    print_red("Error: Invalid action %s" % action)
+    sys.exit(-1)
+
+@cli.command()
+@click.argument('action', type=click.STRING)
+@click.argument('context', type=click.STRING)
+@click.argument('secret', type=click.STRING, nargs=-1)
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def secrets(action, context, secret, verbose):
+  """
+  Actions:\n
+  get - print secrets in the kubectl {CONTEXT}\n
+  set - set {SECRET} in the kubectl {CONTEXT} - each {SECRET} must be in of form 'KEY=VALUE'\n
+  unset - Unset {SECRET} from the kubectl {CONTEXT} - each {SECRET} must be of the form 'KEY'
+  """
+  set_output(verbose)
+  if action == 'get':
+    sys.exit(hokusai.get_secrets(context))
+  elif action == 'set':
+    sys.exit(hokusai.set_secrets(context, secret))
+  elif action == 'unset':
+    sys.exit(hokusai.unset_secrets(context, secret))
+  else:
+    print_red("Error: Invalid action %s" % action)
+    sys.exit(-1)
+
+@cli.command()
+@click.argument('action', type=click.STRING)
+@click.argument('context', type=click.STRING)
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def stack(action, context, verbose):
+  """
+  Actions:\n
+  up - Create / Update the stack in the kubectl {CONTEXT}\n
+  down - Delete the stack in the kubectl {CONTEXT}\n
+  status - Print the stack status in the kubectl {CONTEXT}
+  """
+  set_output(verbose)
+  if action == 'up':
+    sys.exit(hokusai.stack_up(context))
+  elif action == 'down':
+    sys.exit(hokusai.stack_down(context))
+  elif action == 'status':
+    sys.exit(hokusai.stack_status(context))
+  else:
+    print_red("Error: Invalid action %s" % action)
+    sys.exit(-1)
+
+@cli.command()
+@click.argument('context', type=click.STRING)
+@click.argument('tag', type=click.STRING)
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def deploy(context, tag, verbose):
+  """
+  Deploy an image tag to the kubectl {CONTEXT}
+  and update the tag named {CONTEXT} to reference that tag
+  """
+  set_output(verbose)
+  sys.exit(hokusai.deploy(context, tag))
+
+@cli.command()
+@click.argument('from-context', type=click.STRING)
+@click.argument('context', type=click.STRING)
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def promote(from_context, context, verbose):
+  """
+  Update the deployment on {CONTEXT} with the image tag currently deployed on {FROM_CONTEXT}
+  and update the tag named {CONTEXT} to reference that tag
+  """
+  set_output(verbose)
+  sys.exit(hokusai.promote(from_context, context))
+
+@cli.command()
+@click.argument('context', type=click.STRING)
+@click.option('--shell', type=click.STRING, default='bash', help='The shell to run (defaults to bash)')
+@click.option('--tag', type=click.STRING, help='The image tag to run (defaults to the value of context)')
+@click.option('--with-config/--without-config', default=True, help="Inject config as environment variables")
+@click.option('--with-secrets/--without-secrets', default=True, help="Inject secrets as environment variables")
+@click.option('--env', type=click.STRING, multiple=True, help='Environment variables in the form of "KEY=VALUE"')
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def console(context, shell, tag, with_config, with_secrets, env, verbose):
+  """
+  Launch a new container and attach a shell in the kubectl {CONTEXT}
+  """
+  set_output(verbose)
+  sys.exit(hokusai.console(context, shell, tag, with_config, with_secrets, env))
+
+@cli.command()
+@click.argument('context', type=click.STRING)
+@click.argument('command', type=click.STRING)
+@click.option('--tag', type=click.STRING, help='The image tag to run (defaults to the value of context)')
+@click.option('--with-config/--without-config', default=True, help="Inject config as environment variables")
+@click.option('--with-secrets/--without-secrets', default=True, help="Inject secrets as environment variables")
+@click.option('--env', type=click.STRING, multiple=True, help='Environment variables in the form of "KEY=VALUE"')
+@click.option('-v', '--verbose', type=click.BOOL, is_flag=True, help='Verbose output')
+def run(context, command, tag, with_config, with_secrets, env, verbose):
+  """
+  Launch a new container and run a command in the kubectl {CONTEXT}
+  """
+  set_output(verbose)
+  sys.exit(hokusai.run(context, command, tag, with_config, with_secrets, env))
+
+if __name__ == '__main__':
+  cli(obj={})
