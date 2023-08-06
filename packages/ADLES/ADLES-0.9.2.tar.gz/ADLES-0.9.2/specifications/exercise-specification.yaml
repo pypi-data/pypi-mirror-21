@@ -1,0 +1,168 @@
+# Specification of syntax for creating a virtual educational environment using the ADLES system.
+# ADLES:            https://pypi.python.org/pypi/ADLES
+# Format:           YAML 1.1 (See: http://yaml.org/spec/1.1/)
+# Author:           Christopher Goes <goes8945@vandals.uidaho.edu>
+# Creation Date:    October 12th, 2016
+# Current Version:  0.6.1
+# Changelog:
+#   0.1.0:  Created
+#   0.2.0:  Substantial changes
+#   0.3.0:  Additions to services and networks, significant cleanup
+#   0.4.0:  Significant Folder changes, Added VLANs, Improved groups   (02-12-2017)
+#   0.4.1:  Changed group template syntax (02-23-2017)
+#   0.4.2:  Changed group template syntax  (03-04-2017)
+#   0.4.3:  Metadata changes: removed "class" and "course", added "activity" and "prefix" (03-08-2017)
+#   0.4.4:  Cleaned up Resources (03-09-2017)
+#   0.4.5:  Changed master-groups from Suggested to Optional, added to parent-type folders (03-10-2017)
+#   0.5.0:  Renamed to "exercise-specification" from "environment-specification" (03-15-2017)
+#   0.5.1:  Removed template-path and root-path, as they should be defined in infra spec (03-29-2017)
+#   0.5.2:  Removed VLAN tag specification for Generic and Base-type networks, changed default for Unique-type networks (03-30-2017)
+#   0.5.3:  Made passwords for users optional (03-30-2017)
+#   0.5.4:  Removed OS metadata from service definitions (03-31-2017)
+#   0.5.5:  Updated wording, added PyPI URL, added email (04-02-2017)
+#   0.5.6:  Removed excess tabbing/spacing/words, renamed "normal" folders to "base", changed date-created and activity to Optional, changed version to suggested (04-04-2017)
+#   0.6.0:  Revamped networks. Removed base, replaced with increment flag, fundamentally changed generic. (04-07-2017)
+#   0.6.1:  Made "name" suggested, and to default to the filename of the spec (04-07-2017)
+#
+#
+
+# *** Syntax inspirations ***
+# Docker Compose file:  https://docs.docker.com/compose/compose-file/
+# Ansible Playbooks:    https://docs.ansible.com/ansible/YAMLSyntax.html
+
+# *** Labels for syntactic components ***
+# Children do not have to be specified if parent is not defined
+# If no label is given, then context will determine label (Everything should be labeled eventually)
+#
+# REQUIRED      These must be defined. Not doing so is an parse-time error.
+# Suggested     These should be defined. Not doing so will result in a parse-time warning.
+# Optional      Do not have to be specified.
+# Option X      One of the options specified at that level of nesting must be defined. Not doing so is a parse-time error.
+
+# *** Definitions ***
+# VM    Virtual Machine
+# AD    Active Directory
+# CIDR  Classless Inter-Domain Routing, a concise format for representing subnet masks (https://tools.ietf.org/html/rfc4632)
+# YAML  Yaml Ain't Markup Language, a file format syntax (http://yaml.org/spec/1.1/)
+# JSON  JavaScript Object Notation, a file format syntax (http://www.json.org/)
+
+# *** Notes ***
+# "Instances" is assumed to be one unless specified otherwise. They cannot be negative or zero
+# Top-level definitions are only required if used (e.g resources, groups, networks)
+# Details on exercise environment creation steps ("phases") can be found in the description for folders
+# "yes"/"no" are the same as true/false in YAML. They can be used interchangably.
+
+
+# ** Document Metadata **
+metadata:
+  name: "name"                # Suggested   Human-readable title for the specification [default: filename]
+  description: "description"  # Suggested   Human-readable detailed description of the specification
+  activity: "the activity"    # Optional    The activity the specification is being used for, e.g "CS 439" or "PRCCDC"
+  prefix: "GLOBAL-PREFIX"     # REQUIRED    Globally unique prefix that distinguishes this exercise's environments from others on the same infrastructure
+  date-created: "date"        # Optional    UTC format: YYYY-MM-DD (Example: 2016-10-12)
+  version: "0.0.0"            # Suggested   Semantic version of the document: major.minor.bugfix (Refer to: http://semver.org/)
+  infrastructure-config-file: "filename.yaml" # REQUIRED    YAML file specifying the infrastructure used to create the exercise environment (See: infrastructure-specification.yaml for syntax)
+  folder-name: "/Path/To/Folder-Name"         # Suggested   Path of the folder that will contain the exercise, relative to root defined in the infrastructure configuration
+
+
+# ** Groups/Teams **
+# User groups, such as teams, students, instructors, etc
+# These are used to apply permissions to the resources and machines in the generated virtual exercise environment
+groups:
+  Group Regular Example:
+    # The three different methods of specifying users for a regular group
+    ad-group: "Users"       # Option A  AD group must exist
+    filename: "a-file.json" # Option B  File format: specifications/user-json-specification.json
+    user-list: [ "user-a", "user-b" ] # Option C  List of usernames
+
+  # For creating batch groups from a common template base, the "template" type can be used
+  Group Template Example:
+    instances: 10           # REQUIRED  Number of groups created from this template. This marks a group as a template.
+    ad-group: "Group [X]"   # Option A  '[X]' is the instance number. AD group must exist  
+    filename: "users.json"  # Option B  File format: specifications/user-json-specification.json
+
+
+# ** Services **
+# Definition of the services that will be created in the exercise environment, such as hosts, servers, and routers
+# Case insensitive EXCEPT for resources, such as templates or images
+# Networks are attached to interfaces in order of their definition, unless explicitly mapped
+# If containers are used, a GitLab server or Docker registry MUST be specified in the infrastructure-config file
+# Three types of services: template, container, compose
+# template:     Templatized VM in vSphere
+# container:    Docker container
+# compose:      Docker Compose file
+services:
+  all-service-types:  # Configurations that can appear in any of three service types
+    note: "A note"          # Optional    Human-readable note visible by end-user, such as default username/password
+    network-interfaces: []  # Optional    List of network interfaces and their optional configurations  [default: template or container specific]
+  template-based-service:   # Option A
+    template: "name of template"  # REQUIRED
+    template-config:        # Optional    Configuration of Template settings using key-value pairs
+      key: "value"
+    guest-extensions: no    # Optional    Guest extensions will be installed or enabled (e.g VMware Tools)
+  container-based-service:  # Option B
+    image: "name of docker image" # REQUIRED
+    tag: "tag for the image"      # Optional    [default: "default"]
+  compose-based-service:    # Option C
+    compose-file: "filename.yml"  # REQUIRED
+
+
+# ** Resources **
+# Cyber-physical resources that are to be utilized. These will be attached to folders, networks, or groups as needed
+# Examples: A wireless testbed or SCADA testbed in RADICL, a transformer in the power lab. 
+resources:
+  resource-p:
+    lab: "power-lab"          # REQUIRED    Name of the lab the resource is associated with
+    resource: "transformer"   # REQUIRED    Name of the specific resource
+
+
+# ** Networks **
+# Definitions of virtual networks (Layers 2 and 3 of the OSI model)
+# Non-Private (RFC 1918) networks will result in a warning
+# IP version (IPv4/IPv6) is implicitly defined by subnet address format
+networks: 
+  unique-networks:    # Networks that are instantiated once and only once. Think of them as singletons.
+    network-label:          # REQUIRED    Unique label used to identify the network (Replace "network-label" with the name of the network)
+      description: "blah"   # Optional    Human-readable description of network
+      subnet: "x.x.x.x/x"   # Suggested   IP network address and mask: SUBNET-IP/CIDR   
+      vlan: 0               # Optional    VLAN tag of the network. Must be a value < 2000. [default: globally unique value > 2000]
+      vswitch: "name"       # Optional    Name of virtual switch used for the network [default: set in infrastructure-config or VsphereInterface]
+  generic-networks:   # New networks are created per instance of a folder
+    # This instance counter is global across folders. Each instance of a given folder will refer to the "global" value of the base at that index.
+    # Example: a generic network for instance 5 of folder "hidden" will be the same network as instance 5 of folder "workstations"
+    network-label:
+      description: "description"
+      subnet: "x.x.x.x/x"
+      vswitch: "vswitch name"
+      increment: no         # Optional    Increment the subnet value for each unique instance created   [default: no]
+
+
+# ** Folders **
+# Assemblages of objects in a hierarchical structure
+# PHASES - Usually, there are two phases to creation of an exercise environment
+#   Mastering     "Master" instances are created and configured by humans
+#   Deployment    Full deployment of envrionment, using the Master instances created in the Mastering phase
+# PERMISSIONS - Permissions are applied hierarchically. Groups with permissions to a given folder will have permissions for all of it's children as well.
+folders:
+  parent-folder:  # Folders that contain other folders (replace "parent-folder" with name of the folder)
+    group: group-label          # Optional    User group that will have permissions to the folder
+    master-group: group-label   # Optional    User group for the pre-deployment masters [default: group specified for the folder]
+    description: "description"  # Optional    Human-readable description of folder
+    instances: 10               # Optional    Same configurations as for base-type folders
+    base-folder:  # Folders that contain services (replace "base-folder" with name of the folder)
+      group: group-label          # REQUIRED    User group that will have permissions to the folder
+      master-group: group-label   # Optional    User group for the pre-deployment masters [default: group specified for the folder]
+      description: "description"  # Optional    Human-readable description of folder
+      instances:  # Optional    Makes folder a template that is copied N-times (NOTE: instances can also simply be an integer representing N)
+        number: 10            # OPTION A    Number of instances = integer
+        size-of: group-label  # OPTION B    Number of instances = Size of named group
+        prefix: "prefix"      # Optional    String to prepend to named instance numbers [default: name of folder]
+      services:   # REQUIRED    Define services that the base folder will contain
+        service-instance-name:
+          service: service-label  # REQUIRED    Label as defined in services
+          instances: 10           # Optional    Same configurations as for base-type folders
+          networks: ["subnet-a", "subnet-b"]    # Optional    Networks to attach the service instance to (Case sensitive!)
+          scoring:  # Optional    Scoring for the service (e.g a competition, or verification of homework)
+            ports: [0]            # Suggested   Ports used for scoring
+            protocols: ["proto"]  # Suggested   Protocols used for scoring
+            criteria: "file.yaml" # REQUIRED    Criteria used to score the service
