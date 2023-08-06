@@ -1,0 +1,41 @@
+{% extends "dform/base.html" %}
+{% block title %}{{title}}{% endblock title %}
+
+{% block extra_head %}
+{% if is_embedded %}
+  <script type="text/javascript" src="/static/dform/js/pym.min.js"></script>
+{% endif %}
+
+{% endblock extra_head %}
+
+{% block contents %}
+{% if form.show_title %}
+<div class="row">
+  <div class="col-sm-8 col-sm-offset-2">
+    <h2>{{title}}</h2>
+  </div>
+</div>
+<br/>
+{% endif %}
+<div class="row">
+  <div class="col-sm-8 col-sm-offset-2">
+    <form method="post" action="{{submit_action}}">
+      {% csrf_token %}
+      {{form.render_form}}
+      {% if form.has_required %}
+        <div class="form-group required-info">
+          <span class="required-mark">*</span> Required Field
+        </div>
+      {% endif %}
+      <button class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+</div>
+
+{% if is_embedded %}
+<script>
+  var child = new pym.Child();
+</script>
+{% endif %}
+
+{% endblock contents %}
