@@ -1,0 +1,33 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+</head><body><dom-module id="hedgehog-asset-item-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+      }
+        </style>
+        <paper-icon-item class="item">
+            <div class$="[[_determineItemClass(asset)]]" item-icon=""></div>
+            <paper-item-body two-line="" class="flex">
+                <div>[[asset.display_name]]</div>
+                <div secondary=""><label><spany>(</spany> [[asset.address]] <span>)</span></label></div>
+            </paper-item-body>
+            <a href="#/visaconsole-view/[[asset.id]]" tabindex="-1">
+                <paper-icon-button icon="shared-icons:visibility" alt="favourite this!"></paper-icon-button>
+            </a>
+            <a href="#/devicedetails-view/[[asset.id]]" tabindex="-1">
+                <paper-icon-button icon="shared-icons:star" alt="favourite this!"></paper-icon-button>
+            </a>
+            <content></content>
+        </paper-icon-item>
+    </template>
+
+    <script>Polymer({is:"hedgehog-asset-item-view",properties:{asset:{type:Object,notify:!0}},_determineItemClass:function(e){return"avatar success"}});</script>
+</dom-module>
+</body></html>

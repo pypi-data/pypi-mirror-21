@@ -1,0 +1,8 @@
+<html><head><link rel="import" href="../polymer/polymer.html">
+
+
+
+</head><body><dom-module id="polymer-cookie">
+  <script>Polymer({is:"polymer-cookie",properties:{name:{type:String,value:"polymer-cookie",reflectToAttribute:!0},value:{type:String,value:"",reflectToAttribute:!0},domain:{type:String,value:"",reflectToAttribute:!0},path:{type:String,value:"",reflectToAttribute:!0},time:{type:Number,value:1,reflectToAttribute:!0},format:{type:String,value:"d",reflectToAttribute:!0},secure:{type:Boolean,value:!1,reflectToAttribute:!0},httpOnly:{type:Boolean,value:!1,reflectToAttribute:!0},autoSet:{type:Boolean,value:!1,reflectToAttribute:!0}},_setCookie:function(e){return[this.name,"=",this.value,";expires="+e,this.path&&";path="+this.path,this.domain&&";domain="+this.domain,this.secure?";secure":"",this.httpOnly?";HttpOnly":"",";"].join("")},ready:function(){this.autoSet&&this.createCookie()},createCookie:function(){var e,t=new Date;switch(this.format){case"d":t.setTime(t.getTime()+1e3*this.time*24*60*60);break;case"h":t.setTime(t.getTime()+1e3*this.time*60*60);break;case"m":t.setTime(t.getTime()+1e3*this.time*60);break;default:t.setTime(t.getTime()+1e3*this.time)}e=this.time===-1?"Fri, 31 Dec 9999 23:59:59 GMT":t.toUTCString(),document.cookie=this._setCookie(e)},readCookie:function(){var e=new RegExp("(?:(?:^|.*;\\s*)"+this.name+"\\s*\\=\\s*([^;]*).*$)|^.*$");return document.cookie.replace(e,"$1")},eraseCookie:function(){var e=this.name+"=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/;";this.domain&&(e+="domain="+this.domain),document.cookie=e}});</script>
+</dom-module>
+</body></html>
