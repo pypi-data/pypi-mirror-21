@@ -1,0 +1,25 @@
+
+- security:
+    input:
+        groupname: genetalk_allow_port 
+        description: enable ssh and http service
+        vpc_id: vpc-6640ea01
+        tags:
+            - tag:
+                key: Name 
+                value: genetalk_security_group 
+        inbounds:
+            - inbound:
+                protocol: tcp 
+                fromport: 22
+                toport: 22
+                cidr: 0.0.0.0/0
+            - inbound:
+                protocol: tcp  
+                fromport: 80 
+                toport: 80
+                cidr: 0.0.0.0/0
+
+    response:
+        GroupId:
+            export: security_group_id

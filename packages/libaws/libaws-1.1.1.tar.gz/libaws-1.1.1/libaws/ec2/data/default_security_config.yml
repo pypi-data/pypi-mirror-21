@@ -1,0 +1,20 @@
+
+- security:
+    input:
+        groupname: default_open_connection
+        description: enable all internal connection and outside ssh connection
+        vpc_id:
+            from: vpc_id
+        tags:
+            - tag:
+                key: Name 
+                value: default_security_group_config 
+        inbounds:
+            - inbound:
+                protocol: tcp 
+                fromport: 22
+                toport: 22
+                cidr: 0.0.0.0/0
+    response:
+        GroupId:
+            export: security_group_id
