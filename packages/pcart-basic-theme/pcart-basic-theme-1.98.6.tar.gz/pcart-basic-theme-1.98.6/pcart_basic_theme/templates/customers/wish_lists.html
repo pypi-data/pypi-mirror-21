@@ -1,0 +1,38 @@
+{% extends CMS_TEMPLATE %}
+{% load i18n cms_tags %}
+
+{% block base_content %}
+<div class="row">
+    <form method="post">
+    {% csrf_token %}
+    <div class="col-md-2">{% include "customers/includes/profile_menu.html" %}</div>
+    <div class="col-md-6">
+        <h1>{% trans "Wish lists" %}</h1>
+        {% if wish_lists %}
+            {% for wish_list in wish_lists %}
+                <h2>{{wish_list.title}}</h2>
+                {% for item in wish_list.wishlisted_products.all %}
+                    <div>
+                    {% if item.variant %}
+                        <h3><a href="{{item.variant.get_absolute_url}}">{{item.variant.title}}</a></h3>
+                    {% else %}
+                        <h3><a href="{{item.product.get_absolute_url}}">{{item.product.title}}</a></h3>
+                    {% endif %}
+                        <button type="submit"
+                                name="item-remove-{{item.id}}" class="btn btn-link">{% trans "Remove" %}</button>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-info">{% trans "The wish list is empty." %}</div>
+                {% endfor %}
+            {% endfor %}
+        {% else %}
+        <div class="alert alert-info">{% trans "There are no any wish lists yet." %}</div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+            <input name="title" type="text">
+            <button type="submit" name="add-wish-list" class="btn btn-default">{% trans "Add wish list" %}</button>
+    </div>
+    </form>
+</div>
+{% endblock %}

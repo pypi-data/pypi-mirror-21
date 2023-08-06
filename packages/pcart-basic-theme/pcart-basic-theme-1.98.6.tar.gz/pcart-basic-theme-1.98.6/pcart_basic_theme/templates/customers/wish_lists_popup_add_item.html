@@ -1,0 +1,44 @@
+{% load i18n pcart_core %}
+<div id="modal-wish-lists" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{% trans "Wish lists" %}</h4>
+      </div>
+      <div class="modal-body">
+          <form method="post"
+                action="{% optional_url 'pcart_customers:customer-profile-section' 'wishlists' %}?view=popup-add-item"
+                class="__action--ajax-submit" data-post-signal="update-wish-list" data-post-remove-element=".modal-backdrop">
+              {% csrf_token %}
+              {% if "item-id" in request.GET %}
+                  <input type="hidden" name="item-id" value="{{request.GET|get_element:'item-id'}}">
+                  <input type="hidden" name="item-type" value="{{request.GET|get_element:'item-type'}}">
+              {% elif "item-id" in post_data %}
+                  <input type="hidden" name="item-id" value="{{post_data|get_element:'item-id'}}">
+                  <input type="hidden" name="item-type" value="{{post_data|get_element:'item-type'}}">
+              {% endif %}
+        {% if wish_lists %}
+          {% for wish_list in wish_lists %}
+              <div class="checkbox">
+              <label><input type="checkbox" name="target" value="{{wish_list.title}}"> {{wish_list.title}}</label>
+              </div>
+          {% endfor %}
+              <button type="submit" name="add-item" class="btn btn-default" data-allow-ajax="true">{% trans "Add" %}</button><hr>
+        {% else %}
+            <div class="alert alert-info">{% trans "There are no any wish lists yet." %}</div>
+        {% endif %}
+              <input name="title" type="text">
+              <button type="submit" name="add-wish-list" class="btn btn-default" data-allow-ajax="true">{% trans "Add wish list" %}</button>
+            </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+{% if "item-id" in request.GET %}
+    $('#modal-wish-lists').modal('show');
+{% else %}
+    $('#modal-wish-lists').modal('hide');
+{% endif %}
+</script>
