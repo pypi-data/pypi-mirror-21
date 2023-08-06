@@ -1,0 +1,79 @@
+{% load staticfiles %}
+<div class="Pattern" id="element-{{ element.id }}">
+
+    <h2 class="Pattern-title">
+        {{ element.title }}
+
+        <ul class="Pattern-actions">
+            <li class="Pattern-action">
+                <a class="Pattern-linkOut" data-linksto="#iframe-{{ element.id }}" href="{% url "mote:element-iframe" project=element.project.id aspect=element.aspect.id pattern=element.pattern.id element=element.id %}" target="_blank">
+                    <img src="{% static "mote/img/rocket.png" %}" alt="">
+                </a>
+            </li>
+        </ul>
+    </h2>
+
+    {% if element.description %}
+        <p class="Pattern-description">
+            {{ element.description|safe }}
+        </p>
+    {% endif %}
+
+    {% if element.variations %}
+        <div class="Pattern-tools">
+            <div class="Pattern-toolsItem">
+                <ul class="ButtonGroup">
+                    <li class="ButtonGroup-item">
+                        <a href="{% url "mote:element-iframe" project=element.project.id aspect=element.aspect.id pattern=element.pattern.id element=element.id %}" class="Button is-active" data-variation-toggle="iframe-{{ element.id }}">{{ element.id }}</a>
+                    </li>
+                    {% for variation in element.variations %}
+                        <li class="ButtonGroup-item">
+                            <a href="{% url "mote:variation-iframe" project=element.project.id aspect=element.aspect.id pattern=element.pattern.id element=element.id variation=variation.id %}" class="Button" data-variation-toggle="iframe-{{ element.id }}">{{ variation.title }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="Pattern-view">
+        <div class="iframe ui-widget-content">
+            <div class="iframe-status">
+                <b id="pixels">1000</b> px
+                <br/>
+                <b id="rems">48</b> em
+            </div>
+            <iframe class="lazyload" frameBorder="0" width="100%" height="100%" data-src="{% url "mote:element-iframe" project=element.project.id aspect=element.aspect.id pattern=element.pattern.id element=element.id %}"
+                    id="iframe-{{ element.id }}">
+            </iframe>
+            <div class="handle">
+                <?xml version="1.0" encoding="iso-8859-1"?>
+                <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+                <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+                <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                	  viewBox="0 0 408 408" style="enable-background:new 0 0 408 408;" xml:space="preserve">
+                    <g>
+                    	<g id="more-vert">
+                    		<path d="M204,102c28.05,0,51-22.95,51-51S232.05,0,204,0s-51,22.95-51,51S175.95,102,204,102z M204,153c-28.05,0-51,22.95-51,51
+                    			s22.95,51,51,51s51-22.95,51-51S232.05,153,204,153z M204,306c-28.05,0-51,22.95-51,51s22.95,51,51,51s51-22.95,51-51
+                    			S232.05,306,204,306z"/>
+                    	</g>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="Pattern-documentation">
+        <div class="Documentation">
+            <a class="Documentation-toggler" href="#element-{{ element.id }}-examples">
+                Documentation
+            </a>
+
+            <div id="element-{{ element.id }}-examples" class="Documentation-panel">
+              {% block codeblock %}
+              {% endblock %}
+            </div> <!-- sg-hidden-area -->
+        </div>
+    </div>
+</div>

@@ -1,0 +1,42 @@
+{% extends "mote/base.html" %}
+
+{% load staticfiles mote_tags %}
+
+{% block hero %}
+    {% if intro %}
+        {{ intro|safe }}
+    {% endif %}
+{% endblock %}
+
+{% block menu %}
+    <aside role="sidebar" class="ContentArea-aside">
+        <nav class="Navigation">
+            <ul role="menu" class="Navigation-group Navigation-group--tier1" id="sidebar-nav">
+                {% for pattern in pattern.aspect.patterns %}
+                    <li role="menuitem" class="Navigation-item Navigation-item--tier1">
+                        {% url "mote:pattern" project=pattern.project.id aspect=pattern.aspect.id pattern=pattern.id as the_url%}
+                        <a class="Navigation-itemLink Navigation-itemLink--tier1 {% if request.path_info == the_url %}is-active{% endif %}" href="{{ the_url }}">{{ pattern.title }}</a>
+
+                        <ul role="menu" class="Navigation-group Navigation-group--tier2">
+                            {% for element in pattern.elements %}
+                            <li role="menuitem" class="Navigation-item Navigation-item--tier2">
+                                <a class="Navigation-itemLink Navigation-itemLink--tier2" href="{% url "mote:pattern" project=pattern.project.id aspect=pattern.aspect.id pattern=pattern.id %}#element-{{ element.id }}">{{ element.title }}</a>
+                                <a class="Navigation-itemLinkOut" target="_blank" href="{% url "mote:element-iframe" project=element.project.id aspect=element.aspect.id pattern=element.pattern.id element=element.id %}">
+                                    <img class="Navigation-itemLinkOutImage" src="{% static "mote/img/rocket.png" %}" alt="">
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </aside>
+{% endblock %}
+
+
+{% block content %}
+    {% for element in pattern.elements %}
+        {% render_element_index element %}
+    {% endfor %}
+{% endblock %}
