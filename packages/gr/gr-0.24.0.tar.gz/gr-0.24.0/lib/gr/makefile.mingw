@@ -1,0 +1,47 @@
+ INCLUDES = -I../../3rdparty/jpeg -I../../3rdparty -I../../3rdparty/zlib -I../gks -I.
+   CFLAGS = -DXMD_H -D_POSIX $(INCLUDES)
+  DEFINES = -DGRDIR=\"$(GRDIR)\" -DNO_MUPDF -DNO_GS -DNO_X11
+ JPEGLIBS = ../../3rdparty/jpeg/libjpeg.lib
+  PNGLIBS = ../../3rdparty/libpng16/libpng.lib
+    ZLIBS = ../../3rdparty/zlib/libz.lib
+   QHLIBS = ../../3rdparty/qhull/libqhull.lib
+  GKSLIBS = -L../gks/ -lgks
+     LIBS = -lwsock32 -lmsimg32 -lgdi32
+
+OBJS = gr.o text.o contour.o spline.o gridit.o strlib.o io.o image.o \
+	delaunay.o interp2.o md5.o import.o
+
+.SUFFIXES: .o .c
+
+all: prerequisites libgr.dll libgr.lib demo.exe
+
+.c.o:
+	$(CC) $(CFLAGS) $(DEFINES) -c $<
+
+prerequisites:
+	@$(MAKE) -C ../gks
+	@$(MAKE) -C ../../3rdparty/qhull
+	@$(MAKE) -C ../../3rdparty/zlib
+	@$(MAKE) -C ../../3rdparty/libpng16
+	@$(MAKE) -C ../../3rdparty/jpeg
+
+libgr.lib: $(OBJS)
+	$(AR) crs $@ $?
+
+libgr.dll: $(OBJS)
+	$(CC) -shared -o $@ $^ -Wl,--out-implib,$(@:.dll=.a) \
+	$(JPEGLIBS) $(PNGLIBS) $(ZLIBS) $(QHLIBS) $(GKSLIBS) $(LIBS)
+
+demo.exe: demo.o libgr.dll
+	$(CC) -o $@ demo.o -L. -lgr
+
+clean:
+	@$(MAKE) -C ../gks clean
+	@$(MAKE) -C ../../3rdparty/qhull clean
+	@$(MAKE) -C ../../3rdparty/zlib clean
+	@$(MAKE) -C ../../3rdparty/libpng16 clean
+	@$(MAKE) -C ../../3rdparty/jpeg clean
+	$(RM) libgr.so
+	$(RM) *.o
+
+.PHONY: default prerequisites clean
