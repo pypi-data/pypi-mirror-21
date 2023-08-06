@@ -1,0 +1,14 @@
+[uwsgi]
+module = tmserver.wsgi:app
+http-socket = :8080
+logto = {{ tm_log_directory }}/uwsgi.log
+socket = {{ uwsgi_socket }}
+chmod-socket = 666
+vacuum = true
+master = true
+processes = {{ uwsgi_processes }}
+gevent = 100
+die-on-term = true
+lazy-apps = true
+uid = {{ tm_user }}
+gid = {{ tm_user }}
