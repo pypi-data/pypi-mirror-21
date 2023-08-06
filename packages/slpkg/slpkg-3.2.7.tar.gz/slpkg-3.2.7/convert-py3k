@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# The Python2 source is the definitive source. 
+# This script uses 2to3-3.2 to create a new python3/slpkg 
+# source tree that works under Python 3.
+# (Thanks beautifulsoup4 for the script).
+#
+echo "About to destroy and rebuild the py3k/slpkg directory."
+rm -rf py3k/slpkg
+mkdir -p py3k/slpkg
+cp -rf * py3k/slpkg
+2to3 -w py3k/slpkg
+echo ""
+echo "OK, conversion is done."
+echo "Now running the unit tests."
+(cd py3k && python3 -m unittest discover -s slpkg)
