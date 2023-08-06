@@ -1,0 +1,34 @@
+This package defines an ``IInterface`` that allows the developer to mark
+interfaces as content types.
+
+
+=======
+CHANGES
+=======
+
+4.0.0 (2017-04-23)
+------------------
+
+- Add support for PyPy.
+- Add support for Python 3.4, 3.5 and 3.6.
+
+
+3.5.1 (2010-12-21)
+------------------
+
+- Replace ``zope.app.component`` dependency with ``zope.componentvocabulary``.
+
+
+3.5.0 (2010-09-20)
+------------------
+
+- Moved ``zope.app.interface.queryType`` to ``zope.app.content.queryType``
+  to inverse dependency.
+
+
+3.4.0 (2007-10-11)
+------------------
+
+- Initial release independent of the main Zope tree.
+
+
