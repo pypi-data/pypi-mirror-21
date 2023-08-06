@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xml:lang="en"
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
+      xmlns:tal="http://xml.zope.org/namespaces/tal"
+      xmlns:metal="http://xml.zope.org/namespaces/metal"
+      metal:use-macro="api.macro('kotti:templates/view/master.pt')">
+
+  <article metal:fill-slot="content"
+           class="content kotti-alerts"
+           i18n:domain="kotti_alert">
+    <h2>
+      Alerts
+
+      <div class="pull-right">
+        <a href="?status=all"
+            class="btn btn-${'primary' if request.params.get('status', None) == 'all' else 'default'} btn-md">
+                All
+        </a>
+        <a href="?status=active"
+            class="btn btn-${'primary' if request.params.get('status', 'active') == 'active' else 'default'} btn-md">
+                Active
+        </a>
+        <a href="?status=expired"
+            class="btn btn-${'primary' if request.params.get('status', None) == 'expired' else 'default'} btn-md">
+                Expired
+        </a>
+        <a href="?status=disabled"
+            class="btn btn-${'primary' if request.params.get('status', None) == 'disabled' else 'default'} btn-md">
+                Disabled
+        </a>
+      </div>
+    </h2>
+    <div class="table-responsive">
+        <table id="alerts-table" class="table"
+            data-toggle="table"
+            data-search="true"
+            data-pagination="true"
+            data-page-size="50">
+            <thead>
+                <tr>
+                    <th data-field="title" >Title</th>
+                    <th data-field="enabled">Enabled</th>
+                    <th data-field="user_or_group">Audience</th>
+                    <th data-field="status">Status</th>
+                    <th tal:condition="request.params.get('status', None) == 'all'" data-field="active">Active</th>
+                    <th data-field="end_date">End Date</th>
+                    <th data-field="options" >Options</th>
+                </tr>
+            </thead>
+            <tbody>
+              <tr tal:repeat="alert alerts">
+                <td valign="middle" >${ alert.title }</td>
+                <td valign="middle">${ alert.active }</td>
+                <td valign="middle">${ alert.username_or_group or "everyone" }</td>
+                <td valign="middle">${ alert.get_status_title() }</td>
+                <td  tal:condition="request.params.get('status', None) == 'all'" valign="middle">
+                    ${ 'True' if alert.is_active() else 'False' | 'False' }
+                </td>
+                <td valign="middle">
+                  ${ alert.end_date.strftime("%A %d. %B %Y") | '' }
+                </td>
+                <td valign="middle">
+                  <a href="${alert.path}" class="btn btn-primary btn-sm" >
+                    View
+                  </a>
+                </td>
+              </tr>
+        </table>
+        <div>
+            <a href="${request.resource_url(api.root, 'add_alert')}" class="btn btn-primary" >Create Alert</a>
+        </div>
+    </div>
+  </article>
+</html>

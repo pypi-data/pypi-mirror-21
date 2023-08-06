@@ -1,0 +1,22 @@
+<!-- kotti_alert enabled -->
+<div  tal:condition="alert is not None"
+      class="kotti-alerts alert alert-${alert.alert_status}" role="alert">
+  <h4 >
+    ${alert.title}
+    <a tal:condition="request.has_permission('edit')" href="${request.resource_url(alert, 'edit')}" class="edit-link">
+      <span style="font-size: 10pt;" class="glyphicon glyphicon-pencil"></span>
+    </a>
+    <button type="button" data-alert="${alert.id}" data-href="${request.resource_url(alert, 'update-seen-by')}"
+      class="close kotti-alert-closer" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </h4>
+  <p>
+    <span class="alert-description">${alert.description}</span>
+    <span tal tal:condition="alert.body">
+      ...
+      <a href="${request.resource_url(alert)}">Read more.</a>
+    <span>
+  </p>
+  
+</div>
