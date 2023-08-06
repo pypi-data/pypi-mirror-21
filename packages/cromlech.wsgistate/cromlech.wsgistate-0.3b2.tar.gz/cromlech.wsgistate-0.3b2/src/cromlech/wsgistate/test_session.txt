@@ -1,0 +1,109 @@
+Context manager
+------------------
+
+Let's import some helpers::
+
+    >>> import pytest
+    >>> from webtest import TestApp
+    >>> SK = 'session.key'
+
+And our session controller::
+
+    >>> from cromlech.wsgistate import WsgistateSession
+    >>> from cromlech.wsgistate.controlled import WsgistateSession
+
+    >>> def simple_app(environ, start_response):
+    ...     """retained visited path, raise exception if path contain 'fail'
+    ...     """
+    ...     with WsgistateSession(environ, SK) as session:
+    ...         path = environ['PATH_INFO']
+    ...         history = session.setdefault('path', [])
+    ...         history.append(path)
+    ...         if path == '/fail':
+    ...             raise ValueError
+    ...     start_response('200 OK', [('Content-type', 'text/plain')])
+    ...     return [', '.join(history)]
+
+
+Then run it with wsgistate middelware:
+
+    >>> from cromlech.wsgistate import session_wrapper 
+    >>> wsgi_app = TestApp(session_wrapper(simple_app, session_key=SK))
+    >>> result = wsgi_app.get('/foo')
+    >>> result.status
+    '200 OK'
+    >>> result.body
+    '/foo'
+
+    >>> result = wsgi_app.get('/bar')
+    >>> result.status
+    '200 OK'
+    >>> result.body
+    '/foo, /bar'
+    
+If application raise an exception, the context manager wont save the session::
+
+    >>> result = wsgi_app.get('/fail')
+    Traceback (most recent call last):
+    ...
+    ValueError
+    >>> result.status
+    '200 OK'
+    >>> result.body
+    '/foo, /bar'
+
+
+Testing the transaction awareness
+---------------------------------
+
+    >>> import transaction
+    >>> from cromlech.wsgistate import SessionStateException
+
+    >>> def transactional_app(environ, start_response):
+    ...
+    ...     with transaction.manager as tm:
+    ...         with WsgistateSession(environ, SK, tm) as session:
+    ...             session['crom'] = 'Pyramid'
+    ...             tm.abort()
+    ...
+    ...     assert not session
+    ...
+    ...     with transaction.manager as tm:
+    ...         with WsgistateSession(environ, SK, tm) as session:
+    ...             session['crom'] = 'Crom'
+    ...
+    ...     with transaction.manager as tm:
+    ...         with WsgistateSession(environ, SK, tm) as session:
+    ...             session['lech'] = 'Lech'
+    ...             sp1 = tm.savepoint()
+    ...
+    ...             session['crom'] = 'Zope'
+    ...             session['lech'] = 'Quack'
+    ...             sp2 = tm.savepoint()
+    ...
+    ...             session['crom'] = 'PHP'
+    ...             sp3 = tm.savepoint()
+    ...
+    ...             sp2.rollback()
+    ...             assert session['crom'] == 'Zope'
+    ...             assert session['lech'] == 'Quack'
+    ...
+    ...             session['crom'] = 'Zorglub'
+    ...             session['lech'] = 'Zimbabwe'
+    ...
+    ...             sp1.rollback()
+    ...
+    ...     # outside of a transaction, the writing is prohibited
+    ...     with pytest.raises(SessionStateException) as e:
+    ...         session['fail'] = True
+    ...
+    ...     assert e.value.message == (
+    ...         "Session's current state disallows writing")
+    ...
+    ...     start_response('200 OK', [('Content-type', 'text/plain')])
+    ...     return [session.get('crom', ''), session.get('lech', '')]
+
+    >>> wsgi_app = TestApp(session_wrapper(transactional_app, session_key=SK))
+    >>> result = wsgi_app.get('/bar')
+    >>> result.body
+    'CromLech'
