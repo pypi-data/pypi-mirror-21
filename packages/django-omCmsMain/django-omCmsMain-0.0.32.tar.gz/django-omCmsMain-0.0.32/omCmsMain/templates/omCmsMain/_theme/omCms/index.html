@@ -1,0 +1,101 @@
+{% extends "omCmsMain/base.html" %}
+
+{% load includeif_template_exists %}
+
+{% block head-title %}
+    {{siteInfoData.siteName}}
+{% endblock %}
+
+{% block body-header %}
+    {% include 'omCmsMain/header.html' %}
+{% endblock %}
+
+{% block body-main %}
+
+    <!-- Slider -->
+    {% if siteInfoData.displaySlideShow %}
+        {% include 'omCmsMain/sectionLayouts/slider.html' %}
+    {% endif %}
+    <!-- End Slider -->
+    
+    <!-- Sections -->
+    <!-- Default articles section -->
+    <section class="team" id="home">
+            <div class="container">
+                <div class="row">
+                    
+                    <!--h2>{{item.itemDescription}}</h2>
+                    <h4>{{item.onMouseOverDescription}}</h4-->
+                        
+                        {% for articleitem in articleList %}
+                            {% if articleitem.articleCategory|stringformat:"s" == "homepage" %}
+                                {% if item.itemTemplate %}
+                                    {% include 'omCmsMain/sectionLayouts/'|add:item.itemTemplate|add:'.html' %}
+                                {% else %}
+                                    {% if 'omCmsMain/sectionLayouts/'|add:item.itemCategory|add:'.html'|template_exists %}
+                                        {% include 'omCmsMain/sectionLayouts/'|add:item.itemCategory|add:'.html' %}
+                                    {% else %}
+                                        {% include 'omCmsMain/sectionLayouts/default.html' %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                </div>
+                <hr />
+                <div style="text-align:center;"><a href="#">TOP</a></div>
+                <hr />
+            </div>
+        </section><!-- end of Home Page  section -->
+
+    {% for item in itemList %} 
+        <!--section id="{{item.itemCategory}}">
+            <div class="row">
+                <div class="col">
+                    <h1> Section {{item.itemOrder}}: {{item.itemCategory}} </h1>
+                    - Order: {{item.itemOrder}} - Category: {{item.itemCategory}} - Key: {{item.Key}}- Logged: {{item.loggedOnly}}  <br />
+                </div>
+            </div>
+        </section-->
+
+        <!--  Artcles for home page -->
+        <!--section class="thSection" id="homePage"-->
+        
+        <section class="thSection" id="{{item.itemCategory}}">
+            <div class="container">
+                <div class="row">
+                    
+                    <!--h2>{{item.itemDescription}}</h2>
+                    <h4>{{item.onMouseOverDescription}}</h4-->
+                        
+                        {% for articleitem in articleList %}
+                            {% if articleitem.articleCategory|stringformat:"s" == item.itemCategory|stringformat:"s" %}
+                                {% if item.itemTemplate %}
+                                    {% include 'omCmsMain/sectionLayouts/'|add:item.itemTemplate|add:'.html' %}
+                                {% else %}
+                                    {% if 'omCmsMain/sectionLayouts/'|add:item.itemCategory|add:'.html'|template_exists %}
+                                        {% include 'omCmsMain/sectionLayouts/'|add:item.itemCategory|add:'.html' %}
+                                    {% else %}
+                                        {% include 'omCmsMain/sectionLayouts/default.html' %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                </div>
+                <hr />
+                <div style="text-align:center;"><a href="#">TOP</a></div>
+                <hr />
+            </div>
+        </section><!-- end of team section -->
+
+
+
+
+    {% endfor %}
+
+{% endblock %}
+
+{% block body-footer %}
+    {% include 'omCmsMain/footer.html' %}
+{% endblock %}

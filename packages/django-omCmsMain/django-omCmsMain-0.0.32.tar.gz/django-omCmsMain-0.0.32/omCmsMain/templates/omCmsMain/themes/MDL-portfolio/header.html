@@ -1,0 +1,78 @@
+{% if siteInfoData.displayNavBar %}
+    <header class="mdl-layout__header mdl-layout__header--waterfall portfolio-header"
+        {% if siteInfoData.siteHeadBgImg %}
+            style="background-image: url('{{siteInfoData.siteHeadBgImg.url}}');" 
+        {% endif %}
+    > 
+        <!-- Here we have to tweak the Header config -->
+        <!-- TODO: How to config the config tool to correctly interface with the choosen Theme?  -->
+        {% if siteInfoData.displayLogo %}
+            {% if siteInfoData.siteLogo %}
+                <div class="mdl-layout__header-row portfolio-logo-row">
+                    <span class="mdl-layout__title">
+                        <a href="{{siteInfoData.siteLogoLinkTo}}">                
+                            <div class="portfolio-logo" style="background-image: url('{{siteInfoData.siteLogo.url}}')"
+                            {% if siteInfoData.siteLogoText %}
+                                 title="{{siteInfoData.siteLogoText}}" 
+                            {% endif %}
+                            >
+                            </div>
+                        </a>
+                        <span class="mdl-layout__title">
+                            {% if siteInfoData.siteShortDescription %} {{siteInfoData.siteShortDescription}}{% endif %} 
+                            {% if siteInfoData.siteTagLine1 %} {{siteInfoData.siteTagLine1}}{% endif %}
+                            {% if siteInfoData.siteTagLine2 %} {{siteInfoData.siteTagLine2}}{% endif %}
+                        </span>
+                    </span>
+                </div>
+                <!--a href="{{siteInfoData.siteLogoLinkTo}}">
+                    <img src="{{siteInfoData.siteLogo.url}}" 
+                    {% if siteInfoData.siteLogo %}
+                        width={{siteInfoData.siteLogoWidth}} 
+                    {% endif %}
+                    alt="{{siteInfoData.siteLogoText}}" 
+                    title="{{siteInfoData.siteLogoText}}" 
+                    class="img-fluid tm-sidebar-image"
+                    {% if siteInfoData.siteLogoPadding %}
+                        style="margin:{{siteInfoData.siteLogoPadding}}px;" 
+                    {% endif %}
+                    >
+                </a-->
+            {% endif %}
+        {% endif %}
+        <div class="mdl-layout__header-row portfolio-navigation-row mdl-layout--large-screen-only">
+            <nav class="mdl-navigation mdl-typography--body-1-force-preferred-font">
+
+                <a class="mdl-navigation__link " href="/">{{siteInfoData.siteHomeLabel}}</a>
+
+                {% for item in categorysList %}
+                    <a class="mdl-navigation__link" href="/#{{item.itemCategory}}">
+                        {%if item.itemDescription %}
+                            {{item.itemDescription}}
+                        {% else %}
+                            {{item.itemCategory}}
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+    {% if siteInfoData.displayDrawerMenu %}
+    <div class="mdl-layout__drawer {% if siteInfoData.allwaysDisplayDrawerMenu %} {% else %} mdl-layout--small-screen-only {% endif %}">
+            <nav class="mdl-navigation mdl-typography--body-1-force-preferred-font">
+                <a class="mdl-navigation__link" href="/">{{siteInfoData.siteHomeLabel}}</a>
+
+                {% for item in categorysList %}
+                    <a class="mdl-navigation__link" href="/#{{item.itemCategory}}">
+                        {%if item.itemDescription %}
+                            {{item.itemDescription}}
+                        {% else %}
+                            {{item.itemCategory}}
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </nav>
+        </div>
+    {% endif %}
+
+{% endif %}
