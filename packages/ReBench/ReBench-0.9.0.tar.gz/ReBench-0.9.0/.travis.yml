@@ -1,0 +1,31 @@
+language: python
+
+python:
+  - "2.7"
+
+dist: trusty
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - python-scipy
+    - time
+
+# install dependencies
+before_install:
+  - cp -R /usr/lib/python2.7/dist-packages/scipy* /home/travis/virtualenv/python2.7/lib/python2.7/site-packages/
+  - cp -R /usr/lib/python2.7/dist-packages/numpy* /home/travis/virtualenv/python2.7/lib/python2.7/site-packages/
+  # - cp -R /usr/lib/python2.7/dist-packages/PIL* /home/travis/virtualenv/python2.7/lib/python2.7/site-packages/
+
+install:
+  - pip -q install PyYAML
+  - pip install coveralls
+# TODO: check whether we can do something like the proposed:
+#   "pip install -r requirements.txt --use-mirrors"
+
+# command to run tests
+script: nosetests --with-coverage --cover-package=rebench
+
+after_success:
+  coveralls
