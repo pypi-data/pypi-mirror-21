@@ -1,0 +1,250 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="plutonium-chart-behavior.html">
+
+<!--
+`plutonium-line-chart`
+Visualization widget.
+
+@demo demo/index-thin-chart.html 
+-->
+
+<dom-module id="plutonium-thin-chart">
+    <template>
+        <style>
+            :host {
+                display: block;
+                height: 400px;
+            }
+
+            .controls {
+                display: inline-block;
+                margin: 0 0 0 20px;
+            }
+            svg {
+                float: right;
+                margin: 0;
+            }
+            .axis--x path {
+                display: none;
+            }
+
+            .line {
+                fill: none;
+                stroke: steelblue;
+                stroke-width: 1.5px;
+            }
+
+            #tooltip {
+                position: absolute;
+                height: auto;
+                padding: 10px;
+                background-color: white;
+                -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                pointer-events: none;
+            }
+
+            #tooltip.hidden {
+                display: none;
+            }
+
+            #tooltip p {
+                margin: 0;
+                font-family: sans-serif;
+                font-size: 12px;
+                line-height: 20px;
+            }
+
+            #container {
+                position: absolute;
+            }
+
+            canvas {
+                margin-left: var(--margin-left, 0px);
+                margin-top: var(--margin-right, 0px);
+                margin-top: var(--margin-top, 0px);
+                margin-top: var(--margin-bottom, 0px);
+                width: var(--width);
+                height: var(--height);
+            }
+        </style>
+        <content select=".scale"></content>
+        <svg id="container"></svg>
+        <canvas id="canvas" />
+    </template>
+
+    <script>
+        Polymer({
+            is: 'plutonium-thin-chart',
+            extends: 'div',
+            properties: {
+                dataUrl: {
+                    type: String,
+                    notify: true
+                },
+
+                _resolution: {
+                    type: Object,
+                    computed: '_computeResolution(dataUrl)'
+                },
+                _cellSizeX: {
+                    type: Number,
+                    computed: '_computeCellSizeX(_resolution, _height)'
+                },
+                _cellSizeY: {
+                    type: Number,
+                    computed: '_computeCellSizeY(_resolution, _width)'
+                },
+                _selectedPoint: {
+                    type: Object,
+                    notify: true
+                }
+            },
+            behaviors: [
+                Plutonium.ChartBehavior
+            ],
+            observers: [
+                '_observeServerSideData(_g, dataUrl)'
+            ],
+
+            _computeColorBucketCount: function(data) {
+                return (data.domains.z.length && data.domains.z.length > 0) ? data.domains.z.length - 1 : 0;
+            },
+            _computeCellSizeX: function(resolution, height) {
+                return height / resolution.height;
+            },
+            _computeCellSizeY: function(resolution, width) {
+                return width / resolution.width;
+            },
+            _computeResolution: function(data) {
+                return data.resolution;
+            },
+            _observeServerSideData: function(_g, dataUrl) {
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'observe-data');
+                this.update();
+            },
+
+            initialize: function() {
+                //                this._g = this._svg.append("g").attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+                //
+                //                this.$.canvas.width = this._width;
+                //                this.$.canvas.height = this._height;
+                //                this.customStyle['--margin-left'] = this._margin.left + 'px !important';
+                //                this.customStyle['--margin-top'] = this._margin.top + 'px !important';
+                //                this.customStyle['--margin-right'] = this._margin.right + 'px !important';
+                //                this.customStyle['--margin-bottom'] = this._margin.bottom + 'px !important';
+                //                this.customStyle['--width'] = this._width + 'px !important';
+                //                this.customStyle['--height'] = this._height + 'px !important';
+                //                this.updateStyles();
+                this._graph = d3.select('canvas');
+            },
+            draw: function() {
+
+
+                var self = this;
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'draw');
+
+                //                self._graph = d3.select('canvas')
+                ////                        .attr('x', self._margin.left)
+                ////                        .attr('y', self._margin.top)
+                //                        .attr("style", "margin-left: " + self._margin.left + "px !important; margin-top: " + self._margin.top + "px !important;")
+                //                        .attr('width', self._width + 'px')
+                //                        .attr('height', self._height + 'px');
+
+                //                self._graph = self._graph.attr('transform', 'translate(0, ' + (self._tick++) + ')')
+                self._graph = self._graph.attr('transform', 'translate(0, 0)');
+
+                if (this._data) {
+                    var context = self.$.canvas.getContext("2d");
+                    context.clearRect(0, 0, self._data.width, self._data.height);
+                    context.beginPath();
+                    //                self._data.forEach(function (d, i) {
+                    context.drawImage(self._data, 0, 0, self._data.width, self._data.height, 0, 0, self._data.width, self._data.height);
+                    //                });
+                    context.closePath();
+                }
+
+                /*console.debug((self.id ? self.is + '#' + self.id : self.is), 'render scales');
+                var distributedScales = self.queryAllEffectiveChildren('.scale');
+                for (var index in distributedScales) {
+                    console.debug('- ', (distributedScales[index].id ? distributedScales[index].is + '#' + distributedScales[index].id : distributedScales[index].is));
+                    distributedScales[index].fire('d3-update', {
+                        graphics: self._g,
+                        container: self._svg,
+                        width: self._width,
+                        height: self._height,
+                        margin: self._margin
+                    });
+                }
+*/
+                //                var self = this;
+                //                console.debug((this.id ? this.is + '#' + this.id : this.is), 'draw');
+
+                //                self._graph = self._g.append('svg:image').attr('xlink:href', self.dataUrl)
+                //                        .attr('id', self.id + 'Graph')
+                //                        .attr('x', '0')
+                //                        .attr('y', '0')
+                //                        .attr('width', self._width + 'px')
+                //                        .attr('height', self._height + 'px');
+                //                console.debug((self.id ? self.is + '#' + self.id : self.is), 'render scales');
+                //                var distributedScales = self.queryAllEffectiveChildren('.scale');
+                //                for (var index in distributedScales) {
+                //                    console.debug('- ', (distributedScales[index].id ? distributedScales[index].is + '#' + distributedScales[index].id : distributedScales[index].is));
+                //                    distributedScales[index].fire('d3-update', {
+                //                        graphics: self._g,
+                //                        container: self._svg,
+                //                        width: self._width,
+                //                        height: self._height,
+                //                        margin: self._margin
+                //                    });
+                //                }
+            },
+            refresh: function(input) {
+                var blob = new Blob([input], {
+                    type: 'image/png'
+                });
+                var url = URL.createObjectURL(blob);
+                var img = new Image;
+
+                var self = this;
+                img.onload = function() {
+                    self._data = img;
+                    console.debug((self.id ? self.is + '#' + self.id : self.is), 'refresh', self._data);
+                    self._onRender();
+                    URL.revokeObjectURL(url);
+                }
+                img.src = url
+            },
+            update: function() {
+                var self = this;
+                var img = new Image();
+                img.src = this.dataUrl;
+
+                img.onload = function() {
+                    self._data = img;
+                    console.debug('update', self._data);
+                    self._onRender();
+                };
+
+                //                var self = this;
+                ////                var selection = d3.select('image#' + self.id + 'Graph');
+                //                var img = new Image();
+                //                img.src = this.dataUrl;
+                //                img.onload = function () {
+                //                    try {
+                //                        self.$$('image#' + self.id + 'Graph').remove();
+                //                    } catch (exception) {
+                //                        d3.select('image#' + self.id + 'Graph').remove();
+                //                    }
+                //                    self._onRender();
+                ////                    
+                //
+                //                };
+
+            }
+        });
+
+    </script>
+</dom-module>

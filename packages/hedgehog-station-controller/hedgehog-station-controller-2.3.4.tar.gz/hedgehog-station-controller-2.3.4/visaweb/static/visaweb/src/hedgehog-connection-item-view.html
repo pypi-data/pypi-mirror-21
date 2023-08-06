@@ -1,0 +1,75 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="hedgehog-connection-item-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+      }
+        </style>
+
+        <iron-ajax id="attachAjax" url="/visaweb/devicemanager/attach" body="[[mappingModel]]" as-json content-type="application/json" method="POST" on-response="onAttachResponse" on-error="onAttachError"></iron-ajax>
+
+        <paper-icon-item class="item">
+            <paper-item-body two-line class="flex">
+                <div>[[connection]]</div>
+            </paper-item-body>
+            <!--<a href="#/visaconsole-view/[[connection]]" tabindex="-1">-->
+                <paper-icon-button icon="shared-icons:star" alt="favourite this!" on-tap="onAttachAsset"></paper-icon-button>
+            <!--</a>-->
+            <content></content>
+        </paper-icon-item>
+    </template>
+
+    <script>
+    Polymer({
+      is: 'hedgehog-connection-item-view',
+      properties: {
+        connection: {
+            type: String,
+            notify: true
+        },
+        mappingModel: {
+            type: Object,
+            notify: true,
+            value: { }
+        }
+      },
+      onAttachAsset: function(event, details) {
+        this.mappingModel.key = null;
+        this.mappingModel.value = this.connection;
+        this.$.attachAjax.generateRequest();
+      },
+      onAttachResponse: function(event, details) {
+        this.fire('plutonum-navigate', {
+            page: '/visaconsole-view/' + details.response.id,
+            id: details.response.id
+        });
+      },
+      onAttachError: function(event, details) {
+        this.fire('plutonium-notification', {
+            level: 'warning',
+            message: details.error
+        });
+      }
+    });
+
+
+    </script>
+</dom-module>
