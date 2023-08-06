@@ -1,0 +1,169 @@
+{% extends "constellation_base/base.html" %}
+
+{% block title %}{{ template_settings.organization }} -- Create Poll{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_vote/css/vote.css' %}">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css">
+<link rel="stylesheet" href="{% static 'constellation_forms/css/getmdl-select.min.css' %}">
+{% endblock %}
+
+{% block js %}
+<div id="message-toast" class="mdl-js-snackbar mdl-snackbar">
+    <div class="mdl-snackbar__text"></div>
+    <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{{ block.super }}
+{% load static %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/Sortable/1.5.1/Sortable.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
+<script src="{% static 'constellation_vote/js/getmdl-select.min.js' %}"></script>
+<script>
+{% if pollOptions %}
+const pollData = JSON.parse('{{ pollOptions|escapejs }}');
+{% else %}
+const pollData = '';
+{% endif %}
+const urlList = "{% url 'constellation_vote:view_list' %}";
+</script>
+<script src="{% static 'constellation_vote/js/manage-poll.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mdl-grid board" id="board" style="width:100%">
+    <div class="mdl-cell mdl-cell--9-col mdl-shadow--2dp" id="poll-pane">
+        <form action="#" id="poll-title" class="poll-part active-poll-part mdl-grid">
+            {% if pollOptions %}
+            <h2>Update Poll</h2>
+            {% else %}
+            <h2>Create a Poll</h2>
+            {% endif %}
+            <div class="mdl-textfield mdl-js-textfield mdl-cell mdl-cell--12-col huge-textfield">
+                <input class="mdl-textfield__input" type="text" id="poll-title" name="title" value="{{ poll.title }}">
+                <label class="mdl-textfield__label" for="poll-title">Poll Title</label>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-cell mdl-cell--12-col">
+                <textarea class="mdl-textfield__input" type="text" id="poll-desc" name="desc">{{ poll.desc }}</textarea>
+                <label class="mdl-textfield__label" for="poll-desc">Poll Description</label>
+            </div>
+        </form>
+        <form onsubmit="return false;" class="poll-holder mdl-grid" id="poll-holder">
+            <ul id="choices-list" class="mdl-list mdl-cell--12-col choices-list">
+                {% verbatim %}
+                <script id="choice-template" type="text/x-handlebars-template">
+                    <li class="mdl-list__item">
+                        <span class="mdl-list__item-primary-content">
+                            <i class="material-icons drag-handle">drag_handle</i>
+                            <input class="choice-id" type="hidden" name="choice-id-{{ id }}" id="choice-id-{{ id }}" value="{{ choice.id }}">
+                            <div class="mdl-textfield mdl-js-textfield mdl-cell mdl-cell--4-col">
+                                <input class="mdl-textfield__input choice-title" type="text" name="choice-title-{{ id }}" id="choice-title-{{ id }}" value="{{ choice.text }}">
+                                <label class="mdl-textfield__label" for="choice-title-{{ id }}">Item</label>
+                            </div>
+                            <div class="mdl-textfield mdl-js-textfield mdl-cell mdl-cell--6-col">
+                                <input class="mdl-textfield__input choice-desc" type="text" name="choice-desc-{{ id }}" id="choice-desc-{{ id }}" value="{{ choice.desc }}">
+                                <label class="mdl-textfield__label" for="choice-desc-{{ id }}">Description</label>
+                            </div>
+                            {{#if choice.id}}
+                                <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-cell mdl-cell--2-col" for="choice-active-{{ id }}">
+                                    <input type="checkbox" id="choice-active-{{ id }}" name="choice-active-{{ id }}" class="mdl-checkbox__input choice-active"{{#if choice.active}} checked{{/if}}>
+                                    <span class="mdl-checkbox__label">Active</span>
+                                </label>
+                            {{else}}
+                                <input type="hidden" id="choice-active-{{ id }}" name="choice-active-{{ id }}" class="choice-active" checked>
+                                <div class="mdl-cell mdl-cell--2-col">
+                                    <button class="mdl-button mdl-js-button mdl-button--icon delete-choice" onclick="deleteChoice(this)" disabled>
+                                        <i class="material-icons">clear</i>
+                                    </button>
+                                </div>
+                            {{/if}}
+                        </span>
+                    </li>
+                </script>
+                {% endverbatim %}
+            </ul>
+            <button type="button" class="mdl-button mdl-js-button mdl-js-ripple-effect" onclick="addChoice()">
+                <i class="material-icons ">add_circle</i> Add
+            </button>
+        </form>
+        <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent poll-submit" onclick="submitPoll()">
+            {% if pollOptions %}Update Poll{% else %}Create Poll{% endif %}
+        </button>
+    </div>
+    <div id="right-sidebar" class="mdl-cell mdl-cell--3-col">
+        <div class="small-card mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title">
+                <h2 class="mdl-card__title-text">Poll Options</h2>
+            </div>
+            <div class="mdl-card__supporting-text">
+                <form action="#" class="poll-options" id="poll-options">
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input datetimefield" type="text" name="starts" id="begin-date" value="{{ poll.starts|date:"m/d/Y"}} {{ poll.starts|time:"H:i" }}">
+                        <label class="mdl-textfield__label" for="begin-date">Start Date</label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input datetimefield" type="text" name="ends" id="end-date" value="{{ poll.ends|date:"m/d/Y" }} {{ poll.ends|time:"H:i" }}">
+                        <label class="mdl-textfield__label" for="end-date">End Date</label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input class="mdl-textfield__input" type="text" name="ip_range" id="ip-range" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$" value="{{ poll.ip_range }}">
+                        <label class="mdl-textfield__label" for="ip-range">IP Range</label>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select getmdl-select__fullwidth">
+                        <input class="mdl-textfield__input" type="text" id="owner" name="owner" tabIndex="-1" readonly value="{{ poll.owned_by }}">
+                        <label for="owner">
+                            <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
+                        </label>
+                        <label for="owner" class="mdl-textfield__label">Owner</label>
+                        <ul for="owner" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                            {% for group in request.user.groups.all %}
+                            <li class="mdl-menu__item" data-val="{{ group.pk }}">{{ group.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select getmdl-select__fullwidth">
+                        <input class="mdl-textfield__input" type="text" id="visible" name="visible" tabIndex="-1" readonly value="{{ poll.visible_by }}">
+                        <label for="visible">
+                            <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
+                        </label>
+                        <label for="visible" class="mdl-textfield__label">Visible to</label>
+                        <ul for="visible" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                            {% for group in visible_groups %}
+                            <li class="mdl-menu__item" data-val="{{ group.1 }}">{{ group.0 }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select getmdl-select__fullwidth">
+                        {% load get_item %}
+                        <input class="mdl-textfield__input" type="text" id="mechanism" name="mechanism" tabIndex="-1" readonly{% if poll.mechanism %} value="{{ poll.MECHANISMS|get_item:poll.mechanism|get_item:"name" }}" data-val="{{ poll.mechanism }}"{% endif %}">
+                        <label for="mechanism">
+                            <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
+                        </label>
+                        <label for="mechanism" class="mdl-textfield__label">Mechanism</label>
+                        <ul for="mechanism" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                            {% for id, mechanism in mechanisms.items %}
+                            <li class="mdl-menu__item" data-val="{{ id }}">{{ mechanism.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label" id="winners-container">
+                        <input class="mdl-textfield__input" type="text" name="winners" id="winners" value="{{ poll.required_winners }}">
+                        <label class="mdl-textfield__label" for="begin-date">Number of Winners</label>
+                    </div>
+                    <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="visible-to-all">
+                        <input type="checkbox" id="visible-to-all" name="results_visible" class="mdl-checkbox__input"{% if poll.results_visible %} checked{% endif %}>
+                        <span class="mdl-checkbox__label">Results visible</span>
+                    </label>
+                    <label class="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" for="cast-multiple">
+                        <input type="checkbox" id="cast-multiple" name="cast_multiple" class="mdl-checkbox__input"{% if poll.cast_multiple %} checked{% endif %}>
+                        <span class="mdl-checkbox__label">Allow users to edit vote</span>
+                    </label>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
