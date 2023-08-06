@@ -1,0 +1,26 @@
+language: python
+python:
+- '2.7'
+- '3.4'
+- pypy
+install:
+- pip install coveralls nose mock
+- pip install -r requirements.txt
+script:
+#- coverage run --source=uiautomator setup.py nosetests
+- python setup.py sdist
+after_success: coveralls
+deploy:
+  - provider: pypi
+    user: codeskyblue
+    password:
+      secure: vm2LqaTgjw1yHHw82O0Vwtomdaf7h6qzvc5rcrw64aEY76UfnQi+WMkW0Z19+k2O8KCYBdlWWgrVZlaqdHBocrUK5Gx+yGe58+BsSVSaXqxz5jcfEYjuk7MXX1PBao+5I6SabzCPrnoG+8dtYqdM2hpFbfjC33Vt7DCgt2vDMJbGEbpnQmthbZWHGotZMf9gkrY3tGFfADNZNslKmimHqJdi8cR8WXV6hhDNk4h1/4rvt2xuzzFM9JiOjlItdVFNwVE7M8cpJgNMJeQ9L8lcJAO5lnLt+9Wdr/fxfuvoCSk510GfHC74ZDyFiB8dolqJYRuu//W4f23+PXYiMJPohbyQSQarQeLejKMccg8TLSCH6WyKFZvz4FvRZ+KuoN1RAv+7znKAf/7fERauv3z0zagVDtuZ7tvJHvHmMtpdj5RPzpiYsxwmXwr5BDFhUQeD7r+I2z15qDlJ4b7fLkMzvg1ePmXwwtyV9uuo6gIoM6/MBnW0iTVPsPypQN7GCtEPrYmb1XGFNeQI64T5WRvQqe/ME9J/WyJc94MZMPia8qZm3biS89BieE/DN4uYksG+yiuI2YGKNCO9tgH5Vag5U8KbEvgn4a+cOtVR2WmxewG+xImAvhwDf4JhxFIMiK/Uu3U42ONYfhz2yCB1tnQWey4SkSSDaLvX/EXtYmkXSas=
+    distributions: sdist bdist_wheel
+  - provider: pypi
+    user: codeskyblue
+    password:
+      secure: vm2LqaTgjw1yHHw82O0Vwtomdaf7h6qzvc5rcrw64aEY76UfnQi+WMkW0Z19+k2O8KCYBdlWWgrVZlaqdHBocrUK5Gx+yGe58+BsSVSaXqxz5jcfEYjuk7MXX1PBao+5I6SabzCPrnoG+8dtYqdM2hpFbfjC33Vt7DCgt2vDMJbGEbpnQmthbZWHGotZMf9gkrY3tGFfADNZNslKmimHqJdi8cR8WXV6hhDNk4h1/4rvt2xuzzFM9JiOjlItdVFNwVE7M8cpJgNMJeQ9L8lcJAO5lnLt+9Wdr/fxfuvoCSk510GfHC74ZDyFiB8dolqJYRuu//W4f23+PXYiMJPohbyQSQarQeLejKMccg8TLSCH6WyKFZvz4FvRZ+KuoN1RAv+7znKAf/7fERauv3z0zagVDtuZ7tvJHvHmMtpdj5RPzpiYsxwmXwr5BDFhUQeD7r+I2z15qDlJ4b7fLkMzvg1ePmXwwtyV9uuo6gIoM6/MBnW0iTVPsPypQN7GCtEPrYmb1XGFNeQI64T5WRvQqe/ME9J/WyJc94MZMPia8qZm3biS89BieE/DN4uYksG+yiuI2YGKNCO9tgH5Vag5U8KbEvgn4a+cOtVR2WmxewG+xImAvhwDf4JhxFIMiK/Uu3U42ONYfhz2yCB1tnQWey4SkSSDaLvX/EXtYmkXSas=
+    distributions: sdist bdist_wheel
+    on:
+      tags: true
+  
