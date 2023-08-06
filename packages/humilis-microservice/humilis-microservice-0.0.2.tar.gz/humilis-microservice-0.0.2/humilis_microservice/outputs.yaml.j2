@@ -1,0 +1,24 @@
+---
+outputs:
+    {% for _ in api_resources %}
+    LambdaArn{{loop.index}}:
+        Description:
+            The Arn of the backend Lambda function
+        Value:
+          "Fn::GetAtt":
+              - Lambda{{loop.index}}
+              - Arn
+    {% endfor %}
+    {% if not api_id %}
+    RestApiRootResource:
+        Description:
+            The REST API root resource id
+        Value:
+          "Fn::GetAtt":
+              - RestApi
+              - RootResourceId
+    RestApiId:
+        Description:
+            The REST API Id
+        Value: {Ref: RestApi}
+    {% endif %}
