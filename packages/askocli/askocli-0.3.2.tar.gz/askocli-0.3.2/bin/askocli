@@ -1,0 +1,28 @@
+#! /usr/bin/python3
+
+import argparse
+import sys
+
+import libaskocli.actions
+
+class Askocli(object):
+
+    def __init__(self):
+
+        parser = argparse.ArgumentParser(description='AskOcli: askomics command line interface',
+                                         usage='askocli <command> [<args>]')
+
+        parser.add_argument('command', help='Subcommand to run')
+
+        args = parser.parse_args(sys.argv[1:2])
+        subcommand_class = getattr(sys.modules['libaskocli.actions.' + args.command], args.command.title())()
+
+        if not hasattr(subcommand_class, 'run'):
+            print('Unreconized command')
+            parser.print_help()
+            exit(1)
+
+        getattr(subcommand_class, 'run')(sys.argv[2:])
+
+if __name__ == '__main__':
+    Askocli()
