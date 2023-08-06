@@ -1,0 +1,62 @@
+---
+- name: Check if pip is installed
+  stat:
+    path: /bin/pip
+  register: pip_file
+
+- block:
+
+  - name: Download ez_setup.py
+    get_url:
+      url: https://bootstrap.pypa.io/ez_setup.py
+      dest: /tmp/ez_setup.py
+      mode: 0755
+
+  - name: Install easy_install
+    command: /tmp/ez_setup.py
+
+  - name: Download extern
+    get_url:
+      url:  https://pypi.python.org/packages/3d/33/c0a11b3ccf79e784a813bb52804c96d8ddb718f6f20379915e49279d9ef7/extern-0.1.0.tar.gz#md5=33e42793e0313ae08af70460ae73e101
+      dest: /tmp/extern-0.1.0.tar.gz
+
+  - name: Extract extern
+    unarchive:
+      src:  /tmp/extern-0.1.0.tar.gz
+      dest: /tmp/
+      copy: no
+
+  - name: Install extern
+    command: python setup.py install
+    args:
+      chdir: /tmp/extern-0.1.0/
+
+  - name: Install pip
+    command: easy_install pip
+
+  when: not pip_file.stat.exists
+
+- name: Get installed Python modules
+  command: pip freeze
+  register: pip_modules
+
+- name: Install docker-py==1.10.6 module
+  command: pip install --upgrade docker-py==1.10.6
+  when: "'docker-py==1.10.6' not in pip_modules.stdout"
+
+- name: Create /var/lib/registry
+  file:
+    path: /var/lib/registry
+    state: directory
+
+- name: Start Docker registry mirror
+  docker_container:
+    name:            registry-mirror
+    image:           "{{ docker_registry_mirror_image }}:{{ docker_registry_mirror_tag }}"
+    state:           started
+    restart_policy:  always
+    env:
+      REGISTRY_PROXY_REMOTEURL: http://registry-1.docker.io
+    published_ports: 5000:5000
+    volumes:
+      - /var/lib/registry:/var/lib/registry    
