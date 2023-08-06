@@ -1,0 +1,102 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    xmlns:five="http://namespaces.zope.org/five"
+    xmlns:plone="http://namespaces.plone.org/plone"
+    i18n_domain="plone.jsonapi.routes">
+
+  <!-- Zope2 initialization -->
+  <five:registerPackage package="." initialize=".initialize" />
+
+  <!-- Include meta directives -->
+  <include file="meta.zcml"/>
+
+  <!-- Enable/Disable Route Registration on Startup (default: True) -->
+  <plone:jsonapi
+      register_api_routes="True"
+      />
+
+  <!-- CATALOG -->
+
+  <!-- Default catalog adapter -->
+  <adapter
+      for="*"
+      factory=".catalog.Catalog"
+      />
+
+  <!-- Default catalog query adapter -->
+  <adapter
+      for=".interfaces.ICatalog"
+      factory=".catalog.CatalogQuery"
+      />
+
+
+  <!-- BATCHING -->
+
+  <!-- Batch adapter for Plone 4.3 Batching -->
+  <adapter
+      for="*"
+      factory=".batch.Batch"
+      />
+
+  <!-- Batch adapter for Plone 4.2 Batching -->
+  <adapter
+      for="ZTUtils.Batch.Batch"
+      factory=".batch.Batch42"
+      />
+
+
+  <!-- DATA MANAGERS -->
+
+  <!-- Default Data adapter (AT based content types) -->
+  <adapter
+      for="*"
+      factory=".datamanagers.ATDataManager"
+      />
+
+  <!-- Data manager for the Plone site -->
+  <adapter
+      for="Products.CMFPlone.interfaces.siteroot.IPloneSiteRoot"
+      factory=".datamanagers.PortalDataManager"
+      />
+
+  <!-- Data manager for catalog brains -->
+  <adapter
+      for="Products.ZCatalog.interfaces.ICatalogBrain"
+      factory=".datamanagers.BrainDataManager"
+      />
+
+  <!-- Data manager for Dexterity field manipulation -->
+  <adapter
+      for="plone.dexterity.interfaces.IDexterityContent"
+      factory=".datamanagers.DexterityDataManager"
+      />
+
+
+  <!-- DATA PROVIDERS -->
+
+  <!-- Default data provider (AT based content types) -->
+  <adapter
+      for="*"
+      factory=".dataproviders.ATDataProvider"
+      />
+
+  <!-- Data provider for catalog brains -->
+  <adapter
+      for="Products.ZCatalog.interfaces.ICatalogBrain"
+      factory=".dataproviders.ZCDataProvider"
+      />
+
+  <!-- Data provider for the Plone site -->
+  <adapter
+      for="Products.CMFCore.interfaces.ISiteRoot"
+      factory=".dataproviders.SiteRootDataProvider"
+      />
+
+  <!-- Data provider for Dexterity content types -->
+  <adapter
+      for="plone.dexterity.interfaces.IDexterityContent"
+      factory=".dataproviders.DexterityDataProvider"
+      />
+
+</configure>
