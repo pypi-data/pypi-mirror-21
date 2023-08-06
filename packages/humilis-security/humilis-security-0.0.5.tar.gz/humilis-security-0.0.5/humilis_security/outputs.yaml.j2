@@ -1,0 +1,10 @@
+---
+outputs:
+    {% for sg in security_groups %}
+    {% set sanitized_name=sg.name.replace('-','').replace('_','') %}
+    {{sanitized_name}}:
+        Description:
+            The Physical ID of security group {{sg.name}}
+        Value:
+            Ref: {{sanitized_name}}
+    {% endfor %}
