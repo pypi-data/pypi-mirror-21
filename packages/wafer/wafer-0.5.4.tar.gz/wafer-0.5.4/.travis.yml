@@ -1,0 +1,46 @@
+language: python
+sudo: false
+python:
+   - "2.7"
+   - "3.4"
+   - "3.5"
+env:
+   - DJANGO='django>=1.8.0,<1.9.0' TESTDB=sqlite
+   - DJANGO='django>=1.8.0,<1.9.0' TESTDB=postgres
+   - DJANGO='django>=1.9.0,<1.10.0' TESTDB=sqlite
+   - DJANGO='django>=1.9.0,<1.10.0' TESTDB=postgres
+   - DJANGO='django>=1.10.0,<1.11.0' TESTDB=sqlite
+   - DJANGO='django>=1.10.0,<1.11.0' TESTDB=postgres
+   - DJANGO='https://github.com/django/django/archive/stable/1.11.x.tar.gz' TESTDB=sqlite
+   - DJANGO='https://github.com/django/django/archive/stable/1.11.x.tar.gz' TESTDB=postgres
+   - DJANGO='https://github.com/django/django/archive/master.tar.gz' TESTDB=sqlite
+   - DJANGO='https://github.com/django/django/archive/master.tar.gz' TESTDB=postgres
+
+matrix:
+   exclude:
+      # Django 2.0 will drop python 2 support - https://www.djangoproject.com/weblog/2015/jun/25/roadmap/
+      - python: "2.7"
+        env: DJANGO='https://github.com/django/django/archive/master.tar.gz' TESTDB=sqlite
+      - python: "2.7"
+        env: DJANGO='https://github.com/django/django/archive/master.tar.gz' TESTDB=postgres
+
+   allow_failures:
+      - env: DJANGO='https://github.com/django/django/archive/master.tar.gz' TESTDB=postgres
+      - env: DJANGO='https://github.com/django/django/archive/master.tar.gz' TESTDB=sqlite
+
+services:
+   - postgresql
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+
+before_install:
+   - if [ "$TESTDB" = "postgres" ]; then pip install -q psycopg2 ; fi
+# command to install dependencies,
+install:
+   # Install the right version of Django first
+   - pip install "$DJANGO"
+   - pip install -r requirements.txt -r requirements-dev.txt
+# command to run tests
+script: NOSE_WITH_COVERAGE=1 python manage.py test
