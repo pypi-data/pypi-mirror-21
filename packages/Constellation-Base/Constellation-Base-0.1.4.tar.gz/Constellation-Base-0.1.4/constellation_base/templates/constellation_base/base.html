@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% block head %}
+        <meta charset="utf-8" />
+        {% load static %}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>{% block title %}{% endblock %}</title>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" media="screen" href="https://code.getmdl.io/1.2.1/material.indigo-blue.min.css">
+        <link rel="stylesheet" media="screen" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+        <link rel="stylesheet" media="screen" href="{% static 'constellation_base/css/base.css' %}">
+        <link rel="stylesheet" media="print" href="{% static 'constellation_base/css/print.css' %}">
+
+        <style>
+            .layout-transparent {
+                {% if template_settings.background %}
+                background: url('{{ MEDIA_URL }}{{ template_settings.background }}') center / cover;
+                {% endif %}
+            }
+        </style>
+        {% endblock %}
+    </head>
+    <body>
+        <div class="mdl-layout mdl-js-layout mdl-layout--no-desktop-drawer-button {% if template_settings.background %}layout-transparent{% endif %}">
+            {% block header %}
+            {% include 'constellation_base/includes/header.html' %}
+            {% endblock %}
+            <main class="mdl-layout__content">
+                <div class="mdl-grid main-content">
+                    {% block content %}{% endblock %}
+                </div>
+                {% block footer %}
+                <div class="mdl-layout-spacer"></div>
+                {% include 'constellation_base/includes/footer.html' %}
+                {% endblock %}
+            </main>
+        </div>
+        {% block js %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+        <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+        {% endblock %}
+    </body>
+</html>

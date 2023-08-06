@@ -1,0 +1,37 @@
+{% if template_settings.background %}
+<div class="scrim">&nbsp;</div>
+{% endif %}
+<header class="mdl-layout__header mdl-layout__header--scroll {% if template_settings.background %}mdl-layout__header--transparent{% endif %}">
+    <div class="mdl-layout__header-row">
+        <!-- Title -->
+        <span class="mdl-layout-title"><a href="/">{{ template_settings.organization }}</a></span>
+        <!-- Add spacer, to align navigation to the right -->
+        <div class="mdl-layout-spacer"></div>
+        <!-- Navigation -->
+        <nav class="mdl-navigation">
+            {% block titlebar_navigation %}
+            {% for link in template_settings.titlebar_links %}
+            <a class="mdl-navigation__link" href="{{ link.url }}">{{ link.name }}</a>
+            {% endfor %}
+            {% endblock %}
+            {% if user.is_authenticated %}
+            <a class="mdl-navigation__link" href="{% url 'Logout' %}">Logout ({{ user.username }})</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+<div class="mdl-layout__drawer">
+    <span class="mdl-layout-title"><a href="/">{{ template_settings.organization }}</a></span>
+    <nav class="mdl-navigation">
+        {% block sidebar_navigation %}
+        {% for link in template_settings.titlebar_links %}
+        <a class="mdl-navigation__link" href="{{ link.url }}">{{ link.name }}</a>
+        {% endfor %}
+        {% endblock %}
+        {% if user.is_authenticated %}
+        <div class="mdl-layout-spacer"></div>
+        <a class="mdl-navigation__link" href="{% url 'Logout' %}">Logout ({{ user.username }})</a>
+        {% endif %}
+    </nav>
+</div>
+<br/>

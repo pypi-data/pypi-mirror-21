@@ -1,0 +1,72 @@
+{% extends 'constellation_base/base.html' %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'constellation_base/css/getmdl-select.min.css' %}">
+{% endblock %}
+
+{% block js %}
+{{ block.super }}
+<script src="{% static 'constellation_base/js/getmdl-select.min.js' %}"></script>
+{% endblock %}
+
+{% block title %}Supplemental Groups{% endblock %}
+
+{% block content %}
+<div class="mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">Supplemental Groups</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        <div class="mdl-list">
+            {% for group in existing_groups %}
+            <div class="mdl-list__item">
+                <span class="mdl-list__item-primary-content">
+                    {{ group.name }}
+                </span>
+                <span class="mdl-list__item-secondary-content">
+                    <a href="{% url 'base_manage_group_delete' group.id %}">
+                        <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+                            <i class="material-icons">delete</i>
+                        </button>
+                    </a>
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="mdl-card mdl-cell--8-col mdl-cell--2-offset-desktop mdl-shadow--2dp mdl-grid">
+    <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">Update Membership</h2>
+    </div>
+    <div class="mdl-card__supporting-text">
+        <form method="POST">
+{% csrf_token %}
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select getmdl-select__fix-height">
+                <input class="mdl-textfield__input" type="text" id="group_id" name="group_id" tabIndex="-1" readonly>
+                <label for="group_id">
+                    <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
+                </label>
+                <label for="group_id" class="mdl-textfield__label">Group</label>
+                <ul for="group_id" class="mdl-menu mdl-menu--bottom-left mdl-js-menu">
+                    {% for group in all_groups %}
+                    <li class="mdl-menu__item" data-val="{{ group.pk }}">{{ group.name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <br />
+
+            <div class="mdl-textfield mdl-js-textfield">
+                <textarea class="mdl-textfield__input" type="text" rows= "3" id="membership_listing" name="membership_listing" ></textarea>
+                <label class="mdl-textfield__label" for="membership_listing">List of Group Members</label>
+            </div>
+            <br />
+            <input type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"/>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
