@@ -1,0 +1,50 @@
+# Changes
+- v3.0.1:
+  - Fixed an off-by-one error for character offsets when creating mentions
+- v3.0.0:
+  - `PageRank` for dependency graphs via `networkx`
+  - Find shortest paths in dependency graphs via `networkx`
+  - Updated api to match [v.3.0 of `processors-server`](https://github.com/myedibleenso/processors-server/releases/tag/v3.0)
+  - Support for Odin `@Mention.argname`
+  - `json` compatible with [`org.clulab.processors`](https://github.com/clulab/processors)
+- v2.9.7:
+  - `.nes` support for IOB format
+- v2.9.6:
+  - Simplified path checks for `jar`
+- v2.9.5:
+  - Docstring for `ProcessorsAPI`
+  - Updated Odin rules url for tests
+  - Check version of jar against recommended version
+  - Cleanup (kwargs usage, path resolution, etc.)
+- v2.9.4:
+  - `jar` is now downloaded when first used
+- v2.9.3:
+  - Pass hostname to command for starting server
+  - Fixed an Odin test and added needed resources
+- v2.9.2:
+  - Added `.stop_server()` test
+- v2.9.1:
+  - Create `Mention` from `Mention.trigger` when `trigger` is not `None`
+- v2.9:
+  - `Mention.arguments` bug fix related to creating Mentions for each arg corresponding to each role
+  - `Dependencies.incoming` and `Dependencies.outgoing` bug fixes
+  - Implemented custom  __eq__ and __ne__ for core data structures
+- v2.8:
+  - `Dependencies` bug fix related to initializing from `json`
+  - Added `keep_alive` boolean parameter to `ProcessorsAPI` constructor to provide a way to keep the server running when instance goes out of scope
+  - Compatibility fixes for 2.x
+  - Updated api to match [v.2.7 of `processors-server`](https://github.com/myedibleenso/processors-server/releases/tag/v2.7)
+    - handle pre-segmented text (preserve provided sentence segmentation in `.annotate` and `.sentiment.corenlp.score_segmented_text` calls)
+- v2.7:
+  - Added `Mention` class and support for rule-based information extraction with Odin
+  - Updated api to match [v.2.5 of `processors-server`](https://github.com/myedibleenso/processors-server/releases/tag/v2.5)
+- v2.6:
+  - Added interface to [CoreNLP's tree-based sentiment analysis](http://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf)
+  - Rewrote `json` serialization and loading to mirror changes in `processors-server` v2.2
+- v2.4:
+  - Added support for `json` serialization
+- v2.1:
+  - Added interface to `BioNLPProcessor`
+  - Download latest `processors-server.jar` as part of installation
+- v1.0:
+  - Basic functionality (interface to `FastNLPProcessor`)
