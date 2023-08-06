@@ -1,0 +1,59 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="hedgehog-plot-view.html">
+<link rel="import" href="hedgehog-property-editor-view.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="hedgehog-device-monitor-view">
+    <template>
+        <style include="shared-styles">
+          :host {
+            display: block;
+
+            padding: 10px;
+          }
+
+          .action-icon {
+                margin: auto px;
+          }
+        </style>
+
+        <app-route route="{{route}}" pattern="/:id" data="{{routeData}}"></app-route>
+        <iron-ajax url="/visaweb/assets/[[routeData.id]]" auto last-response="{{data}}"></iron-ajax>
+
+        <paper-card style="width: 100%;" heading="[[data.display_name]]">
+            <hedgehog-plot-view endpoint="/visualization/[[routeData.id]]/spectrum/4" class="card-content"></hedgehog-plot-view>
+            <hedgehog-plot-view endpoint="/visualization/[[routeData.id]]/heatmap/4" class="card-content"></hedgehog-plot-view>
+        </paper-card>
+    </template>
+
+    <script>
+    Polymer({
+      is: 'hedgehog-device-monitor-view',
+
+    });
+
+
+
+
+
+    </script>
+</dom-module>

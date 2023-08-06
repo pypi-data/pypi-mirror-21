@@ -1,0 +1,387 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="plutonium-chart-behavior.html">
+
+<!--
+`plutonium-line-chart`
+Visualization widget.
+
+@demo demo/index-waterfall-chart.html 
+-->
+
+<dom-module id="plutonium-waterfall-chart">
+    <template>
+        <style>
+            :host {
+                display: block;
+                height: 400px;
+            }
+            text {
+                fill: white;
+            }
+            .controls {
+                display: inline-block;
+                margin: 0 0 0 20px;
+            }
+            svg {
+                float: right;
+                margin: 0;
+            }
+            .axis--x path {
+                display: none;
+            }
+
+            .line {
+                fill: none;
+                stroke: steelblue;
+                stroke-width: 1.5px;
+            }
+
+            #tooltip {
+                position: absolute;
+                height: auto;
+                padding: 10px;
+                background-color: white;
+                -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+                pointer-events: none;
+            }
+
+            #tooltip.hidden {
+                display: none;
+            }
+
+            #tooltip p {
+                margin: 0;
+                font-family: sans-serif;
+                font-size: 12px;
+                line-height: 20px;
+            }
+        </style>
+        <content select="plutonium-axis"></content>
+        <!--        <div class="controls">
+                    <template is="dom-repeat" items="{{data}}" as="d">
+                        <p>A
+                            <label for="input">{{d.type}}: </label>
+                            <input id="input"
+                                   type="range"
+                                   value="{{d.amount}}"
+                                   min="0" max="500" />
+                            <span>[[d.amount]]</span>
+                        </p>
+                    </template>
+                </div>-->
+        <div id="tooltip" class="hidden">
+            <p><span id="value"></p>
+            <table>
+                <tr>
+                    <td>[[xAxisName]]</td>
+                    <td>[[_selectedPoint.x]]</td>
+                </tr>
+                <tr>
+                    <td>[[yAxisName]]</td>
+                    <td>[[_selectedPoint.y]]</td>
+                </tr>
+                <tr>
+                    <td>[[zAxisName]]</td>
+                    <td>[[_selectedPoint.z]]</td>
+                </tr>
+            </table>
+        </div>
+        <svg id="svg">
+        </svg>
+    </template>
+
+    <script>
+        Polymer({
+            is: 'plutonium-waterfall-chart',
+            extends: 'div',
+            properties: {
+                xAxisName: {
+                    type: String,
+                    notify: true
+                },
+                yAxisName: {
+                    type: String,
+                    notify: true
+                },
+                zAxisName: {
+                    type: String,
+                    notify: true
+                },
+
+                _colorBucketCount: {
+                    type: Number,
+                    computed: '_computeColorBucketCount(data)',
+
+                },
+
+                _resolution: {
+                    type: Object,
+                    computed: '_computeResolution(data)'
+//                    notify: true,
+//                    value: {
+//                        width: 40,
+//                        height: 40
+//                    }
+                },
+                _cellSizeX: {
+                    type: Number,
+                    computed: '_computeCellSizeX(_resolution, _height)'
+                },
+                _cellSizeY: {
+                    type: Number,
+                    computed: '_computeCellSizeY(_resolution, _width)'
+                },
+                _selectedPoint: {
+                    type: Object,
+                    notify: true
+                }
+            },
+            behaviors: [
+                Plutonium.ChartBehavior
+            ],
+            observers: [
+                '_observeWaterfall(_cellSizeX, _cellSizeY, _g, data)'
+            ],
+
+            _computeColorBucketCount: function (data) {
+                return (data.domains.z.length && data.domains.z.length > 0) ? data.domains.z.length - 1 : 0;
+            },
+            _computeCellSizeX: function (resolution, height) {
+                return height / resolution.height;
+            },
+            _computeCellSizeY: function (resolution, width) {
+                return width / resolution.width;
+            },
+            _computeResolution: function (data) {
+                return data.resolution;
+            },
+            _observeWaterfall: function (_cellSizeX, _cellSizeY, _g, data) {
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'observe-data');
+                this.fire('d3-render', {});
+            },
+            draw: function () {
+                var self = this;
+                console.debug((this.id ? this.is + '#' + this.id : this.is), 'draw');
+
+                var zScale = d3.scaleQuantile().domain([
+                    d3.min(this.data.data, function (d) {
+                        return d.z;
+                    }),
+                    this._colorBucketCount,
+                    d3.max(this.data.data, function (d) {
+                        return d.z;
+                    })
+                ]).range(this.data.domains.z);
+
+                var legendElementWidth = this._width / this.data.domains.z.length;
+                var legendG = this._g.append("g").selectAll(".legend")
+                        .data([0].concat(zScale.quantiles()), function (d) {
+                            return d;
+                        })
+                        .enter()
+                        .append("g").attr("class", "legend");
+
+                legendG.append("rect")
+                        .attr("x", function (d, i) {
+                            return legendElementWidth * i;
+                        }).attr("y", this._height)
+                        .attr("width", legendElementWidth).attr("height", this._cellSizeY)
+                        .style("fill", function (d, i) {
+                            return self.data.domains.z[i].name;
+                        });
+
+                legendG.append("text")
+                        .attr("class", "mono")
+                        .text(function (d) {
+                            return Math.round(d);
+                        })
+                        .attr("x", function (d, i) {
+                            return legendElementWidth * i;
+                        })
+                        .attr("y", this._height + this._cellSizeY + 15);
+
+                legendG.append("text").attr("class", "mono").text(d3.max(this.data.data, function (d) {
+                    return d.z;
+                }))
+                        .attr("x", function (d, i) {
+                            return self._width;
+                        })
+                        .attr("y", this._height + this._cellSizeY + 15);
+//                legend.exit().remove();
+
+
+                this._graph = this._g.append('image');
+
+                this._graph.attr('xlink:href', 'http://localhost:9006/data-generator/image?width=' + this._width + '&height=' + this._height + '&pixel_width=' + this._resolution.width + '&pixel_height=' + this._resolution.height + '&opacity=255&ver=' + new Date().getTime())
+                        .attr('x', '0')
+                        .attr('y', '0')
+                        .attr('width', this._width + 'px')
+                        .attr('height', this._height + 'px');
+
+
+//                this._graph = this._g.append('g').attr('class', 'mapg').selectAll('.cellg')
+//                        .data(this.data.data, function (d) {
+//                            return d.x + ":" + d.y;
+//                        })
+//                        .enter()
+//                        .append("rect")
+//
+//                        .attr("x", function (d) {
+//                            return d.x * self._cellSizeX;
+//                        })
+//                        .attr("y", function (d) {
+//                            return d.y * self._cellSizeY;
+//                        })
+//                        .attr("class", function (d) {
+//                            return "cell cell-border cr" + (d.x - 1) + " cc" + (d.y - 1);
+//                        })
+//                        .attr("width", self._cellSizeX).attr("height", self._cellSizeY)
+//                        .style("fill", function (d) {
+//                            return zScale(d.z).name;
+//                        })
+//                        .on("mouseover", function (d) {
+//
+//                            d3.select(this).classed("cell-hover", true);
+//                            //Update the tooltip position and value
+//                            self._selectedPoint = d;
+//                            d3.select("#tooltip")
+//                                    .style("left", (d3.event.pageX + 10) + "px")
+//                                    .style("top", (d3.event.pageY - 10) + "px")
+////                                    .select("#value")
+////                                    .text(JSON.stringify(d));
+//                            //Show the tooltip
+//                            d3.select("#tooltip").classed("hidden", false);
+//                        })
+//                        .on("mouseout", function () {
+//                            d3.select(this).classed("cell-hover", false);
+//                            d3.select("#tooltip").classed("hidden", true);
+//                        })
+//                        .append("text")
+//                        .attr("font-size", (self._cellSizeY - 1) + "px")
+//                        .attr("color", "black")
+//                        .text(function (d) {
+//                            return zScale(d.z).name;
+//                        });
+
+
+                // TODO: separate component
+                this._xAxis = this._g.append("g")
+                        .selectAll(".rowLabelg")
+                        .data(this.data.domains.x)
+                        .enter()
+                        .append("text")
+                        .attr("font-size", (self._cellSizeY - 1) + "px")
+                        .text(function (d) {
+                            return d.name;
+                        })
+                        .attr("x", 0)
+                        .attr("y", function (d, i) {
+                            return self._cellSizeY * i;
+                        })
+                        .style("text-anchor", "end")
+                        .attr("transform", "translate(-6," + (self._cellSizeY / 1.5 + 2) + ")")
+                        .attr("class", function (d, i) {
+                            return "rowLabel mono r" + i;
+                        });
+
+                this._yAxis = this._g.append("g")
+                        .selectAll(".colLabelg")
+                        .data(this.data.domains.y)
+                        .enter()
+                        .append("text")
+                        .attr("font-size", (self._cellSizeX - 1) + "px")
+                        .text(function (d) {
+                            return d.name;
+                        })
+                        .attr("x", 0)
+                        .attr("y", function (d, i) {
+                            return self._cellSizeX * i;
+                        })
+                        .style("text-anchor", "left")
+                        .attr("transform", "translate(" + (self._cellSizeX / 1.5 + 2) + ",-6) rotate (-90)")
+                        .attr("class", function (d, i) {
+                            return "colLabel mono c" + i;
+                        });
+            },
+            update: function (data) {
+                
+                
+
+
+
+                if (this.data) {
+
+                    this._graph.attr('xlink:href', 'http://localhost:9006/data-generator/image?width='
+                        + this._width + '&height='
+                        + this._height + '&pixel_width='
+                        + this._resolution.width + '&pixel_height='
+                        + this._resolution.height + '&opacity=255&ver='
+                        + new Date().getTime());
+
+                    if (this.data.deltaRows) {
+//                        this._g.remove();
+//                        delete this._g;
+//                        this._g = this._svg.append("g").attr("transform", "translate(" + this._margin.left + "," + this._margin.top + ")");
+                        console.debug('Dataset size before shrink:', this.data.data.length);
+//
+
+
+
+                        var newData = [];
+                        this.data.data.forEach(function (item, index, arr) {
+                            if (item.y < this.data.deltaRows) {
+//                                arr.splice(index, 1);
+                            } else {
+                                item.y = item.y - this.data.deltaRows;
+                                newData.push(item);
+                            }
+                        }, this);
+                        console.debug('Dataset size after shrink:', this.data.data.length);
+                        if (data.data) {
+                            newData = newData.concat(data.data);
+//                            data.data.forEach(function (item, index, arr) {
+//                                item.x = item.x - data.deltaRows;
+//                            }, this);
+                            delete data.data;
+                        }
+
+                        this.data.data = newData;
+                        this.data = Object.assign(this.data, data);
+                    }
+//                    this.data = Object.assign(this.data, data);
+                    console.debug('Dataset size after MERGE:', this.data.data.length);
+
+//                    this.set('data', Object.assign(this.data, data));
+                } else {
+                    this.data = data;
+                }
+
+
+//                if (this._graph) {
+//                    this._graph.remove();
+//                    this._graph = this._g.append('image')
+//                            .attr('xlink:href', 'http://localhost:9006/data-generator/image?width=' 
+//                            + this._width + '&height=' 
+//                            + this._height + '&pixel_width=' 
+//                            + this._resolution.width + '&pixel_height=' + this._resolution.height + '&opacity=255&ver=' + new Date().getTime())
+//                            .attr('x', '0')
+//                            .attr('y', '0')
+//                            .attr('width', this._width + 'px')
+//                            .attr('height', this._height + 'px');
+//                }
+//                this.fire('d3-render', {});
+            }
+        });
+    </script>
+</dom-module>
+
+
+
+
+
+
+
+
