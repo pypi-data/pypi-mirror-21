@@ -1,0 +1,86 @@
+{% extends "pretixpresale/event/base.html" %}
+{% load i18n %}
+{% load bootstrap3 %}
+{% block title %}{% trans "Checkout" %}{% endblock %}
+{% block content %}
+    <h2>{% trans "Checkout" %}</h2>
+    <p>{% trans "Before we continue, we need you to answer some questions." %}</p>
+    <form class="form-horizontal" method="post">
+        {% csrf_token %}
+        <div class="panel-group" id="questions_group">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" href="#contact">
+                            <strong>{% trans "Contact information" %}</strong>
+                        </a>
+                    </h4>
+                </div>
+                <div id="contact" class="panel-collapse collapsed in">
+                    <div class="panel-body">
+                        {% bootstrap_form contact_form layout="horizontal" %}
+                    </div>
+                </div>
+            </div>
+            {% if event.settings.invoice_address_asked %}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#invoice">
+                                <strong>{% trans "Invoice information" %}</strong>
+                                {% if not event.settings.invoice_address_required %}
+                                    {% trans "(optional)" %}
+                                {% endif %}
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="invoice" class="panel-collapse collapsed {% if event.settings.invoice_address_required %} in {% endif %}">
+                        <div class="panel-body">
+                            {% bootstrap_form invoice_form layout="horizontal" %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% for form in forms %}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#cp{{ form.pos.id }}">
+                                <strong>{{ form.pos.item.name }}</strong>
+                                {% if form.pos.variation %}
+                                    – {{ form.pos.variation }}
+                                {% endif %}
+                            </a>
+                            {% if forloop.counter > 1 %}
+                                <span class="text-right pull-right">
+                                     <input type="button" data-id="{{ forloop.counter0 }}" name="copy" class="js-copy-answers btn btn-default btn-xs" value='{% trans "Copy answers from above" %}'>
+                                </span>
+                            {% endif %}
+                        </h4>
+                    </div>
+                    <div id="cp{{ form.pos.id }}"
+                            class="panel-collapse collapsed in">
+                        <div class="panel-body" data-idx="{{ forloop.counter0 }}">
+                            {% bootstrap_form form layout="horizontal" %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="row checkout-button-row">
+            <div class="col-md-4">
+                <a class="btn btn-block btn-default btn-lg"
+                        href="{{ prev_url }}">
+                    {% trans "Go back" %}
+                </a>
+            </div>
+            <div class="col-md-4 col-md-offset-4">
+                <button class="btn btn-block btn-primary btn-lg" type="submit">
+                    {% trans "Continue" %}
+                </button>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </form>
+{% endblock %}
