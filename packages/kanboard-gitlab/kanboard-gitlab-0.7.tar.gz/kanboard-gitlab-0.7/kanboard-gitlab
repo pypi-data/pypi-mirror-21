@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import kanboard_gitlab
+from gettext import bindtextdomain, textdomain, gettext as _
+from envparse import env
+from kanboard_gitlab.importer import GitlabImporter
+
+
+def main():
+    path = os.path.join(os.path.dirname(kanboard_gitlab.__file__), 'locale')
+    bindtextdomain('kanboard-gitlab', path)
+    textdomain('kanboard-gitlab')
+
+    # TODO: Better support for configuring international labels and columns
+    labels = {
+        'To Do': _('Ready'),
+        'Doing': _('Work in progress'),
+    }
+
+    importer = GitlabImporter(labels)
+    importer.setup_gitlab(env('GITLAB_ENDPOINT'), env('GITLAB_TOKEN'))
+    importer.setup_kanboard(
+        env('KANBOARD_ENDPOINT'),
+        env('KANBOARD_USER', default='jsonrpc'),
+        env('KANBOARD_TOKEN'),
+    )
+    importer.connect()
+    importer.migrate(*sys.argv[1].split('/'))
+
+
+if __name__ == '__main__':
+    main()
