@@ -1,0 +1,10 @@
+{% load regwall_tags %}
+
+{% get_regwall_attempts as regwall_attempts %}
+{% get_regwall_successes as regwall_successes %}
+{% get_regwall_limit as regwall_limit %}
+{% get_regwall_expire as regwall_expire %}
+
+{% if regwall_attempts|length >= regwall_limit %}
+<p>You read {{ regwall_successes|length }} of your {{ regwall_limit }} free article{{ regwall_limit|pluralize }} for {{ regwall_expire }} day{{ regwall_expire|pluralize }}. Log in or register to read unlimited articles.</p>
+{% endif %}
