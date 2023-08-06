@@ -1,0 +1,29 @@
+dist: trusty
+language: python
+python:
+- 3.5-dev
+sudo: required
+services:
+  - docker
+cache:
+  directories:
+  - eggs
+before_install:
+- sysctl -w vm.max_map_count=262144
+- docker-compose up -d
+install:
+- python bootstrap-buildout.py --setuptools-version=32.1.0
+- bin/buildout -t 3
+- pip install flake8
+- pip install coverage==4.0.3
+- sleep 15
+- docker-compose logs
+script:
+- bin/py.test -s --cov=guillotina_elasticsearch -v --cov-report term-missing guillotina 
+- bin/code-analysis
+after_success:
+- coveralls
+- cat .coverage
+after_script:
+- docker-compose stop
+- docker-compose rm -f
