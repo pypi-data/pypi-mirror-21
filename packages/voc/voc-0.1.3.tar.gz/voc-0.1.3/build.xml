@@ -1,0 +1,39 @@
+<project name="python" default="all" basedir=".">
+  <description>
+    Build Python support libraries for voc
+  </description>
+
+  <property environment="env"/>
+  <property name="release" value="4"/>
+  <exec executable="python" outputProperty="python-version">
+    <arg value="-c"/>
+    <arg value="import sys; print('.'.join(sys.version.split('.',3)[:2]))"/>
+  </exec>
+
+  <condition property="build" value="${env.VOC_BUILD_DIR}" else="build">
+    <isset property="env.VOC_BUILD_DIR" />
+  </condition>
+  <condition property="dist" value="${env.VOC_DIST_DIR}" else="dist">
+    <isset property="env.VOC_DIST_DIR" />
+  </condition>
+
+  <target name="java">
+    <ant antfile="build-java.xml" target="dist"/>
+    <ant antfile="build-java.xml" target="dist-testdaemon"/>
+  </target>
+
+  <target name="checkstyle">
+    <ant antfile="build-java.xml" target="checkstyle"/>
+  </target>
+
+  <target name="android">
+    <ant antfile="build-android.xml" target="dist"/>
+  </target>
+
+  <target name="all" depends="java, android" />
+
+  <target name="clean" description="Clean up">
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>
