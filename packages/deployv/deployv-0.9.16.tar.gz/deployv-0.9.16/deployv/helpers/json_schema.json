@@ -1,0 +1,76 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "version": {"type": "string"},
+        "message_id": {"type": "string"},
+        "deploy_id": {"type": ["integer", "null"]},
+        "orchest_pipe_id": {"type": ["integer", "null"]},
+        "sender_node_id": {"type": "string"},
+        "receiver_node_id": {"type": "string"},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "response_to": {"type": ["string", "null"]},
+        "message_body": {
+            "type": "object",
+            "properties": {
+                "module": {"type": "string"},
+                "command": {"type": "string"},
+                "ack": {
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string"}
+                    }
+                },
+                "parameters": {
+                    "type": "object"
+                },
+                "result": {
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string"},
+                        "value": {"type": ["object", "string"]},
+                        "attachments": {
+                            "type": "array",
+                            "optional": true,
+                            "items": {"$ref": "#/definitions/attachment"}
+                        }
+                    }
+                },
+                "error": {
+                    "type": "object",
+                    "properties": {
+                        "message": {"type": "string"},
+                        "message": {"type": "string"},
+                        "value": {"type": "integer"},
+                        "attachments": {
+                            "type": "array",
+                            "optional": true,
+                            "items": {"$ref": "#/definitions/attachment"}
+                        }
+                    }
+                }
+            },
+            "oneOf": [
+                {"required": ["parameters"]},
+                {"required": ["ack"]},
+                {"required": ["result"]},
+                {"required": ["error"]}
+            ]
+        }
+    },
+    "required": ["version", "message_id", "deploy_id", "orchest_pipe_id", "sender_node_id",
+                 "receiver_node_id", "timestamp", "response_to", "message_body"],
+    "definitions": {
+        "attachment": {
+            "type": "object",
+            "properties": {
+                "file_name": {"type": "string"},
+                "file": {"type": "string", "contentEncoding": "base64"},
+                "type": {
+                    "type": "string",
+                    "enum": ["text/plain", "application/json"]
+                }
+            }
+        }
+    }
+}
