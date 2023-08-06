@@ -1,0 +1,38 @@
+@require(prototype, symbol, return_value, parameters, callable_type, tags, extra)
+@extends('base_symbol.html')
+
+@def header():
+<h3>
+	<span><code>@symbol.link.title</code></span>
+</h3>
+@end
+@def content():
+@prototype
+@symbol.formatted_doc
+
+@include("parameters.html")
+
+@if return_value:
+	@return_value
+@end
+
+@if extra:
+\
+@for name, ex in extra.items():
+<p>
+	@name :\
+	@ex
+</p>
+@end
+@end
+
+@for tag in tags.values():
+	<p>
+	@tag.name\
+	@if tag.description:
+		: @tag.description
+	@end
+	</p>
+@end
+\
+@end
