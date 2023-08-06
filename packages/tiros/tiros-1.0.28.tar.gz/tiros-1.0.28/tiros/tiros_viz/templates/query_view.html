@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tiros Snapshot Visualization</title>
+    <meta charset="utf-8">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"
+          rel="stylesheet">
+      <link href="../static/css/tiros.css" rel="stylesheet">
+      <link href="../static/css/nodes.css" rel="stylesheet">
+      <link href="../static/css/message.css" rel="stylesheet">
+      <link href="../static/css/index.css" rel="stylesheet">
+</head>
+<body>
+
+  <nav>
+    <div class="nav">
+      <form action="query_page" method="post" enctype="multipart/form-data">
+       <input type="text" name="text">
+       <input type="submit" value="Ask Tiros">
+      </form>
+    </div>
+  </nav>​
+
+    <div id="legend">
+        <p><span class="circle vpc">&nbsp;</span> VPC </p>
+        <p><span class="circle subnet">&nbsp;</span> Subnet</p>
+        <p><span class="circle instance">&nbsp;</span> Instance</p>
+        <p><span class="circle acl">&nbsp;</span> ACL</p>
+        <p><span class="circle instance_ssh">&nbsp;</span>Internet-SSH-Instance</p>
+        <p><span class="circle query_node">&nbsp;</span> Queried node</p>
+        <p><span class="link vpc_link">&nbsp;</span> vpc &#8596; subnet</p>
+        <p><span class="link subnet_link">&nbsp;</span> subnet &#8596; instance</p>
+    </div>
+    <!-- <div id="tiros-graph"></div> -->
+
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="../static/js/netjsongraph_tiros.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+    <script>
+      d3.netJsonGraph('{{snapshot_file}}', {
+            animationAtStart:true,
+            linkDistance: 150,
+            charge: -200,
+            defaultStyle: false,
+            linkClassProperty: "type",
+            nodeClassProperty: "color",
+            labelDy: "-1.8em",
+            cached_status:'{{cached_status}}',
+            tiros_status:'{{tiros_status}}',
+            query_answer:'{{query_answer}}'
+        });
+    </script>
+
+</body>
+</html>
