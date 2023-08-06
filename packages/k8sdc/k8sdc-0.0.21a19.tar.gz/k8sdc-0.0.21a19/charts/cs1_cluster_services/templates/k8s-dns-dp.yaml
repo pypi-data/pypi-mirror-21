@@ -1,0 +1,135 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-dns
+  namespace: {{ .Values.namespace }}
+  labels:
+    solution: cs1_cluster_services
+    product:  kube-dns
+    heritage: {{ .Release.Service | quote }}
+    release:  {{ .Release.Name | quote }}
+    chart:    "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    k8s-app: kube-dns
+    kubernetes.io/cluster-service: "true"
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 10%
+      maxUnavailable: 0
+  replicas: {{ default 1 .Values.replicaCount }}
+  selector:
+    matchLabels:
+      solution: cs1_cluster_services
+      product:  kube-dns
+  template:
+    metadata:
+      labels:
+        solution: cs1_cluster_services
+        product:  kube-dns
+        heritage: {{ .Release.Service | quote }}
+        release:  {{ .Release.Name | quote }}
+        chart:    "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        k8s-app: kube-dns
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+    spec:
+      dnsPolicy: Default
+      containers:
+        - name: kubedns
+          image: {{ .Values.kubedns_image }}:{{ .Values.kubedns_tag }}
+          imagePullPolicy: {{ default "IfNotPresent" .Values.pullPolicy }}          
+          resources:
+            limits:
+              memory: 170Mi
+            requests:
+              cpu: 100m
+              memory: 70Mi
+          livenessProbe:
+            httpGet:
+              path: /healthcheck/kubedns
+              port: 10054
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: 8081
+              scheme: HTTP
+            initialDelaySeconds: 3
+            timeoutSeconds: 5
+          args:
+            - --domain={{ .Values.domain }}
+            - --dns-port=10053
+          env:
+            - name: PROMETHEUS_PORT
+              value: "10055"
+          ports:
+            - containerPort: 10053
+              name: dns-local
+              protocol: UDP
+            - containerPort: 10053
+              name: dns-tcp-local
+              protocol: TCP
+            - containerPort: 10055
+              name: metrics
+              protocol: TCP
+
+        - name: dnsmasq
+          image: {{ .Values.dnsmasq_image }}:{{ .Values.dnsmasq_tag }}
+          imagePullPolicy: {{ default "IfNotPresent" .Values.pullPolicy }}
+          resources:
+            requests:
+              cpu: 150m
+              memory: 10Mi
+          livenessProbe:
+            httpGet:
+              path: /healthcheck/dnsmasq
+              port: 10054
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          args:
+            - --cache-size=1000
+            - --no-resolv
+            - --server=127.0.0.1#10053
+            - --log-facility=-
+          ports:
+            - containerPort: 53
+              name: dns
+              protocol: UDP
+            - containerPort: 53
+              name: dns-tcp
+              protocol: TCP
+        
+        - name: sidecar
+          image: {{ .Values.sidecar_image }}:{{ .Values.sidecar_tag }}
+          imagePullPolicy: {{ default "IfNotPresent" .Values.pullPolicy }}
+          resources:
+            requests:
+              memory: 20Mi
+              cpu: 10m
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 10054
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          args:
+            - --v=2
+            - --logtostderr
+            - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ .Values.domain }},5,A
+            - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ .Values.domain }},5,A
+          ports:
+            - containerPort: 10054
+              name: metrics
+              protocol: TCP

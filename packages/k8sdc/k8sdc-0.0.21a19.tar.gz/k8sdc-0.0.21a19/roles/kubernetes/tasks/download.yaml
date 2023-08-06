@@ -1,0 +1,28 @@
+---
+# Download Kubernetes binaries
+- name: download | Check if this Kubernetes version already has a directory
+  stat:
+    path:   "{{ download_dir }}/kubernetes_binaries_{{ kubernetes_version }}"
+  register: kubernetes_binaries_dir
+
+- name: download | Create the Kubernetes binaries directory
+  file:
+    path:  "{{ download_dir }}/kubernetes_binaries_{{ kubernetes_version }}"
+    state: directory
+    owner: kube
+    group: kube
+    mode:  0755
+  when:    not kubernetes_binaries_dir.stat.exists
+
+- name: download | Download the Kubernetes binaries
+  get_url:
+    url:    "{{ kubernetes_url }}{{ item }}"
+    dest:   "{{ download_dir }}/kubernetes_binaries_{{ kubernetes_version }}/{{ item }}"
+  when:     not kubernetes_binaries_dir.stat.exists
+  with_items:
+    - kubectl
+    - kubelet
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-proxy
+    - kube-scheduler
