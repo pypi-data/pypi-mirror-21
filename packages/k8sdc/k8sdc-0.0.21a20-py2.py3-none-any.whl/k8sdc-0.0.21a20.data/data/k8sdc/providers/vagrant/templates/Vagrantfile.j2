@@ -1,0 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "{{ vm_box }}"
+  config.vm.box_version = "{{ vm_box_version }}"
+  {% for master in masters %}
+  config.vm.define "{{ master.hostname }}" do |master|
+    master.vm.hostname = "{{ master.hostname }}"
+    master.vm.network :private_network, ip: "{{ master.ip }}"
+    master.vm.provider "{{ vm_provider }}" do |vbox|
+      vbox.memory = {{ master.memory }}
+      vbox.cpus = {{ master.cpus }}
+      vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
+      vbox.customize ["modifyvm", :id, "--nictype2", "virtio"]
+    end
+  end
+  {% endfor -%}
+  {% for node in nodes %}
+  config.vm.define "{{ node.hostname }}" do |node|
+    node.vm.hostname = "{{ node.hostname }}"
+    node.vm.network :private_network, ip: "{{ node.ip }}"
+    node.vm.provider "{{ vm_provider }}" do |vbox|
+      vbox.memory = {{ node.memory }}
+      vbox.cpus = {{ node.cpus }}
+      vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
+      vbox.customize ["modifyvm", :id, "--nictype2", "virtio"]
+    end
+  end
+  {% endfor %}
+end
