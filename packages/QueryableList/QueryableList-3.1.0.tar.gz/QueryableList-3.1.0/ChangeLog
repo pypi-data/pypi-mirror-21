@@ -1,0 +1,116 @@
+* 3.1.0 - Apr 23 2017
+
+- Add "sort_by" method, which allows returning a sorted copy of the
+collection, using the same field access _get_item_value already defined.
+
+- Add "count" method to return the number of items in the collection (same as
+len), which matches the interface on a lot of server-side filtering ORMs, to
+increase the compatability between the two.
+
+- Make "all()" method return a copy of the collection (but same elements)
+
+- Implement "__copy__" to do the same as "all()", leaving deepcopy to create
+copy of both the collection AND the elements within it
+
+- Load latest "runTests.py" from GoodTests.py. It is recommended that you
+delete the local copy and let it download the latest GoodTests.py if you run
+unit tests.
+
+- Some more unit tests
+
+
+* 3.0.1 - Apr 06 2017
+- Fix MANIFEST.in to include ChangeLog properly and also include the unit tests
+
+* 3.0.0 - Apr 03 2017
+- Fix __iadd__ ( += )to not make a copy, but to just inline update the list.
+Previously it was updating the list inline, so references and such
+functionally the same, but it made a copy after the inline update (so the id
+would change). Used more memory, more cpu, so fix that to just do inline.
+
+- Implement __isub__ method ( -= ) to substract elements frm the current list,
+i.e. not make a copy
+
+- Update __sub__ and impelment in __isub__ a change in behaviour, previously
+if we subtracted two lists and they contained common elements, we would only
+remove the FIRST instance of that element found (so QL['a', 'b', 'a'] -
+QL['a'] would equal ['b', 'a']). This has been updated to remove ALL
+references, (so QL['a', 'b', 'a'] - QL['a'] now will equal ['b']). I think
+this makes a lot more sense.
+
+- Document how easy and cool it is to extend QueryableList to add filtering
+capabilities to collections of your own custom modules
+
+- Add some missing docstrings, add some more comments. Remove the copy of
+README that was in the QueryableList.__init__ module docstring, too many
+copies to manage!
+
+- Update the static copy of FILTER_TYPES to when unrolling filters to use a dict comprehension
+
+
+- Update QueryBuilder with "addFilterAnd" and "addFilterOr" methods, as alias
+to "addFilter" with the filterType defined accordingly.
+
+- Add "customFilter" method which allows passing in a lambda to match on elements
+
+- Add a "customMatch" operation (like fieldName__customMatch=lambda x : x.isMatch()) which can take a lambda or function and match based on the results of its return
+
+- Added experimental (default disabled) value-cache impl. You can enable it by:
+   import QueryableList.Base as QLB
+   QLB.USE_CACHED = True
+Performance is not improved for normal queries (a few params to filter), but for abnormally large queries with multiples on the same field, where field access is a property that could be expensive to calculate, this may improve things.
+
+- Add test for operators, ( like +, -, +=, etc. )
+- Add some tests that seem to have been accidently not committed which tast
+basic operation
+- Add test for Operations. Implement a few of them, eventually will want to
+have all operations here (eq, ne, contains, etc)
+- Add/Transfer some common testing stuff into "tutils.py" test class
+
+
+
+* 2.2.1 - Mar 14 2017
+- Fix missing "icontains" and "contains" in the docstring (for pydoc)
+
+* 2.2.0 - Mar 14 2017
+- Add icontains and noticontains operations to do a case-insensitive
+"contains" and "not contains" filtering
+
+* 2.1.0 - Apr 12 2016
+- Add "all" method that returns the list, so that projects which also use
+IndexedRedis can have a type-agnostic interface for filtering (i.e. "all" will
+always return items, and "filter" will always filter. On IndexedRedis,
+"filter" updates/creates and returns a query, and values aren't returned until
+"all" is called, but if you just always expect "all" to return values, you can
+do that whether dealing with an IndexedRedisModel or QueryableList)
+
+* 2.0.0 - Jan 25 2016
+- Move constants to constants.py
+- FIX: Missing QueryableListMixed in __all__ (for * import)
+- FEATURE: Add QueryBuilder which allows building queries that can be applied on
+multiple lists
+- Update READMEs and documentation
+
+
+* 1.2.1 - Jan 11 2016
+- Support binary-logic operators ( &and, |or, ^xor) on QueryableLists
+
+* 1.2.0 - Jan 11 2016
+- Fixed issue with notcontainsAny
+- Added new compare types that operate on lists stored as strings. All take a tuple, first argument is what to split by, second is what to match against (same type as the non-split equivalent comparison).
+New filters are: splitcontains, splitnotcontains, splitcontainsAny, splitnotcontainsAny
+- Fix the containsAny/notcontainsAny with a null value
+
+* 1.1.0 - Jan 7 2016
+- Implement inherited list methods which would return list, and make them return the same QueryableList type as the owning class
+- Add the QueryableList name to __repr__, so it can be used to reconstruct / is visible
+- Add __version__ and __version_tuple__ tags
+- Remove one method of indirection in QueryableListObjs
+- Implement subtraction for QueryableList (not present in list)
+- Treat the lack of a field as None/null. This adds a slight overhead, but really simplifies filtering on multiple object types
+- Speed up some access
+- Add QueryableListMixed which is slightly slower, but supports both dict-like and object-like access. Use if you don't know in advance, or you need to support both in the same list.
+
+* 1.0.0 - Jan 6 2016
+- First Release
+
