@@ -1,0 +1,14 @@
+#! /bin/sh
+
+umask 022 &&
+
+git archive --format=tar --prefix=sqlconvert/ "${1:-HEAD}" |
+   (cd "$HOME/tmp" && exec tar xf -) &&
+
+cp -ap docs "$HOME/tmp/sqlconvert" &&
+
+cd "$HOME/tmp/sqlconvert" &&
+chmod -R u=rwX,go=rX docs &&
+
+python setup.py sdist --formats=bztar &&
+cd dist && mv sqlconvert-*.tar.bz2 ../.. && cd ../.. && exec rm -rf sqlconvert
