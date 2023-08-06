@@ -1,0 +1,4 @@
+* ver: 1.3.12 index.md modify
+* ver: 1.3.11 add datafiles
+* ver: 1.3.10 add normalization dataset minmax and meanstd
+* ver: 1.3.9  just add chang log modify long description
