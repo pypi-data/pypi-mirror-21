@@ -1,0 +1,417 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SpectralToolbox.Spectral1D.OrthogonalFunctions &mdash; SpectralToolbox 0.2.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="SpectralToolbox 0.2.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SpectralToolbox 0.2.3 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for SpectralToolbox.Spectral1D.OrthogonalFunctions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="c1">#</span>
+<span class="c1"># This file is part of SpectralToolbox.</span>
+<span class="c1">#</span>
+<span class="c1"># SpectralToolbox is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the LGNU Lesser General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># SpectralToolbox is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># LGNU Lesser General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the LGNU Lesser General Public License</span>
+<span class="c1"># along with SpectralToolbox.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c1">#</span>
+<span class="c1"># DTU UQ Library</span>
+<span class="c1"># Copyright (C) 2012-2015 The Technical University of Denmark</span>
+<span class="c1"># Scientific Computing Section</span>
+<span class="c1"># Department of Applied Mathematics and Computer Science</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (C) 2015-2016 Massachusetts Institute of Technology</span>
+<span class="c1"># Uncertainty Quantification group</span>
+<span class="c1"># Department of Aeronautics and Astronautics</span>
+<span class="c1">#</span>
+<span class="c1"># Author: Daniele Bigoni</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">LA</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">fft</span> <span class="k">as</span> <span class="n">FFT</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">gamma</span> <span class="k">as</span> <span class="n">gammaF</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">gammaln</span> <span class="k">as</span> <span class="n">gammalnF</span>
+<span class="kn">from</span> <span class="nn">scipy.misc</span> <span class="kn">import</span> <span class="n">factorial</span>
+
+<span class="kn">import</span> <span class="nn">orthpol</span>
+
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.Constants</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.AbstractClasses</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">SpectralToolbox.Spectral1D.OrthogonalPolynomials</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;HermitePhysicistsFunction&#39;</span><span class="p">,</span> <span class="s1">&#39;HermiteProbabilistsFunction&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;LaguerreFunction&#39;</span><span class="p">,</span> <span class="s1">&#39;Fourier&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="HermitePhysicistsFunction"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermitePhysicistsFunction">[docs]</a><span class="k">class</span> <span class="nc">HermitePhysicistsFunction</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Construction of the Hermite Physiticists&#39; functions</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      normalized (bool): whether to normalize the polynomials. Default=``None``</span>
+<span class="sd">        which leaves the choice at evaluation time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HermitePhysicistsFunction</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">HermitePhysicistsPolynomial</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">He</span> <span class="o">=</span> <span class="n">HermiteProbabilistsPolynomial</span><span class="p">()</span>
+
+<div class="viewcode-block" id="HermitePhysicistsFunction.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermitePhysicistsFunction.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Hermite Physicists&#39; function Gauss quadratures</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">hf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span><span class="o">**</span><span class="n">N</span> <span class="o">*</span> <span class="n">factorial</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">hf</span><span class="o">**</span><span class="mf">2.</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HermitePhysicistsFunction.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermitePhysicistsFunction.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th order Hermite Physicists&#39; function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mf">2.</span><span class="o">/</span><span class="mf">2.</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="HermitePhysicistsFunction.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermitePhysicistsFunction.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th order Hermite Physicists&#39; function</span>
+
+<span class="sd">        One can write it as</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           \psi_n^{(k)} = \sum_{i=0}^k (-1)^i F_{k,i} \psi_i H_n^{(k-i)}</span>
+
+<span class="sd">        where :math:`F_{k,i}` is the :math:`i`-th component of the :math:`k`-th</span>
+<span class="sd">        row of the Pascal&#39;s triangle, :math:`psi_i` is the :math:`i`-th</span>
+<span class="sd">        Hermite Physicists&#39; function and :math:`H_n^{(n-i)}` is the</span>
+<span class="sd">        :math:`(k-1)`-th derivative of the :math:`n`-th Hermite Physicists&#39; </span>
+<span class="sd">        polynomial.</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">dP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">*</span> \
+             <span class="bp">self</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">F</span> <span class="o">=</span> <span class="n">F</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">i</span>
+            <span class="n">dP</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">i</span> <span class="o">*</span> <span class="n">F</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mf">2.</span><span class="o">/</span><span class="mf">2.</span> <span class="p">)</span> <span class="o">*</span> \
+                  <span class="bp">self</span><span class="o">.</span><span class="n">He</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">*</span> \
+                  <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="n">i</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">dP</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">dP</span></div>
+
+<div class="viewcode-block" id="HermitePhysicistsFunction.Gamma"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermitePhysicistsFunction.Gamma">[docs]</a>    <span class="k">def</span> <span class="nf">Gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Return the normalization constant for the ``N``-th Hermite Physiticsts&#39; function.</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Gamma`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mf">2.</span><span class="o">**</span><span class="n">N</span> <span class="o">*</span> <span class="n">factorial</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">exact</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsFunction"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsFunction">[docs]</a><span class="k">class</span> <span class="nc">HermiteProbabilistsFunction</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Construction of the Hermite Probabilists&#39; functions</span>
+
+<span class="sd">    This are rescaling of :math:`\sqrt{2}` of the Hermite Physicists&#39;</span>
+<span class="sd">    functions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      normalized (bool): whether to normalize the polynomials. Default=``None``</span>
+<span class="sd">        which leaves the choice at evaluation time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HermiteProbabilistsFunction</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Hf</span> <span class="o">=</span> <span class="n">HermitePhysicistsFunction</span><span class="p">()</span>
+
+<div class="viewcode-block" id="HermiteProbabilistsFunction.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsFunction.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Hermite Probabilists&#39; function Gauss quadratures</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Hf</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsFunction.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsFunction.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th order Hermite Probabilists&#39; function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Hf</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsFunction.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsFunction.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th order Hermite Probabilists&#39; function</span>
+
+<span class="sd">        .. seealso:: :func:`HermitePhysicistsFunction.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span>
+        <span class="n">dP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Hf</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">dP</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">dP</span></div>
+
+<div class="viewcode-block" id="HermiteProbabilistsFunction.Gamma"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.HermiteProbabilistsFunction.Gamma">[docs]</a>    <span class="k">def</span> <span class="nf">Gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Return the normalization constant for the ``N``-th Hermite Probabilists&#39; function.</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Gamma`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Hf</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="n">N</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="LaguerreFunction"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LaguerreFunction">[docs]</a><span class="k">class</span> <span class="nc">LaguerreFunction</span><span class="p">(</span><span class="n">OrthogonalPolynomial</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Construction of the Laguerre functions</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      alpha (float): parameter :math:`\alpha`.</span>
+<span class="sd">      normalized (bool): whether to normalize the polynomials. Default=``None``</span>
+<span class="sd">        which leaves the choice at evaluation time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">normalized</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LaguerreFunction</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="n">LaguerrePolynomial</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LaguerreFunction.GaussQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LaguerreFunction.GaussQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Laguerre function Gauss quadratures</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GaussQuadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">.</span><span class="n">GaussQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LaguerreFunction.GaussRadauQuadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LaguerreFunction.GaussRadauQuadrature">[docs]</a>    <span class="k">def</span> <span class="nf">GaussRadauQuadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">.</span><span class="n">GaussRadauQuadrature</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LaguerreFunction.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LaguerreFunction.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th order Laguerre function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="LaguerreFunction.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LaguerreFunction.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th order Laguerre function</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalPolynomial.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span> <span class="n">norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalized</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">dP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">F</span> <span class="o">=</span> <span class="n">F</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">i</span>
+            <span class="n">dP</span> <span class="o">+=</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span><span class="o">**</span><span class="n">i</span> <span class="o">*</span> <span class="n">F</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span> <span class="o">*</span> \
+                  <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">.</span><span class="n">GradEvaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="n">i</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">dP</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">dP</span></div>
+
+<div class="viewcode-block" id="LaguerreFunction.Gamma"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.LaguerreFunction.Gamma">[docs]</a>    <span class="k">def</span> <span class="nf">Gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="n">N</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Fourier"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Fourier">[docs]</a><span class="k">class</span> <span class="nc">Fourier</span><span class="p">(</span><span class="n">OrthogonalBasis</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bspan</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Fourier.Quadrature"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Fourier.Quadrature">[docs]</a>    <span class="k">def</span> <span class="nf">Quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Generate quadrature points for the Fourier series</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalBase.Quadrature`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">N</span><span class="o">+</span><span class="mi">3</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">N</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">/=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Fourier.Evaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Fourier.Evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">Evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th Fourier basis</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalBase.Evaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">N</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span> <span class="n">N</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span> <span class="p">(</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">P</span></div>
+
+<div class="viewcode-block" id="Fourier.GradEvaluate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Fourier.GradEvaluate">[docs]</a>    <span class="k">def</span> <span class="nf">GradEvaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``k``-th derivative of the ``N``-th Fourier basis</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalBase.GradEvaluate`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">N</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">**</span><span class="p">((</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="p">(</span><span class="n">k</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">((</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="p">(</span><span class="n">k</span> <span class="o">%</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">norm</span><span class="p">:</span>
+            <span class="n">P</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Gamma</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="n">P</span></div>
+
+<div class="viewcode-block" id="Fourier.Gamma"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Fourier.Gamma">[docs]</a>    <span class="k">def</span> <span class="nf">Gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Evaluate the ``N``-th normalization constant for the Fourier basis</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalBase.Gamma`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">2.</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span></div>
+
+<div class="viewcode-block" id="Fourier.project"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Fourier.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Project ``f`` onto the span of Fourier basis up to order ``N``</span>
+
+<span class="sd">        .. seealso:: :func:`OrthogonalBase.project`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;r and f should have the same size&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">==</span> <span class="n">N</span><span class="o">+</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span><span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Quadrature</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">atol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">):</span>
+                <span class="n">fhatc</span> <span class="o">=</span> <span class="n">FFT</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span> <span class="n">f</span> <span class="p">)</span> <span class="c1"># Complex</span>
+                <span class="n">fhatc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span> <span class="p">(</span><span class="n">fhatc</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">fhatc</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span> <span class="p">)</span><span class="o">.</span><span class="n">T</span>
+                <span class="n">fhat</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">N</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> \
+                       <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span> <span class="p">(</span> <span class="n">fhatc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+                                    <span class="n">fhatc</span><span class="p">[</span><span class="mi">1</span><span class="p">:,:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> <span class="p">)</span>
+                <span class="k">return</span> <span class="n">fhat</span><span class="p">[:</span><span class="n">N</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Fourier</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Fourier.interpolate"><a class="viewcode-back" href="../../../api-spectral1d.html#SpectralToolbox.Spectral1D.Fourier.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot; Interpolate function values ``f`` from points ``x`` to points ``xi``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">          x (:class:`ndarray&lt;ndarray&gt;` [``m``]): set of ``m`` original points</span>
+<span class="sd">          f (:class:`ndarray&lt;ndarray&gt;` [``m``]): function values at points ``x``</span>
+<span class="sd">          xi (:class:`ndarray&lt;ndarray&gt;` [``n``]): set of ``n`` interpolation </span>
+<span class="sd">            points</span>
+<span class="sd">          order (int): polynomial order</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">          (:class:`ndarray&lt;ndarray&gt;` [``n``]) -- interpolated function values at</span>
+<span class="sd">            points ``xi``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fhat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">order</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Use the generalized vandermonde matrix</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GradVandermonde</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">fi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span><span class="n">fhat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fi</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">SpectralToolbox 0.2.3 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012-2016, Daniele Bigoni.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+    </div>
+  </body>
+</html>
