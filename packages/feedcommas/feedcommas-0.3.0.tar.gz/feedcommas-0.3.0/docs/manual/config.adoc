@@ -1,0 +1,413 @@
+// tag::manpage[]
+:ini-wiki-url: https://en.wikipedia.org/wiki/INI_file
+:basedir-url: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+:format-url: https://docs.python.org/3.5/library/string.html#formatspec
+// end::manpage[]
+
+[[config]]
+== Configuration
+
+// tag::manpage[]
+
+Feed Commas can be configured by setting options in a standard
+{ini-wiki-url}[ini-style] configuration file. If not specified via `-c,
+--config` flag, configuration is searched in a filesystem in a way described by
+{basedir-url}[XDG Base Directory Specification]. In practice it means that for
+most users it will be located in `~/.config/feed-commas/config.ini`. However,
+any of below files can be read if previous ones were not found:
+
+1. `$XDG_CONFIG_HOME/feed-commas/config.ini`. If `$XDG_CONFIG_HOME` is not set,
+   it defaults to `$HOME/.config`.
+2. any of `$XDG_DATA_DIRS/feed-commas/config.ini`. `$XDG_DATA_DIRS` is
+   colon-separated list of directories to check. If it is not set, it defaults
+   to `/etc/xdg`.
+
+If configuration file is not found, Feed Commas will create one.
+
+Before Feed Commas terminates, any changes to the configuration are written
+back.
+
+[NOTE]
+.Specific configuration files
+====
+You can tell Feed Commas to use a specific configuration file by using `-c,
+--config` switch. Feed Commas will read it (or create it if it doesn't exist)
+and everything else will work the same as with configuration found by above
+method.
+
+----
+$ feed-commas -c ~/feedcommasrc
+----
+====
+
+// end::manpage[]
+
+=== Structure
+
+INI files are made of sections. Each section contains a number of options. Below
+is incomplete example of file which has `[server]` and `[keys]` sections.
+
+----
+[server]
+address = https://commafeed.com
+
+[keys]
+nav-up = k
+nav-down = j
+
+[settings]
+workers = 2
+----
+
+[[cfg-server]]
+==== Server
+
+`[server]` contains options for configuring access to CommaFeed server.
+
+.[server] options
+[cols="2*^m,4", options="header"]
+|===
+| Option | Default value | Description
+
+| address
+| \https://commafeed.com
+| Address of CommaFeed instance with which Feed Commas will communicate.
+
+| username
+|
+| name or e-mail used to login to CommaFeed instance.
+
+| password
+|
+| Plain text password which will be used to login to CommaFeed. Due to security
+  reasons, *it is not recommended to leave plain text passwords* in any
+  configuration file. Use *password-cmd* instead.
+
+| password-cmd
+|
+| A command used to get password to login to CommaFeed. It takes precedence over
+  *password*, even if the latter is set.
+
+| timeout
+| 10
+| Time in seconds after which Feed Commas timeouts and goes to auto-offline
+  mode. When in auto-offline mode, Feed Commas will retry connecting with Comma
+  Feed, but meanwhile will use local cache of RSS entries. You can force Feed
+  Commas to try to reconnect immediately by <<refresh,refreshing>> article list.
+|===
+
+[[cfg-keys]]
+==== Keys
+
+`[keys]` contains key mappings used in Feed Commas.
+
+[cols="^2m,^1m,6", options="header"]
+.[keys] options
+|===
+| Option | Default value | Description
+
+| [[navigation]]nav-up
+| kbd:[k]
+| Navigates and scrolls up. It is used e.g. to navigate a menu and scroll
+  article list.
+
+| nav-down
+| kbd:[j]
+| Navigates and scrolls down. It is used e.g. to navigate a menu and scroll
+  article list.
+
+| nav-right
+| kbd:[l]
+| Navigates right. It is used e.g. to switch used panel from menu to article
+  list.
+
+| nav-right
+| kbd:[h]
+| Navigates right. It is used e.g. to switch used panel from article list to
+  menu.
+
+| [[read-toggle]]read-toggle
+| kbd:[R]
+| Toggles between read and unread state for currently selected article.
+
+| star-toggle
+| kbd:[S]
+| Stars or unstars currently selected article.
+
+| read-all
+|
+| Marks all unread articles from currently displayed feed (or category with its
+  descendants) as read.
+
+| [[show-all]]show-all
+|
+| Shows both unread and read entries. Modifies <<show-read,show-read>> option.
+
+| [[show-unread]]show-unread
+|
+| Shows only unread entries. Modifies <<show-read,show-read>> option.
+
+| [[refresh]]refresh
+| kbd:[r]
+| Instantly refreshes list of articles.
+
+| sync
+|
+| Downloads articles for offline read, up to the
+  <<sync-article-count,sync-article-count>> limit. Only works if Feed Commas is
+  <<offline,online>>.
+
+| offline-toggle
+|
+| Toggles between <<offline,offline>> and online modes.
+
+| open-browser
+| kbd:[ctrl+\]]
+a| Opens selected article in a default web browser.
+
+Refer to the documentation of your Operating System on how to configure one.
+Usually setting `$BROWSER` environment variable should be sufficient.
+
+| quit
+| kbd:[q]
+| Quits Feed Commas.
+|===
+
+Key values can contain modifiers, but they heavily depend on what keycodes
+terminal sends. For example, terminals usually won't explicitly send
+kbd:[shift], but uppercase letters instead (so instead of mapping kbd:[shift+e],
+map kbd:[E]).
+
+Any combination of kbd:[ctrl] and kbd:[alt] modifiers is available as `c-` and
+`a-` prefixes. Other keys are also available:
+
+[.center, width=50%, cols="^,^m", options="header"]
+.Special keys
+|===
+| Key on keyboard | config.ini notation
+| kbd:[ctrl]      | c-
+| kbd:[alt]       | a-
+| kbd:[shift]     | s-
+| kbd:[↑]         | up
+| kbd:[↓]         | down
+| kbd:[←]         | left
+| kbd:[→]         | right
+| kbd:[Enter]     | enter
+| kbd:[Return]    | enter
+| kbd:[Page Up]   | page up
+| kbd:[Page Down] | page down
+| kbd:[F5]        | f5
+2+^.^|*Examples*
+| kbd:[ctrl+a]      | c-a
+| kbd:[alt+a]       | a-a
+| kbd:[ctrl+alt+←]  | c-a-left
+| kbd:[alt+Enter]   | a-enter
+|===
+
+[WARNING]
+.Use lower case
+====
+Non-character keys should be written lower-case! Instead of typing `F5`, type
+`f5`, `page down`, `enter` and so on.
+====
+
+==== Settings
+
+`[settings]` section contains options affecting various behaviours of
+Feed Commas.
+
+[cols="^2m,^1m,6", options="header"]
+.[settings] options
+|===
+| Option | Default value | Description
+
+| mark-read-time
+| 2
+| Time (in seconds) after which currently selected article will be marked as
+  read. If set to 0, articles will be marked as read immediately. If set to
+  -1, articles won't be automatically marked as read.
+
+It's advised to be kept as positive integer, which will prevent marking articles
+as unread when scrolling through an article list.
+
+| [[show-read]]show-read
+| false
+| If set to _true_, all articles will be shown on the article list. If set to
+  _false_, only unread articles will be shown. Using
+  <<show-all,show-all>> or <<show-unread,show-unread>> command automatically
+  changes this setting so after application restart, the last state is used.
+
+| supported-colors
+| 256
+| Number of colors supported by terminal. Most terminals nowdays support at
+  least 256 colors, so if things work for you, don't change this setting.
+
+  Valid values: 1, 16, 88, 256
+
+| bright-bold
+| false
+| Display bright colors as bold (some terminals work that way). Change it to
+  true if you don't see a difference when using bright colors.
+
+| html-filter
+| builtin
+a| Method of filtering HTML in received entries so they're readable. Can be
+   either of the following:
+
+   * `builtin` - simple (and inaccurate) builtin filtering method. Quite fast
+     and doesn't need any additional dependencies.
+   * `none` or unset option - filtering is disabled and HTML is printed exactly
+     as received
+   * any filter command - external command, which accepts HTML on its stdin and
+     converts it to a readable output on its stdout. Some text-based browsers
+     (http://lynx.browser.org/[lynx], http://elinks.or.cz/[elinks]) support such
+     mode. Make sure to read a <<html-filter-tip,tip about commands>> if you
+     want to use this option.
+
+| [[offline]]offline
+| false
+| When set to true, Feed Commas will only display articles which were previously
+  saved for offline read and won't request updates from remote Comma Feed
+  service. When using Feed Commas in online mode, all articles are automatically
+  saved and updated to match Comma Feed state.
+
+| window-title
+| Feed Commas
+| Some terminals and terminal multiplexers allow setting title of terminal
+  window. If this option is set, Feed Commas will try to change a title to its
+  value.
+
+| workers
+| 2
+| Number of worker processes used for various tasks, like communicating with
+  CommaFeed. If this option is unset, workers will be spawned in a number equal
+  to available CPU cores.
+
+| [[status-line]]status-line
+| \{unread\}\{offline\} \{notif\}
+a| Parameters displayed on status line. The value of `status-line` is displayed
+   literally and any parameters in curly braces (`{` and `}`) are replaced with
+   a status string. To print curly braces themselves, escape them by doubling:
+   `{{` and `}}`.
+
+The following parameters are available:
+
+   * `{offline}` - displays 'o' when offline mode is turned on;
+   * `{unread}` - displays 'u' when <<show-read,show-read>> is turned off;
+   * `{notif}` - shows any current notification (e.g. synchronization progress).
+
+| [[sync-article-count]]sync-article-count
+| 1000
+| Maximum number of articles to be downloaded from Comma Feed for offline
+  access. It usually doesn't make any sense to set this limit to more than 1000
+  because Comma Feed only stores the last 1000 RSS entries.
+|===
+
+[[html-filter-tip]]
+[TIP]
+.html-filter commands usage
+====
+Both lynx and elinks work very well as `html-filter`. Keep in mind however that
+they can slow down obtaining entries a little because an external process must
+be started separately for each entry.
+
+The best results are achieved when they are configured with a dump wide enough,
+so that Feed Commas can take care of line wrapping:
+
+----
+html-filter = elinks -dump -dump-width 500
+html-filter = lynx -dump -width 500 -stdin
+----
+====
+
+==== Colors
+
+Different parts of Feed Commas can be colorized to your liking by setting
+different options in `[colors]` section. Default values are sensible, but the
+end-result depends on terminal's color capabilities. Color can be empty, in
+which case
+
+[cols="^2m,^1m,6", options="header"]
+.[colors] options
+|===
+| Option | Default value | Affected elements
+
+| article-title
+| yellow
+| Color of article's title.
+
+| article-title-focus
+| light blue
+| Color of currently selected article's title.
+
+| article-border-focus
+| light blue
+| Color of currently selected article's border.
+
+| metadata
+| light gray
+| Various meta data information: article's publication date, article's header,
+  various indicators on articles list, number of unread articles in menu etc.
+
+| menu-focus-fg
+| white
+| Foreground color of currently selected menu item.
+
+| menu-focus-bg
+| light blue
+| Background color of currently selected menu item.
+
+| menu-selected
+| dark gray
+| Color of currently active feed or category.
+
+| status-fg
+| black
+| Foreground color of status line.
+
+| status-bg
+| light gray
+| Background color of status line.
+
+| menu-line
+| dark gray
+| Color of line separating menu and article list.
+
+| error-fg
+| white
+| Foreground color of errors displayed in commandline.
+
+| error-bg
+| dark red
+| Background color of errors displayed in commandline.
+|===
+
+Monochrome, 16-, 88- and 256-color terminals are supported. As a color name you
+can use any of standard color values: _black, dark red, dark green, brown,
+dark blue, dark magenta, dark cyan, light gray, dark gray, light
+red, light green, yellow, light blue, light magenta, light cyan,
+white_. For terminals which support that, you can also use other notations:
+
+* `#fcc`: hex like HTML color;
+* `g40`: decimal value: 40% of gray
+* `g#cc`: hex value: 80% of gray
+* `h255`: color number 255
+
+For different terminals colors are configured in different ways, but most often
+they're defined in `~/.Xresources` file. Consult your terminal's documentation
+for details.
+
+Apart from color name, you can specify some text attributes, which should be
+placed after comma. These attributes include _bold, underline, blink_ and
+_standout_. Color value can be omitted, in which case a default foreground or
+background color for your terminal will be used.
+
+[.center, cols="^1m,3", options="header"]
+.Color setting examples
+|===
+| Setting   | Description
+| dark gray | Set color to "dark gray" standard color.
+| #f00,bold | Set font to bold red.
+| bold      | Set font to bold. Default color will be used (depending on which
+              option is set)
+|===
