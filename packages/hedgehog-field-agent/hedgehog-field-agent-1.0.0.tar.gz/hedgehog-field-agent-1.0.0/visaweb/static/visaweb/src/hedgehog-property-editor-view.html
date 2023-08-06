@@ -1,0 +1,109 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="shared-icons.html">
+<link rel="import" href="shared-styles.html">
+
+</head><body><dom-module id="hedgehog-property-editor-view">
+    <template>
+        <style include="shared-styles">
+      :host {
+        display: block;
+        @apply(--layout-vertical);
+      }
+
+
+
+
+
+
+        </style>
+
+        <iron-ajax url="/assetadapter/property/[[property.id]]/choices" as-json="" last-response="{{choices}}" on-error="_onPropertyChoiceValueError" auto=""></iron-ajax>
+        <iron-ajax url="/assetadapter/unit/[[property.id]]/choices" as-json="" last-response="{{units}}" on-error="_onUnitChoiceValueError" auto=""></iron-ajax>
+
+        <div class="layout horizontal">
+            <iron-pages class="flex" selected="[[property.type]]" attr-for-selected="aspect" fallback-selection="string" role="chooser">
+                <paper-input type="text" name="[[property.name]]" aspect="string" label="[[property.display_name]]" title="[[property.description]]" class="flex">
+
+                </paper-input>
+                <paper-input type="number" name="[[property.name]]" aspect="interval" min="[[property.minimum]]" label="[[property.display_name]]" title="[[property.description]]" class="flex">
+                </paper-input>
+                <paper-dropdown-menu aspect="choice" name="[[property.name]]" label="[[property.display_name]]" value="{{selected_value}}" class="flex" style="width: 100%">
+                    <paper-listbox class="dropdown-content" selected="{{selected_value}}" attr-for-selected="name">
+                        <template is="dom-repeat" items="[[choices]]" as="choice">
+                            <paper-item name="[[choice.id]]">[[choice.value]]</paper-item>
+                        </template>
+                    </paper-listbox>
+                </paper-dropdown-menu>
+            </iron-pages>
+            <template is="dom-if" if="[[_hasUnit]]">
+                <paper-dropdown-menu name="unit" label="Mértékegység" style="margin-left: 8px" value="{{selected_unit}}">
+                    <paper-listbox class="dropdown-content" selected="{{selected_unit}}" attr-for-selected="name">
+                        <template is="dom-repeat" items="[[units]]" as="unit">
+                            <paper-item name="[[unit.id]]">[[unit.value]]</paper-item>
+                        </template>
+                    </paper-listbox>
+                </paper-dropdown-menu>
+            </template>
+            <paper-icon-button icon="shared-icons:info" alt="[[property.description]]" on-tap="togglePropertyInfo"></paper-icon-button>
+
+        </div>
+        <iron-collapse id="propertyHelp">
+            <div>[[property.description]]</div>
+        </iron-collapse>
+    </template>
+
+    <script>
+    Polymer({
+      is: 'hedgehog-property-editor-view',
+      properties: {
+        property: {
+            type: Object,
+            notify: true
+        },
+        _hasUnit: {
+            type: Boolean,
+            notify: true,
+            value: true
+        }
+      },
+      observers: [
+        '_onUnitChanged(property.unit_choices)'
+      ],
+      togglePropertyInfo: function() {
+        this.$.propertyHelp.toggle();
+      },
+      _onPropertyChoiceValueError: function() {
+
+      },
+      _onUnitChoiceValueError: function() {
+        this._hasUnit = false;
+      },
+      _onUnitChanged(unit_choices) {
+        this._hasUnit = (unit_choices !== undefined && unit_choices !== null);
+      }
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+</dom-module>
+</body></html>
